@@ -326,6 +326,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <p style="font-size:13.5px;color:var(--mute)" id="mt-sub"></p>
     <div class="thread" id="mt-list"></div>
     <textarea id="mt-reply" maxlength="2000" placeholder="Votre réponse : le client la voit dans son espace"></textarea>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:600;font-size:13.5px;margin-top:8px"><input type="checkbox" id="mt-mail" checked style="width:auto"> Prévenir le client par e-mail</label>
     <div class="acts"><button class="btn main" id="mt-send" type="button">Envoyer</button><span class="sp"></span><button class="btn ghost" id="mt-close" type="button">Fermer</button></div>
   </div>
 </div>
@@ -724,7 +725,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var t = $('mt-reply').value.trim(); if (!t) { $('mt-reply').focus(); return; }
     // attach the reply to the client's latest visible quote, if any
     var q = data.quotes.filter(function(x){ return x.client_id === talking.id && x.shared; })[0];
-    sb.insert('messages', { client_id: talking.id, quote_id: q ? q.id : null, author: 'moi', body: t }).then(function(){ $('mt-reply').value = ''; toast('Réponse envoyée.'); loadThread(); }, fail);
+    sb.insert('messages', { client_id: talking.id, quote_id: q ? q.id : null, author: 'moi', body: t }).then(function(){
+      $('mt-reply').value = ''; toast('Réponse envoyée.'); loadThread();
+      if ($('mt-mail').checked) sb.fn('notify-client', { kind: 'message', client_id: talking.id, quote_id: q ? q.id : null, text: t })
+        .then(function(r){ if (r && r.to) toast('Réponse envoyée, et e-mail envoyé à ' + r.to + '.'); }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
+    }, fail);
   };
 
   /* ---------------- paste a request ---------------- */

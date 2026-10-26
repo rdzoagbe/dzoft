@@ -213,6 +213,9 @@ a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
 .em{font-size:13.5px;color:var(--mute);margin-top:2px}
 .en{font-size:13px;color:var(--ink2);margin-top:4px}
 .env .btn{margin-top:8px}
+.note2{background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:8px;white-space:pre-wrap}
+.valid{border-color:#9fc2ff}
+.docs a span.muted{white-space:nowrap}
 .withdraw{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:12px}
 .withdraw b{font-size:14px}.withdraw p{font-size:13.5px;margin-top:2px}
 .withdraw .chk{margin-top:8px}
@@ -537,7 +540,8 @@ footer{max-width:1180px}
       var dep = s.k === 'deposit' ? depositText(q) : '';
       return '<li class="' + (s.done ? 'done' : i === now && q.accepted_at ? 'now' : '') + '"><span class="dot">' + (s.done ? '✓' : i + 1) + '</span>' +
         '<div class="t">' + esc(s.t) + '</div>' + (s.s ? '<div class="s">' + esc(s.s) + dep + '</div>' : '') +
-        (s.done && s.d ? '<div class="d">Fait le ' + day(isoDay(s.d)) + '</div>' : '') +
+        (s.vby ? '<div class="d">Validé par ' + esc(s.vby) + ' le ' + day(s.vat) + '</div>' : s.done && s.d ? '<div class="d">Fait le ' + day(isoDay(s.d)) + '</div>' : '') +
+        (s.ask && !s.done ? '<div class="d" style="color:var(--blue2)">Votre validation est attendue</div>' : '') +
         (s.note ? '<div class="n">' + esc(s.note) + '</div>' : '') + '</li>';
     }).join('') + '</ol>';
   }
@@ -551,6 +555,7 @@ footer{max-width:1180px}
       var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
       if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer']);
     });
+    projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider']); }); });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
     var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec RD Créations.');
@@ -627,12 +632,33 @@ footer{max-width:1180px}
     if (!ps.length) return h + empty(quotes().some(pending) ? 'Votre projet démarre dès que vous acceptez votre devis.' : 'Aucun projet en cours pour le moment.', quotes().some(pending) ? '<a class="btn main" href="#/devis">Voir mes devis</a>' : '');
     return h + '<div class="items">' + ps.map(quoteCard).join('') + '</div>';
   };
+  WIRE.projets = function(id){
+    var q = id && byId(id); if (!q) return;
+    [].forEach.call(document.querySelectorAll('.valid'), function(box){
+      var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;
+      b.onclick = function(){
+        b.disabled = true; msg.className = 'msgline ok'; msg.textContent = 'Enregistrement…';
+        var t = (steps(q).filter(function(s){ return s.k === st; })[0] || {}).t || st;
+        call('validate', { p_quote: q.id, p_step: st, p_name: D.client.nom || 'Client' }).then(function(){
+          notify(D.client.nom + ' a validé « ' + t + ' » (' + q.numero + ')', 'Étape validée en ligne : ' + t + '\nProjet : ' + title(q) + ' (' + q.numero + ')');
+          return load();
+        }, function(){ b.disabled = false; msg.className = 'msgline err'; msg.textContent = 'La validation n’a pas abouti. Réessayez.'; });
+      };
+    });
+  };
   function projectDetail(q){
     if (!q || !q.accepted_at) return back('projets', 'Mes projets') + empty('Ce projet n’est pas disponible.');
     var st = state(q), p = progress(q), h = back('projets', 'Mes projets'), env = envOf(q), docs = okDocs(q);
     h += '<div class="phead"><h1>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num"><a href="#/devis/' + q.id + '">Devis ' + esc(q.numero) + '</a></span></div>';
     if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
     h += withdrawText(q);
+    steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){
+      h += '<section class="card accept valid" data-step="' + esc(s.k) + '"><h2>Votre validation est attendue : ' + esc(s.t) + '</h2>' +
+        (s.note ? '<p class="note2">' + esc(s.note) + '</p>' : '') +
+        '<p>Vérifiez cette étape' + (okDocs(q).length ? ' (voir les documents plus bas)' : '') + '. Si tout vous convient, validez-la : je passe à la suite. Sinon, dites-moi ce qu’il faut changer.</p>' +
+        '<div class="row"><button class="btn main" type="button" data-v="ok">Je valide « ' + esc(s.t) + ' »</button><a class="btn line" href="#/messages">Demander des changements</a></div>' +
+        '<p class="msgline" role="status" aria-live="polite"></p><p class="legal">Votre validation est enregistrée avec votre nom, la date et l’heure.</p></section>';
+    });
     h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
     h += payBlock(q);
     h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';
@@ -648,9 +674,57 @@ footer{max-width:1180px}
   };
   VIEWS.documents = function(){
     var qs = quotes().filter(function(q){ return okDocs(q).length; }), h = head('Documents', 'Maquettes, factures, fiche de remise et autres fichiers partagés.');
+    h += '<section class="card" id="myfiles"><h2>Mes fichiers</h2>' + (token ?
+      '<p class="muted">Pour m’envoyer vos fichiers (logo, photos, textes) depuis cet espace, connectez-vous avec un compte. En attendant, envoyez-les par e-mail ou WhatsApp.</p>' :
+      '<p class="muted">Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).</p>' +
+      '<div class="qacts"><label class="btn main" style="cursor:pointer">Envoyer des fichiers<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
+      '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">Chargement…</li></ul>') + '</section>';
     h += '<section class="card"><h2>Toujours disponibles</h2>' + docsList([{ n: 'Fiche de remise (modèle)', u: 'https://rdzoagbe.github.io/rd-creations/assets/fiche-de-remise-client.pdf' }]) + '</section>';
     if (!qs.length) return h + empty('Les documents de vos projets apparaîtront ici.');
     return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');
+  };
+  var ME = null;
+  function myId(){ return ME ? Promise.resolve(ME) : sb.me().then(function(u){ ME = u && u.id; return ME; }); }
+  function fsize(n){ return n > 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko'; }
+  function listFiles(){
+    myId().then(function(uid){ return sb.files.list('u/' + uid + '/').then(function(list){
+      list = (list || []).filter(function(f){ return f.id; });
+      $('flist').innerHTML = list.length ? list.map(function(f){
+        return '<li><a href="#" data-path="u/' + uid + '/' + esc(f.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
+          esc(f.name.replace(/^\d+-/, '')) + '<span class="muted" style="margin-left:auto;font-weight:400;font-size:13px">' + fsize((f.metadata || {}).size || 0) + ' · ' + day(f.created_at) + '</span></a></li>';
+      }).join('') : '<li class="muted">Aucun fichier envoyé pour l’instant.</li>';
+    }); }).catch(function(){ $('flist').innerHTML = '<li class="muted">Vos fichiers sont indisponibles pour le moment.</li>'; });
+  }
+  WIRE.documents = function(){
+    if (token || !$('up')) return;
+    listFiles();
+    $('flist').onclick = function(e){
+      var a = e.target.closest('[data-path]'); if (!a) return; e.preventDefault();
+      var w = window.open('', '_blank'); sb.files.link(a.dataset.path).then(function(u){ w.location = u; }, function(){ w.close(); });
+    };
+    $('up').onchange = function(){
+      var list = [].slice.call(this.files || []), m = $('up-msg'), sent = [];
+      this.value = '';
+      if (!list.length) return;
+      m.className = 'msgline ok'; m.textContent = 'Envoi en cours…';
+      myId().then(function(uid){
+        return list.reduce(function(p, f){
+          return p.then(function(){
+            if (f.size > 20971520) throw new Error(f.name + ' dépasse 20 Mo.');
+            var clean = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80);
+            return sb.files.upload('u/' + uid + '/' + Date.now() + '-' + clean, f).then(function(){ sent.push(f.name); });
+          });
+        }, Promise.resolve());
+      }).then(function(){
+        m.textContent = sent.length + ' fichier' + (sent.length > 1 ? 's envoyés' : ' envoyé') + ' ✓';
+        notify('Nouveau fichier de ' + D.client.nom, 'Fichier(s) déposé(s) dans l’espace client : ' + sent.join(', '));
+        listFiles();
+      }, function(err){
+        m.className = 'msgline err';
+        m.textContent = (sent.length ? sent.length + ' envoyé(s). ' : '') + (/mime|type/i.test(err.message) ? 'Ce type de fichier n’est pas accepté.' : /size|large|dépasse/i.test(err.message) ? 'Fichier trop lourd (20 Mo maximum).' : 'L’envoi n’a pas abouti : ' + err.message);
+        listFiles();
+      });
+    };
   };
   VIEWS.messages = function(){
     var ms = D.messages || [], qs = quotes(), h = head('Messages', 'Je vous réponds sous 48 h. Pour une urgence : WhatsApp au 07 82 88 46 46.');

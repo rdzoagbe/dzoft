@@ -101,6 +101,30 @@
       if (!signedIn) return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
       return token().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
     },
+    /* Server function (e-mails to clients), called with the signed-in session. */
+    fn: function (name, body) {
+      return token().then(function (t) { return req('/functions/v1/' + name, { method: 'POST', token: t, body: body || {} }); });
+    },
+    /* Private file storage (bucket client-files). */
+    files: {
+      list: function (prefix) {
+        return token().then(function (t) { return req('/storage/v1/object/list/client-files', { method: 'POST', token: t, body: { prefix: prefix, limit: 200, offset: 0, sortBy: { column: 'created_at', order: 'desc' } } }); });
+      },
+      upload: function (path, file) {
+        return token().then(function (t) {
+          return fetch(URL + '/storage/v1/object/client-files/' + path.split('/').map(encodeURIComponent).join('/'), {
+            method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file
+          }).then(function (r) { return r.text().then(function (x) { if (!r.ok) { var d = {}; try { d = JSON.parse(x); } catch (e) {} var err = new Error(d.message || d.error || ('Erreur ' + r.status)); err.status = r.status; throw err; } return x; }); });
+        });
+      },
+      link: function (path) {
+        return token().then(function (t) { return req('/storage/v1/object/sign/client-files/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: t, body: { expiresIn: 600 } }); })
+          .then(function (d) { return URL + '/storage/v1' + (d.signedURL || d.signedUrl); });
+      },
+      remove: function (path) {
+        return token().then(function (t) { return req('/storage/v1/object/client-files', { method: 'DELETE', token: t, body: { prefixes: [path] } }); });
+      }
+    },
     /* Public: lets a site visitor drop a request, without reading anything back. */
     submitLead: function (row, signedIn) {
       if (!signedIn) return req('/rest/v1/leads', { method: 'POST', body: row, prefer: 'return=minimal' });

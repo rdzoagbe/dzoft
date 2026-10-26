@@ -62,6 +62,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* docs */
 .doc{display:grid;grid-template-columns:1fr 2fr auto;gap:6px;align-items:center}
 .doc+.doc{margin-top:6px}
+#files .doc{grid-template-columns:2fr 1fr auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.ask{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);grid-column:1/-1;cursor:pointer;margin:0}
+.ask input{width:16px;height:16px}
+.vok{grid-column:1/-1;font-size:13px;color:var(--ok);font-weight:700}
 .envr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1.1fr 1fr 2fr auto;gap:6px;align-items:center}
 .envr+.envr{margin-top:8px}
 .envr textarea{grid-column:1/-2;min-height:38px;font-size:13.5px}
@@ -109,6 +113,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="has-client">
       <p class="muted">Client : <b id="cl-name" style="color:var(--ink)"></b>. Un seul lien par client : il y retrouve tous les devis que vous rendez visibles.</p>
       <label class="switch"><input type="checkbox" id="shared"> Visible dans l’espace client</label>
+      <label class="switch" style="font-weight:600"><input type="checkbox" id="mailon" checked> Prévenir le client par e-mail (devis publié, étape terminée, validation demandée, réponse)</label>
       <div class="link"><input id="url" readonly aria-label="Lien de l’espace client"><button class="btn sm line" id="b-copy" type="button">Copier</button></div>
       <div class="row" style="margin-top:8px">
         <button class="btn sm main" id="b-wa" type="button">Envoyer par WhatsApp</button>
@@ -149,11 +154,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="env"></div>
   </section>
 
+  <section class="card" id="c-files" hidden>
+    <h2>Fichiers du client <span class="sp"></span><label class="btn sm line" style="cursor:pointer">+ Ajouter un fichier<input type="file" id="f-up" hidden multiple></label></h2>
+    <p class="muted" style="margin-bottom:8px">Les fichiers que le client envoie depuis son espace (logo, photos, textes), et ceux que vous lui déposez. 20 Mo maximum par fichier.</p>
+    <div id="files"></div>
+  </section>
+
   <section class="card" id="c-msg" hidden>
     <h2>Messages</h2>
     <div class="thread" id="thread"></div>
     <textarea id="reply" maxlength="2000" placeholder="Votre réponse au client"></textarea>
-    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><span class="muted">Le client la voit dans son espace. Pensez à le prévenir si c’est important.</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><span class="muted">Le client la voit dans son espace et reçoit un e-mail si « Prévenir le client » est coché en haut.</span></div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
@@ -200,6 +211,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function render(){
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
+    $('c-files').hidden = !(C && C.user_id);
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
@@ -221,12 +233,23 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderEnv(); renderThread();
+    renderSteps(); renderDocs(); renderEnv(); renderThread(); renderFiles();
   }
 
   function save(row, reload){
     $('sync').textContent = 'enregistrement…';
     return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); });
+  }
+  // e-mail to the client through the notify-client server function (Brevo)
+  try { $('mailon').checked = localStorage.getItem('rd-mailon') !== '0'; } catch(e){}
+  $('mailon').onchange = function(){ try { localStorage.setItem('rd-mailon', this.checked ? '1' : '0'); } catch(e){} };
+  function notify(kind, extra){
+    if (!$('mailon').checked || !C) return Promise.resolve();
+    var body = { kind: kind, quote_id: QID, client_id: C.id };
+    for (var k in extra) body[k] = extra[k];
+    return sb.fn('notify-client', body).then(function(r){
+      if (r && r.to && !r.skipped) toast('E-mail envoyé à ' + r.to + '.');
+    }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
   }
   function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }); }, 700); }
 
@@ -235,7 +258,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var on = this.checked, row = { shared: on, steps: Q.steps };
     if (on && !Q.sent_at) row.sent_at = new Date().toISOString();
     if (on && Q.status === 'brouillon') row.status = 'envoyé';
-    save(row, true).then(function(){ toast(on ? 'Le devis est visible dans l’espace du client.' : 'Le devis n’est plus visible pour le client.'); });
+    save(row, true).then(function(){
+      toast(on ? 'Le devis est visible dans l’espace du client.' : 'Le devis n’est plus visible pour le client.');
+      if (on && !Q.accepted_at) setTimeout(function(){ notify('quote'); }, 900);
+    });
   };
   $('b-copy').onclick = function(){
     var i = $('url'); i.select();
@@ -282,7 +308,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     box.innerHTML = Q.steps.map(function(s, i){
       return '<div class="st' + (s.done ? ' done' : '') + '" data-i="' + i + '"><input type="checkbox" class="ck" aria-label="Étape faite"' + (s.done ? ' checked' : '') + '>' +
         '<div class="f"><input class="t" value="' + esc(s.t) + '" placeholder="Nom de l’étape"><input type="date" class="d" value="' + esc(s.d || '') + '" aria-label="Date">' +
-        '<input class="s" value="' + esc(s.s || '') + '" placeholder="Explication pour le client"><textarea class="n" placeholder="Note pour le client sur cette étape (facultatif)">' + esc(s.note || '') + '</textarea></div>' +
+        '<input class="s" value="' + esc(s.s || '') + '" placeholder="Explication pour le client"><textarea class="n" placeholder="Note pour le client sur cette étape (facultatif)">' + esc(s.note || '') + '</textarea>' +
+        (s.vby ? '<p class="vok">✓ Validé par ' + esc(s.vby) + ' le ' + new Date(s.vat).toLocaleString('fr-FR') + '</p>' :
+          !s.done ? '<label class="ask"><input type="checkbox" class="askc"' + (s.ask ? ' checked' : '') + '> Demander au client de valider cette étape' + (s.ask ? ' <b>(en attente de sa validation)</b>' : '') + '</label>' : '') + '</div>' +
         '<div class="tools"><button type="button" data-a="up" title="Monter">↑</button><button type="button" data-a="down" title="Descendre">↓</button><button type="button" data-a="rm" title="Retirer">×</button></div></div>';
     }).join('');
   }
@@ -294,10 +322,18 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     later();
   };
   $('steps').onchange = function(e){
-    if (!e.target.classList.contains('ck')) return;
+    if (!e.target.classList.contains('ck') && !e.target.classList.contains('askc')) return;
     var row = e.target.closest('.st'), s = Q.steps[+row.dataset.i];
+    if (e.target.classList.contains('askc')) {
+      s = Q.steps[+e.target.closest('.st').dataset.i];
+      s.ask = e.target.checked; renderSteps(); later();
+      if (s.ask) setTimeout(function(){ notify('validate', { step: s.t }); }, 900);
+      return;
+    }
     s.done = e.target.checked; if (s.done && !s.d) s.d = today();
+    if (s.done) s.ask = false;
     renderSteps(); later();
+    if (s.done && Q.accepted_at && s.k !== 'accept') setTimeout(function(){ notify('step', { step: s.t }); }, 900);
   };
   $('steps').onclick = function(e){
     var b = e.target.closest('button[data-a]'); if (!b) return;
@@ -374,7 +410,38 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   $('b-reply').onclick = function(){
     var t = $('reply').value.trim(); if (!t) { $('reply').focus(); return; }
-    sb.insert('messages', { client_id: C.id, quote_id: QID, author: 'moi', body: t }).then(function(){ $('reply').value = ''; toast('Réponse envoyée.'); load(); }, fail);
+    sb.insert('messages', { client_id: C.id, quote_id: QID, author: 'moi', body: t }).then(function(){ $('reply').value = ''; toast('Réponse envoyée.'); notify('message', { text: t }); load(); }, fail);
+  };
+
+  /* files exchanged with the client (accounts only: u/<user id>/…) */
+  function size(n){ return n > 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko'; }
+  function renderFiles(){
+    if (!C || !C.user_id) return;
+    $('files').innerHTML = '<p class="muted">Chargement…</p>';
+    sb.files.list('u/' + C.user_id + '/').then(function(list){
+      list = (list || []).filter(function(f){ return f.id; });
+      $('files').innerHTML = list.length ? list.map(function(f){
+        return '<div class="doc" data-name="' + esc(f.name) + '"><span>' + esc(f.name.replace(/^\d+-/, '')) + '</span><span class="muted">' + size((f.metadata || {}).size || 0) + ' · ' + new Date(f.created_at).toLocaleDateString('fr-FR') + '</span>' +
+          '<span><button class="btn sm line" type="button" data-f="get">Ouvrir</button> <button class="rm" type="button" data-f="rm" title="Supprimer">×</button></span></div>';
+      }).join('') : '<p class="muted">Aucun fichier pour l’instant.</p>';
+    }, function(){ $('files').innerHTML = '<p class="muted">Fichiers indisponibles pour le moment.</p>'; });
+  }
+  $('files').onclick = function(e){
+    var b = e.target.closest('[data-f]'); if (!b) return;
+    var path = 'u/' + C.user_id + '/' + b.closest('.doc').dataset.name;
+    if (b.dataset.f === 'get') { var w = window.open('', '_blank'); sb.files.link(path).then(function(u){ w.location = u; }, function(err){ w.close(); fail(err); }); return; }
+    if (!confirm('Supprimer ce fichier ? Le client ne le verra plus.')) return;
+    sb.files.remove(path).then(function(){ toast('Fichier supprimé.'); renderFiles(); }, fail);
+  };
+  $('f-up').onchange = function(){
+    var list = [].slice.call(this.files || []); this.value = '';
+    list.reduce(function(p, f){
+      return p.then(function(){
+        if (f.size > 20971520) { toast(f.name + ' : plus de 20 Mo.'); return; }
+        var clean = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80);
+        return sb.files.upload('u/' + C.user_id + '/' + Date.now() + '-' + clean, f).then(function(){ toast(f.name + ' ajouté.'); }, fail);
+      });
+    }, Promise.resolve()).then(renderFiles);
   };
 
   load();
