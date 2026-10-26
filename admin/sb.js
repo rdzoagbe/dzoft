@@ -5,7 +5,8 @@
   var URL = 'https://rzghbvmszbjlqkdjzpxc.supabase.co';
   var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z2hidm1zemJqbHFrZGp6cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDQ0MTEsImV4cCI6MjEwODU4MDQxMX0.LtN4aeyRY8Xf7s6vmoLU1QfRl_aCXOdtyAGSYdgHkZM';
   var OWNER = 'roland.dzoagbe@hotmail.com';
-  var STORE = 'rd-admin-session';
+  // The client space and the request form keep their own session, apart from the private space.
+  var STORE = global.RD_STORE || 'rd-admin-session';
   var ADMIN = 'https://rdzoagbe.github.io/rd-creations/admin/';
   var PORTAL = 'https://rdzoagbe.github.io/rd-creations/espace/';
 
@@ -53,11 +54,11 @@
     signIn: function (email, password) {
       return req('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: email, password: password } }).then(keep);
     },
-    signUp: function (email, password) {
-      return req('/auth/v1/signup?redirect_to=' + encodeURIComponent(ADMIN), { method: 'POST', body: { email: email, password: password } });
+    signUp: function (email, password, back) {
+      return req('/auth/v1/signup?redirect_to=' + encodeURIComponent(back || ADMIN), { method: 'POST', body: { email: email, password: password } });
     },
-    recover: function (email) {
-      return req('/auth/v1/recover?redirect_to=' + encodeURIComponent(ADMIN), { method: 'POST', body: { email: email } });
+    recover: function (email, back) {
+      return req('/auth/v1/recover?redirect_to=' + encodeURIComponent(back || ADMIN), { method: 'POST', body: { email: email } });
     },
     setPassword: function (password) {
       return token().then(function (t) { return req('/auth/v1/user', { method: 'PUT', token: t, body: { password: password } }); });
@@ -96,12 +97,14 @@
       return token().then(function (t) { return req('/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'DELETE', token: t }); });
     },
     /* Client space: database functions reached with the client's secret link, never with a login. */
-    rpc: function (name, args) {
-      return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
+    rpc: function (name, args, signedIn) {
+      if (!signedIn) return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
+      return token().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
     },
     /* Public: lets a site visitor drop a request, without reading anything back. */
-    submitLead: function (row) {
-      return req('/rest/v1/leads', { method: 'POST', body: row, prefer: 'return=minimal' });
+    submitLead: function (row, signedIn) {
+      if (!signedIn) return req('/rest/v1/leads', { method: 'POST', body: row, prefer: 'return=minimal' });
+      return token().then(function (t) { return req('/rest/v1/leads', { method: 'POST', token: t, body: row, prefer: 'return=minimal' }); });
     }
   };
   global.RDsb = sb;

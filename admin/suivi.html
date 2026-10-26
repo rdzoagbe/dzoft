@@ -180,7 +180,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     }, function(e){ $('loading').textContent = 'Connexion expirée : reconnectez-vous depuis l’espace privé.'; });
   }
   function fresh(){ return window.RDSTEPS.map(function(s){ return { k: s.k, t: s.t, s: s.s, done: false, d: '', note: '' }; }); }
+  // A client with an account signs in; others get their secret link.
   function url(){ return C ? sb.PORTAL + '#' + C.portal_token : ''; }
+  function inviteUrl(){ return C && C.user_id ? sb.PORTAL : url(); }
   function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
 
   function render(){
@@ -189,7 +191,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('ttl').textContent = 'Suivi · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
-    if (C) { $('cl-name').textContent = C.nom || 'sans nom'; $('url').value = url(); $('b-open').href = url(); }
+    if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : le message l’invite à se connecter ; le lien privé ci-dessous marche aussi)' : ''); $('url').value = url(); $('b-open').href = url(); }
     $('shared').checked = !!Q.shared;
     $('sh-pill').textContent = Q.shared ? 'visible' : 'non visible'; $('sh-pill').className = 'pill' + (Q.shared ? ' on' : '');
     // acceptance
@@ -224,7 +226,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(function(){ toast('Lien copié.'); }, function(){ document.execCommand('copy'); toast('Lien copié.'); });
   };
   function invite(){
-    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client RD Créations :\n' + url() +
+    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client RD Créations' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : '') + ' :\n' + inviteUrl() +
       '\n\nVous pouvez le consulter, me poser vos questions et l’accepter en ligne. Vous y suivrez ensuite chaque étape de votre projet.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
   }
   function guard(){

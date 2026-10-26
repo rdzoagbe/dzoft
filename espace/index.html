@@ -131,6 +131,22 @@ main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
 .hint{font-size:13px;color:var(--mute);margin-top:6px}
 
 .center{min-height:60vh;display:grid;place-items:center;text-align:center;color:var(--mute)}
+.auth{min-height:62vh;display:grid;place-items:center}
+.auth .card{width:100%;max-width:420px;margin:0}
+.auth h1{font-size:21px;margin-bottom:4px}
+.auth p.intro{font-size:14.5px;color:var(--mute)}
+.auth .btn{width:100%;margin-top:14px}
+.auth .links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:14px}
+.auth .links button{background:none;border:0;color:var(--blue2);cursor:pointer;font-size:14px;padding:0;text-decoration:underline}
+.pw{position:relative}
+.pw input{padding-right:46px}
+.pw .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;color:var(--mute);border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.pw .eye svg{width:20px;height:20px}
+.top .out{background:none;border:1px solid #27425f;color:#c4d2e1;border-radius:20px;padding:6px 12px;font-size:13.5px;cursor:pointer}
+.reqs{list-style:none;display:grid;gap:10px}
+.reqs li{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.reqs .h{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.reqs .txt{font-size:14px;color:var(--ink2);white-space:pre-wrap;margin-top:4px;max-height:4.5em;overflow:hidden}
 .center .card{max-width:480px}
 footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:var(--mute);text-align:center}
 
@@ -160,11 +176,45 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations</b><span>Espace client</span></div></a>
     <div class="sp"></div>
     <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp <span>07 82 88 46 46</span></a>
+    <button class="out" id="b-out" type="button" hidden>Déconnexion</button>
   </div>
 </header>
 
 <main id="main">
   <div class="center" id="s-load"><p>Chargement de votre espace…</p></div>
+  <div class="auth" id="s-auth" hidden>
+    <div class="card">
+      <form id="f-login">
+        <h1>Votre espace client</h1>
+        <p class="intro">Suivez votre demande, votre devis et votre projet, et échangez avec moi.</p>
+        <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="email" required>
+        <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
+        <button class="btn main" type="submit">Se connecter</button>
+        <div class="links"><button type="button" data-go="f-forgot">Mot de passe oublié ?</button><button type="button" data-go="f-signup">Créer mon espace</button></div>
+      </form>
+      <form id="f-signup" hidden>
+        <h1>Créer mon espace</h1>
+        <p class="intro">Utilisez l’adresse e-mail donnée lors de votre demande : vous y retrouverez tout.</p>
+        <label for="s-email">E-mail</label><input id="s-email" type="email" autocomplete="email" required>
+        <label for="s-pass">Mot de passe (8 caractères minimum)</label><input id="s-pass" type="password" minlength="8" autocomplete="new-password" required>
+        <button class="btn main" type="submit">Créer mon espace</button>
+        <div class="links"><button type="button" data-go="f-login">J’ai déjà un espace</button></div>
+      </form>
+      <form id="f-forgot" hidden>
+        <h1>Mot de passe oublié</h1>
+        <p class="intro">Indiquez votre e-mail : vous recevrez un lien pour en choisir un nouveau.</p>
+        <label for="r-email">E-mail</label><input id="r-email" type="email" autocomplete="email" required>
+        <button class="btn main" type="submit">Recevoir le lien</button>
+        <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
+      </form>
+      <form id="f-newpass" hidden>
+        <h1>Nouveau mot de passe</h1>
+        <label for="n-pass">Mot de passe (8 caractères minimum)</label><input id="n-pass" type="password" minlength="8" autocomplete="new-password" required>
+        <button class="btn main" type="submit">Enregistrer</button>
+      </form>
+      <p class="msgline" id="au-msg" role="status" aria-live="polite"></p>
+    </div>
+  </div>
   <div class="center" id="s-bad" hidden>
     <div class="card">
       <h2 style="font-size:19px;margin-bottom:8px">Ce lien ne fonctionne pas</h2>
@@ -180,8 +230,13 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   <div id="app" hidden>
     <div class="hello"><h1 id="hello"></h1><p>Retrouvez ici votre devis, l’avancement de votre projet, vos documents et nos échanges.</p></div>
     <div class="picker" id="picker" hidden></div>
-    <div id="none" class="card" hidden><p>Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.</p></div>
+    <div id="none" class="card" hidden><p id="none-t">Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.</p></div>
     <div id="proj"></div>
+    <section class="card" id="reqs" hidden>
+      <h2>Vos demandes</h2>
+      <ul class="reqs" id="reqlist"></ul>
+      <div class="qacts"><a class="btn line" href="../#devis">Faire une nouvelle demande</a></div>
+    </section>
 
     <section class="card" id="chat">
       <h2>Nos échanges</h2>
@@ -194,8 +249,9 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     </section>
   </div>
 </main>
-<footer>RD Créations · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · Cet espace est personnel : ne partagez pas son lien.</footer>
+<footer>RD Créations · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
+<script>window.RD_STORE = 'rd-client-session';</script>
 <script src="../admin/sb.js"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
@@ -208,24 +264,81 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   var time = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); };
   var isoDay = function(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? new Date(s + 'T12:00:00') : null; };
 
-  // The secret link: espace/#<code>. Kept on this device so the page also opens without it.
-  var UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-  var m = UUID.exec(location.hash), token = m ? m[0].toLowerCase() : null;
-  try { if (token) localStorage.setItem('rd-espace', token); else token = localStorage.getItem('rd-espace'); } catch(e){}
+  // Two ways in: the client's account (e-mail and password), or the secret link espace/#<code>
+  // sent for requests made by WhatsApp or e-mail. The link is kept on this device.
+  var hashErr = /error_description=([^&]+)/.exec(location.hash);
+  var kind = hashErr ? null : sb.fromUrl();
+  if (hashErr) history.replaceState(null, '', location.pathname + location.search);
+  var UUID = /^#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  var m = UUID.exec(location.hash), token = m ? m[1].toLowerCase() : null;
+  try { if (token) localStorage.setItem('rd-espace', token); else if (!sb.session()) token = localStorage.getItem('rd-espace'); } catch(e){}
   var D = null, current = null;
 
-  function show(id){ ['s-load', 's-bad', 's-err', 'app'].forEach(function(x){ $(x).hidden = x !== id; }); }
+  function show(id){ ['s-load', 's-auth', 's-bad', 's-err', 'app'].forEach(function(x){ $(x).hidden = x !== id; }); }
+  function call(fn, args){
+    // same functions, reached with the secret link or with the signed-in account
+    if (token) { var a = { p_token: token }; for (var k in args) a[k] = args[k]; return sb.rpc('portal_' + fn, a); }
+    return sb.rpc('my_' + fn, args, true);
+  }
+
+  /* account forms */
+  var forms = ['f-login', 'f-signup', 'f-forgot', 'f-newpass'];
+  function form(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); au(msg || '', ok); show('s-auth'); }
+  function au(t, ok){ var e = $('au-msg'); e.textContent = t; e.className = 'msgline ' + (ok ? 'ok' : 'err'); }
+  [].forEach.call(document.querySelectorAll('[data-go]'), function(b){
+    b.onclick = function(){ var v = ($('l-email').value || $('s-email').value || $('r-email').value).trim(); form(b.dataset.go); ['l-email', 's-email', 'r-email'].forEach(function(i){ if (!$(i).value) $(i).value = v; }); };
+  });
+  $('f-login').onsubmit = function(e){
+    e.preventDefault(); au('Connexion…', true);
+    sb.signIn($('l-email').value.trim(), $('l-pass').value).then(function(){ $('l-pass').value = ''; show('s-load'); load(); }, function(err){
+      au(/confirm/i.test(err.message) ? 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail (pensez aux indésirables).' : 'E-mail ou mot de passe incorrect.');
+    });
+  };
+  $('f-signup').onsubmit = function(e){
+    e.preventDefault();
+    if ($('s-pass').value.length < 8) { au('Choisissez un mot de passe de 8 caractères minimum.'); return; }
+    au('Création…', true);
+    sb.signUp($('s-email').value.trim(), $('s-pass').value, sb.PORTAL).then(function(u){
+      $('s-pass').value = '';
+      form('f-login', u && u.identities && !u.identities.length ? 'Un espace existe déjà avec cette adresse : connectez-vous, ou utilisez « Mot de passe oublié ».' :
+        'Presque fini : ouvrez l’e-mail envoyé à ' + $('s-email').value.trim() + ' et cliquez sur le lien pour activer votre espace.', true);
+    }, function(err){ au(/password|weak/i.test(err.message) ? 'Mot de passe trop simple : choisissez-en un plus long.' : 'La création n’a pas abouti. Réessayez dans un instant.'); });
+  };
+  $('f-forgot').onsubmit = function(e){
+    e.preventDefault();
+    sb.recover($('r-email').value.trim(), sb.PORTAL).then(function(){ form('f-login', 'Si un espace existe avec cette adresse, un e-mail vient de vous être envoyé.', true); },
+      function(){ au('L’envoi n’a pas abouti. Réessayez dans un instant.'); });
+  };
+  $('f-newpass').onsubmit = function(e){
+    e.preventDefault();
+    if ($('n-pass').value.length < 8) { au('Choisissez un mot de passe de 8 caractères minimum.'); return; }
+    sb.setPassword($('n-pass').value).then(function(){ $('n-pass').value = ''; show('s-load'); load(); }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
+  };
+  $('b-out').onclick = function(){
+    try { localStorage.removeItem('rd-espace'); } catch(e){}
+    sb.signOut().then(function(){ location.replace(location.pathname); });
+  };
   function notify(subject, text){
     if (!FORMSPREE_ID) return;
     fetch('https://formspree.io/f/' + FORMSPREE_ID, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ _subject: subject, message: text + '\n\nVoir dans l’espace privé : ' + sb.ADMIN }) }).catch(function(){});
   }
   function load(keep){
-    if (!token) { show('s-bad'); return Promise.resolve(); }
-    return sb.rpc('portal_get', { p_token: token }).then(function(d){
-      if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
-      D = d; show('app'); render(keep);
-    }, function(){ show('s-err'); });
+    if (token) {
+      return sb.rpc('portal_get', { p_token: token }).then(function(d){
+        if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
+        D = d; show('app'); render(keep);
+      }, function(){ show('s-err'); });
+    }
+    if (!sb.session()) { form('f-login'); return Promise.resolve(); }
+    return sb.rpc('my_space', {}, true).then(function(d){
+      D = d; $('b-out').hidden = false; show('app'); render(keep);
+    }, function(err){
+      if (/administrateur/.test(err.message)) { sb.signOut(); form('f-login', 'Ce compte est celui de l’espace privé : utilisez la page admin.'); return; }
+      if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
+      if (err.status === 401 || /JWT|non connecté/i.test(err.message)) { sb.signOut(); form('f-login', 'Votre session a expiré : reconnectez-vous.'); return; }
+      show('s-err');
+    });
   }
 
   function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
@@ -244,8 +357,19 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
 
   function render(keep){
     $('hello').textContent = 'Bonjour ' + (first(D.client.nom) || '') + ' 👋';
+    $('b-out').hidden = !!token;
     var qs = D.quotes || [];
     $('none').hidden = !!qs.length;
+    var rq = D.requests || [];
+    $('none-t').textContent = rq.length ? 'Votre demande est bien reçue : je prépare votre devis, il apparaîtra ici. En attendant, vous pouvez m’écrire en bas de la page.' :
+      'Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.';
+    $('reqs').hidden = !rq.length || token;
+    $('reqlist').innerHTML = rq.map(function(r){
+      var st = qs.length && r.status !== 'nouvelle' ? ['Traitée', 'ok'] : r.status === 'nouvelle' ? ['Reçue', ''] : ['Devis en préparation', 'warn'];
+      return '<li><div class="h"><b>' + esc(r.projet || 'Demande') + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+        '<div class="hint" style="margin-top:2px">Envoyée le ' + day(r.at) + (r.budget ? ' · budget : ' + esc(r.budget) : '') + '</div>' +
+        (r.message ? '<div class="txt">' + esc(r.message) + '</div>' : '') + '</li>';
+    }).join('');
     if (!keep || !qs.some(function(q){ return q.id === current; })) current = qs[0] && qs[0].id;
     $('picker').hidden = qs.length < 2;
     $('picker').innerHTML = qs.map(function(q){ return '<button type="button" data-id="' + q.id + '" aria-pressed="' + (q.id === current) + '">' + esc(title(q)) + '</button>'; }).join('');
@@ -348,7 +472,7 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     ok.onchange = upd; nm.oninput = upd;
     go.onclick = function(){
       go.disabled = true; amsg('Enregistrement…', true);
-      sb.rpc('portal_accept', { p_token: token, p_quote: q.id, p_name: nm.value.trim() }).then(function(){
+      call('accept', { p_quote: q.id, p_name: nm.value.trim() }).then(function(){
         notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.');
         return load(true);
       }, function(e){
@@ -372,7 +496,7 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     if (!body) { $('m-body').focus(); return; }
     b.disabled = true; e.className = 'msgline ok'; e.textContent = 'Envoi…';
     var q = (D.quotes || []).filter(function(x){ return x.id === current; })[0];
-    sb.rpc('portal_message', { p_token: token, p_quote: current || null, p_body: body }).then(function(){
+    call('message', { p_quote: current || null, p_body: body }).then(function(){
       notify('Nouveau message de ' + D.client.nom, (q ? 'Devis ' + q.numero + '\n\n' : '') + body);
       $('m-body').value = ''; e.textContent = 'Message envoyé ✓';
       return load(true);
@@ -381,7 +505,24 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     }).then(function(){ b.disabled = false; });
   };
 
-  load();
+  if (hashErr) form('f-login', /expired|invalid/i.test(decodeURIComponent(hashErr[1])) ? 'Ce lien a expiré ou a déjà servi : connectez-vous, ou demandez un nouveau lien avec « Mot de passe oublié ».' : 'Le lien n’a pas fonctionné : connectez-vous ou demandez un nouveau lien.');
+  else if (kind === 'recovery') form('f-newpass', 'Choisissez votre nouveau mot de passe.', true);
+  else load();
+})();
+</script>
+<script>
+/* Show/hide toggle on every password field. */
+(function () {
+  var open = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var shut = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
+  document.querySelectorAll('input[type=password]').forEach(function (inp) {
+  var box = document.createElement('div'); box.className = 'pw';
+  inp.parentNode.insertBefore(box, inp); box.appendChild(inp);
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'eye';
+  function show(on){ inp.type = on ? 'text' : 'password'; b.innerHTML = on ? shut : open; b.setAttribute('aria-label', on ? 'Masquer le mot de passe' : 'Afficher le mot de passe'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  b.addEventListener('click', function(){ show(inp.type === 'password'); inp.focus(); });
+  show(false); box.appendChild(b);
+  });
 })();
 </script>
 </body>

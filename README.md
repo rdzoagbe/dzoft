@@ -5,7 +5,8 @@ Site de l'activité de création de sites web, d'applications web installables (
 - Site public : https://rdzoagbe.github.io/rd-creations/
 - Espace privé (connexion requise) : `/admin/` — demandes, clients et devis, stockés dans Supabase (projet RD-Clients, région Paris), protégés par row level security.
 - Suivi client (privé) : `/admin/suivi.html?q=…` — rendre un devis visible, envoyer le lien, étapes, documents, messages.
-- Espace client : `/espace/#<lien secret>` — le client voit ses devis, les accepte en ligne, suit l’avancement et écrit. Aucun compte : un lien secret par client, lu uniquement via les fonctions `portal_get`, `portal_accept` et `portal_message`.
+- Espace client : `/espace/` — le client se connecte (e-mail et mot de passe, compte créé en envoyant sa demande depuis le site) ou ouvre son lien privé `/espace/#<lien secret>` (demandes reçues par WhatsApp ou e-mail). Il voit ses demandes et ses devis, les accepte en ligne, suit l’avancement et écrit. Accès uniquement via les fonctions `my_*` (compte) et `portal_*` (lien).
+- E-mails de confirmation et de mot de passe : voir `docs/emails-supabase.md` (envoi via le SMTP Brevo configuré dans Supabase).
 - Formulaire de devis : Formspree (`xrpppprj`) et enregistrement de la demande dans Supabase.
 
 Le logo utilise la police Cinzel (licence SIL Open Font, voir `assets/`).

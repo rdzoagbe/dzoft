@@ -124,7 +124,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="username" required>
       <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
       <button class="btn main" style="width:100%;margin-top:14px" type="submit">Se connecter</button>
-      <div class="row"><a id="go-forgot">Mot de passe oublié ?</a><a id="go-first">Première connexion</a></div>
+      <div class="row"><a id="go-forgot">Mot de passe oublié ?</a><a id="go-first" hidden>Première connexion</a></div>
     </form>
 
     <form id="f-first" hidden>
@@ -211,6 +211,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <div><label for="mc-ent">Entreprise ou activité</label><input id="mc-ent"></div>
       <div><label for="mc-contact">E-mail ou téléphone</label><input id="mc-contact"></div>
       <div><label for="mc-adr">Adresse</label><input id="mc-adr"></div>
+      <div><label for="mc-email">E-mail de l’espace client</label><input id="mc-email" type="email" placeholder="Pour relier son compte à cette fiche"></div>
+      <div><label>Espace client</label><p id="mc-acc" style="font-size:14px;padding-top:9px;color:var(--mute)"></p></div>
     </div>
     <label for="mc-notes">Notes (projet, rendez-vous, préférences…)</label><textarea id="mc-notes"></textarea>
     <ul class="qlist" id="mc-quotes"></ul>
@@ -319,7 +321,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var rows = data.leads.filter(function(l){ return f === 'all' ? true : f === 'open' ? l.status !== 'archivée' : l.status === f; });
     if (!rows.length) { box.innerHTML = '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
     box.innerHTML = rows.map(function(l){
-      var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source]
+      var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
+        l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : l.email && l.source === 'formulaire' ? 'espace client en attente de confirmation' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
       return '<article class="lead" data-id="' + l.id + '"><div class="h"><b>' + esc(l.prenom) + '</b><span class="st ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
         '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' +
@@ -369,8 +372,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       .then(function(q){ openQuote(q.id); }, fail);
   }
   function quoteFromLead(l){
-    var mk = l.client_id ? Promise.resolve(client(l.client_id)) :
-      sb.insert('clients', { nom: l.prenom, entreprise: l.activite || '', contact: l.contact || '', notes: l.message || '' })
+    // a client account may already have its file (created when the client signed in)
+    var mine = l.user_id && data.clients.filter(function(c){ return c.user_id === l.user_id; })[0];
+    var mk = l.client_id ? sb.update('leads', l.id, { status: 'traitée' }).then(function(){ return client(l.client_id); }) : mine ?
+      sb.update('leads', l.id, { client_id: mine.id, status: 'traitée' }).then(function(){ return mine; }) :
+      sb.insert('clients', { nom: l.prenom, entreprise: l.activite || '', contact: l.contact || l.email || '', email: l.email || '', user_id: l.user_id || null, notes: l.message || '' })
         .then(function(c){ return sb.update('leads', l.id, { client_id: c.id, status: 'traitée' }).then(function(){ return c; }); });
     mk.then(function(c){
       var q = blankQuote(c, { lead: { projet: l.projet, budget: l.budget, elements: l.elements } });
@@ -418,7 +424,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     box.innerHTML = '<table><thead><tr><th>Nom</th><th>Activité</th><th class="hide-m">Contact</th><th class="num">Devis</th></tr></thead><tbody>' +
       rows.map(function(c){
         var n = data.quotes.filter(function(q){ return q.client_id === c.id; }).length;
-        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b></td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
+        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b>' + (c.user_id ? ' <span class="chip">compte</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
       }).join('') + '</tbody></table>';
   }
   $('clients').onclick = function(e){ var tr = e.target.closest('tr.click'); if (tr) editClient(client(tr.dataset.id)); };
@@ -428,14 +434,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-title').textContent = c ? (c.nom || 'Client') : 'Nouveau client';
     c = c || {};
     $('mc-nom').value = c.nom || ''; $('mc-ent').value = c.entreprise || ''; $('mc-contact').value = c.contact || '';
-    $('mc-adr').value = c.adresse || ''; $('mc-notes').value = c.notes || '';
+    $('mc-adr').value = c.adresse || ''; $('mc-notes').value = c.notes || ''; $('mc-email').value = c.email || '';
+    $('mc-acc').textContent = c.user_id ? 'Compte actif : il se connecte avec son e-mail.' : 'Pas de compte. S’il en crée un avec l’e-mail ci-contre, il sera relié à cette fiche.';
     c = editing;
     $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c;
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
     $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="suivi.html?q=' + q.id + '">suivi</a></span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
-  function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), notes: $('mc-notes').value }; }
+  function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), email: $('mc-email').value.trim().toLowerCase(), notes: $('mc-notes').value }; }
   $('mc-close').onclick = function(){ $('m-client').hidden = true; };
   $('mc-portal').onclick = function(){
     var u = sb.PORTAL + '#' + editing.portal_token;
