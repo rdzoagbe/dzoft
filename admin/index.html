@@ -27,6 +27,12 @@ input,select,textarea{width:100%;border:1px solid #c9d6e4;border-radius:10px;pad
 textarea{min-height:90px;resize:vertical}
 label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 
+.pw{position:relative}
+.pw input{padding-right:44px}
+.pw .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;color:var(--mute);border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.pw .eye:hover{color:var(--ink);background:var(--soft)}
+.pw .eye svg{width:20px;height:20px}
+
 /* login */
 .auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
 .auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
@@ -486,6 +492,30 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   if (kind === 'recovery') { $('auth').hidden = false; showForm('f-newpass', 'Choisissez votre nouveau mot de passe.', true); }
   else if (kind === 'signup') { toast('Adresse confirmée.'); start(); }
   else start();
+})();
+</script>
+<script>
+/* Show/hide toggle on every password field. */
+(function () {
+  var open = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var shut = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
+  document.querySelectorAll('input[type=password]').forEach(function (inp) {
+    var box = document.createElement('div'); box.className = 'pw';
+    inp.parentNode.insertBefore(box, inp); box.appendChild(inp);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'eye';
+    function show(on) {
+      inp.type = on ? 'text' : 'password'; b.innerHTML = on ? shut : open;
+      b.setAttribute('aria-label', on ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    b.addEventListener('click', function () { show(inp.type === 'password'); inp.focus(); });
+    show(false); box.appendChild(b);
+  });
+  /* Never leave a password readable after the form is sent. */
+  document.addEventListener('submit', function () {
+    document.querySelectorAll('.pw input').forEach(function (i) { i.type = 'password'; });
+    document.querySelectorAll('.pw .eye').forEach(function (b) { b.innerHTML = open; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Afficher le mot de passe'); });
+  }, true);
 })();
 </script>
 </body>
