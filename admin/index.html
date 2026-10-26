@@ -182,6 +182,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <div class="row"><a class="go-login">Retour à la connexion</a></div>
     </form>
 
+    <form id="f-mfa" hidden>
+      <h1>Code de vérification</h1>
+      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « RD Créations ».</p>
+      <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
+      <div class="row"><a id="mfa-out">Se déconnecter</a></div>
+    </form>
+
     <form id="f-newpass" hidden>
       <h1>Nouveau mot de passe</h1>
       <label for="n-pass">Mot de passe (10 caractères minimum)</label><input id="n-pass" type="password" minlength="10" autocomplete="new-password" required>
@@ -278,6 +286,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         <div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" style="font-size:13.5px;color:var(--mute);align-self:center"></span></div>
       </div>
       <div class="panel">
+        <h3>Double authentification</h3>
+        <div id="mfa-box"><p style="color:var(--mute)">Chargement…</p></div>
+      </div>
+      <div class="panel">
         <h3>Documents légaux</h3>
         <p style="font-size:14px">Conditions générales de vente (version 2026-10) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/rd-creations/cgv.html</a>. Le client les accepte en même temps que le devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
         <p style="font-size:14px;margin-top:8px;color:#8a5a00;background:#fff3d6;border-radius:8px;padding:8px 10px">À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.</p>
@@ -357,7 +369,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function fail(e){ toast(e && e.message ? 'Erreur : ' + e.message : 'Une erreur est survenue.'); }
 
   /* ---------------- auth ---------------- */
-  var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass'];
+  var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
+  var mfaFactor = null;
   function showForm(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); amsg(msg || '', ok); }
   function amsg(t, ok){ var m = $('a-msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
   ['l-email', 's-email', 'r-email'].forEach(function(id){ $(id).value = sb.OWNER; });
@@ -385,14 +398,26 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     e.preventDefault();
     sb.setPassword($('n-pass').value).then(function(){ toast('Mot de passe enregistré.'); start(); }, function(err){ amsg(err.message); });
   };
+  $('f-mfa').onsubmit = function(e){
+    e.preventDefault();
+    var code = $('m-code').value.replace(/\D/g, '');
+    if (code.length !== 6) { amsg('Le code fait 6 chiffres.'); return; }
+    amsg('Vérification…', true);
+    sb.mfa.challenge(mfaFactor).then(function(c){ return sb.mfa.verify(mfaFactor, c.id, code); })
+      .then(function(){ amsg(''); start(); }, function(){ amsg('Code incorrect ou expiré : réessayez avec le code affiché maintenant.'); $('m-code').select(); });
+  };
+  $('mfa-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
   $('b-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
 
   function start(){
     sb.me().then(function(u){
       if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
       if ((u.email || '').toLowerCase() !== sb.OWNER) { sb.signOut(); $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); return; }
+      // two-step sign-in turned on: the code is asked before anything is shown
+      var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0];
+      if (f && sb.aal() !== 'aal2') { mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa'); $('m-code').value = ''; $('m-code').focus(); return; }
       $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
-      fromHash(); loadAll(); loadSettings();
+      fromHash(); loadAll(); loadSettings(); renderMfa(u);
     }, function(){ $('auth').hidden = false; showForm('f-login'); });
   }
 
@@ -515,6 +540,43 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (p.iban && !/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,40}$/.test(p.iban)) { $('p-msg').textContent = 'IBAN incomplet ou mal saisi.'; return; }
     sb.update('settings', 1, { payment: p, updated_at: new Date().toISOString() }).then(function(){ $('p-msg').textContent = 'Enregistré ✓'; toast('Paramètres de paiement enregistrés.'); }, fail);
   };
+
+  /* ---------------- two-step sign-in ---------------- */
+  var enrolling = null;
+  function renderMfa(u){
+    var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0], box = $('mfa-box');
+    if (f) {
+      box.innerHTML = '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
+        '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver</button></div>';
+      $('mfa-off').onclick = function(){
+        if (!confirm('Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.')) return;
+        sb.mfa.remove(f.id).then(function(){ toast('Double authentification désactivée.'); sb.me().then(renderMfa); }, fail);
+      };
+      return;
+    }
+    box.innerHTML = '<p style="font-size:14px">Conseillée : en plus du mot de passe, un code à 6 chiffres de votre téléphone est demandé à chaque connexion. Même si votre mot de passe fuitait, personne ne pourrait entrer.</p>' +
+      '<p style="font-size:13.5px;color:var(--mute);margin-top:4px">Il vous faut une application gratuite : Google Authenticator, Microsoft Authenticator ou l’application Mots de passe de l’iPhone.</p>' +
+      '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="mfa-on" type="button">Activer</button></div>';
+    $('mfa-on').onclick = function(){
+      // forget an unfinished attempt, then start a new one
+      Promise.all((u.factors || []).filter(function(x){ return x.status !== 'verified'; }).map(function(x){ return sb.mfa.remove(x.id).catch(function(){}); }))
+        .then(function(){ return sb.mfa.enroll(); }).then(function(r){
+          enrolling = r.id;
+          box.innerHTML = '<ol style="font-size:14px;margin-left:18px;display:grid;gap:6px"><li>Dans votre application, ajoutez un compte en scannant ce QR code :</li></ol>' +
+            '<img alt="QR code à scanner" src="' + esc(r.totp.qr_code) + '" style="width:180px;height:180px;display:block;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px">' +
+            '<p style="font-size:12.5px;color:var(--mute)">Pas de scanner ? Saisissez cette clé : <code style="user-select:all">' + esc(r.totp.secret) + '</code></p>' +
+            '<ol start="2" style="font-size:14px;margin:10px 0 0 18px"><li>Tapez le code à 6 chiffres affiché :</li></ol>' +
+            '<div style="display:flex;gap:8px;margin-top:6px;max-width:320px"><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"><button class="btn main sm" id="mfa-ok" type="button">Confirmer</button></div>';
+          $('mfa-ok').onclick = function(){
+            var code = $('mfa-code').value.replace(/\D/g, '');
+            if (code.length !== 6) { toast('Le code fait 6 chiffres.'); return; }
+            sb.mfa.challenge(enrolling).then(function(c){ return sb.mfa.verify(enrolling, c.id, code); }).then(function(){
+              toast('Double authentification activée ✓'); sb.me().then(renderMfa);
+            }, function(){ toast('Code incorrect : réessayez avec le code affiché maintenant.'); });
+          };
+        }, function(e){ toast('Activation impossible : ' + (e.message || 'erreur')); });
+    };
+  }
 
   /* ---------------- trash ---------------- */
   function renderTrash(){

@@ -101,6 +101,17 @@
       if (!signedIn) return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
       return token().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
     },
+    /* Two-step sign-in (TOTP code from an authenticator app). */
+    aal: function () {
+      var s = getSession(); if (!s) return '';
+      try { var p = s.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4))).aal || ''; } catch (e) { return ''; }
+    },
+    mfa: {
+      enroll: function () { return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'RD Créations ' + Date.now() } }); }); },
+      challenge: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },
+      verify: function (fid, cid, code) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: { challenge_id: cid, code: code } }); }).then(keep); },
+      remove: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid, { method: 'DELETE', token: t }); }); }
+    },
     /* Server function (e-mails to clients), called with the signed-in session. */
     fn: function (name, body) {
       return token().then(function (t) { return req('/functions/v1/' + name, { method: 'POST', token: t, body: body || {} }); });
