@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /rd-creations/admin/
+Sitemap: https://rdzoagbe.github.io/rd-creations/sitemap.xml

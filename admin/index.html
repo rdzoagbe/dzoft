@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Espace privé · RD Créations</title>
+<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#081626; --navy2:#0e2a49; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee; --sky:#7fd7f5;
+  --grad:linear-gradient(135deg,#2f8bff,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#eef3f8;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+a{color:var(--blue2)}
+[hidden]{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none}
+.btn.main{background:var(--grad);color:#05213d}
+.btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--ink2);padding:8px 10px}
+.btn.danger{background:#fff;border:1px solid #f0c9c4;color:var(--err)}
+.btn.sm{padding:6px 10px;font-size:13px;border-radius:8px}
+input,select,textarea{width:100%;border:1px solid #c9d6e4;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);font-size:15px}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
+
+/* login */
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
+.auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
+.brand{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.logo{width:34px;height:37px;flex:none;display:block}
+.brand b{font-size:16px;display:block}.brand span{font-size:12.5px;color:var(--mute)}
+.auth h1{font-size:20px;margin-bottom:4px}
+.auth p.intro{font-size:14px;color:var(--mute)}
+.auth .row{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:13.5px}
+.auth .row a{cursor:pointer}
+.msg{font-size:13.5px;border-radius:10px;padding:9px 11px;margin-top:12px}
+.msg:empty{display:none}
+.msg.ok{background:var(--okbg);color:var(--ok)}.msg.err{background:var(--errbg);color:var(--err)}
+
+/* app */
+.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:10}
+.top .in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top .brand{margin:0}.top .brand span{color:#9fb3c8}
+.top .sp{flex:1}
+.top .who{font-size:12.5px;color:#9fb3c8}
+.tabs{display:flex;gap:4px;max-width:1100px;margin:0 auto;padding:0 16px}
+.tab{background:none;border:0;color:#c4d2e1;padding:10px 12px;font-weight:700;font-size:14px;border-bottom:3px solid transparent;cursor:pointer}
+.tab[aria-selected=true]{color:#fff;border-color:var(--cyan)}
+.tab .n{background:var(--cyan);color:#05213d;border-radius:20px;font-size:11.5px;padding:1px 7px;margin-left:5px}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.bar h2{font-size:19px;margin-right:auto}
+.bar input[type=search]{max-width:240px;padding:8px 10px;font-size:14px}
+.empty{background:#fff;border-radius:14px;padding:26px;text-align:center;color:var(--mute)}
+.list{display:grid;gap:10px}
+.lead{background:#fff;border-radius:14px;padding:14px 16px;border:1px solid var(--line)}
+.lead .h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.lead .h b{font-size:16px}
+.lead .h .d{font-size:12.5px;color:var(--mute);margin-left:auto}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:2px 9px;color:var(--ink2)}
+.st{font-size:11.5px;font-weight:800;border-radius:20px;padding:2px 9px;text-transform:uppercase;letter-spacing:.03em}
+.st.nouvelle,.st.brouillon{background:#e3f9fd;color:#0b6577}
+.st.traitée,.st.envoyé{background:var(--warnbg);color:var(--warn)}
+.st.archivée,.st.refusé{background:#eceff3;color:var(--mute)}
+.st.accepté{background:var(--okbg);color:var(--ok)}
+.lead .txt{font-size:14px;color:var(--ink2);white-space:pre-wrap;margin-top:4px;max-height:4.4em;overflow:hidden}
+.lead.open .txt{max-height:none}
+.lead .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}
+th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);background:var(--soft);padding:9px 12px}
+td{border-top:1px solid var(--line);padding:9px 12px;font-size:14px;vertical-align:middle}
+td.num{text-align:right;white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:#f8fbfe}
+td select{width:auto;padding:4px 6px;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(8,22,38,.55);display:grid;place-items:center;padding:16px;z-index:20}
+.modal .card{background:#fff;border-radius:16px;width:100%;max-width:620px;max-height:92vh;overflow:auto;padding:20px 22px}
+.modal h3{font-size:18px;margin-bottom:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.modal .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.modal .acts .sp{flex:1}
+.qlist{margin-top:12px;font-size:14px}
+.qlist li{list-style:none;display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:7px 0}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:30}
+@media (max-width:700px){
+  .grid2{grid-template-columns:1fr}
+  .hide-m{display:none}
+  td{padding:8px}
+  .bar input[type=search]{max-width:none;flex:1 1 100%}
+}
+/* printable client sheet */
+#print{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff}
+  .top,main,.modal,.toast,.auth{display:none!important}
+  #print{display:block}
+  #print h1{font-size:20px}#print h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin:16px 0 6px}
+  #print p,#print li{font-size:13px}
+  #print table{border:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ sign in ============ -->
+<section class="auth" id="auth" hidden>
+  <div class="card">
+    <div class="brand"><img class="logo" src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations · espace privé</b><span>Clients, demandes et devis</span></div></div>
+
+    <form id="f-login">
+      <h1>Connexion</h1>
+      <p class="intro">Cet espace est réservé au propriétaire du site.</p>
+      <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="username" required>
+      <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
+      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Se connecter</button>
+      <div class="row"><a id="go-forgot">Mot de passe oublié ?</a><a id="go-first">Première connexion</a></div>
+    </form>
+
+    <form id="f-first" hidden>
+      <h1>Première connexion</h1>
+      <p class="intro">Choisissez votre mot de passe. Vous recevrez un e-mail pour confirmer votre adresse.</p>
+      <label for="s-email">E-mail</label><input id="s-email" type="email" autocomplete="username" required>
+      <label for="s-pass">Mot de passe (10 caractères minimum)</label><input id="s-pass" type="password" minlength="10" autocomplete="new-password" required>
+      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Créer mon accès</button>
+      <div class="row"><a class="go-login">Retour à la connexion</a></div>
+    </form>
+
+    <form id="f-forgot" hidden>
+      <h1>Mot de passe oublié</h1>
+      <p class="intro">Vous recevrez un e-mail avec un lien pour choisir un nouveau mot de passe.</p>
+      <label for="r-email">E-mail</label><input id="r-email" type="email" autocomplete="username" required>
+      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Recevoir le lien</button>
+      <div class="row"><a class="go-login">Retour à la connexion</a></div>
+    </form>
+
+    <form id="f-newpass" hidden>
+      <h1>Nouveau mot de passe</h1>
+      <label for="n-pass">Mot de passe (10 caractères minimum)</label><input id="n-pass" type="password" minlength="10" autocomplete="new-password" required>
+      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Enregistrer</button>
+    </form>
+    <div class="msg" id="a-msg"></div>
+  </div>
+</section>
+
+<!-- ============ app ============ -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="in">
+      <div class="brand"><img class="logo" src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations</b><span>Espace privé</span></div></div>
+      <div class="sp"></div>
+      <span class="who hide-m" id="who"></span>
+      <a class="btn sm line" href="../" target="_blank" rel="noopener">Voir le site</a>
+      <button class="btn sm ghost" style="color:#c4d2e1" id="b-out" type="button">Déconnexion</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="leads" aria-selected="true">Demandes<span class="n" id="n-new" hidden></span></button>
+      <button class="tab" role="tab" data-tab="clients" aria-selected="false">Clients</button>
+      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="v-leads">
+      <div class="bar">
+        <h2>Demandes reçues</h2>
+        <select id="lead-filter" style="width:auto"><option value="open">À traiter</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
+        <button class="btn sm line" id="b-paste" type="button">Coller une demande</button>
+      </div>
+      <div class="list" id="leads"></div>
+    </section>
+
+    <section id="v-clients" hidden>
+      <div class="bar">
+        <h2>Clients</h2>
+        <input type="search" id="c-search" placeholder="Rechercher…">
+        <button class="btn sm line" id="b-cexport" type="button">Exporter (Excel)</button>
+        <button class="btn sm main" id="b-cnew" type="button">+ Nouveau client</button>
+      </div>
+      <div id="clients"></div>
+    </section>
+
+    <section id="v-quotes" hidden>
+      <div class="bar">
+        <h2>Devis</h2>
+        <input type="search" id="q-search" placeholder="Rechercher…">
+        <button class="btn sm line" id="b-qexport" type="button">Exporter (Excel)</button>
+        <button class="btn sm main" id="b-qnew" type="button">+ Nouveau devis</button>
+      </div>
+      <div id="quotes"></div>
+    </section>
+  </main>
+</div>
+
+<!-- client editor -->
+<div class="modal" id="m-client" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mc-title">
+    <h3 id="mc-title">Client</h3>
+    <div class="grid2">
+      <div><label for="mc-nom">Nom et prénom</label><input id="mc-nom"></div>
+      <div><label for="mc-ent">Entreprise ou activité</label><input id="mc-ent"></div>
+      <div><label for="mc-contact">E-mail ou téléphone</label><input id="mc-contact"></div>
+      <div><label for="mc-adr">Adresse</label><input id="mc-adr"></div>
+    </div>
+    <label for="mc-notes">Notes (projet, rendez-vous, préférences…)</label><textarea id="mc-notes"></textarea>
+    <ul class="qlist" id="mc-quotes"></ul>
+    <div class="acts">
+      <button class="btn main" id="mc-save" type="button">Enregistrer</button>
+      <button class="btn line" id="mc-quote" type="button">Nouveau devis</button>
+      <button class="btn line" id="mc-print" type="button">Imprimer la fiche</button>
+      <span class="sp"></span>
+      <button class="btn danger" id="mc-del" type="button">Supprimer</button>
+      <button class="btn ghost" id="mc-close" type="button">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- paste a request received elsewhere (WhatsApp, e-mail) -->
+<div class="modal" id="m-paste" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mp-title">
+    <h3 id="mp-title">Coller une demande</h3>
+    <p style="font-size:14px;color:var(--mute)">Collez le message reçu par WhatsApp ou par e-mail : il est ajouté à vos demandes avec les bonnes informations.</p>
+    <textarea id="mp-text" style="min-height:180px;margin-top:10px"></textarea>
+    <div class="acts"><button class="btn main" id="mp-go" type="button">Ajouter</button><span class="sp"></span><button class="btn ghost" id="mp-close" type="button">Annuler</button></div>
+  </div>
+</div>
+
+<div id="print"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="sb.js"></script>
+<script>
+(function(){
+  var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
+  var data = { leads: [], clients: [], quotes: [] }, editing = null;
+  var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
+  var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
+  function toast(t){ var e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function(){ e.hidden = true; }, 2600); }
+  function fail(e){ toast(e && e.message ? 'Erreur : ' + e.message : 'Une erreur est survenue.'); }
+
+  /* ---------------- auth ---------------- */
+  var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass'];
+  function showForm(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); amsg(msg || '', ok); }
+  function amsg(t, ok){ var m = $('a-msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+  ['l-email', 's-email', 'r-email'].forEach(function(id){ $(id).value = sb.OWNER; });
+  $('go-forgot').onclick = function(){ showForm('f-forgot'); };
+  $('go-first').onclick = function(){ showForm('f-first'); };
+  [].forEach.call(document.querySelectorAll('.go-login'), function(a){ a.onclick = function(){ showForm('f-login'); }; });
+
+  $('f-login').onsubmit = function(e){
+    e.preventDefault(); amsg('Connexion…', true);
+    sb.signIn($('l-email').value.trim(), $('l-pass').value).then(start, function(err){
+      amsg(/confirm/i.test(err.message) ? 'Adresse pas encore confirmée : ouvrez l’e-mail de confirmation.' : 'E-mail ou mot de passe incorrect.');
+    });
+  };
+  $('f-first').onsubmit = function(e){
+    e.preventDefault(); amsg('Création…', true);
+    sb.signUp($('s-email').value.trim(), $('s-pass').value).then(function(){
+      showForm('f-login', 'Accès créé. Ouvrez l’e-mail de confirmation reçu, puis connectez-vous ici.', true);
+    }, function(err){ amsg(/registered|exists/i.test(err.message) ? 'Ce compte existe déjà : connectez-vous.' : err.message); });
+  };
+  $('f-forgot').onsubmit = function(e){
+    e.preventDefault();
+    sb.recover($('r-email').value.trim()).then(function(){ showForm('f-login', 'Si le compte existe, un e-mail vient de vous être envoyé.', true); }, fail);
+  };
+  $('f-newpass').onsubmit = function(e){
+    e.preventDefault();
+    sb.setPassword($('n-pass').value).then(function(){ toast('Mot de passe enregistré.'); start(); }, function(err){ amsg(err.message); });
+  };
+  $('b-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
+
+  function start(){
+    sb.me().then(function(u){
+      if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
+      if ((u.email || '').toLowerCase() !== sb.OWNER) { sb.signOut(); $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); return; }
+      $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
+      loadAll();
+    }, function(){ $('auth').hidden = false; showForm('f-login'); });
+  }
+
+  /* ---------------- data ---------------- */
+  function loadAll(){
+    return Promise.all([
+      sb.select('leads', 'select=*&order=created_at.desc'),
+      sb.select('clients', 'select=*&order=created_at.desc'),
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total&order=created_at.desc')
+    ]).then(function(r){ data.leads = r[0] || []; data.clients = r[1] || []; data.quotes = r[2] || []; render(); }, fail);
+  }
+  function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
+  function render(){ renderLeads(); renderClients(); renderQuotes(); }
+
+  /* ---------------- tabs ---------------- */
+  [].forEach.call(document.querySelectorAll('.tab'), function(t){
+    t.onclick = function(){
+      [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x === t); });
+      ['leads', 'clients', 'quotes'].forEach(function(v){ $('v-' + v).hidden = v !== t.dataset.tab; });
+    };
+  });
+
+  /* ---------------- leads ---------------- */
+  $('lead-filter').onchange = renderLeads;
+  function renderLeads(){
+    var f = $('lead-filter').value, box = $('leads');
+    var nNew = data.leads.filter(function(l){ return l.status === 'nouvelle'; }).length;
+    $('n-new').hidden = !nNew; $('n-new').textContent = nNew;
+    var rows = data.leads.filter(function(l){ return f === 'all' ? true : f === 'open' ? l.status !== 'archivée' : l.status === f; });
+    if (!rows.length) { box.innerHTML = '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
+    box.innerHTML = rows.map(function(l){
+      var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source]
+        .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
+      return '<article class="lead" data-id="' + l.id + '"><div class="h"><b>' + esc(l.prenom) + '</b><span class="st ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
+        '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' +
+        (l.message ? '<div class="txt">' + esc(l.message) + '</div>' : '') +
+        '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
+        (l.message && l.message.length > 160 ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
+        (l.status === 'nouvelle' ? '<button class="btn sm line" data-a="done">Marquer traitée</button>' : '') +
+        (l.status !== 'archivée' ? '<button class="btn sm line" data-a="arch">Archiver</button>' : '<button class="btn sm line" data-a="reopen">Rouvrir</button>') +
+        '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
+    }).join('');
+  }
+  $('leads').onclick = function(e){
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    var card = b.closest('.lead'), l = data.leads.filter(function(x){ return x.id === card.dataset.id; })[0];
+    var a = b.dataset.a;
+    if (a === 'more') { card.classList.toggle('open'); return; }
+    if (a === 'quote') return quoteFromLead(l);
+    if (a === 'del') { if (!confirm('Supprimer cette demande ?')) return; return sb.remove('leads', l.id).then(loadAll, fail); }
+    var st = { done: 'traitée', arch: 'archivée', reopen: 'nouvelle' }[a];
+    sb.update('leads', l.id, { status: st }).then(loadAll, fail);
+  };
+
+  /* ---------------- quotes ---------------- */
+  function nextNumber(){
+    var y = new Date().getFullYear(), max = 0;
+    data.quotes.forEach(function(q){ var m = /^D-(\d{4})-(\d+)$/.exec(q.numero || ''); if (m && +m[1] === y) max = Math.max(max, +m[2]); });
+    return 'D-' + y + '-' + String(max + 1).padStart(3, '0');
+  }
+  function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  function blankQuote(c, extra){
+    var d = new Date(), v = new Date(); v.setDate(v.getDate() + 30);
+    c = c || {};
+    var f = { num: nextNumber(), date: iso(d), valid: iso(v), cname: c.nom || '', corg: c.entreprise || '', caddr: c.adresse || '',
+              ccontact: c.contact || '', desc: '', deppct: '30', pay: 'Virement bancaire ; solde à la livraison',
+              fix: 'Gratuites pendant 1 mois après la livraison', novat: true };
+    return Object.assign({ f: f, lines: [], acc: [] }, extra || {});
+  }
+  function openQuote(id){ location.href = 'devis.html?q=' + encodeURIComponent(id); }
+  function createQuote(c, lead, data0){
+    return sb.insert('quotes', { numero: data0.f.num, client_id: c ? c.id : null, lead_id: lead ? lead.id : null, data: data0, total: 0 })
+      .then(function(q){ openQuote(q.id); }, fail);
+  }
+  function quoteFromLead(l){
+    var mk = l.client_id ? Promise.resolve(client(l.client_id)) :
+      sb.insert('clients', { nom: l.prenom, entreprise: l.activite || '', contact: l.contact || '', notes: l.message || '' })
+        .then(function(c){ return sb.update('leads', l.id, { client_id: c.id, status: 'traitée' }).then(function(){ return c; }); });
+    mk.then(function(c){
+      var q = blankQuote(c, { lead: { projet: l.projet, budget: l.budget, elements: l.elements } });
+      q.f.desc = [l.message, l.budget ? 'Budget indiqué : ' + l.budget : ''].filter(Boolean).join('\n\n');
+      return createQuote(c, l, q);
+    }, fail);
+  }
+  $('b-qnew').onclick = function(){ createQuote(null, null, blankQuote(null)); };
+  $('q-search').oninput = renderQuotes;
+  var STS = ['brouillon', 'envoyé', 'accepté', 'refusé'];
+  function renderQuotes(){
+    var s = $('q-search').value.toLowerCase(), box = $('quotes');
+    var rows = data.quotes.filter(function(q){ var c = client(q.client_id) || {}; return !s || (q.numero + ' ' + c.nom + ' ' + c.entreprise).toLowerCase().indexOf(s) > -1; });
+    if (!rows.length) { box.innerHTML = '<div class="empty">Aucun devis. Créez-en un depuis une demande, une fiche client ou « + Nouveau devis ».</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>N°</th><th>Client</th><th class="hide-m">Date</th><th class="num">Total</th><th>Statut</th><th></th></tr></thead><tbody>' +
+      rows.map(function(q){
+        var c = client(q.client_id) || {};
+        return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b></td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
+          '<td class="hide-m">' + day(q.created_at) + '</td><td class="num">' + eur(q.total) + '</td>' +
+          '<td><select data-a="st">' + STS.map(function(x){ return '<option' + (x === q.status ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></td>' +
+          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  $('quotes').onclick = function(e){
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    var id = b.closest('tr').dataset.id;
+    if (b.dataset.a === 'open') return openQuote(id);
+    if (b.dataset.a === 'del' && confirm('Supprimer ce devis ?')) sb.remove('quotes', id).then(loadAll, fail);
+  };
+  $('quotes').onchange = function(e){
+    if (e.target.dataset.a !== 'st') return;
+    sb.update('quotes', e.target.closest('tr').dataset.id, { status: e.target.value }).then(function(){ toast('Statut enregistré.'); loadAll(); }, fail);
+  };
+
+  /* ---------------- clients ---------------- */
+  $('c-search').oninput = renderClients;
+  function renderClients(){
+    var s = $('c-search').value.toLowerCase(), box = $('clients');
+    var rows = data.clients.filter(function(c){ return !s || (c.nom + ' ' + c.entreprise + ' ' + c.contact).toLowerCase().indexOf(s) > -1; });
+    if (!rows.length) { box.innerHTML = '<div class="empty">Aucun client pour le moment.</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>Nom</th><th>Activité</th><th class="hide-m">Contact</th><th class="num">Devis</th></tr></thead><tbody>' +
+      rows.map(function(c){
+        var n = data.quotes.filter(function(q){ return q.client_id === c.id; }).length;
+        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b></td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  $('clients').onclick = function(e){ var tr = e.target.closest('tr.click'); if (tr) editClient(client(tr.dataset.id)); };
+  $('b-cnew').onclick = function(){ editClient(null); };
+  function editClient(c){
+    editing = c;
+    $('mc-title').textContent = c ? (c.nom || 'Client') : 'Nouveau client';
+    c = c || {};
+    $('mc-nom').value = c.nom || ''; $('mc-ent').value = c.entreprise || ''; $('mc-contact').value = c.contact || '';
+    $('mc-adr').value = c.adresse || ''; $('mc-notes').value = c.notes || '';
+    c = editing;
+    $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c;
+    var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
+    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span></span></li>'; }).join('');
+    $('m-client').hidden = false; $('mc-nom').focus();
+  }
+  function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), notes: $('mc-notes').value }; }
+  $('mc-close').onclick = function(){ $('m-client').hidden = true; };
+  $('mc-save').onclick = function(){
+    var p = editing ? sb.update('clients', editing.id, clientRow()) : sb.insert('clients', clientRow());
+    p.then(function(){ $('m-client').hidden = true; toast('Client enregistré.'); loadAll(); }, fail);
+  };
+  $('mc-del').onclick = function(){
+    if (!confirm('Supprimer ce client ? Ses devis restent, sans client associé.')) return;
+    sb.remove('clients', editing.id).then(function(){ $('m-client').hidden = true; loadAll(); }, fail);
+  };
+  $('mc-quote').onclick = function(){ var c = Object.assign({}, editing, clientRow()); createQuote(editing, null, blankQuote(c)); };
+  $('mc-print').onclick = function(){
+    var c = Object.assign({}, editing, clientRow()), qs = data.quotes.filter(function(q){ return q.client_id === editing.id; });
+    var ls = data.leads.filter(function(l){ return l.client_id === editing.id; });
+    $('print').innerHTML = '<h1>Fiche client · ' + esc(c.nom) + '</h1><p style="color:#5d6f83">Roland Dzoagbe · éditée le ' + day(new Date()) + '</p>' +
+      '<h2>Coordonnées</h2><p><b>' + esc(c.nom) + '</b><br>' + esc(c.entreprise) + '<br>' + esc(c.adresse) + '<br>' + esc(c.contact) + '</p>' +
+      (c.notes ? '<h2>Notes</h2><p style="white-space:pre-wrap">' + esc(c.notes) + '</p>' : '') +
+      (ls.length ? '<h2>Demandes</h2>' + ls.map(function(l){ return '<p><b>' + day(l.created_at) + '</b> · ' + esc(l.projet) + (l.budget ? ' · budget ' + esc(l.budget) : '') + '<br><span style="white-space:pre-wrap">' + esc(l.message) + '</span></p>'; }).join('') : '') +
+      '<h2>Devis</h2>' + (qs.length ? '<table><tr><th>N°</th><th>Date</th><th>Statut</th><th>Total</th></tr>' + qs.map(function(q){ return '<tr><td>' + esc(q.numero) + '</td><td>' + day(q.created_at) + '</td><td>' + esc(q.status) + '</td><td>' + eur(q.total) + '</td></tr>'; }).join('') + '</table>' : '<p>Aucun devis.</p>');
+    window.print();
+  };
+
+  /* ---------------- paste a request ---------------- */
+  $('b-paste').onclick = function(){ $('mp-text').value = ''; $('m-paste').hidden = false; $('mp-text').focus(); };
+  $('mp-close').onclick = function(){ $('m-paste').hidden = true; };
+  $('mp-go').onclick = function(){
+    var r = parseRequest($('mp-text').value);
+    if (!r.prenom) r.prenom = 'Sans nom';
+    sb.insert('leads', { prenom: r.prenom.slice(0, 100), activite: (r.activite || '').slice(0, 200), projet: (r.projet || '').slice(0, 100),
+      budget: (r.budget || '').slice(0, 100), contact: (r.contact || '').slice(0, 200), elements: (r.elements || '').slice(0, 500),
+      message: (r.message || '').slice(0, 5000), source: 'collée' })
+      .then(function(){ $('m-paste').hidden = true; toast('Demande ajoutée.'); loadAll(); }, fail);
+  };
+  function parseRequest(txt){
+    var r = {}, rest = [], map = { 'prénom':'prenom', 'prenom':'prenom', 'activité':'activite', 'activite':'activite', 'projet':'projet',
+      'budget':'budget', 'éléments à prévoir':'elements', 'elements':'elements', 'pour me répondre':'contact', 'contact':'contact', 'message':'message' };
+    txt.normalize('NFC').replace(/[  ]/g, ' ').split(/\r?\n/).forEach(function(line){
+      line = line.replace(/^[>*•\-\s]+/, '');
+      var m = line.match(/^\s*([A-Za-zÀ-ÿ' ]+?)\s*:\s*(.*)$/), k = m && map[m[1].trim().toLowerCase()];
+      if (k && m[2].trim()) r[k] = m[2].trim();
+      else if (!/^\s*(bonjour|je souhaite un devis|_|email\s*:)/i.test(line)) rest.push(line);
+    });
+    var idea = rest.join('\n').trim(); if (idea) r.message = (r.message ? r.message + '\n' : '') + idea;
+    return r;
+  }
+  window.RDparse = parseRequest;
+
+  /* ---------------- export (CSV for Excel) ---------------- */
+  function csv(name, head, rows){
+    var q = function(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    var body = [head].concat(rows).map(function(r){ return r.map(q).join(';'); }).join('\r\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + body], { type: 'text/csv;charset=utf-8' }));
+    a.download = name + '-' + iso(new Date()) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+  }
+  $('b-cexport').onclick = function(){
+    csv('clients', ['Nom', 'Entreprise', 'Contact', 'Adresse', 'Notes', 'Créé le'],
+      data.clients.map(function(c){ return [c.nom, c.entreprise, c.contact, c.adresse, c.notes, day(c.created_at)]; }));
+  };
+  $('b-qexport').onclick = function(){
+    csv('devis', ['N°', 'Client', 'Entreprise', 'Date', 'Statut', 'Total (€)'],
+      data.quotes.map(function(q){ var c = client(q.client_id) || {}; return [q.numero, c.nom, c.entreprise, day(q.created_at), q.status, String(q.total).replace('.', ',')]; }));
+  };
+
+  /* ---------------- boot ---------------- */
+  var kind = sb.fromUrl();
+  if (kind === 'recovery') { $('auth').hidden = false; showForm('f-newpass', 'Choisissez votre nouveau mot de passe.', true); }
+  else if (kind === 'signup') { toast('Adresse confirmée.'); start(); }
+  else start();
+})();
+</script>
+</body>
+</html>

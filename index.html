@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RD Créations · Sites web, PWA et applications mobiles</title>
+<meta name="description" content="Création de sites vitrines, d’applications web installables (PWA) et d’applications mobiles iOS et Android pour indépendants, commerces et petites structures. Prix fixe annoncé à l’avance, devis gratuit.">
+<link rel="canonical" href="https://rdzoagbe.github.io/rd-creations/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rdzoagbe.github.io/rd-creations/">
+<meta property="og:title" content="Votre site ou votre application, sans le prix d’une agence">
+<meta property="og:description" content="Sites vitrines, applications web installables et applications mobiles pour indépendants, commerces et petites structures. Devis gratuit.">
+<meta property="og:image" content="https://rdzoagbe.github.io/rd-creations/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="RD Créations">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#081626">
+<link rel="icon" href="assets/rd-creations-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/rd-creations-app-icon.png">
+<style>
+:root{
+  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#081626; --navy2:#0e2a49; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee; --sky:#7fd7f5;
+  --grad:linear-gradient(135deg,#2f8bff,#22d3ee);
+  --r:14px; --max:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-999px;top:8px;background:#fff;color:var(--ink);padding:8px 12px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px;border-radius:6px}
+
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(8,22,38,.86);backdrop-filter:saturate(160%) blur(10px);-webkit-backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid rgba(255,255,255,.08)}
+.bar{display:flex;align-items:center;gap:18px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;letter-spacing:.02em}
+.logo{width:30px;height:33px;display:block}
+nav{margin-left:auto;display:flex;gap:4px}
+nav a{color:#c6d4e3;text-decoration:none;font-size:14.5px;padding:8px 11px;border-radius:8px}
+nav a:hover{color:#fff;background:rgba(255,255,255,.07)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;border:0;border-radius:11px;padding:12px 18px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--grad);color:#05213d;box-shadow:0 10px 24px rgba(34,158,238,.28)}
+.btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-ghost:hover{background:rgba(255,255,255,.13)}
+.btn-wa{background:#1fa855;color:#fff}
+.btn-wa:hover{background:#1b974c}
+.btn-line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.bar .btn{padding:9px 14px;font-size:14px}
+.btn svg{width:18px;height:18px;flex:none}
+
+/* hero */
+.hero{color:#fff;background:
+   radial-gradient(700px 420px at 85% 0%,rgba(47,139,255,.35),transparent 65%),
+   radial-gradient(520px 380px at 100% 100%,rgba(34,211,238,.18),transparent 60%),
+   linear-gradient(125deg,#06101c 0%,#0b1d33 55%,#0e2a49 100%);
+   padding:72px 0 84px;position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:48px;align-items:center}
+.eyebrow{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sky)}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.08;letter-spacing:-.02em;margin:14px 0 18px}
+h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18.5px;color:#c4d2e1;max-width:36em}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.trust{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:28px;font-size:14.5px;color:#b9cadb;list-style:none}
+.trust li{display:flex;align-items:center;gap:8px}
+.trust svg{width:18px;height:18px;color:var(--cyan);flex:none}
+.me{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:26px;text-align:center}
+.me img{width:132px;height:132px;border-radius:50%;object-fit:cover;margin:0 auto 16px;border:3px solid rgba(127,215,245,.55)}
+.me b{display:block;font-size:19px}
+.me span{display:block;color:var(--sky);font-size:14.5px;margin-top:2px}
+.me p{color:#b9cadb;font-size:14.5px;margin-top:12px}
+
+/* sections */
+section{padding:84px 0}
+.soft{background:var(--soft)}
+.head{max-width:720px;margin-bottom:38px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue2)}
+h2{font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.015em;margin:8px 0 12px}
+.head p{color:var(--ink2);font-size:17px}
+
+/* services */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.svc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
+.svc:hover{box-shadow:0 16px 36px rgba(11,27,46,.09);transform:translateY(-2px)}
+.ic{width:42px;height:42px;border-radius:11px;background:#e8f2ff;color:var(--blue2);display:grid;place-items:center;margin-bottom:14px}
+.ic svg{width:22px;height:22px}
+.svc h3{font-size:17.5px;line-height:1.25}
+.svc p{color:var(--ink2);font-size:15px;margin:8px 0 18px}
+.price{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+.price b{display:block;font-size:22px;color:var(--ink);letter-spacing:-.01em}
+.care{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px dashed #b9cbe0;border-radius:var(--r);padding:16px 22px}
+.care b{font-size:16.5px}
+.care span{color:var(--ink2);font-size:15px}
+.care .p{font-weight:800;font-size:18px;color:var(--ink)}
+.fine{margin-top:16px;font-size:14px;color:var(--mute)}
+
+/* work */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.work{border:1px solid var(--line);border-radius:18px;padding:26px;background:#fff;display:flex;flex-direction:column}
+.tag{align-self:flex-start;display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);background:#e8f2ff;border-radius:999px;padding:4px 10px}
+.work h3{font-size:22px;margin:12px 0 6px}
+.work p{color:var(--ink2);font-size:15.5px}
+.links{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:auto;padding-top:20px}
+.store-badge{display:inline-flex;align-items:center;gap:7px;background:#000;color:#fff;border:1px solid #a6a6a6;border-radius:8px;padding:5px 11px 5px 9px;text-decoration:none;line-height:1;height:42px}
+.store-badge svg{width:21px;height:21px;flex:none}
+.store-badge small{display:block;font-size:9px;opacity:.9;margin-bottom:2px}
+.store-badge b{display:block;font-size:15px}
+.textlink{font-weight:700;color:var(--blue2);text-decoration:none;font-size:15px;padding:8px 2px}
+.textlink:hover{text-decoration:underline}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;list-style:none;counter-reset:s}
+.steps li{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;counter-increment:s}
+.steps li:before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--grad);color:#05213d;font-weight:800;margin-bottom:12px}
+.steps b{display:block;font-size:17px}
+.steps span{display:block;color:var(--ink2);font-size:15px;margin-top:6px}
+.pay{margin-top:18px;font-size:15px;color:var(--ink2)}
+.pay b{color:var(--ink)}
+
+/* faq */
+.faq{max-width:820px}
+details{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+summary{cursor:pointer;list-style:none;padding:16px 48px 16px 20px;font-weight:700;font-size:16.5px;position:relative}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:22px;font-weight:400;color:var(--blue2)}
+details[open] summary:after{content:"–"}
+details p{padding:0 20px 18px;color:var(--ink2);font-size:15.5px}
+details p a,.pay a{color:var(--blue2);font-weight:700}
+
+/* contact */
+.contact{color:#fff;background:linear-gradient(125deg,#06101c 0%,#0b1d33 55%,#0e2a49 100%)}
+.contact h2{color:#fff}
+.contact .kicker{color:var(--sky)}
+.contact .head p{color:#c4d2e1}
+.cgrid{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:start}
+form{background:#fff;color:var(--ink);border-radius:18px;padding:26px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.full{grid-column:1/-1}
+input,select,textarea{width:100%;font:inherit;font-size:15.5px;color:var(--ink);border:1px solid #c9d6e4;border-radius:10px;padding:11px 12px;background:#fff}
+textarea{min-height:110px;resize:vertical}
+[aria-invalid=true]{border-color:#d4483b;box-shadow:0 0 0 3px rgba(212,72,59,.15)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,111,245,.18)}
+.fbtns{display:flex;flex-wrap:wrap;gap:10px}
+.privacy{font-size:13.5px;color:var(--mute)}
+.fhelp{font-size:13px;color:var(--mute);margin:2px 0 6px;line-height:1.45}
+#message{min-height:150px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.fstatus{font-size:14px;font-weight:600;border-radius:10px;padding:10px 12px}
+.fstatus:empty{display:none}
+.fstatus.ok{background:#e7f8ef;color:#136c3a}
+.fstatus.err{background:#fdecea;color:#a3271c}
+.direct{display:grid;gap:12px}
+.direct>a{display:flex;align-items:center;gap:14px;text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px 18px}
+.direct>a:hover{background:rgba(255,255,255,.1)}
+.direct svg{width:24px;height:24px;color:var(--cyan);flex:none}
+.direct small{display:block;color:#9fb3c8;font-size:13px}
+.direct b{font-size:16.5px}
+.cleft{display:grid;gap:18px}
+.needs{border-top:1px solid var(--line);padding-top:14px}
+.needs-t{display:block;font-size:14px;font-weight:700}
+.needs-t small{font-weight:400;color:var(--mute);font-size:12.5px;margin-left:6px}
+.needs .ho-list{margin:10px 0 8px}
+@media (max-width:620px){.needs .ho-list{grid-template-columns:1fr}}
+.needs .ho-item{background:var(--soft);border-color:#c9d6e4;color:var(--ink)}
+.needs .ho-item:hover{background:#e9f1f8}
+.needs .ho-item:before{border-color:#9fb3c8}
+.needs .ho-item small{color:var(--blue2)}
+.needs .ho-item[aria-pressed=true]{background:#e3f9fd;border-color:var(--cyan)}
+.needs-note{font-size:13px;color:var(--mute)}
+.needs-note a{color:var(--blue2);font-weight:600}
+.ho-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.ho-item{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;color:#e4edf6;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
+.ho-item:hover{background:rgba(255,255,255,.1)}
+.ho-item:before{content:"";flex:none;width:16px;height:16px;border-radius:5px;border:1.5px solid rgba(255,255,255,.45)}
+.ho-item span{flex:1}
+.ho-item[aria-pressed=true]{background:rgba(34,211,238,.14);border-color:var(--cyan)}
+.ho-item[aria-pressed=true]:before{background:var(--cyan) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23081626' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--cyan)}
+.ho-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.ho-item small{color:var(--sky);font-size:12.5px;white-space:nowrap}
+.bcard{margin-top:6px}
+.bcard-flip{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;perspective:1200px;aspect-ratio:1000/648;border-radius:12px}
+.bcard-inner{position:relative;display:block;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.bcard-flip.is-back .bcard-inner{transform:rotateY(180deg)}
+.bcard-inner img{position:absolute;inset:0;width:100%;height:100%;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.bcard-inner img+img{transform:rotateY(180deg)}
+.bcard-flip:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+.bcard figcaption{margin-top:10px;text-align:center;color:#9fb3c8;font-size:13px}
+.bcard figcaption a{color:var(--sky)}
+
+footer{background:#06101c;color:#8fa3b8;font-size:14px;padding:30px 0}
+.frow{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center}
+footer a{color:#c6d4e3}
+footer details{background:transparent;border:1px solid rgba(255,255,255,.12);margin:18px 0 0}
+footer summary{font-size:14px;color:#c6d4e3;padding:12px 44px 12px 16px}
+footer summary:after{color:var(--sky);right:16px}
+footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
+
+@media (max-width:960px){
+  .grid4,.steps{grid-template-columns:1fr 1fr}
+  .hero-grid,.cgrid{grid-template-columns:1fr}
+  .me{display:flex;align-items:center;gap:18px;text-align:left;padding:18px}
+  .me img{width:84px;height:84px;margin:0}
+  .me p{margin-top:6px}
+  nav{display:none}
+  .bar .btn{margin-left:auto}
+}
+@media (max-width:620px){
+  section{padding:60px 0}
+  .hero{padding:48px 0 60px}
+  .grid4,.steps,.grid2{grid-template-columns:1fr}
+  form{grid-template-columns:1fr;padding:20px}
+  .lead{font-size:17px}
+  .ctas .btn{flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="RD Créations, accueil"><img class="logo" src="assets/rd-creations-icon.svg" alt="" width="30" height="33"><span>RD Créations</span></a>
+    <nav aria-label="Navigation principale">
+      <a href="#services">Services</a><a href="#realisations">Réalisations</a><a href="#methode">Méthode</a><a href="#faq">Questions</a>
+    </nav>
+    <a class="btn btn-primary" href="#devis">Devis gratuit</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Sites web · PWA · Applications mobiles</span>
+      <h1>Votre site ou votre application, <em>sans le prix d’une agence.</em></h1>
+      <p class="lead">Je conçois et mets en ligne des sites vitrines, des applications web installables et des applications mobiles pour les indépendants, les commerces et les petites structures. Un seul interlocuteur, un prix fixe annoncé avant de commencer.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#devis">Demander un devis gratuit</a>
+        <a class="btn btn-ghost" href="https://wa.me/33782884646?text=Bonjour%20Roland%2C%20j%E2%80%99aimerais%20parler%20d%E2%80%99un%20projet%20de%20site%20ou%20d%E2%80%99application." target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.2h.01c5.46 0 9.91-4.45 9.91-9.91A9.85 9.85 0 0 0 12.04 2zm5.8 14.13c-.25.69-1.44 1.32-2 1.37-.51.05-1 .24-3.37-.7-2.85-1.12-4.65-4.04-4.79-4.23-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.56-.35.75-.35l.54.01c.17.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.17-.3.37-.42.5-.14.14-.29.29-.12.57.17.28.74 1.22 1.59 1.97 1.09.97 2.01 1.27 2.3 1.41.28.14.45.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.64-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.69-.18 1.38z"/></svg>
+          Écrire sur WhatsApp</a>
+      </div>
+      <ul class="trust">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Devis gratuit sous 48 h</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Prix fixe, sans surprise</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Vous restez propriétaire</li>
+      </ul>
+    </div>
+    <aside class="me" aria-label="Votre interlocuteur">
+      <img src="assets/profile.jpg" alt="Roland Dzoagbe" width="132" height="132">
+      <div>
+        <b>Roland Dzoagbe</b>
+        <span>Votre interlocuteur unique</span>
+        <p>Dix ans dans l’informatique en entreprise, deux applications publiées dans les stores. Basé en Île-de-France.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Services et tarifs</span>
+      <h2>Ce que je crée, et à partir de combien</h2>
+      <p>Des prix pensés pour les petites structures. Le devis fixe le prix final, avec le détail de ce qui est inclus, avant tout démarrage.</p>
+    </div>
+    <div class="grid4">
+      <article class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 13h6M7 16h9"/></svg></div>
+        <h3>Page de présentation</h3>
+        <p>Une page claire pour présenter votre activité, vos horaires, vos tarifs et vos contacts. Idéal pour démarrer.</p>
+        <div class="price">à partir de<b>200 €</b></div>
+      </article>
+      <article class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="4" width="19" height="14" rx="2"/><path d="M8 21h8M12 18v3M2.5 8h19"/></svg></div>
+        <h3>Site vitrine</h3>
+        <p>Trois à cinq pages, formulaire de contact, adapté au téléphone, et les bases pour être trouvé sur Google.</p>
+        <div class="price">à partir de<b>400 €</b></div>
+      </article>
+      <article class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+        <h3>Application web installable</h3>
+        <p>Une PWA s’installe depuis le navigateur, sur téléphone et ordinateur, sans passer par les stores ni payer leurs frais.</p>
+        <div class="price">à partir de<b>700 €</b></div>
+      </article>
+      <article class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></div>
+        <h3>Application mobile</h3>
+        <p>Pour iPhone et Android, publiée sur l’App Store et Google Play sous votre propre compte.</p>
+        <div class="price">à partir de<b>1 500 €</b></div>
+      </article>
+    </div>
+    <div class="care">
+      <div><b>Hébergement, mises à jour et suivi</b><br><span>Votre site reste en ligne, à jour et sécurisé ; les petites modifications sont incluses. Optionnel.</span></div>
+      <div class="p">à partir de 15 € / mois</div>
+    </div>
+    <p class="fine">Prix nets. TVA non applicable, article 293 B du CGI.</p>
+  </div>
+</section>
+
+<section class="soft" id="realisations">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Réalisations</span>
+      <h2>Deux produits conçus, publiés et maintenus</h2>
+      <p>Pas des maquettes : des produits en ligne, utilisés, mis à jour en continu.</p>
+    </div>
+    <div class="grid2">
+      <article class="work">
+        <span class="tag">Application mobile · iOS, Android, web</span>
+        <h3>Ahenora</h3>
+        <p>Organisation familiale : tâches, calendrier partagé, corvées des enfants, repas et paperasse scolaire dans un espace privé. Numérisation de documents par IA, coffre-fort sécurisé, disponible en quatre langues.</p>
+        <div class="links">
+          <a class="store-badge" href="https://apps.apple.com/us/app/ahenora-family-organizer/id6806811163" target="_blank" rel="noopener" aria-label="Ahenora sur l’App Store"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg><span><small>Télécharger dans l’</small><b>App Store</b></span></a>
+          <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.householdcoo.app" target="_blank" rel="noopener" aria-label="Ahenora sur Google Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.61 1.81L13.5 12 3.61 22.19c-.25-.24-.36-.56-.36-.93V2.74c0-.37.11-.69.36-.93z" fill="#2196F3"/><path d="M17.05 15.55L13.5 12l3.55-3.55 4.09 2.35c.83.48.83 1.92 0 2.4z" fill="#FFC107"/><path d="M17.05 8.45L13.5 12 3.61 1.81c.4-.4 1.05-.5 1.6-.19z" fill="#4CAF50"/><path d="M17.05 15.55l-11.84 6.83c-.55.31-1.2.21-1.6-.19L13.5 12z" fill="#F44336"/></svg><span><small>DISPONIBLE SUR</small><b>Google Play</b></span></a>
+          <a class="textlink" href="https://ahenora.com" target="_blank" rel="noopener">ahenora.com →</a>
+        </div>
+      </article>
+      <article class="work">
+        <span class="tag">Plateforme web</span>
+        <h3>StackLens</h3>
+        <p>Suivi des abonnements logiciels d’une entreprise : licences, accès des collaborateurs, renouvellements automatiques et dépenses, dans un seul tableau de bord. Hébergé en Europe, conforme RGPD.</p>
+        <div class="links">
+          <a class="textlink" href="https://stacklens.fr" target="_blank" rel="noopener">stacklens.fr →</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="methode">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Méthode</span>
+      <h2>Simple, du premier échange à la mise en ligne</h2>
+    </div>
+    <ol class="steps">
+      <li><b>On échange</b><span>Vingt minutes, gratuitement, pour comprendre votre activité et ce dont vous avez vraiment besoin.</span></li>
+      <li><b>Devis à prix fixe</b><span>Sous 48 h, avec le détail de ce qui est inclus et le délai. Le prix ne bouge plus.</span></li>
+      <li><b>Je construis, vous validez</b><span>Vous suivez l’avancement et validez chaque étape. Pas de mauvaise surprise à la fin.</span></li>
+      <li><b>Mise en ligne et suivi</b><span>Nom de domaine, hébergement, publication, puis accompagnement après le lancement.</span></li>
+    </ol>
+    <p class="pay"><b>Paiement :</b> acompte de 30 % au démarrage, solde à la livraison. <b>À la livraison :</b> la <a href="assets/fiche-de-remise-client.pdf">fiche de remise</a> de tous vos comptes, à votre nom.</p>
+  </div>
+</section>
+
+<section class="soft" id="faq">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Questions fréquentes</span>
+      <h2>Ce qu’on me demande souvent</h2>
+    </div>
+    <div class="faq">
+    <details><summary>Combien de temps faut-il ?</summary><p>Une page de présentation : quelques jours. Un site vitrine : une à deux semaines. Une application : quatre à huit semaines selon les fonctionnalités. Le délai est écrit dans le devis.</p></details>
+    <details><summary>Pourquoi est-ce moins cher qu’une agence ?</summary><p>Je ne suis ni une agence ni un développeur de métier. Je conçois et construis avec des outils modernes, dont l’intelligence artificielle, et je m’appuie sur plus de six ans d’informatique en entreprise pour livrer quelque chose de fiable. Je travaille seul, sans frais de structure : vous payez le travail, pas l’organisation autour.</p></details>
+    <details><summary>À qui appartiennent le site et l’application ?</summary><p>À vous. Le nom de domaine, l’hébergement et les comptes développeur Apple et Google sont à votre nom. Si un jour vous changez de prestataire, rien ne casse. À la livraison, je vous remets la <a href="assets/fiche-de-remise-client.pdf">fiche de remise</a> qui liste tous vos comptes.</p></details>
+    <details><summary>Faut-il payer les stores d’applications ?</summary><p>Oui, si vous voulez une application dans les stores : Apple facture 99 $ par an et Google 25 $ une seule fois, directement sur votre compte. Une application web installable (PWA) évite ces frais.</p></details>
+    <details><summary>Que se passe-t-il après la mise en ligne ?</summary><p>Le suivi mensuel couvre l’hébergement, les mises à jour et les petites modifications. Il est optionnel : vous pouvez aussi gérer votre site vous-même, je vous montre comment.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="devis">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Devis gratuit</span>
+      <h2>Parlez-moi de votre projet</h2>
+      <p>Quelques lignes suffisent. Je vous réponds sous 48 h avec une première estimation.</p>
+    </div>
+    <div class="cgrid">
+      <div class="cleft">
+      <form id="devis-form" novalidate>
+        <div><label for="prenom">Votre prénom</label><input id="prenom" name="prenom" autocomplete="given-name" required></div>
+        <div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
+        <div><label for="projet">Type de projet</label>
+          <select id="projet" name="projet" required>
+            <option value="">Choisir…</option>
+            <option>Page de présentation</option><option>Site vitrine</option>
+            <option>Application web installable (PWA)</option><option>Application mobile</option>
+            <option>Je ne sais pas encore</option>
+          </select></div>
+        <div><label for="budget">Budget envisagé</label>
+          <select id="budget" name="budget">
+            <option>Je ne sais pas</option><option>Moins de 300 €</option><option>300 à 700 €</option>
+            <option>700 à 1 500 €</option><option>Plus de 1 500 €</option>
+          </select></div>
+        <div class="full"><label for="contact">Votre e-mail ou téléphone, pour vous répondre</label><input id="contact" name="contact" autocomplete="email" placeholder="Ex. : nom@exemple.fr ou 06 12 34 56 78"></div>
+        <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">Racontez-la avec vos mots : ce que vous voulez faire, pour qui, ce qui existe déjà (logo, textes, photos, ancien site), des sites ou applications que vous aimez, et pour quand.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
+        <div class="full needs">
+          <span class="needs-t">Ce qu’il faudra prévoir <small>facultatif : cochez ce que vous savez déjà</small></span>
+          <ul class="ho-list" aria-label="Éléments à prévoir">
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Nom de domaine"><span>Nom de domaine</span><small>env. 12 € / an</small></button></li>
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Hébergement"><span>Hébergement</span><small>souvent gratuit</small></button></li>
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Code du site (GitHub)"><span>Code du site (GitHub)</span><small>gratuit</small></button></li>
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Messagerie professionnelle"><span>Messagerie</span><small>selon l’offre</small></button></li>
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Application iPhone"><span>Application iPhone</span><small>99 $ / an</small></button></li>
+            <li><button type="button" class="ho-item" aria-pressed="false" data-item="Application Android"><span>Application Android</span><small>25 $, une fois</small></button></li>
+          </ul>
+          <p class="needs-note">Tous ces comptes seront à votre nom et payés par vous. À la livraison, vous recevez votre fiche de remise et vous pouvez retirer mon accès à tout moment, sans que rien ne s’arrête. <a href="assets/fiche-de-remise-client.pdf" target="_blank" rel="noopener">Voir la fiche de remise (PDF)</a></p>
+        </div>
+        <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="full fbtns">
+          <button class="btn btn-primary" type="button" id="send-direct" hidden>Envoyer ma demande</button>
+          <button class="btn btn-wa" type="button" id="send-wa">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.2h.01c5.46 0 9.91-4.45 9.91-9.91A9.85 9.85 0 0 0 12.04 2zm5.8 14.13c-.25.69-1.44 1.32-2 1.37-.51.05-1 .24-3.37-.7-2.85-1.12-4.65-4.04-4.79-4.23-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.56-.35.75-.35l.54.01c.17.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.17-.3.37-.42.5-.14.14-.29.29-.12.57.17.28.74 1.22 1.59 1.97 1.09.97 2.01 1.27 2.3 1.41.28.14.45.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.64-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.69-.18 1.38z"/></svg>
+            Envoyer sur WhatsApp</button>
+          <button class="btn btn-line" type="button" id="send-mail">Envoyer par e-mail</button>
+        </div>
+        <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
+        <p class="full privacy" id="privacy">Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir les mentions légales). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
+      </form>
+      </div>
+      <div class="direct">
+        <a href="tel:+33782884646"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span><small>Téléphone</small><b>07 82 88 46 46</b></span></a>
+        <a href="https://wa.me/33782884646" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg><span><small>WhatsApp</small><b>Discuter maintenant</b></span></a>
+        <a href="mailto:rolanddzoagbe@gmail.com?subject=Demande%20de%20devis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg><span><small>E-mail</small><b>rolanddzoagbe@gmail.com</b></span></a>
+        <a href="assets/fiche-de-remise-client.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span><small>Document à consulter</small><b>Fiche de remise client (PDF)</b></span></a>
+        <a href="assets/roland-dzoagbe.vcf" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg><span><small>Sur votre téléphone</small><b>Ajouter à mes contacts</b></span></a>
+        <figure class="bcard">
+          <button class="bcard-flip" type="button" id="bcard" aria-pressed="false" aria-label="Carte de visite : afficher le verso">
+            <span class="bcard-inner">
+              <img src="assets/carte-recto.webp?v=2" width="1000" height="648" alt="Carte de visite, recto : Roland Dzoagbe, sites web, PWA et applications mobiles, développement assisté par IA. Tarifs accessibles, devis gratuit." loading="lazy">
+              <img src="assets/carte-verso.webp?v=2" width="1000" height="648" alt="Carte de visite, verso : site vitrine, application web installable, application mobile iOS et Android, mise en ligne et suivi. Téléphone 07 82 88 46 46, e-mail rolanddzoagbe@gmail.com." loading="lazy">
+            </span>
+          </button>
+          <figcaption>Ma carte de visite · touchez pour la retourner · <a href="assets/carte-de-visite-roland-dzoagbe.pdf?v=2" download>PDF</a></figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="frow">
+      <span>© <span id="y">2026</span> RD Créations · Roland Dzoagbe, entrepreneur individuel</span>
+      <a href="https://rdzoagbe.github.io/Portfolio.RDzoagbe/" target="_blank" rel="noopener">Parcours professionnel</a>
+    </div>
+    <details>
+      <summary>Mentions légales</summary>
+      <p><b>Éditeur :</b> Roland Dzoagbe, entrepreneur individuel (EI, micro-entreprise), 93140 Bondy. SIREN 104 838 727 · SIRET 104 838 727 00014. Contact : rolanddzoagbe@gmail.com · 07 82 88 46 46.<br>
+      <b>Hébergement :</b> GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.<br>
+      <b>Données personnelles :</b> ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience. Les informations envoyées avec le formulaire de devis (prénom, activité, contact, description du projet) servent uniquement à vous répondre et à préparer votre devis. Elles sont conservées dans une base de données hébergée en France (Supabase, Paris) et, avec le bouton « Envoyer ma demande », transmises par e-mail via le service Formspree. Elles sont supprimées trois ans après notre dernier échange. Vous pouvez demander à les consulter, les corriger ou les supprimer à tout moment : roland.dzoagbe@hotmail.com.</p>
+    </details>
+  </div>
+</footer>
+
+<script src="admin/sb.js"></script>
+<script>
+(function(){
+  document.getElementById('y').textContent = new Date().getFullYear();
+  var bc = document.getElementById('bcard');
+  bc.addEventListener('click', function(){
+    var back = bc.classList.toggle('is-back');
+    bc.setAttribute('aria-pressed', back ? 'true' : 'false');
+    bc.setAttribute('aria-label', 'Carte de visite : afficher le ' + (back ? 'recto' : 'verso'));
+  });
+  var f = document.getElementById('devis-form');
+  function compose(){
+    var d = new FormData(f), L = ['Bonjour Roland,', '', 'Je souhaite un devis.'];
+    L.push('Prénom : ' + (d.get('prenom') || '').trim());
+    if ((d.get('activite') || '').trim()) L.push('Activité : ' + d.get('activite').trim());
+    L.push('Projet : ' + d.get('projet'));
+    L.push('Budget : ' + d.get('budget'));
+    var items = picked();
+    if (items) L.push('Éléments à prévoir : ' + items);
+    if ((d.get('contact') || '').trim()) L.push('Pour me répondre : ' + d.get('contact').trim());
+    if ((d.get('message') || '').trim()) { L.push(''); L.push(d.get('message').trim()); }
+    return L.join('\n');
+  }
+  // Formspree form id (the part after formspree.io/f/). Empty: direct sending stays hidden.
+  var FORMSPREE_ID = 'xrpppprj';
+  function valid(needContact){
+    var ok = true;
+    (needContact ? ['prenom','projet','contact'] : ['prenom','projet']).forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el.value.trim()) { el.setAttribute('aria-invalid','true'); if (ok) el.focus(); ok = false; }
+      else el.removeAttribute('aria-invalid');
+    });
+    return ok;
+  }
+  // Every request also lands in the private space (once per content), whatever the button.
+  var lastLead = '';
+  function pushLead(source){
+    if (!window.RDsb) return;
+    var d = new FormData(f), row = {
+      prenom: (d.get('prenom') || '').trim().slice(0, 100), activite: (d.get('activite') || '').trim().slice(0, 200),
+      projet: (d.get('projet') || '').slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
+      contact: (d.get('contact') || '').trim().slice(0, 200), elements: picked().slice(0, 500),
+      message: (d.get('message') || '').trim().slice(0, 5000), source: source
+    };
+    if (d.get('_gotcha')) return;
+    var sig = JSON.stringify([row.prenom, row.projet, row.contact, row.elements, row.message]);
+    if (sig === lastLead) return;
+    lastLead = sig;
+    window.RDsb.submitLead(row).catch(function(){ lastLead = ''; });
+  }
+  function sendWa(){
+    if (!valid()) return;
+    pushLead('whatsapp');
+    window.open('https://wa.me/33782884646?text=' + encodeURIComponent(compose()), '_blank', 'noopener');
+  }
+  function sendMail(){
+    if (!valid()) return;
+    pushLead('e-mail');
+    location.href = 'mailto:roland.dzoagbe@hotmail.com?subject=' + encodeURIComponent('Demande de devis') + '&body=' + encodeURIComponent(compose());
+  }
+  function picked(){
+    return [].map.call(document.querySelectorAll('.ho-item[aria-pressed=true]'), function(b){ return b.dataset.item; }).join(', ');
+  }
+  var status = document.getElementById('fstatus'), sending = false;
+  function sendDirect(){
+    if (sending || !valid(true)) return;
+    pushLead('formulaire');
+    var d = new FormData(f), contact = (d.get('contact') || '').trim(), btns = document.querySelectorAll('#send-direct');
+    var data = {
+      _subject: 'Demande de devis - ' + (d.get('prenom') || '').trim(),
+      prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
+      projet: d.get('projet'), budget: d.get('budget'), contact: contact,
+      elements: picked() || 'Aucun', message: (d.get('message') || '').trim(), _gotcha: d.get('_gotcha') || ''
+    };
+    if (contact.indexOf('@') > 0) data.email = contact;
+    sending = true; status.className = 'full fstatus'; status.textContent = 'Envoi en cours…';
+    [].forEach.call(btns, function(b){ b.disabled = true; });
+    fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+      method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    }).then(function(r){
+      if (!r.ok) throw new Error(r.status);
+      status.className = 'full fstatus ok';
+      status.textContent = 'Merci ' + data.prenom + ', votre demande est bien envoyée. Je vous réponds sous 48 h.';
+      f.reset();
+      [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
+    }).catch(function(){
+      status.className = 'full fstatus err';
+      status.textContent = 'L’envoi n’a pas abouti. Réessayez, ou envoyez votre demande sur WhatsApp ou par e-mail.';
+    }).then(function(){
+      sending = false; [].forEach.call(btns, function(b){ b.disabled = false; });
+      status.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }
+  if (FORMSPREE_ID) {
+    document.getElementById('send-direct').hidden = false;
+    document.getElementById('send-direct').addEventListener('click', sendDirect);
+    document.getElementById('privacy').textContent = 'Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir les mentions légales). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.';
+  }
+  document.getElementById('send-wa').addEventListener('click', sendWa);
+  document.getElementById('send-mail').addEventListener('click', sendMail);
+  [].forEach.call(document.querySelectorAll('.ho-item'), function(b){
+    b.addEventListener('click', function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+  });
+})();
+</script>
+</body>
+</html>

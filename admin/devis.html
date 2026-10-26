@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Devis · RD Créations</title>
+<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#081626; --blue:#2f6ff5; --cyan:#22d3ee; --sky:#7fd7f5;
+  --grad:linear-gradient(135deg,#2f8bff,#22d3ee);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#e9eef4;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+.tools{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools b{margin-right:auto;font-size:15px}
+.tb{border:0;border-radius:9px;padding:9px 13px;font-weight:700;font-size:14px;background:rgba(255,255,255,.12);color:#fff}
+.tb:hover{background:rgba(255,255,255,.2)}
+.tb.main{background:var(--grad);color:#05213d}
+.importbox{max-width:820px;margin:16px auto 0;background:#fff;border-radius:14px;padding:16px;display:none}
+.importbox.open{display:block}
+.importbox p{font-size:14px;color:var(--mute);margin-bottom:8px}
+.importbox textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:14px}
+.importbox .row{display:flex;gap:8px;margin-top:8px}
+.ibtn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;font-weight:700;font-size:14px}
+.ibtn.go{background:var(--blue);border-color:var(--blue);color:#fff}
+
+.sheet{max-width:820px;margin:16px auto 40px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(8,22,38,.12);padding:34px 38px}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:3px solid var(--cyan);padding-bottom:16px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:44px;height:49px;flex:none;display:block}
+.brand h1{font-size:20px;line-height:1.2}
+.brand p{font-size:12.5px;color:var(--mute)}
+.meta{text-align:right}
+.meta h2{font-size:26px;letter-spacing:.06em;color:var(--blue)}
+.meta .kv{display:flex;justify-content:flex-end;gap:6px;font-size:13px;align-items:center;margin-top:3px}
+.meta .kv span{color:var(--mute)}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.party{background:var(--soft);border-radius:10px;padding:12px 14px}
+.party h3,.blk h3{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.party .l{font-size:13px;color:var(--ink2)}
+.blk{margin-top:18px}
+input.f,.ed{font:inherit;color:inherit;border:1px dashed transparent;border-radius:6px;background:transparent;padding:1px 4px;width:100%}
+input.f:hover,.ed:hover{border-color:#c9d6e4}
+input.f:focus,.ed:focus{outline:none;border-color:var(--blue);background:#f7faff}
+input.f::placeholder{color:#9aabbd}
+.ed:empty:before{content:attr(data-ph);color:#9aabbd}
+.ed{min-height:1.5em;white-space:pre-wrap}
+.party input.f{font-size:13px}
+.party input.name{font-weight:700;font-size:14px}
+.meta input.f{width:130px;text-align:right;font-size:13px}
+.desc{font-size:13.5px;background:var(--soft);border-radius:10px;padding:10px 12px;min-height:60px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);border-bottom:2px solid var(--line);padding:6px 6px}
+td{border-bottom:1px solid var(--line);padding:6px;vertical-align:top}
+td.num,th.num{text-align:right;white-space:nowrap}
+td input.f{padding:2px 4px}
+td .label{font-weight:700}
+td .sub{font-size:12.5px;color:var(--mute);min-height:1.2em}
+td input.q{width:52px;text-align:right}
+td input.pu{width:84px;text-align:right}
+td select{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:2px;background:#fff}
+.rm{border:0;background:none;color:#b5432f;font-size:18px;line-height:1;padding:2px 6px}
+tr.grp td{background:var(--soft);border-bottom:1px solid var(--line);padding-top:8px}
+tr.grp input.label{font-weight:800;font-size:14.5px;color:var(--navy)}
+td input.label{font-weight:700}
+.optc{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;color:var(--mute);white-space:nowrap;margin-right:2px}
+.otag{display:none;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8a5a00;background:#fff3d6;border-radius:5px;padding:1px 6px;margin:0 0 2px 4px}
+tr.is-opt .otag{display:inline-block}
+tr.is-opt .tot{font-style:italic;color:var(--mute)}
+.why{font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
+.adders{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.add{border:1px dashed #9fb7d1;background:#f7faff;color:var(--blue);border-radius:8px;padding:6px 10px;font-weight:700;font-size:13px}
+.totals{display:flex;justify-content:flex-end;margin-top:12px}
+.totals table{width:320px;margin:0}
+.totals td{border:0;padding:4px 6px}
+.totals tr.grand td{font-size:16px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px}
+.vatline{font-size:12.5px;color:var(--mute);text-align:right;margin-top:4px}
+.accounts{font-size:13px}
+.accounts ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:4px}
+.accounts li{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:3px 0}
+.accounts li span{color:var(--mute)}
+.conds{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:13px}
+.conds .kv{display:flex;gap:6px;align-items:center}
+.conds .kv span{color:var(--mute);white-space:nowrap}
+.conds input.f{flex:1}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+.sign .box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:110px;font-size:13px}
+.sign .box b{display:block;margin-bottom:4px}
+.sign .box .hint{color:var(--mute);font-size:12px}
+.foot{margin-top:18px;font-size:11.5px;color:var(--mute);text-align:center;border-top:1px solid var(--line);padding-top:8px}
+.chk{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--mute);margin-top:6px}
+@media (max-width:700px){
+  .sheet{padding:20px 16px;border-radius:0;margin:0 0 30px}
+  .top,.parties,.sign,.conds,.accounts ul{grid-template-columns:1fr;display:grid}
+  .meta{text-align:left}.meta .kv{justify-content:flex-start}
+  .totals table{width:100%}
+  td input.pu{width:70px}
+}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  .noprint,.tools,.importbox,.adders,.rm{display:none!important}
+  .sheet{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
+  input.f,.ed{border:0!important;background:transparent!important;padding:0}
+  .ed:empty:before{content:""}
+  input.f::placeholder{color:transparent}
+  td select{border:0;appearance:none;-webkit-appearance:none;padding:0}
+  .party,.desc,tr.grp td,.why,.otag{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tr,.sign{break-inside:avoid}
+  input[type=date]::-webkit-calendar-picker-indicator{display:none}
+  body{font-size:12px}
+  .top{padding-bottom:10px}
+  .parties{margin-top:10px;gap:12px}
+  .party{padding:8px 10px}
+  .blk{margin-top:10px}
+  .desc{min-height:0;padding:8px 10px}
+  td{padding:4px 6px}
+  .sign{margin-top:12px}
+  .sheet{zoom:.88}
+  #deppct{max-width:28px!important;flex:none!important}
+  .sign .box{min-height:80px}
+  .foot{margin-top:10px}
+}
+</style>
+</head>
+<body>
+<div class="tools">
+  <a class="tb" href="./">← Espace privé</a>
+  <b>Devis <span id="sync" style="font-weight:400;font-size:12.5px;color:#9fb3c8;margin-left:6px"></span></b>
+  <button class="tb" type="button" id="b-import">Importer une demande</button>
+  <button class="tb" type="button" id="b-new">Nouveau devis</button>
+  <button class="tb" type="button" id="b-mail">Préparer l’e-mail</button>
+  <button class="tb" type="button" id="b-wa">WhatsApp</button>
+  <button class="tb main" type="button" id="b-print">Imprimer / PDF</button>
+</div>
+
+<div class="importbox" id="importbox">
+  <p>Collez ici la demande reçue (WhatsApp, e-mail ou Formspree). Le prénom, l’activité, le projet, le budget, les éléments cochés, le contact et l’idée du projet sont repris automatiquement.</p>
+  <textarea id="importtext" placeholder="Bonjour Roland,&#10;Je souhaite un devis.&#10;Prénom : …"></textarea>
+  <div class="row"><button class="ibtn go" type="button" id="b-doimport">Remplir le devis</button><button class="ibtn" type="button" id="b-cancel">Annuler</button></div>
+</div>
+
+<main class="sheet" id="sheet">
+  <div class="top">
+    <div class="brand">
+      <img class="logo" src="../assets/rd-creations-icon.svg" alt="RD Créations" width="44" height="49">
+      <div><h1>RD Créations</h1><p>Roland Dzoagbe · sites web, PWA et applications mobiles</p></div>
+    </div>
+    <div class="meta">
+      <h2>DEVIS</h2>
+      <div class="kv"><span>N°</span><input class="f" id="num" data-k="num"></div>
+      <div class="kv"><span>Date</span><input class="f" id="date" type="date" data-k="date"></div>
+      <div class="kv"><span>Valable jusqu’au</span><input class="f" id="valid" type="date" data-k="valid"></div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <h3>Prestataire</h3>
+      <div class="l"><b>Roland Dzoagbe</b>, entrepreneur individuel</div>
+      <div class="l">SIRET 104 838 727 00014</div>
+      <input class="f" data-k="myaddr" data-keep="1" placeholder="Votre adresse professionnelle (obligatoire)">
+      <div class="l">07 82 88 46 46 · rolanddzoagbe@gmail.com</div>
+      <div class="l">rdzoagbe.github.io/rd-creations</div>
+    </div>
+    <div class="party">
+      <h3>Client</h3>
+      <input class="f name" id="c-name" data-k="cname" placeholder="Nom et prénom">
+      <input class="f" id="c-org" data-k="corg" placeholder="Entreprise ou activité">
+      <input class="f" data-k="caddr" placeholder="Adresse">
+      <input class="f" id="c-contact" data-k="ccontact" placeholder="E-mail ou téléphone">
+    </div>
+  </div>
+
+  <div class="blk">
+    <h3>Le projet</h3>
+    <div class="ed desc" contenteditable="true" id="desc" data-k="desc" data-ph="L’idée du client, ce qui est prévu, ce qui est fourni (logo, textes, photos), les délais…"></div>
+  </div>
+
+  <div class="blk">
+    <h3>Prestations</h3>
+    <table>
+      <thead><tr><th>Désignation</th><th class="num">Qté</th><th>Unité</th><th class="num">Prix unitaire</th><th class="num">Total</th><th class="noprint"></th></tr></thead>
+      <tbody id="lines"></tbody>
+    </table>
+    <div class="adders" id="adders">
+      <button class="add" type="button" data-preset="0">+ Page de présentation</button>
+      <button class="add" type="button" data-preset="1">+ Site vitrine</button>
+      <button class="add" type="button" data-preset="2">+ Application web installable</button>
+      <button class="add" type="button" data-preset="3">+ Application mobile</button>
+      <button class="add" type="button" data-preset="4">+ Suivi mensuel</button>
+      <button class="add" type="button" data-preset="5">+ Ligne libre</button>
+    </div>
+    <div class="totals">
+      <table>
+        <tr><td>Total des prestations</td><td class="num" id="t-ht">0,00 €</td></tr>
+        <tr id="r-vat" hidden><td>TVA 20 %</td><td class="num" id="t-vat">0,00 €</td></tr>
+        <tr class="grand"><td id="t-label">Net à payer</td><td class="num" id="t-ttc">0,00 €</td></tr>
+        <tr id="r-month" hidden><td>Puis, suivi mensuel (optionnel)</td><td class="num" id="t-month">0,00 € / mois</td></tr>
+        <tr id="r-opt" hidden><td>Options proposées, non comprises</td><td class="num" id="t-opt">0,00 €</td></tr>
+        <tr><td>Acompte à la signature (<span id="t-deppct">30</span> %)</td><td class="num" id="t-dep">0,00 €</td></tr>
+      </table>
+    </div>
+    <div class="vatline" id="vatline">TVA non applicable, article 293 B du CGI.</div>
+    <div class="why"><b>Comment lire ce devis.</b> Chaque ligne correspond à une partie du travail, avec son prix : le total en est la somme. <span id="why-opt" hidden>Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. </span>Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>
+    <label class="chk noprint"><input type="checkbox" id="novat" data-k="novat" data-keep="1" checked> Franchise de TVA (article 293 B du CGI)</label>
+  </div>
+
+  <div class="blk accounts" id="accounts">
+    <h3>Comptes à votre nom, payés directement par vous</h3>
+    <div class="ed" contenteditable="true" data-k="accnote" data-ph="">Ces frais ne sont pas inclus dans le devis : les comptes restent à votre nom, et vous pouvez retirer mon accès à tout moment.</div>
+    <ul id="acclist"></ul>
+  </div>
+
+  <div class="blk">
+    <h3>Conditions</h3>
+    <div class="conds">
+      <div class="kv"><span>Délai de réalisation</span><input class="f" data-k="delay" placeholder="Ex. : 3 semaines après l’acompte"></div>
+      <div class="kv"><span>Acompte</span><input class="f" id="deppct" data-k="deppct" type="number" min="0" max="100" value="30" style="max-width:70px"> %</div>
+      <div class="kv"><span>Paiement</span><input class="f" data-k="pay" value="Virement bancaire ; solde à la livraison"></div>
+      <div class="kv"><span>Corrections</span><input class="f" data-k="fix" value="Gratuites pendant 1 mois après la livraison"></div>
+    </div>
+    <div class="ed" contenteditable="true" data-k="notes" data-ph="Remarques (facultatif)" style="font-size:13px;margin-top:6px"></div>
+  </div>
+
+  <div class="sign">
+    <div class="box"><b>Le prestataire</b>Roland Dzoagbe<div class="hint">Date et signature</div></div>
+    <div class="box"><b>Le client</b><div class="hint">Date, signature et mention manuscrite « Bon pour accord »</div></div>
+  </div>
+
+  <div class="foot">RD Créations · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div>
+</main>
+
+<script src="sb.js"></script>
+<script>
+(function(){
+  // Private page: only the signed-in owner can use it.
+  var sb = window.RDsb;
+  if (!sb || !sb.session()) { location.replace('./'); return; }
+  var QID = new URLSearchParams(location.search).get('q'), remoteTimer = null, lastTotal = 0;
+  var PRESETS = [
+    {l:'Page de présentation', s:'Une page : activité, horaires, tarifs, contacts ; adaptée au téléphone.', parts:[
+      ['Conception de la page', 'Structure, textes et mise en forme', 60],
+      ['Réalisation de la page', 'Adaptée au téléphone et à l’ordinateur', 100],
+      ['Mise en ligne et référencement de base', 'Pour être trouvé sur Google', 40]]},
+    {l:'Site vitrine', s:'Trois à cinq pages, formulaire de contact, adapté au téléphone, bases du référencement Google.', parts:[
+      ['Conception et maquette des pages', 'Organisation du site, style et contenus', 80],
+      ['Réalisation de 3 à 5 pages', 'Adaptées au téléphone et à l’ordinateur', 220],
+      ['Formulaire de contact', 'Les messages arrivent dans votre boîte e-mail', 40],
+      ['Référencement de base', 'Titres, descriptions et fiche pour Google', 40],
+      ['Mise en ligne', 'Sur votre nom de domaine', 20]]},
+    {l:'Application web installable (PWA)', s:'S’installe depuis le navigateur, sur téléphone et ordinateur, sans passer par les stores.', parts:[
+      ['Conception et maquettes des écrans', 'Parcours de l’utilisateur et style', 150],
+      ['Développement de l’application web', 'Fonctionnalités prévues au projet', 400],
+      ['Installation sur téléphone et ordinateur', 'Icône sur l’écran d’accueil, fonctionnement hors ligne', 100],
+      ['Mise en ligne', 'Sur votre nom de domaine', 50]]},
+    {l:'Application mobile iPhone et Android', s:'Publiée sur l’App Store et Google Play, sous votre propre compte.', parts:[
+      ['Conception : parcours et maquettes des écrans', 'Ce que voit et fait l’utilisateur, écran par écran', 300],
+      ['Développement de l’application', 'Une seule application pour iPhone et Android', 900],
+      ['Comptes utilisateurs et base de données', 'Inscription, connexion, données sécurisées', 150],
+      ['Publication sur l’App Store et Google Play', 'Sous votre propre compte développeur', 150]]},
+    {l:'Hébergement, mises à jour et suivi', s:'Site en ligne, à jour et sécurisé ; petites modifications incluses. Optionnel, sans engagement.', u:'mois', p:15},
+    {l:'', s:'', u:'forfait', p:0}
+  ];
+  var ACCOUNTS = {
+    'Nom de domaine':'env. 12 € / an', 'Hébergement':'souvent gratuit', 'Code du site (GitHub)':'gratuit',
+    'Messagerie professionnelle':'selon l’offre', 'Application iPhone':'99 $ / an (Apple)', 'Application Android':'25 $, une fois (Google)'
+  };
+  var KEY = 'rd-devis-v1', state = {lines: [], acc: []};
+  var $ = function(id){ return document.getElementById(id); };
+  var eur = function(n){ return (Math.round(n * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
+  var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ return null; } }
+  function save(){
+    var d = {lines: state.lines, acc: state.acc, f: {}};
+    [].forEach.call(document.querySelectorAll('[data-k]'), function(el){
+      d.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : (el.isContentEditable ? el.innerText : el.value);
+    });
+    if (!QID) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} return; }
+    $('sync').textContent = 'modifications non enregistrées…';
+    clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(function(){
+      sb.update('quotes', QID, { data: d, numero: d.f.num || '', total: lastTotal })
+        .then(function(){ $('sync').textContent = 'enregistré ✓'; }, function(){ $('sync').textContent = 'non enregistré : vérifiez la connexion'; });
+    }, 700);
+  }
+  function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  function nextNum(){
+    var y = new Date().getFullYear(), n = 1;
+    try { n = parseInt(localStorage.getItem('rd-devis-seq-' + y) || '0', 10) + 1; localStorage.setItem('rd-devis-seq-' + y, n); } catch(e){}
+    return 'D-' + y + '-' + String(n).padStart(3, '0');
+  }
+
+  function renderLines(){
+    var tb = $('lines'); tb.innerHTML = '';
+    state.lines.forEach(function(ln, i){
+      var tr = document.createElement('tr');
+      if (ln.h) {
+        tr.className = 'grp';
+        tr.innerHTML = '<td colspan="5"><input class="f label" placeholder="Titre de la partie" value="' + esc(ln.l) + '"><div class="ed sub" contenteditable="true" data-ph="Présentation (facultatif)">' + esc(ln.s || '') + '</div></td>' +
+          '<td class="noprint"><button class="rm" type="button" title="Retirer le titre" aria-label="Retirer le titre">×</button></td>';
+        tr.querySelector('input').oninput = function(){ ln.l = this.value; save(); };
+        tr.querySelector('.sub').oninput = function(){ ln.s = this.innerText; save(); };
+        tr.querySelector('.rm').onclick = function(){ state.lines.splice(i, 1); renderLines(); };
+        tb.appendChild(tr);
+        return;
+      }
+      tr.classList.toggle('is-opt', !!ln.o);
+      tr.innerHTML = '<td><span class="otag">Option</span><input class="f label" placeholder="Désignation" value="' + esc(ln.l) + '"><div class="ed sub" contenteditable="true" data-ph="Détail (facultatif)">' + esc(ln.s) + '</div></td>' +
+        '<td class="num"><input class="f q" type="number" min="0" step="1" value="' + ln.q + '"></td>' +
+        '<td><select><option' + (ln.u === 'forfait' ? ' selected' : '') + '>forfait</option><option' + (ln.u === 'unité' ? ' selected' : '') + '>unité</option><option' + (ln.u === 'jour' ? ' selected' : '') + '>jour</option><option' + (ln.u === 'mois' ? ' selected' : '') + '>mois</option></select></td>' +
+        '<td class="num"><input class="f pu" type="number" min="0" step="1" value="' + ln.p + '"></td>' +
+        '<td class="num tot"></td><td class="noprint"><label class="optc" title="Proposer cette ligne en option, hors total"><input type="checkbox" class="opt"' + (ln.o ? ' checked' : '') + '> option</label><button class="rm" type="button" title="Retirer la ligne" aria-label="Retirer la ligne">×</button></td>';
+      var ins = tr.querySelectorAll('input');
+      ins[0].oninput = function(){ ln.l = this.value; save(); };
+      tr.querySelector('.sub').oninput = function(){ ln.s = this.innerText; save(); };
+      ins[1].oninput = function(){ ln.q = parseFloat(this.value) || 0; totals(); };
+      ins[2].oninput = function(){ ln.p = parseFloat(this.value) || 0; totals(); };
+      tr.querySelector('select').onchange = function(){ ln.u = this.value; totals(); };
+      tr.querySelector('.opt').onchange = function(){ ln.o = this.checked; tr.classList.toggle('is-opt', ln.o); totals(); };
+      tr.querySelector('.rm').onclick = function(){ state.lines.splice(i, 1); renderLines(); };
+      tb.appendChild(tr);
+    });
+    totals();
+  }
+  function totals(){
+    var once = 0, month = 0, opt = 0, rows = $('lines').rows;
+    state.lines.forEach(function(ln, i){
+      if (ln.h) return;
+      var t = (ln.q || 0) * (ln.p || 0);
+      if (ln.o) opt += t; else if (ln.u === 'mois') month += t; else once += t;
+      var cell = rows[i] && rows[i].querySelector('.tot');
+      if (cell) cell.textContent = ln.u === 'mois' ? eur(t) + ' / mois' : eur(t);
+    });
+    $('r-opt').hidden = !opt; $('t-opt').textContent = eur(opt);
+    $('why-opt').hidden = !opt;
+    var novat = $('novat').checked, vat = novat ? 0 : once * 0.2, pct = Math.min(100, Math.max(0, parseFloat($('deppct').value) || 0));
+    $('t-ht').textContent = eur(once);
+    $('r-vat').hidden = novat; $('t-vat').textContent = eur(vat);
+    $('t-label').textContent = novat ? 'Net à payer' : 'Total TTC';
+    $('t-ttc').textContent = eur(once + vat); lastTotal = Math.round((once + vat) * 100) / 100;
+    $('r-month').hidden = !month; $('t-month').textContent = eur(month * (novat ? 1 : 1.2)) + ' / mois';
+    $('t-deppct').textContent = pct; $('t-dep').textContent = eur((once + vat) * pct / 100);
+    $('vatline').textContent = novat ? 'TVA non applicable, article 293 B du CGI.' : 'Montants hors taxes ; TVA au taux de 20 %.';
+    save();
+  }
+  function renderAcc(){
+    var ul = $('acclist'); ul.innerHTML = '';
+    state.acc.forEach(function(a){ var li = document.createElement('li'); li.innerHTML = esc(a) + ' <span>' + esc(ACCOUNTS[a] || '') + '</span>'; ul.appendChild(li); });
+    $('accounts').hidden = !state.acc.length;
+    save();
+  }
+  function addPreset(k){
+    var p = PRESETS[k];
+    if (p.parts) {
+      state.lines.push({h: 1, l: p.l, s: p.s});
+      p.parts.forEach(function(x){ state.lines.push({l: x[0], s: x[1], q: 1, u: 'forfait', p: x[2]}); });
+    } else state.lines.push({l: p.l, s: p.s, q: 1, u: p.u, p: p.p});
+    renderLines();
+  }
+  function setField(k, v){
+    var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
+    if (el.isContentEditable) el.innerText = v; else el.value = v;
+  }
+  function fresh(){
+    [].forEach.call(document.querySelectorAll('[data-k]'), function(el){
+      if (el.dataset.keep) return;
+      if (el.isContentEditable) { if (el.dataset.k !== 'accnote') el.innerText = ''; }
+      else if (el.type !== 'checkbox' && !el.defaultValue) el.value = '';
+      else if (el.type !== 'checkbox') el.value = el.defaultValue;
+    });
+    var d = new Date(), v = new Date(); v.setDate(v.getDate() + 30);
+    $('num').value = nextNum(); $('date').value = iso(d); $('valid').value = iso(v);
+    state.lines = []; state.acc = [];
+    renderLines(); renderAcc();
+    $('importbox').classList.add('open');
+  }
+
+  function parseRequest(txt){
+    var r = {}, rest = [], map = {
+      'prénom':'prenom', 'prenom':'prenom', 'activité':'activite', 'activite':'activite', 'projet':'projet', 'budget':'budget',
+      'éléments à prévoir':'elements', 'elements':'elements', 'pour me répondre':'contact', 'contact':'contact', 'email':'contact', 'message':'message'
+    };
+    txt = txt.normalize('NFC').replace(/[\u00a0\u202f]/g, ' ');
+    txt.split(/\r?\n/).forEach(function(line){
+      line = line.replace(/^[>*•\-\s]+/, '');
+      var m = line.match(/^\s*([A-Za-zÀ-ÿ' ]+?)\s*:\s*(.*)$/);
+      var k = m && map[m[1].trim().toLowerCase()];
+      if (k && m[2].trim()) r[k] = (r[k] && k === 'message' ? r[k] + '\n' : '') + m[2].trim();
+      else if (!/^\s*(bonjour|je souhaite un devis|_|email\s*:)/i.test(line)) rest.push(line);
+    });
+    var idea = rest.join('\n').trim();
+    if (idea) r.message = (r.message ? r.message + '\n' : '') + idea;
+    return r;
+  }
+  function doImport(){
+    var r = parseRequest($('importtext').value);
+    if (r.prenom) setField('cname', r.prenom);
+    if (r.activite) setField('corg', r.activite);
+    if (r.contact) setField('ccontact', r.contact);
+    var idea = [r.message, r.budget ? 'Budget indiqué : ' + r.budget : ''].filter(Boolean).join('\n\n');
+    if (idea) setField('desc', idea);
+    var proj = (r.projet || '').toLowerCase(), idx = -1;
+    if (proj.indexOf('page') > -1) idx = 0; else if (proj.indexOf('vitrine') > -1) idx = 1;
+    else if (proj.indexOf('pwa') > -1 || proj.indexOf('installable') > -1) idx = 2; else if (proj.indexOf('mobile') > -1) idx = 3;
+    if (idx > -1 && !state.lines.some(function(l){ return l.h && l.l === PRESETS[idx].l; })) {
+      // a bare single line from an older version of the page is replaced by the detailed breakdown
+      state.lines = state.lines.filter(function(l){ return !(l.l === PRESETS[idx].l && !l.h); });
+      addPreset(idx);
+    }
+    if (r.elements) {
+      r.elements.split(',').map(function(s){ return s.trim(); }).forEach(function(e){
+        if (ACCOUNTS[e] && state.acc.indexOf(e) < 0) state.acc.push(e);
+      });
+      renderAcc();
+    }
+    $('importbox').classList.remove('open'); $('importtext').value = ''; save();
+  }
+  function summary(){
+    var who = ($('c-name').value || '').trim();
+    return 'Bonjour' + (who ? ' ' + who : '') + ',\n\nVeuillez trouver ci-joint le devis ' + $('num').value + ' pour votre projet, d’un montant de ' +
+      $('t-ttc').textContent + '. Il est valable jusqu’au ' + new Date($('valid').value).toLocaleDateString('fr-FR') +
+      '.\n\nPour l’accepter, il suffit de me le renvoyer daté et signé avec la mention « Bon pour accord ». Je reste à votre disposition pour toute question.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
+  }
+
+  // init
+  function apply(saved){
+    state.lines = saved.lines || []; state.acc = saved.acc || [];
+    Object.keys(saved.f || {}).forEach(function(k){
+      var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
+      if (el.type === 'checkbox') el.checked = saved.f[k]; else if (el.isContentEditable) el.innerText = saved.f[k]; else el.value = saved.f[k];
+    });
+    renderLines(); renderAcc();
+  }
+  if (QID) {
+    // a quote stored in the private space: the owner's address stays in this browser only
+    var myaddr = (function(){ try { return (JSON.parse(localStorage.getItem(KEY) || '{}').f || {}).myaddr || ''; } catch(e){ return ''; } })();
+    $('sync').textContent = 'chargement…';
+    sb.select('quotes', 'select=*&id=eq.' + encodeURIComponent(QID)).then(function(rows){
+      var q = rows && rows[0];
+      if (!q) { $('sync').textContent = 'devis introuvable'; return; }
+      var d = q.data || {};
+      apply(d);
+      if (myaddr && !document.querySelector('[data-k="myaddr"]').value) document.querySelector('[data-k="myaddr"]').value = myaddr;
+      if (!state.lines.length && d.lead && d.lead.projet) {
+        $('importtext').value = 'Projet : ' + d.lead.projet + (d.lead.elements ? '\nÉléments à prévoir : ' + d.lead.elements : '');
+        doImport();
+      }
+      $('importbox').classList.remove('open');
+      $('sync').textContent = 'enregistré ✓';
+    }, function(){ $('sync').textContent = 'connexion expirée : reconnectez-vous'; });
+  } else {
+    var saved = load();
+    if (saved) apply(saved); else fresh();
+  }
+
+  [].forEach.call(document.querySelectorAll('[data-k]'), function(el){ el.addEventListener('input', totals); el.addEventListener('change', totals); });
+  [].forEach.call(document.querySelectorAll('.add'), function(b){ b.onclick = function(){ addPreset(+b.dataset.preset); }; });
+  $('b-print').onclick = function(){ save(); window.print(); };
+  $('b-new').onclick = function(){
+    if (QID) { location.href = './'; return; }
+    if (confirm('Commencer un nouveau devis ? Le devis en cours sera effacé de cette page.')) fresh();
+  };
+  $('b-import').onclick = function(){ $('importbox').classList.add('open'); $('importtext').focus(); };
+  $('b-cancel').onclick = function(){ $('importbox').classList.remove('open'); };
+  $('b-doimport').onclick = doImport;
+  function looksLikeRequest(t){ return /pr[ée]nom\s*:/i.test(t.normalize('NFC')) || /je souhaite un devis/i.test(t); }
+  $('desc').addEventListener('paste', function(e){
+    var t = (e.clipboardData || window.clipboardData).getData('text');
+    if (!t || !looksLikeRequest(t)) return;
+    e.preventDefault(); $('importtext').value = t; doImport();
+  });
+  // a request pasted earlier straight into "Le projet": spread it into the right fields
+  if (!QID && looksLikeRequest($('desc').innerText) && !$('c-name').value) {
+    $('importtext').value = $('desc').innerText; $('desc').innerText = ''; doImport();
+  }
+  if (!QID && !$('c-name').value && !$('desc').innerText.trim()) $('importbox').classList.add('open');
+  $('b-mail').onclick = function(){
+    var c = ($('c-contact').value || '').trim();
+    location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + $('num').value) + '&body=' + encodeURIComponent(summary());
+  };
+  $('b-wa').onclick = function(){
+    var c = ($('c-contact').value || '').replace(/[^\d+]/g, '');
+    if (c.indexOf('0') === 0 && c.length === 10) c = '33' + c.slice(1);
+    c = c.replace(/^\+/, '');
+    window.open('https://wa.me/' + (c.length >= 10 && c.indexOf('@') < 0 ? c : '') + '?text=' + encodeURIComponent(summary()), '_blank', 'noopener');
+  };
+})();
+</script>
+</body>
+</html>
