@@ -168,6 +168,69 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   .qv .party,.qv .desc,.qv tr.grp td,.qv .why,.qv .otag,.qv .signed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .qv tr{break-inside:avoid}
 }
+
+/* layout with menu */
+.shell{max-width:1180px;margin:0 auto;padding:20px 16px 40px;display:grid;grid-template-columns:230px 1fr;gap:22px;align-items:start}
+.side{position:sticky;top:16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:2px}
+.side .who{padding:8px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.side .who b{display:block;font-size:15px}.side .who span{font-size:12.5px;color:var(--mute)}
+.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:14.5px;position:relative}
+.side a:hover{background:var(--soft)}
+.side a[aria-current]{background:#e8f0ff;color:var(--blue2)}
+.side svg{width:19px;height:19px;flex:none}
+.side a i{font-style:normal;margin-left:auto;background:var(--cyan);color:#05213d;border-radius:20px;font-size:11.5px;font-weight:800;padding:1px 7px}
+.content{min-width:0;max-width:none;margin:0;padding:0}
+.top .in{max-width:1180px}
+.content:focus{outline:none}
+.vhead h1,.phead h1{font-size:24px;line-height:1.25}
+.vhead p{color:var(--mute);margin-top:4px}
+.vhead{margin-bottom:6px}
+.back{display:inline-block;margin-bottom:10px;font-weight:600;text-decoration:none}
+.muted{color:var(--mute)}
+.items{display:grid;gap:10px}
+.item{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink);text-decoration:none}
+a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
+.card .item{border-color:var(--line)}
+.ih{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.ih b{font-size:15.5px}
+.im{font-size:13.5px;color:var(--mute);margin-top:3px}
+.item .txt{font-size:14px;color:var(--ink2);white-space:pre-wrap;margin-top:6px}
+.item .bar{margin-top:10px}
+.bar{height:8px;background:#e4ebf3;border-radius:20px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--grad);border-radius:20px}
+.pc{margin-left:auto;font-size:14px;color:var(--blue2)}
+.gt{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
+.todo{list-style:none;display:grid;gap:8px}
+.todo li{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:9px;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.stats a{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-decoration:none;color:var(--mute);font-size:13px;text-align:center}
+.stats b{display:block;font-size:22px;color:var(--ink)}
+.empty-card p{color:var(--mute);margin-bottom:10px}
+.envlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.env{border:1px solid var(--line);border-radius:12px;padding:12px}
+.eh{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.em{font-size:13.5px;color:var(--mute);margin-top:2px}
+.en{font-size:13px;color:var(--ink2);margin-top:4px}
+.env .btn{margin-top:8px}
+.secure{font-size:13.5px;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
+select{width:100%;border:1px solid #c9d6e4;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);font-size:15px}
+footer{max-width:1180px}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;padding-top:0;gap:14px}
+  .side{position:sticky;top:0;z-index:5;flex-direction:row;overflow-x:auto;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px;gap:4px;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .side .who{display:none}
+  .side a{flex:none;padding:8px 11px;font-size:13.5px;white-space:nowrap}
+  .side svg{width:17px;height:17px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .envlist{grid-template-columns:1fr}
+  .todo li{flex-direction:column;align-items:flex-start}
+}
+@media print{
+  body.printing .side,body.printing .back,body.printing .phead,body.printing .okbox,body.printing .warnbox,body.printing .accept,body.printing .note{display:none!important}
+  body.printing .shell{display:block;padding:0}
+}
 </style>
 </head>
 <body>
@@ -180,78 +243,60 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   </div>
 </header>
 
-<main id="main">
-  <div class="center" id="s-load"><p>Chargement de votre espace…</p></div>
-  <div class="auth" id="s-auth" hidden>
-    <div class="card">
-      <form id="f-login">
-        <h1>Votre espace client</h1>
-        <p class="intro">Suivez votre demande, votre devis et votre projet, et échangez avec moi.</p>
-        <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="email" required>
-        <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
-        <button class="btn main" type="submit">Se connecter</button>
-        <div class="links"><button type="button" data-go="f-forgot">Mot de passe oublié ?</button><button type="button" data-go="f-signup">Créer mon espace</button></div>
-      </form>
-      <form id="f-signup" hidden>
-        <h1>Créer mon espace</h1>
-        <p class="intro">Utilisez l’adresse e-mail donnée lors de votre demande : vous y retrouverez tout.</p>
-        <label for="s-email">E-mail</label><input id="s-email" type="email" autocomplete="email" required>
-        <label for="s-pass">Mot de passe (8 caractères minimum)</label><input id="s-pass" type="password" minlength="8" autocomplete="new-password" required>
-        <button class="btn main" type="submit">Créer mon espace</button>
-        <div class="links"><button type="button" data-go="f-login">J’ai déjà un espace</button></div>
-      </form>
-      <form id="f-forgot" hidden>
-        <h1>Mot de passe oublié</h1>
-        <p class="intro">Indiquez votre e-mail : vous recevrez un lien pour en choisir un nouveau.</p>
-        <label for="r-email">E-mail</label><input id="r-email" type="email" autocomplete="email" required>
-        <button class="btn main" type="submit">Recevoir le lien</button>
-        <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
-      </form>
-      <form id="f-newpass" hidden>
-        <h1>Nouveau mot de passe</h1>
-        <label for="n-pass">Mot de passe (8 caractères minimum)</label><input id="n-pass" type="password" minlength="8" autocomplete="new-password" required>
-        <button class="btn main" type="submit">Enregistrer</button>
-        <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
-      </form>
-      <p class="msgline" id="au-msg" role="status" aria-live="polite"></p>
-      <p class="hint" style="text-align:center;margin-top:14px"><a href="../">← Retour au site RD Créations</a></p>
-    </div>
-  </div>
-  <div class="center" id="s-bad" hidden>
-    <div class="card">
-      <h2 style="font-size:19px;margin-bottom:8px">Ce lien ne fonctionne pas</h2>
-      <p>Il est peut-être incomplet ou a été remplacé. Ouvrez le dernier lien reçu par e-mail ou WhatsApp, ou demandez-m’en un nouveau.</p>
-      <p style="margin-top:12px"><a class="btn main" href="https://wa.me/33782884646" target="_blank" rel="noopener">Me contacter</a></p>
-    </div>
-  </div>
-  <div class="center" id="s-err" hidden>
-    <div class="card"><h2 style="font-size:19px;margin-bottom:8px">Connexion impossible</h2><p>Vérifiez votre connexion internet, puis rechargez la page.</p>
-    <p style="margin-top:12px"><button class="btn main" type="button" onclick="location.reload()">Recharger</button></p></div>
-  </div>
+<div id="s-load" class="center"><p>Chargement de votre espace…</p></div>
 
-  <div id="app" hidden>
-    <p class="msgline ok" id="app-msg" role="status" aria-live="polite" style="margin:0 0 14px"></p>
-    <div class="hello"><h1 id="hello"></h1><p>Retrouvez ici votre devis, l’avancement de votre projet, vos documents et nos échanges.</p></div>
-    <div class="picker" id="picker" hidden></div>
-    <div id="none" class="card" hidden><p id="none-t">Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.</p></div>
-    <div id="proj"></div>
-    <section class="card" id="reqs" hidden>
-      <h2>Vos demandes</h2>
-      <ul class="reqs" id="reqlist"></ul>
-      <div class="qacts"><a class="btn line" href="../#devis">Faire une nouvelle demande</a></div>
-    </section>
-
-    <section class="card" id="chat">
-      <h2>Nos échanges</h2>
-      <div class="thread" id="thread"></div>
-      <label for="m-body">Votre message</label>
-      <textarea id="m-body" maxlength="2000" placeholder="Une question, une modification à demander, un retour sur les maquettes…"></textarea>
-      <div class="qacts"><button class="btn main" id="m-send" type="button">Envoyer</button></div>
-      <p class="msgline" id="m-msg" role="status" aria-live="polite"></p>
-      <p class="hint">Je vous réponds sous 48 h. Pour une urgence, appelez-moi ou écrivez-moi sur WhatsApp au 07 82 88 46 46.</p>
-    </section>
+<div class="auth" id="s-auth" hidden>
+  <div class="card">
+    <form id="f-login">
+      <h1>Votre espace client</h1>
+      <p class="intro">Suivez vos demandes, vos devis et vos projets, et échangez avec moi.</p>
+      <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="email" required>
+      <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
+      <button class="btn main" type="submit">Se connecter</button>
+      <div class="links"><button type="button" data-go="f-forgot">Mot de passe oublié ?</button><button type="button" data-go="f-signup">Créer mon espace</button></div>
+    </form>
+    <form id="f-signup" hidden>
+      <h1>Créer mon espace</h1>
+      <p class="intro">Utilisez l’adresse e-mail donnée lors de votre demande : vous y retrouverez tout.</p>
+      <label for="s-email">E-mail</label><input id="s-email" type="email" autocomplete="email" required>
+      <label for="s-pass">Mot de passe (8 caractères minimum)</label><input id="s-pass" type="password" minlength="8" autocomplete="new-password" required>
+      <button class="btn main" type="submit">Créer mon espace</button>
+      <div class="links"><button type="button" data-go="f-login">J’ai déjà un espace</button></div>
+    </form>
+    <form id="f-forgot" hidden>
+      <h1>Mot de passe oublié</h1>
+      <p class="intro">Indiquez votre e-mail : vous recevrez un lien pour en choisir un nouveau.</p>
+      <label for="r-email">E-mail</label><input id="r-email" type="email" autocomplete="email" required>
+      <button class="btn main" type="submit">Recevoir le lien</button>
+      <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
+    </form>
+    <form id="f-newpass" hidden>
+      <h1>Nouveau mot de passe</h1>
+      <label for="n-pass">Mot de passe (8 caractères minimum)</label><input id="n-pass" type="password" minlength="8" autocomplete="new-password" required>
+      <button class="btn main" type="submit">Enregistrer</button>
+      <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
+    </form>
+    <p class="msgline" id="au-msg" role="status" aria-live="polite"></p>
+    <p class="hint" style="text-align:center;margin-top:14px"><a href="../">← Retour au site RD Créations</a></p>
   </div>
-</main>
+</div>
+
+<div class="center" id="s-bad" hidden>
+  <div class="card">
+    <h2 style="font-size:19px;margin-bottom:8px">Ce lien ne fonctionne pas</h2>
+    <p>Il est peut-être incomplet ou a été remplacé. Ouvrez le dernier lien reçu par e-mail ou WhatsApp, ou connectez-vous avec votre compte.</p>
+    <p style="margin-top:12px"><a class="btn main" href="./">Se connecter</a></p>
+  </div>
+</div>
+<div class="center" id="s-err" hidden>
+  <div class="card"><h2 style="font-size:19px;margin-bottom:8px">Connexion impossible</h2><p>Vérifiez votre connexion internet, puis rechargez la page.</p>
+  <p style="margin-top:12px"><button class="btn main" type="button" onclick="location.reload()">Recharger</button></p></div>
+</div>
+
+<div class="shell" id="app" hidden>
+  <nav class="side" id="nav" aria-label="Menu de l’espace client"></nav>
+  <main class="content" id="view" tabindex="-1"></main>
+</div>
 <footer>RD Créations · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
@@ -275,7 +320,8 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   var UUID = /^#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
   var m = UUID.exec(location.hash), token = m ? m[1].toLowerCase() : null;
   try { if (token) localStorage.setItem('rd-espace', token); else if (!sb.session()) token = localStorage.getItem('rd-espace'); } catch(e){}
-  var D = null, current = null;
+  if (m) history.replaceState(null, '', location.pathname + '#/accueil');
+  var D = null;
 
   function show(id){ ['s-load', 's-auth', 's-bad', 's-err', 'app'].forEach(function(x){ $(x).hidden = x !== id; }); }
   function call(fn, args){
@@ -283,8 +329,13 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     if (token) { var a = { p_token: token }; for (var k in args) a[k] = args[k]; return sb.rpc('portal_' + fn, a); }
     return sb.rpc('my_' + fn, args, true);
   }
+  function notify(subject, text){
+    if (!FORMSPREE_ID) return;
+    fetch('https://formspree.io/f/' + FORMSPREE_ID, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _subject: subject, message: text + '\n\nVoir dans l’espace privé : ' + sb.ADMIN }) }).catch(function(){});
+  }
 
-  /* account forms */
+  /* ---------- account forms ---------- */
   var forms = ['f-login', 'f-signup', 'f-forgot', 'f-newpass'];
   function form(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); au(msg || '', ok); show('s-auth'); }
   function au(t, ok){ var e = $('au-msg'); e.textContent = t; e.className = 'msgline ' + (ok ? 'ok' : 'err'); }
@@ -326,25 +377,22 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
       });
     }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
   };
-  $('b-out').onclick = function(){
+  function logout(){
     try { localStorage.removeItem('rd-espace'); } catch(e){}
     sb.signOut().then(function(){ location.replace(location.pathname); });
-  };
-  function notify(subject, text){
-    if (!FORMSPREE_ID) return;
-    fetch('https://formspree.io/f/' + FORMSPREE_ID, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ _subject: subject, message: text + '\n\nVoir dans l’espace privé : ' + sb.ADMIN }) }).catch(function(){});
   }
-  function load(keep){
+  $('b-out').onclick = logout;
+
+  function load(){
     if (token) {
       return sb.rpc('portal_get', { p_token: token }).then(function(d){
         if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
-        D = d; show('app'); render(keep);
+        D = d; show('app'); route();
       }, function(){ show('s-err'); });
     }
     if (!sb.session()) { form('f-login'); return Promise.resolve(); }
     return sb.rpc('my_space', {}, true).then(function(d){
-      D = d; $('b-out').hidden = false; show('app'); render(keep);
+      D = d; $('b-out').hidden = false; show('app'); route();
     }, function(err){
       if (/administrateur/.test(err.message)) { sb.signOut(); form('f-login', 'Ce compte est celui de l’espace privé : utilisez la page admin.'); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
@@ -353,6 +401,7 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     });
   }
 
+  /* ---------- data helpers ---------- */
   function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
   function title(q){
     var h = (q.data.lines || []).filter(function(l){ return l.h && l.l; }).map(function(l){ return l.l; });
@@ -360,74 +409,256 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   }
   function steps(q){ return (q.steps && q.steps.length) ? q.steps : window.RDSTEPS; }
   function expired(q){ var v = isoDay((q.data.f || {}).valid); return !q.accepted_at && v && v < new Date(new Date().toDateString()); }
+  function pending(q){ return !q.accepted_at && !expired(q) && q.status !== 'refusé'; }
+  function quotes(){ return D.quotes || []; }
+  function projects(){ return quotes().filter(function(q){ return q.accepted_at; }); }
+  function byId(id){ return quotes().filter(function(q){ return q.id === id; })[0]; }
+  function progress(q){ var s = steps(q), d = s.filter(function(x){ return x.done; }).length; return s.length ? Math.round(d * 100 / s.length) : 0; }
+  function current(q){ return steps(q).filter(function(s){ return !s.done; })[0]; }
   function state(q){
     if (q.status === 'refusé') return ['Clos', 'off'];
-    if (!q.accepted_at) return expired(q) ? ['Devis expiré', 'warn'] : ['Devis à valider', ''];
-    var st = steps(q), cur = st.filter(function(s){ return !s.done; })[0];
-    return cur ? ['En cours : ' + cur.t, ''] : ['Projet livré', 'ok'];
+    if (!q.accepted_at) return expired(q) ? ['Expiré', 'warn'] : ['À valider', ''];
+    var cur = current(q);
+    return cur ? ['En cours : ' + cur.t, ''] : ['Livré', 'ok'];
+  }
+  // messages from Roland the client has not seen yet on this device
+  function seenKey(){ return 'rd-espace-seen-' + (D.email || token || ''); }
+  function seen(){ try { return localStorage.getItem(seenKey()) || ''; } catch(e){ return ''; } }
+  function unseen(){ var s = seen(); return (D.messages || []).filter(function(x){ return x.author !== 'client' && (!s || x.at > s); }).length; }
+  function markSeen(){ var ms = D.messages || []; if (!ms.length) return; try { localStorage.setItem(seenKey(), ms[ms.length - 1].at); } catch(e){} }
+  function envOf(q){
+    // the project environment, or the hosting planned in the quote until it is filled in
+    if ((q.env || []).length) return q.env;
+    return (q.data.host || []).map(function(x){ return { l: x.l, w: x.w, u: '', o: 'client', st: 'prévu', n: x.c ? 'Coût indicatif : ' + x.c : '' }; });
   }
 
-  function render(keep){
-    $('hello').textContent = 'Bonjour ' + (first(D.client.nom) || '') + ' 👋';
-    $('b-out').hidden = !!token;
-    var qs = D.quotes || [];
-    $('none').hidden = !!qs.length;
-    var rq = D.requests || [];
-    $('none-t').textContent = rq.length ? 'Votre demande est bien reçue : je prépare votre devis, il apparaîtra ici. En attendant, vous pouvez m’écrire en bas de la page.' :
-      'Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.';
-    $('reqs').hidden = !rq.length || token;
-    $('reqlist').innerHTML = rq.map(function(r){
-      var st = qs.length && r.status !== 'nouvelle' ? ['Traitée', 'ok'] : r.status === 'nouvelle' ? ['Reçue', ''] : ['Devis en préparation', 'warn'];
-      return '<li><div class="h"><b>' + esc(r.projet || 'Demande') + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
-        '<div class="hint" style="margin-top:2px">Envoyée le ' + day(r.at) + (r.budget ? ' · budget : ' + esc(r.budget) : '') + '</div>' +
-        (r.message ? '<div class="txt">' + esc(r.message) + '</div>' : '') + '</li>';
-    }).join('');
-    if (!keep || !qs.some(function(q){ return q.id === current; })) current = qs[0] && qs[0].id;
-    $('picker').hidden = qs.length < 2;
-    $('picker').innerHTML = qs.map(function(q){ return '<button type="button" data-id="' + q.id + '" aria-pressed="' + (q.id === current) + '">' + esc(title(q)) + '</button>'; }).join('');
-    var q = qs.filter(function(x){ return x.id === current; })[0];
-    $('proj').innerHTML = q ? project(q) : '';
-    if (q) wire(q);
-    renderThread();
+  /* ---------- router ---------- */
+  var NAV = [
+    ['accueil', 'Accueil', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'],
+    ['demandes', 'Mes demandes', '<path d="M4 4h16v12H7l-3 3z"/>'],
+    ['devis', 'Mes devis', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>'],
+    ['projets', 'Mes projets', '<path d="M3 7h18v13H3z"/><path d="M8 7V4h8v3"/>'],
+    ['environnement', 'Environnement', '<rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><path d="M7 7h.01M7 17h.01"/>'],
+    ['documents', 'Documents', '<path d="M3 7h6l2 2h10v10H3z"/>'],
+    ['messages', 'Messages', '<path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/>'],
+    ['compte', 'Mon compte', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']
+  ];
+  function go(path){ location.hash = '#/' + path; }
+  function route(){
+    if (!D) return;
+    var parts = (location.hash.replace(/^#\/?/, '') || 'accueil').split('/'), page = parts[0], id = parts[1];
+    if (!NAV.some(function(n){ return n[0] === page; })) page = 'accueil';
+    var pend = quotes().filter(pending).length, un = unseen();
+    $('nav').innerHTML = '<div class="who"><b>' + esc(D.client.nom || '') + '</b>' + (D.client.entreprise ? '<span>' + esc(D.client.entreprise) + '</span>' : '') + '</div>' +
+      NAV.map(function(n){
+        var badge = n[0] === 'devis' && pend ? pend : n[0] === 'messages' && un ? un : 0;
+        return '<a href="#/' + n[0] + '"' + (n[0] === page ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + n[2] + '</svg><span>' + n[1] + '</span>' + (badge ? '<i>' + badge + '</i>' : '') + '</a>';
+      }).join('');
+    var v = $('view');
+    v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
+    (WIRE[page] || function(){})(id);
+    document.title = (NAV.filter(function(n){ return n[0] === page; })[0] || NAV[0])[1] + ' · Espace client RD Créations';
+    var cur = $('nav').querySelector('[aria-current]'); if (cur && cur.scrollIntoView && window.innerWidth < 900) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
+    window.scrollTo(0, 0);
   }
-  $('picker').onclick = function(e){ var b = e.target.closest('button[data-id]'); if (!b) return; current = b.dataset.id; render(true); };
+  window.addEventListener('hashchange', route);
 
-  function project(q){
-    var f = q.data.f || {}, st = state(q), h = '';
-    h += '<div class="phead"><h2>' + esc(title(q)) + '</h2><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num">Devis ' + esc(q.numero) + '</span></div>';
-    if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
-    if (q.accepted_at) h += '<div class="okbox"><b>Devis accepté ✓</b>Le ' + day(q.accepted_at) + ', par ' + esc(q.accepted_name) + '. Merci pour votre confiance ! Vous suivez ci-dessous chaque étape du projet.</div>';
-    else if (expired(q)) h += '<div class="warnbox">Ce devis a expiré le ' + day(isoDay(f.valid)) + '. Écrivez-moi en bas de la page : je vous en envoie un à jour.</div>';
-    // steps
+  /* ---------- pieces ---------- */
+  function head(t, sub){ return '<div class="vhead"><h1>' + t + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>'; }
+  function back(path, label){ return '<a class="back" href="#/' + path + '">← ' + label + '</a>'; }
+  function empty(t, cta){ return '<div class="card empty-card"><p>' + t + '</p>' + (cta || '') + '</div>'; }
+  function bar(p){ return '<div class="bar" role="progressbar" aria-valuenow="' + p + '" aria-valuemin="0" aria-valuemax="100"><span style="width:' + p + '%"></span></div>'; }
+  function quoteCard(q){
+    var st = state(q);
+    return '<a class="item" href="#/' + (q.accepted_at ? 'projets' : 'devis') + '/' + q.id + '"><div class="ih"><b>' + esc(title(q)) + '</b><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span></div>' +
+      '<div class="im">Devis ' + esc(q.numero) + ' · ' + eur(q.total) + (q.accepted_at ? ' · accepté le ' + day(q.accepted_at) : (q.data.f || {}).valid ? ' · valable jusqu’au ' + day(isoDay(q.data.f.valid)) : '') + '</div>' +
+      (q.accepted_at ? bar(progress(q)) : '') + '</a>';
+  }
+  function envTable(items){
+    var ST = { 'actif': ['Actif', 'ok'], 'en cours': ['En cours', ''], 'à créer': ['À créer', 'warn'], 'prévu': ['Prévu', 'off'] };
+    return '<div class="envlist">' + items.map(function(x){
+      var st = ST[x.st] || ST['prévu'], url = /^https:\/\//i.test(x.u || '') ? x.u : '';
+      return '<div class="env"><div class="eh"><b>' + esc(x.l) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+        '<div class="em">' + (x.w ? esc(x.w) + ' · ' : '') + (x.o === 'rd' ? 'géré par RD Créations' : 'à votre nom') + '</div>' +
+        (x.n ? '<div class="en">' + esc(x.n) + '</div>' : '') +
+        (url ? '<a class="btn line sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Ouvrir ↗</a>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  function docsList(docs){
+    return '<ul class="docs">' + docs.map(function(d){
+      return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + esc(d.n || 'Document') + '</a></li>';
+    }).join('') + '</ul>';
+  }
+  function okDocs(q){ return (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); }); }
+  function stepsList(q){
     var list = steps(q), now = -1;
     list.forEach(function(s, i){ if (now < 0 && !s.done) now = i; });
-    h += '<section class="card"><h2>Où en est votre projet</h2><ol class="steps">' + list.map(function(s, i){
+    return '<ol class="steps">' + list.map(function(s, i){
       var dep = s.k === 'deposit' ? depositText(q) : '';
       return '<li class="' + (s.done ? 'done' : i === now && q.accepted_at ? 'now' : '') + '"><span class="dot">' + (s.done ? '✓' : i + 1) + '</span>' +
         '<div class="t">' + esc(s.t) + '</div>' + (s.s ? '<div class="s">' + esc(s.s) + dep + '</div>' : '') +
         (s.done && s.d ? '<div class="d">Fait le ' + day(isoDay(s.d)) + '</div>' : '') +
         (s.note ? '<div class="n">' + esc(s.note) + '</div>' : '') + '</li>';
-    }).join('') + '</ol></section>';
-    // accept
-    if (!q.accepted_at && !expired(q) && q.status !== 'refusé') {
-      h += '<section class="card accept" id="acc"><h2>Bon pour accord</h2>' +
-        '<p>Si le devis ci-dessous vous convient, vous pouvez l’accepter ici, sans rien imprimer. Une question ou une modification avant ? Écrivez-moi en bas de la page.</p>' +
-        '<label for="a-name">Votre nom et prénom</label><input id="a-name" autocomplete="name" maxlength="120" value="' + esc(D.client.nom) + '">' +
-        '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’en accepte le contenu et les conditions.</span></label>' +
-        '<div class="row"><button class="btn main" id="a-go" type="button" disabled>J’accepte le devis</button><button class="lnk" id="a-ask" type="button">Poser une question</button></div>' +
-        '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
-        '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord »). Votre nom, la date, l’heure et l’adresse de connexion sont enregistrés comme preuve de votre accord.</p></section>';
-    }
-    // quote
-    h += '<section class="card quote"><h2>Votre devis</h2>' + quoteView(q) +
-      '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
-    // documents
-    var docs = (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); });
-    if (docs.length) h += '<section class="card"><h2>Vos documents</h2><ul class="docs">' + docs.map(function(d){
-      return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + esc(d.n || 'Document') + '</a></li>';
-    }).join('') + '</ul></section>';
+    }).join('') + '</ol>';
+  }
+
+  /* ---------- views ---------- */
+  var VIEWS = {}, WIRE = {};
+  VIEWS.accueil = function(){
+    var todo = [], qs = quotes(), un = unseen();
+    qs.filter(pending).forEach(function(q){ todo.push(['Votre devis ' + q.numero + ' (' + eur(q.total) + ') attend votre accord', '#/devis/' + q.id, 'Voir le devis']); });
+    projects().forEach(function(q){
+      var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
+      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Voir le projet']);
+    });
+    if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
+    if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
+    var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec RD Créations.');
+    if (note) h += '<div class="note"><b>Le mot de Roland · ' + esc(title(note)) + '</b>' + esc(note.note) + '</div>';
+    h += '<section class="card"><h2>À faire</h2>' + (todo.length ? '<ul class="todo">' + todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><a class="btn main sm" href="' + t[1] + '">' + t[2] + '</a></li>'; }).join('') + '</ul>' :
+      '<p class="muted">Rien à faire pour le moment 👌 Je vous préviens dès qu’il y a du nouveau.</p>') + '</section>';
+    var ps = projects();
+    if (ps.length) h += '<section class="card"><h2>Vos projets</h2><div class="items">' + ps.map(quoteCard).join('') + '</div></section>';
+    h += '<div class="stats"><a href="#/demandes"><b>' + (D.requests || []).length + '</b>demande' + ((D.requests || []).length > 1 ? 's' : '') + '</a><a href="#/devis"><b>' + qs.length + '</b>devis</a><a href="#/projets"><b>' + ps.length + '</b>projet' + (ps.length > 1 ? 's' : '') + '</a><a href="#/messages"><b>' + (D.messages || []).length + '</b>message' + ((D.messages || []).length > 1 ? 's' : '') + '</a></div>';
+    return h;
+  };
+  VIEWS.demandes = function(){
+    var rq = D.requests || [], qs = quotes(), h = head('Mes demandes', 'Ce que vous m’avez envoyé depuis le site.');
+    if (!rq.length) return h + empty(token ? 'Vos demandes envoyées par WhatsApp ou par e-mail ne s’affichent pas ici, mais vos devis oui.' : 'Aucune demande pour le moment.', '<a class="btn main" href="../#devis">Faire une demande</a>');
+    return h + '<div class="items">' + rq.map(function(r){
+      var st = qs.length && r.status !== 'nouvelle' ? ['Traitée', 'ok'] : r.status === 'nouvelle' ? ['Reçue', ''] : ['Devis en préparation', 'warn'];
+      return '<div class="item"><div class="ih"><b>' + esc(r.projet || 'Demande') + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+        '<div class="im">Envoyée le ' + day(r.at) + (r.budget ? ' · budget : ' + esc(r.budget) : '') + '</div>' + (r.message ? '<div class="txt">' + esc(r.message) + '</div>' : '') + '</div>';
+    }).join('') + '</div><p style="margin-top:14px"><a class="btn line" href="../#devis">Faire une nouvelle demande</a></p>';
+  };
+  VIEWS.devis = function(id){
+    if (id) return quoteDetail(byId(id));
+    var qs = quotes(), h = head('Mes devis', 'Consultez, téléchargez et acceptez vos devis en ligne.');
+    if (!qs.length) return h + empty((D.requests || []).length ? 'Votre demande est bien reçue : je prépare votre devis, il apparaîtra ici.' : 'Aucun devis pour le moment.');
+    var groups = [['À valider', qs.filter(pending)], ['Acceptés', projects()], ['Expirés ou clos', qs.filter(function(q){ return !q.accepted_at && !pending(q); })]];
+    return h + groups.filter(function(g){ return g[1].length; }).map(function(g){
+      return '<h2 class="gt">' + g[0] + '</h2><div class="items">' + g[1].map(function(q){ return quoteCard(q).replace('href="#/projets/', 'href="#/devis/'); }).join('') + '</div>';
+    }).join('');
+  };
+  function quoteDetail(q){
+    if (!q) return back('devis', 'Mes devis') + empty('Ce devis n’est pas disponible.');
+    var f = q.data.f || {}, st = state(q), h = back('devis', 'Mes devis');
+    h += '<div class="phead"><h1>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num">Devis ' + esc(q.numero) + '</span></div>';
+    if (q.accepted_at) h += '<div class="okbox"><b>Devis accepté ✓</b>Le ' + day(q.accepted_at) + ', par ' + esc(q.accepted_name) + '. <a href="#/projets/' + q.id + '">Suivre le projet →</a></div>';
+    else if (expired(q)) h += '<div class="warnbox">Ce devis a expiré le ' + day(isoDay(f.valid)) + '. <a href="#/messages">Écrivez-moi</a> : je vous en envoie un à jour.</div>';
+    if (pending(q)) h += '<section class="card accept" id="acc"><h2>Bon pour accord</h2>' +
+      '<p>Si le devis ci-dessous vous convient, vous pouvez l’accepter ici, sans rien imprimer. Une question ou une modification avant ? <a href="#/messages">Écrivez-moi</a>.</p>' +
+      '<label for="a-name">Votre nom et prénom</label><input id="a-name" autocomplete="name" maxlength="120" value="' + esc(D.client.nom) + '">' +
+      '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’en accepte le contenu et les conditions.</span></label>' +
+      '<div class="row"><button class="btn main" id="a-go" type="button" disabled>J’accepte le devis</button></div>' +
+      '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
+      '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord »). Votre nom, la date, l’heure et l’adresse de connexion sont enregistrés comme preuve de votre accord.</p></section>';
+    h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
     return h;
   }
+  WIRE.devis = function(id){
+    var q = id && byId(id); if (!q) return;
+    $('q-print').onclick = function(){ document.body.classList.add('printing'); window.print(); };
+    if (!$('acc')) return;
+    var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name');
+    function upd(){ gob.disabled = !(ok.checked && nm.value.trim().length >= 2); }
+    ok.onchange = upd; nm.oninput = upd;
+    gob.onclick = function(){
+      gob.disabled = true; amsg('Enregistrement…', true);
+      call('accept', { p_quote: q.id, p_name: nm.value.trim() }).then(function(){
+        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.');
+        return load();
+      }, function(e){
+        amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'L’enregistrement n’a pas abouti. Réessayez dans un instant.');
+        upd();
+      });
+    };
+  };
+  function amsg(t, ok){ var e = $('a-msg'); if (!e) return; e.textContent = t; e.className = 'msgline ' + (ok ? 'ok' : 'err'); }
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('printing'); });
+
+  VIEWS.projets = function(id){
+    if (id) return projectDetail(byId(id));
+    var ps = projects(), h = head('Mes projets', 'Les devis acceptés et leur avancement, étape par étape.');
+    if (!ps.length) return h + empty(quotes().some(pending) ? 'Votre projet démarre dès que vous acceptez votre devis.' : 'Aucun projet en cours pour le moment.', quotes().some(pending) ? '<a class="btn main" href="#/devis">Voir mes devis</a>' : '');
+    return h + '<div class="items">' + ps.map(quoteCard).join('') + '</div>';
+  };
+  function projectDetail(q){
+    if (!q || !q.accepted_at) return back('projets', 'Mes projets') + empty('Ce projet n’est pas disponible.');
+    var st = state(q), p = progress(q), h = back('projets', 'Mes projets'), env = envOf(q), docs = okDocs(q);
+    h += '<div class="phead"><h1>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num"><a href="#/devis/' + q.id + '">Devis ' + esc(q.numero) + '</a></span></div>';
+    if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
+    h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
+    h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';
+    if (docs.length) h += '<section class="card"><h2>Documents</h2>' + docsList(docs) + '</section>';
+    h += '<p style="margin-top:16px"><a class="btn line" href="#/messages">Une question sur ce projet ? Écrivez-moi</a></p>';
+    return h;
+  }
+  VIEWS.environnement = function(){
+    var qs = quotes().filter(function(q){ return envOf(q).length; }), h = head('Environnement', 'Où vit votre projet : site en ligne, code, hébergement, base de données, stores, nom de domaine. Tout est à votre nom, sauf mention contraire.');
+    h += '<p class="secure">🔒 Aucun mot de passe n’est affiché ici : seulement les liens et les informations. Vos identifiants vous sont remis avec la fiche de remise, à la livraison.</p>';
+    if (!qs.length) return h + empty('Les accès de vos projets apparaîtront ici dès qu’ils seront créés.');
+    return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + envTable(envOf(q)) + '</section>'; }).join('');
+  };
+  VIEWS.documents = function(){
+    var qs = quotes().filter(function(q){ return okDocs(q).length; }), h = head('Documents', 'Maquettes, factures, fiche de remise et autres fichiers partagés.');
+    h += '<section class="card"><h2>Toujours disponibles</h2>' + docsList([{ n: 'Fiche de remise (modèle)', u: 'https://rdzoagbe.github.io/rd-creations/assets/fiche-de-remise-client.pdf' }]) + '</section>';
+    if (!qs.length) return h + empty('Les documents de vos projets apparaîtront ici.');
+    return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');
+  };
+  VIEWS.messages = function(){
+    var ms = D.messages || [], qs = quotes(), h = head('Messages', 'Je vous réponds sous 48 h. Pour une urgence : WhatsApp au 07 82 88 46 46.');
+    h += '<section class="card"><div class="thread" id="thread">' + (ms.length ? ms.map(function(x){
+      var q = x.quote_id && byId(x.quote_id);
+      return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + esc(x.body) + '<small>' + (x.author === 'client' ? 'Vous' : 'Roland') + ' · ' + time(x.at) + (q ? ' · ' + esc(q.numero) : '') + '</small></div>';
+    }).join('') : '<p class="muted">Pas encore de message. Écrivez-moi ici pour toute question.</p>') + '</div>' +
+      (qs.length > 1 ? '<label for="m-q">À propos de</label><select id="m-q"><option value="">Général</option>' + qs.map(function(q){ return '<option value="' + q.id + '">' + esc(title(q)) + ' (' + esc(q.numero) + ')</option>'; }).join('') + '</select>' : '') +
+      '<label for="m-body">Votre message</label><textarea id="m-body" maxlength="2000" placeholder="Une question, une modification à demander, un retour sur les maquettes…"></textarea>' +
+      '<div class="qacts"><button class="btn main" id="m-send" type="button">Envoyer</button></div><p class="msgline" id="m-msg" role="status" aria-live="polite"></p></section>';
+    return h;
+  };
+  WIRE.messages = function(){
+    var t = $('thread'); t.scrollTop = t.scrollHeight; markSeen();
+    var link = $('nav').querySelector('a[href="#/messages"] i'); if (link) link.remove();
+    $('m-send').onclick = function(){
+      var body = $('m-body').value.trim(), b = $('m-send'), e = $('m-msg');
+      if (!body) { $('m-body').focus(); return; }
+      var qid = $('m-q') ? $('m-q').value : (quotes()[0] && quotes()[0].id) || '';
+      b.disabled = true; e.className = 'msgline ok'; e.textContent = 'Envoi…';
+      call('message', { p_quote: qid || null, p_body: body }).then(function(){
+        var q = qid && byId(qid);
+        notify('Nouveau message de ' + D.client.nom, (q ? 'Devis ' + q.numero + '\n\n' : '') + body);
+        return load();
+      }, function(err){
+        b.disabled = false; e.className = 'msgline err'; e.textContent = /trop de messages/.test(err.message) ? 'Trop de messages d’un coup : réessayez dans un moment.' : 'L’envoi n’a pas abouti. Réessayez.';
+      });
+    };
+  };
+  VIEWS.compte = function(){
+    var h = head('Mon compte');
+    if (token) return h + '<section class="card"><p>Vous accédez à votre espace avec un <b>lien privé</b>. Gardez-le pour vous : toute personne qui l’a peut voir votre espace.</p>' +
+      '<p style="margin-top:10px">Pour vous connecter avec un e-mail et un mot de passe à la place, créez votre compte avec l’adresse e-mail que vous m’avez donnée, puis dites-le-moi : je relie votre espace à votre compte.</p>' +
+      '<div class="qacts"><button class="btn line" id="c-out" type="button">Fermer l’espace sur cet appareil</button></div></section>';
+    return h + '<section class="card"><h2>Vos informations</h2><p><span class="muted">E-mail de connexion :</span> <b>' + esc(D.email || '') + '</b></p>' +
+      '<p><span class="muted">Nom :</span> ' + esc(D.client.nom || '') + (D.client.entreprise ? ' · ' + esc(D.client.entreprise) : '') + '</p>' +
+      '<p class="muted" style="margin-top:6px">Une information à corriger ? <a href="#/messages">Écrivez-moi</a>.</p></section>' +
+      '<section class="card"><h2>Changer de mot de passe</h2><label for="c-pass">Nouveau mot de passe (8 caractères minimum)</label><input id="c-pass" type="password" minlength="8" autocomplete="new-password">' +
+      '<div class="qacts"><button class="btn main" id="c-save" type="button">Enregistrer</button></div><p class="msgline" id="c-msg" role="status" aria-live="polite"></p></section>' +
+      '<section class="card"><h2>Déconnexion</h2><p class="muted">Sur un ordinateur partagé, pensez à vous déconnecter.</p><div class="qacts"><button class="btn line" id="c-out" type="button">Se déconnecter</button></div></section>';
+  };
+  WIRE.compte = function(){
+    $('c-out').onclick = logout;
+    if (!$('c-save')) return;
+    eyes();
+    $('c-save').onclick = function(){
+      var p = $('c-pass').value, e = $('c-msg');
+      if (p.length < 8) { e.className = 'msgline err'; e.textContent = 'Choisissez un mot de passe de 8 caractères minimum.'; return; }
+      sb.setPassword(p).then(function(){ $('c-pass').value = ''; e.className = 'msgline ok'; e.textContent = 'Mot de passe changé ✓'; },
+        function(){ e.className = 'msgline err'; e.textContent = 'Le changement n’a pas abouti. Déconnectez-vous puis utilisez « Mot de passe oublié ».'; });
+    };
+  };
+
+  /* ---------- quote rendering ---------- */
   function amounts(q){
     var d = q.data, f = d.f || {}, once = 0, month = 0, opt = 0;
     (d.lines || []).forEach(function(l){ if (l.h) return; var t = (l.q || 0) * (l.p || 0); if (l.o) opt += t; else if (l.u === 'mois') month += t; else once += t; });
@@ -475,66 +706,25 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     return h;
   }
 
-  function wire(q){
-    $('q-print').onclick = function(){ document.body.classList.add('printing'); window.print(); };
-    if (!$('acc')) return;
-    var ok = $('a-ok'), go = $('a-go'), nm = $('a-name');
-    $('a-ask').onclick = function(){ $('chat').scrollIntoView({ behavior: 'smooth' }); $('m-body').focus({ preventScroll: true }); };
-    function upd(){ go.disabled = !(ok.checked && nm.value.trim().length >= 2); }
-    ok.onchange = upd; nm.oninput = upd;
-    go.onclick = function(){
-      go.disabled = true; amsg('Enregistrement…', true);
-      call('accept', { p_quote: q.id, p_name: nm.value.trim() }).then(function(){
-        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.');
-        return load(true);
-      }, function(e){
-        amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'L’enregistrement n’a pas abouti. Réessayez dans un instant.');
-        upd();
-      });
-    };
+  /* ---------- password eye ---------- */
+  var EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_SHUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
+  function eyes(){
+    [].forEach.call(document.querySelectorAll('input[type=password]'), function(inp){
+      if (inp.parentNode.classList.contains('pw')) return;
+      var box = document.createElement('div'); box.className = 'pw';
+      inp.parentNode.insertBefore(box, inp); box.appendChild(inp);
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'eye';
+      function set(on){ inp.type = on ? 'text' : 'password'; b.innerHTML = on ? EYE_SHUT : EYE_OPEN; b.setAttribute('aria-label', on ? 'Masquer le mot de passe' : 'Afficher le mot de passe'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+      b.onclick = function(){ set(inp.type === 'password'); inp.focus(); };
+      set(false); box.appendChild(b);
+    });
   }
-  function amsg(t, ok){ var e = $('a-msg'); if (!e) return; e.textContent = t; e.className = 'msgline ' + (ok ? 'ok' : 'err'); }
-  window.addEventListener('afterprint', function(){ document.body.classList.remove('printing'); });
-
-  function renderThread(){
-    var ms = D.messages || [], box = $('thread');
-    box.innerHTML = ms.length ? ms.map(function(x){
-      return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + esc(x.body) + '<small>' + (x.author === 'client' ? 'Vous' : 'Roland') + ' · ' + time(x.at) + '</small></div>';
-    }).join('') : '<p class="empty">Pas encore de message. Écrivez-moi ici pour toute question sur votre projet.</p>';
-    box.scrollTop = box.scrollHeight;
-  }
-  $('m-send').onclick = function(){
-    var body = $('m-body').value.trim(), b = $('m-send'), e = $('m-msg');
-    if (!body) { $('m-body').focus(); return; }
-    b.disabled = true; e.className = 'msgline ok'; e.textContent = 'Envoi…';
-    var q = (D.quotes || []).filter(function(x){ return x.id === current; })[0];
-    call('message', { p_quote: current || null, p_body: body }).then(function(){
-      notify('Nouveau message de ' + D.client.nom, (q ? 'Devis ' + q.numero + '\n\n' : '') + body);
-      $('m-body').value = ''; e.textContent = 'Message envoyé ✓';
-      return load(true);
-    }, function(err){
-      e.className = 'msgline err'; e.textContent = /trop de messages/.test(err.message) ? 'Trop de messages d’un coup : réessayez dans un moment.' : 'L’envoi n’a pas abouti. Réessayez.';
-    }).then(function(){ b.disabled = false; });
-  };
+  eyes();
 
   if (hashErr) form('f-login', /expired|invalid/i.test(decodeURIComponent(hashErr[1])) ? 'Ce lien a expiré ou a déjà servi : connectez-vous, ou demandez un nouveau lien avec « Mot de passe oublié ».' : 'Le lien n’a pas fonctionné : connectez-vous ou demandez un nouveau lien.');
   else if (kind === 'recovery') form('f-newpass', 'Choisissez votre nouveau mot de passe.', true);
   else load();
-})();
-</script>
-<script>
-/* Show/hide toggle on every password field. */
-(function () {
-  var open = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  var shut = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
-  document.querySelectorAll('input[type=password]').forEach(function (inp) {
-  var box = document.createElement('div'); box.className = 'pw';
-  inp.parentNode.insertBefore(box, inp); box.appendChild(inp);
-  var b = document.createElement('button'); b.type = 'button'; b.className = 'eye';
-  function show(on){ inp.type = on ? 'text' : 'password'; b.innerHTML = on ? shut : open; b.setAttribute('aria-label', on ? 'Masquer le mot de passe' : 'Afficher le mot de passe'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-  b.addEventListener('click', function(){ show(inp.type === 'password'); inp.focus(); });
-  show(false); box.appendChild(b);
-  });
 })();
 </script>
 </body>

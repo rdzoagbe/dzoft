@@ -53,11 +53,42 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 .top .brand{margin:0}.top .brand span{color:#9fb3c8}
 .top .sp{flex:1}
 .top .who{font-size:12.5px;color:#9fb3c8}
-.tabs{display:flex;gap:4px;max-width:1100px;margin:0 auto;padding:0 16px}
-.tab{background:none;border:0;color:#c4d2e1;padding:10px 12px;font-weight:700;font-size:14px;border-bottom:3px solid transparent;cursor:pointer}
-.tab[aria-selected=true]{color:#fff;border-color:var(--cyan)}
-.tab .n{background:var(--cyan);color:#05213d;border-radius:20px;font-size:11.5px;padding:1px 7px;margin-left:5px}
-main{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.top .in{max-width:1280px}
+.shell{max-width:1280px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:start}
+.side{position:sticky;top:76px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:2px}
+.tab{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--ink2);padding:9px 10px;font-weight:700;font-size:14.5px;border-radius:10px;cursor:pointer;text-align:left;width:100%}
+.tab:hover{background:var(--soft)}
+.tab[aria-selected=true]{background:#e8f0ff;color:var(--blue2)}
+.tab svg{width:19px;height:19px;flex:none}
+.tab .n{margin-left:auto;background:var(--cyan);color:#05213d;border-radius:20px;font-size:11.5px;padding:1px 7px}
+.side hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+main{min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.kpi:hover{border-color:#b9cbe0}
+.kpi b{display:block;font-size:26px;line-height:1.1}
+.kpi span{font-size:13px;color:var(--mute)}
+.kpi.hot b{color:var(--blue2)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.panel h3{font-size:15.5px;margin-bottom:8px}
+.todo{list-style:none;display:grid;gap:8px}
+.todo li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
+.prog{height:8px;background:#e4ebf3;border-radius:20px;overflow:hidden;min-width:90px}
+.prog span{display:block;height:100%;background:var(--grad)}
+.inbox li{cursor:pointer}
+.inbox .prev{color:var(--mute);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;padding-top:0;gap:12px}
+  .side{position:sticky;top:0;z-index:9;flex-direction:row;overflow-x:auto;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px;gap:4px;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .side hr{display:none}
+  .tab{flex:none;width:auto;padding:8px 11px;font-size:13.5px;white-space:nowrap}
+  .tab svg{width:17px;height:17px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .top{position:static}
+  #dash-projects,#projects,#quotes,#clients,#trash,#inbox{overflow-x:auto}
+  .prog{min-width:60px}
+}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .bar h2{font-size:19px;margin-right:auto}
 .bar input[type=search]{max-width:240px;padding:8px 10px;font-size:14px}
@@ -170,15 +201,28 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <a class="btn sm line" href="../" target="_blank" rel="noopener">Voir le site</a>
       <button class="btn sm ghost" style="color:#c4d2e1" id="b-out" type="button">Déconnexion</button>
     </div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="leads" aria-selected="true">Demandes<span class="n" id="n-new" hidden></span></button>
-      <button class="tab" role="tab" data-tab="clients" aria-selected="false">Clients<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
-      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis</button>
-    </nav>
   </header>
 
+  <div class="shell">
+  <nav class="side" role="tablist" aria-label="Menu de l’espace privé">
+      <button class="tab" role="tab" data-tab="dash" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/></svg>Tableau de bord</button>
+      <button class="tab" role="tab" data-tab="leads" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v12H7l-3 3z"/></svg>Demandes<span class="n" id="n-new" hidden></span></button>
+      <button class="tab" role="tab" data-tab="clients" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M22 21a6 6 0 0 0-4-5.7"/></svg>Clients</button>
+      <button class="tab" role="tab" data-tab="quotes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Devis</button>
+      <button class="tab" role="tab" data-tab="projects" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v13H3z"/><path d="M8 7V4h8v3"/></svg>Projets</button>
+      <button class="tab" role="tab" data-tab="inbox" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg>Messages<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
+      <hr>
+      <button class="tab" role="tab" data-tab="trash" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg>Corbeille<span class="n" id="n-trash" hidden style="background:#eceff3;color:var(--mute)"></span></button>
+  </nav>
+
   <main>
-    <section id="v-leads">
+    <section id="v-dash">
+      <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel"><h3>À faire</h3><ul class="todo" id="todo"></ul></div>
+      <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
+    </section>
+    <section id="v-leads" hidden>
       <div class="bar">
         <h2>Demandes reçues</h2>
         <select id="lead-filter" style="width:auto"><option value="open">À traiter</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
@@ -206,7 +250,23 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       </div>
       <div id="quotes"></div>
     </section>
+
+    <section id="v-projects" hidden>
+      <div class="bar"><h2>Projets</h2><span style="color:var(--mute);font-size:13.5px">Les devis acceptés et leur avancement</span></div>
+      <div id="projects"></div>
+    </section>
+
+    <section id="v-inbox" hidden>
+      <div class="bar"><h2>Messages</h2><span style="color:var(--mute);font-size:13.5px">Toutes les conversations avec vos clients</span></div>
+      <div id="inbox"></div>
+    </section>
+
+    <section id="v-trash" hidden>
+      <div class="bar"><h2>Corbeille</h2><span style="color:var(--mute);font-size:13.5px">Demandes et devis supprimés : restaurez-les ou supprimez-les définitivement</span></div>
+      <div id="trash"></div>
+    </section>
   </main>
+  </div>
 </div>
 
 <!-- client editor -->
@@ -261,10 +321,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div class="toast" id="toast" hidden></div>
 
 <script src="sb.js"></script>
+<script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var data = { leads: [], clients: [], quotes: [], unread: [] }, editing = null;
+  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [] }, editing = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
@@ -307,7 +368,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
       if ((u.email || '').toLowerCase() !== sb.OWNER) { sb.signOut(); $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); return; }
       $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
-      loadAll();
+      fromHash(); loadAll();
     }, function(){ $('auth').hidden = false; showForm('f-login'); });
   }
 
@@ -316,20 +377,125 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Promise.all([
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at&order=created_at.desc'),
-      sb.select('messages', 'select=id,client_id,quote_id&author=eq.client&read_at=is.null')
-    ]).then(function(r){ data.leads = r[0] || []; data.clients = r[1] || []; data.quotes = r[2] || []; data.unread = r[3] || []; render(); }, fail);
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,steps,deleted_at,data->f->>valid&order=created_at.desc'),
+      sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc')
+    ]).then(function(r){
+      // deleted requests and quotes stay in the trash until removed for good
+      var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
+      data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
+      data.clients = r[1] || [];
+      data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
+      data.messages = r[3] || [];
+      data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
+      render();
+    }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
-  function render(){ renderLeads(); renderClients(); renderQuotes(); }
+  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); }
 
-  /* ---------------- tabs ---------------- */
+  /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
+  var VIEWS = ['dash', 'leads', 'clients', 'quotes', 'projects', 'inbox', 'trash'];
+  var SLUG = { dash: 'tableau-de-bord', leads: 'demandes', clients: 'clients', quotes: 'devis', projects: 'projets', inbox: 'messages', trash: 'corbeille' };
+  function showView(v){
+    if (VIEWS.indexOf(v) < 0) v = 'dash';
+    [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x.dataset.tab === v); });
+    VIEWS.forEach(function(x){ $('v-' + x).hidden = x !== v; });
+  }
+  function fromHash(){
+    var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
+    Object.keys(SLUG).forEach(function(k){ if (SLUG[k] === h) v = k; });
+    showView(v);
+  }
   [].forEach.call(document.querySelectorAll('.tab'), function(t){
-    t.onclick = function(){
-      [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x === t); });
-      ['leads', 'clients', 'quotes'].forEach(function(v){ $('v-' + v).hidden = v !== t.dataset.tab; });
-    };
+    t.onclick = function(){ location.hash = '#/' + SLUG[t.dataset.tab]; };
   });
+  window.addEventListener('hashchange', function(){ if (!/access_token|error=/.test(location.hash)) fromHash(); });
+
+  /* ---------------- dashboard ---------------- */
+  function steps(q){ return (q.steps || []).length ? q.steps : (window.RDSTEPS || []); }
+  function progress(q){ var s = steps(q), d = s.filter(function(x){ return x.done; }).length; return s.length ? Math.round(d * 100 / s.length) : 0; }
+  function nowStep(q){ var c = steps(q).filter(function(x){ return !x.done; })[0]; return c ? c.t : 'Livré'; }
+  function projectsList(){ return data.quotes.filter(function(q){ return q.accepted_at; }); }
+  function waiting(){ return data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && !(q.valid && new Date(q.valid + 'T23:59:59') < new Date()); }); }
+  function renderDash(){
+    $('today').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    var y = new Date().getFullYear(), ps = projectsList();
+    var nNew = data.leads.filter(function(l){ return l.status === 'nouvelle'; }).length;
+    var running = ps.filter(function(q){ return progress(q) < 100; });
+    var signed = ps.filter(function(q){ return new Date(q.accepted_at).getFullYear() === y; }).reduce(function(t, q){ return t + (+q.accepted_total || +q.total || 0); }, 0);
+    var K = [['leads', nNew, 'nouvelle' + (nNew > 1 ? 's' : '') + ' demande' + (nNew > 1 ? 's' : ''), nNew],
+             ['inbox', data.unread.length, 'message' + (data.unread.length > 1 ? 's' : '') + ' non lu' + (data.unread.length > 1 ? 's' : ''), data.unread.length],
+             ['quotes', waiting().length, 'devis en attente d’accord', 0],
+             ['projects', running.length, 'projet' + (running.length > 1 ? 's' : '') + ' en cours', 0],
+             ['projects', eur(signed), 'signés en ' + y, 0],
+             ['clients', data.clients.length, 'client' + (data.clients.length > 1 ? 's' : ''), 0]];
+    $('kpis').innerHTML = K.map(function(k){ return '<button class="kpi' + (k[3] ? ' hot' : '') + '" type="button" data-go="' + k[0] + '"><b>' + k[1] + '</b><span>' + k[2] + '</span></button>'; }).join('');
+    var todo = [];
+    data.leads.filter(function(l){ return l.status === 'nouvelle'; }).forEach(function(l){ todo.push(['Nouvelle demande de ' + l.prenom + ' · ' + (l.projet || ''), 'leads', 'Voir']); });
+    var byClient = {};
+    data.unread.forEach(function(m){ byClient[m.client_id] = (byClient[m.client_id] || 0) + 1; });
+    Object.keys(byClient).forEach(function(id){ todo.push([byClient[id] + ' message' + (byClient[id] > 1 ? 's' : '') + ' de ' + ((client(id) || {}).nom || 'client'), 'thread:' + id, 'Répondre']); });
+    data.quotes.filter(function(q){ return !q.shared && q.status === 'brouillon'; }).forEach(function(q){ todo.push(['Devis ' + q.numero + ' en brouillon pour ' + ((client(q.client_id) || {}).nom || '—') + ' : à finir et envoyer', 'quote:' + q.id, 'Ouvrir']); });
+    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
+    $('todo').innerHTML = todo.length ? todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Rien d’urgent 👌</li>';
+    $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-go]'); if (!b || !$('app').contains(b)) return;
+    var g = b.dataset.go;
+    if (g.indexOf('thread:') === 0) return openThread(client(g.slice(7)) || { id: g.slice(7) });
+    if (g.indexOf('quote:') === 0) return openQuote(g.slice(6));
+    if (g.indexOf('follow:') === 0) return openFollow(g.slice(7));
+    location.hash = '#/' + SLUG[g];
+  });
+
+  /* ---------------- projects ---------------- */
+  function projectTable(rows){
+    return '<table><thead><tr><th>Projet</th><th>Client</th><th class="hide-m">Étape</th><th>Avancement</th><th></th></tr></thead><tbody>' + rows.map(function(q){
+      var c = client(q.client_id) || {}, p = progress(q);
+      return '<tr><td><b>' + esc(q.numero) + '</b><br><span style="color:var(--mute);font-size:12.5px">accepté le ' + day(q.accepted_at) + '</span></td><td>' + esc(c.nom || '—') + '</td>' +
+        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + p + ' %</span></td>' +
+        '<td class="num"><button class="btn sm main" type="button" data-go="follow:' + q.id + '">Fiche projet</button></td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+  function renderProjects(){
+    var ps = projectsList();
+    $('projects').innerHTML = ps.length ? projectTable(ps) : '<div class="empty">Aucun projet pour l’instant. Un devis accepté par le client devient un projet ici.</div>';
+  }
+
+  /* ---------------- inbox ---------------- */
+  function renderInbox(){
+    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
+    var last = {}, order = [];
+    data.messages.forEach(function(m){ if (!last[m.client_id]) { last[m.client_id] = m; order.push(m.client_id); } });
+    if (!order.length) { $('inbox').innerHTML = '<div class="empty">Aucun message pour l’instant. Les messages de vos clients arrivent ici.</div>'; return; }
+    $('inbox').innerHTML = '<table class="inbox"><tbody>' + order.map(function(id){
+      var m = last[id], c = client(id) || {}, nu = data.unread.filter(function(x){ return x.client_id === id; }).length;
+      return '<tr data-go="thread:' + id + '" class="click"><td><b>' + esc(c.nom || 'Client') + '</b>' + (nu ? ' <span class="chip msg">' + nu + ' non lu' + (nu > 1 ? 's' : '') + '</span>' : '') +
+        '<div class="prev">' + (m.author === 'moi' ? 'Vous : ' : '') + esc(m.body) + '</div></td><td class="num" style="color:var(--mute);font-size:12.5px">' + new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+
+  /* ---------------- trash ---------------- */
+  function renderTrash(){
+    var n = data.trashLeads.length + data.trashQuotes.length;
+    $('n-trash').hidden = !n; $('n-trash').textContent = n;
+    if (!n) { $('trash').innerHTML = '<div class="empty">La corbeille est vide.</div>'; return; }
+    var rows = data.trashQuotes.map(function(q){ return ['quotes', q.id, 'Devis ' + q.numero, ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.total), q.deleted_at]; })
+      .concat(data.trashLeads.map(function(l){ return ['leads', l.id, 'Demande de ' + l.prenom, l.projet || '', l.deleted_at]; }));
+    rows.sort(function(a, b){ return a[4] < b[4] ? 1 : -1; });
+    $('trash').innerHTML = '<table><thead><tr><th>Élément</th><th class="hide-m">Détail</th><th class="hide-m">Supprimé le</th><th></th></tr></thead><tbody>' + rows.map(function(r){
+      return '<tr data-t="' + r[0] + '" data-id="' + r[1] + '"><td><b>' + esc(r[2]) + '</b></td><td class="hide-m">' + esc(r[3]) + '</td><td class="hide-m">' + day(r[4]) + '</td>' +
+        '<td class="num"><button class="btn sm main" data-a="restore" type="button">Restaurer</button> <button class="btn sm danger" data-a="purge" type="button">Supprimer définitivement</button></td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+  $('trash').onclick = function(e){
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    var tr = b.closest('tr'), t = tr.dataset.t, id = tr.dataset.id;
+    if (b.dataset.a === 'restore') return sb.update(t, id, { deleted_at: null }).then(function(){ toast('Restauré.'); loadAll(); }, fail);
+    if (!confirm('Supprimer définitivement ? Cette action est irréversible.')) return;
+    sb.remove(t, id).then(function(){ toast('Supprimé définitivement.'); loadAll(); }, fail);
+  };
 
   /* ---------------- leads ---------------- */
   $('lead-filter').onchange = renderLeads;
@@ -363,7 +529,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (a === 'more') { card.classList.toggle('open'); return; }
     if (a === 'quote') return quoteFromLead(l);
     if (a === 'msgs') return openThread(client(l.client_id) || { id: l.client_id, nom: l.prenom });
-    if (a === 'del') { if (!confirm('Supprimer cette demande ?')) return; return sb.remove('leads', l.id).then(loadAll, fail); }
+    if (a === 'del') { if (!confirm('Mettre cette demande à la corbeille ? Vous pourrez la restaurer.')) return; return sb.update('leads', l.id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Demande mise à la corbeille.'); loadAll(); }, fail); }
     var st = { done: 'traitée', arch: 'archivée', reopen: 'nouvelle' }[a];
     sb.update('leads', l.id, { status: st }).then(loadAll, fail);
   };
@@ -423,7 +589,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b>' + (flags ? '<div style="margin-top:4px">' + flags + '</div>' : '') + '</td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
           '<td class="hide-m">' + day(q.created_at) + '</td><td class="num">' + eur(q.total) + '</td>' +
           '<td><select data-a="st">' + STS.map(function(x){ return '<option' + (x === q.status ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></td>' +
-          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm line" data-a="follow">Suivi client</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
+          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm line" data-a="follow">Fiche projet</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
       }).join('') + '</tbody></table>';
   }
   $('quotes').onclick = function(e){
@@ -431,7 +597,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var id = b.closest('tr').dataset.id;
     if (b.dataset.a === 'open') return openQuote(id);
     if (b.dataset.a === 'follow') return openFollow(id);
-    if (b.dataset.a === 'del' && confirm('Supprimer ce devis ?')) sb.remove('quotes', id).then(loadAll, fail);
+    if (b.dataset.a === 'del' && confirm('Mettre ce devis à la corbeille ? Le client ne le verra plus ; vous pourrez le restaurer.')) sb.update('quotes', id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Devis mis à la corbeille.'); loadAll(); }, fail);
   };
   $('quotes').onchange = function(e){
     if (e.target.dataset.a !== 'st') return;

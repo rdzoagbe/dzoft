@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Suivi client · RD Créations</title>
+<title>Fiche projet · RD Créations</title>
 <link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
 <style>
 :root{
@@ -62,6 +62,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* docs */
 .doc{display:grid;grid-template-columns:1fr 2fr auto;gap:6px;align-items:center}
 .doc+.doc{margin-top:6px}
+.envr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1.1fr 1fr 2fr auto;gap:6px;align-items:center}
+.envr+.envr{margin-top:8px}
+.envr textarea{grid-column:1/-2;min-height:38px;font-size:13.5px}
+.envr select{font-size:13.5px}
+@media (max-width:760px){.envr{grid-template-columns:1fr 1fr}.envr textarea{grid-column:1/-1}}
 .rm{border:0;background:none;color:#b5432f;font-size:18px;cursor:pointer;padding:2px 8px}
 /* messages */
 .thread{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow:auto;margin-bottom:8px}
@@ -82,7 +87,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <header class="top">
   <div class="in">
     <a class="back" href="./">← Espace privé</a>
-    <b id="ttl">Suivi client</b>
+    <b id="ttl">Fiche projet</b>
     <span id="sync"></span>
     <span class="sp"></span>
     <a class="btn sm line" id="to-devis" href="#">Modifier le devis</a>
@@ -138,6 +143,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="docs"></div>
   </section>
 
+  <section class="card" id="c-env" hidden>
+    <h2>Environnement <span class="sp"></span><button class="btn sm line" id="ev-host" type="button">Reprendre l’hébergement du devis</button><button class="btn sm line" id="ev-add" type="button">+ Élément</button></h2>
+    <p class="muted" style="margin-bottom:8px">Ce que le client voit dans « Environnement » : site en ligne, code (GitHub), hébergement, base de données, stores, nom de domaine. Mettez des liens, <b>jamais de mot de passe</b> : les identifiants se remettent avec la fiche de remise.</p>
+    <div id="env"></div>
+  </section>
+
   <section class="card" id="c-msg" hidden>
     <h2>Messages</h2>
     <div class="thread" id="thread"></div>
@@ -146,6 +157,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
+<datalist id="ev-providers"><option value="GitHub"><option value="GitHub Pages"><option value="OVH"><option value="Supabase (Paris)"><option value="Google Play Console"><option value="Apple App Store Connect"><option value="Formspree"><option value="Brevo"></datalist>
 
 <script src="sb.js"></script>
 <script src="../assets/rd-steps.js"></script>
@@ -187,8 +199,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   function render(){
     $('loading').hidden = true;
-    ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
-    $('ttl').textContent = 'Suivi · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
+    ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
+    $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
     if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : le message l’invite à se connecter ; le lien privé ci-dessous marche aussi)' : ''); $('url').value = url(); $('b-open').href = url(); }
@@ -205,14 +217,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderThread();
+    renderSteps(); renderDocs(); renderEnv(); renderThread();
   }
 
   function save(row, reload){
     $('sync').textContent = 'enregistrement…';
     return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); });
   }
-  function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [] }); }, 700); }
+  function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }); }, 700); }
 
   /* sharing */
   $('shared').onchange = function(){
@@ -309,6 +321,37 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     later();
   };
   $('docs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; Q.docs.splice(+e.target.closest('.doc').dataset.i, 1); renderDocs(); later(); };
+  /* environment shown to the client (links and owners, never passwords) */
+  var EV_ST = ['actif', 'en cours', 'à créer', 'prévu'];
+  function renderEnv(){
+    Q.env = Q.env || [];
+    $('env').innerHTML = Q.env.length ? Q.env.map(function(x, i){
+      return '<div class="envr" data-i="' + i + '"><input class="l" value="' + esc(x.l) + '" placeholder="Élément (ex. : Site en ligne)">' +
+        '<input class="w" value="' + esc(x.w) + '" placeholder="Service (ex. : OVH, GitHub)" list="ev-providers">' +
+        '<input class="u" value="' + esc(x.u) + '" placeholder="https://…" inputmode="url">' +
+        '<button class="rm" type="button" title="Retirer">×</button>' +
+        '<select class="o"><option value="client"' + (x.o !== 'rd' ? ' selected' : '') + '>À son nom</option><option value="rd"' + (x.o === 'rd' ? ' selected' : '') + '>Géré par RD Créations</option></select>' +
+        '<select class="st">' + EV_ST.map(function(v){ return '<option' + (x.st === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select>' +
+        '<textarea class="n" placeholder="Note pour le client (facultatif), ex. : identifiants remis le 12/11">' + esc(x.n || '') + '</textarea></div>';
+    }).join('') : '<p class="muted">Rien pour l’instant. « Reprendre l’hébergement du devis » remplit la liste à partir du devis.</p>';
+  }
+  $('env').oninput = $('env').onchange = function(e){
+    var row = e.target.closest('.envr'); if (!row) return;
+    var x = Q.env[+row.dataset.i], c = e.target.className.split(' ')[0];
+    x[c] = c === 'u' ? e.target.value.trim() : e.target.value;
+    if (c === 'u') e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : '';
+    later();
+  };
+  $('env').onclick = function(e){ if (!e.target.classList.contains('rm')) return; Q.env.splice(+e.target.closest('.envr').dataset.i, 1); renderEnv(); later(); };
+  $('ev-add').onclick = function(){ Q.env = Q.env || []; Q.env.push({ l: '', w: '', u: '', o: 'client', st: 'à créer', n: '' }); renderEnv(); var l = $('env').querySelectorAll('input.l'); l[l.length - 1].focus(); later(); };
+  $('ev-host').onclick = function(){
+    var host = ((Q.data || {}).host) || [], have = (Q.env || []).map(function(x){ return x.l; }), n = 0;
+    Q.env = Q.env || [];
+    host.forEach(function(h){ if (have.indexOf(h.l) < 0) { Q.env.push({ l: h.l, w: h.w, u: '', o: 'client', st: 'à créer', n: '' }); n++; } });
+    if (!Q.env.some(function(x){ return /site en ligne|application publiée/i.test(x.l); })) { Q.env.unshift({ l: 'Site en ligne', w: '', u: '', o: 'client', st: 'à créer', n: '' }); n++; }
+    renderEnv(); later(); toast(n ? n + ' élément' + (n > 1 ? 's' : '') + ' ajouté' + (n > 1 ? 's' : '') + '.' : 'Tout y est déjà.');
+  };
+
   $('dc-add').onclick = function(){ Q.docs = Q.docs || []; Q.docs.push({ n: '', u: '' }); renderDocs(); var n = $('docs').querySelectorAll('input.n'); n[n.length - 1].focus(); };
 
   /* messages */
