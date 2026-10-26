@@ -386,6 +386,11 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option>Application web installable (PWA)</option><option>Application mobile</option>
             <option>Je ne sais pas encore</option>
           </select></div>
+        <div class="full" id="pf-box" hidden><label for="plateforme">Sur quels téléphones ?</label>
+          <select id="plateforme" name="plateforme">
+            <option>iPhone et Android</option><option>iPhone seulement</option><option>Android seulement</option><option>Je ne sais pas encore</option>
+          </select>
+          <p class="fhelp">iPhone : publiée sur l’App Store (compte Apple, 99 $ / an). Android : publiée sur Google Play (compte Google, 25 $ une fois).</p></div>
         <div><label for="budget">Budget envisagé</label>
           <select id="budget" name="budget">
             <option>Je ne sais pas</option><option>Moins de 300 €</option><option>300 à 700 €</option>
@@ -464,11 +469,16 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     bc.setAttribute('aria-label', 'Carte de visite : afficher le ' + (back ? 'recto' : 'verso'));
   });
   var f = document.getElementById('devis-form');
+  // "Application mobile (iPhone seulement)": the platform travels inside the project type.
+  function projet(d){
+    var p = d.get('projet') || '';
+    return p === 'Application mobile' ? p + ' (' + (d.get('plateforme') || 'iPhone et Android') + ')' : p;
+  }
   function compose(){
     var d = new FormData(f), L = ['Bonjour Roland,', '', 'Je souhaite un devis.'];
     L.push('Prénom : ' + (d.get('prenom') || '').trim());
     if ((d.get('activite') || '').trim()) L.push('Activité : ' + d.get('activite').trim());
-    L.push('Projet : ' + d.get('projet'));
+    L.push('Projet : ' + projet(d));
     L.push('Budget : ' + d.get('budget'));
     var items = picked();
     if (items) L.push('Éléments à prévoir : ' + items);
@@ -493,7 +503,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     if (!window.RDsb) return;
     var d = new FormData(f), row = {
       prenom: (d.get('prenom') || '').trim().slice(0, 100), activite: (d.get('activite') || '').trim().slice(0, 200),
-      projet: (d.get('projet') || '').slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
+      projet: projet(d).slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
       contact: (d.get('contact') || '').trim().slice(0, 200), elements: picked().slice(0, 500),
       message: (d.get('message') || '').trim().slice(0, 5000), source: source
     };
@@ -524,7 +534,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     var data = {
       _subject: 'Demande de devis - ' + (d.get('prenom') || '').trim(),
       prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
-      projet: d.get('projet'), budget: d.get('budget'), contact: contact,
+      projet: projet(d), budget: d.get('budget'), contact: contact,
       elements: picked() || 'Aucun', message: (d.get('message') || '').trim(), _gotcha: d.get('_gotcha') || ''
     };
     if (contact.indexOf('@') > 0) data.email = contact;
@@ -536,7 +546,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       if (!r.ok) throw new Error(r.status);
       status.className = 'full fstatus ok';
       status.textContent = 'Merci ' + data.prenom + ', votre demande est bien envoyée. Je vous réponds sous 48 h.';
-      f.reset();
+      f.reset(); showPf();
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
     }).catch(function(){
       status.className = 'full fstatus err';
@@ -551,6 +561,18 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     document.getElementById('send-direct').addEventListener('click', sendDirect);
     document.getElementById('privacy').textContent = 'Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir les mentions légales). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.';
   }
+  // Platform question only for a mobile app; it also ticks the matching store accounts.
+  var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
+  function showPf(){ pfBox.hidden = document.getElementById('projet').value !== 'Application mobile'; }
+  function tickStores(){
+    var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
+    Object.keys(want).forEach(function(k){
+      var b = document.querySelector('.ho-item[data-item="' + k + '"]');
+      if (b) b.setAttribute('aria-pressed', want[k] ? 'true' : 'false');
+    });
+  }
+  document.getElementById('projet').addEventListener('change', function(){ showPf(); if (!pfBox.hidden) tickStores(); });
+  pfSel.addEventListener('change', tickStores);
   document.getElementById('send-wa').addEventListener('click', sendWa);
   document.getElementById('send-mail').addEventListener('click', sendMail);
   [].forEach.call(document.querySelectorAll('.ho-item'), function(b){

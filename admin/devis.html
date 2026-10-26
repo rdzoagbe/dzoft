@@ -80,9 +80,13 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
 .totals tr.grand td{font-size:16px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px}
 .vatline{font-size:12.5px;color:var(--mute);text-align:right;margin-top:4px}
 .accounts{font-size:13px}
-.accounts ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:4px}
-.accounts li{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:3px 0}
-.accounts li span{color:var(--mute)}
+.accounts table{margin-top:6px}
+.accounts td{padding:5px 6px;vertical-align:top}
+.accounts td input.f{font-size:13px}
+.accounts td.w input{font-weight:700}
+.accounts th.c,.accounts td.c{width:30%}
+.hostadd{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pfsel{font-size:12px;padding:3px 6px;border-radius:7px;width:auto;margin-bottom:4px}
 .conds{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:13px}
 .conds .kv{display:flex;gap:6px;align-items:center}
 .conds .kv span{color:var(--mute);white-space:nowrap}
@@ -95,7 +99,7 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
 .chk{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--mute);margin-top:6px}
 @media (max-width:700px){
   .sheet{padding:20px 16px;border-radius:0;margin:0 0 30px}
-  .top,.parties,.sign,.conds,.accounts ul{grid-template-columns:1fr;display:grid}
+  .top,.parties,.sign,.conds{grid-template-columns:1fr;display:grid}
   .meta{text-align:left}.meta .kv{justify-content:flex-start}
   .totals table{width:100%}
   td input.pu{width:70px}
@@ -103,7 +107,7 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
 @media print{
   @page{size:A4;margin:12mm}
   body{background:#fff}
-  .noprint,.tools,.importbox,.adders,.rm{display:none!important}
+  .noprint,.tools,.importbox,.adders,.hostadd,.rm{display:none!important}
   .sheet{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
   input.f,.ed{border:0!important;background:transparent!important;padding:0}
   .ed:empty:before{content:""}
@@ -111,7 +115,9 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
   td select{border:0;appearance:none;-webkit-appearance:none;padding:0}
   .party,.desc,tr.grp td,.why,.otag{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   tr,.sign{break-inside:avoid}
-  input[type=date]::-webkit-calendar-picker-indicator{display:none}
+  input[type=date]::-webkit-calendar-picker-indicator,input[list]::-webkit-calendar-picker-indicator{display:none!important}
+  .accounts td{padding:2px 6px}
+  body.has-host .sheet{zoom:.78}
   body{font-size:12px}
   .top{padding-bottom:10px}
   .parties{margin-top:10px;gap:12px}
@@ -211,10 +217,18 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
   </div>
 
   <div class="blk accounts" id="accounts">
-    <h3>Comptes à votre nom, payés directement par vous</h3>
-    <div class="ed" contenteditable="true" data-k="accnote" data-ph="">Ces frais ne sont pas inclus dans le devis : les comptes restent à votre nom, et vous pouvez retirer mon accès à tout moment.</div>
-    <ul id="acclist"></ul>
+    <h3>Hébergement et comptes, à votre nom</h3>
+    <div class="ed" contenteditable="true" data-k="accnote" data-ph="">Voici où votre projet sera hébergé une fois les tarifs validés. Ces frais ne sont pas inclus dans le devis : les comptes sont ouverts à votre nom et payés directement par vous, et vous pouvez retirer mon accès à tout moment.</div>
+    <table id="hosttab">
+      <thead><tr><th>Élément</th><th>Où</th><th class="c">Coût indicatif</th><th class="noprint"></th></tr></thead>
+      <tbody id="hostlist"></tbody>
+    </table>
   </div>
+  <div class="hostadd noprint">
+    <button class="add" type="button" id="b-host">+ Hébergement conseillé pour ce projet</button>
+    <button class="add" type="button" id="b-hostline">+ Ligne d’hébergement</button>
+  </div>
+  <datalist id="providers"></datalist>
 
   <div class="blk">
     <h3>Conditions</h3>
@@ -258,25 +272,42 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
       ['Développement de l’application web', 'Fonctionnalités prévues au projet', 400],
       ['Installation sur téléphone et ordinateur', 'Icône sur l’écran d’accueil, fonctionnement hors ligne', 100],
       ['Mise en ligne', 'Sur votre nom de domaine', 50]]},
-    {l:'Application mobile iPhone et Android', s:'Publiée sur l’App Store et Google Play, sous votre propre compte.', parts:[
+    {l:'Application mobile iPhone et Android', s:'Publiée sur l’App Store et Google Play, sous votre propre compte.', pf:'both', parts:[
       ['Conception : parcours et maquettes des écrans', 'Ce que voit et fait l’utilisateur, écran par écran', 300],
-      ['Développement de l’application', 'Une seule application pour iPhone et Android', 900],
+      ['Développement de l’application', 'Une seule application pour iPhone et Android', 900, 'dev'],
       ['Comptes utilisateurs et base de données', 'Inscription, connexion, données sécurisées', 150],
-      ['Publication sur l’App Store et Google Play', 'Sous votre propre compte développeur', 150]]},
+      ['Publication sur l’App Store et Google Play', 'Sous votre propre compte développeur', 150, 'pub']]},
     {l:'Hébergement, mises à jour et suivi', s:'Site en ligne, à jour et sécurisé ; petites modifications incluses. Optionnel, sans engagement.', u:'mois', p:15},
     {l:'', s:'', u:'forfait', p:0}
   ];
-  var ACCOUNTS = {
-    'Nom de domaine':'env. 12 € / an', 'Hébergement':'souvent gratuit', 'Code du site (GitHub)':'gratuit',
-    'Messagerie professionnelle':'selon l’offre', 'Application iPhone':'99 $ / an (Apple)', 'Application Android':'25 $, une fois (Google)'
+  // Which stores the mobile app goes to: heading, development detail, publication line.
+  var PLATFORMS = {
+    both: {t:'iPhone et Android', h:'Application mobile iPhone et Android', s:'Publiée sur l’App Store et Google Play, sous votre propre compte.',
+           dev:'Une seule application pour iPhone et Android', pub:'Publication sur l’App Store et Google Play', pp:150},
+    ios: {t:'iPhone seulement', h:'Application mobile iPhone', s:'Publiée sur l’App Store, sous votre propre compte.',
+          dev:'Application pour iPhone', pub:'Publication sur l’App Store', pp:100},
+    android: {t:'Android seulement', h:'Application mobile Android', s:'Publiée sur Google Play, sous votre propre compte.',
+              dev:'Application pour Android', pub:'Publication sur Google Play', pp:100}
   };
-  var KEY = 'rd-devis-v1', state = {lines: [], acc: []};
+  // Where things are hosted: provider suggestions with an indicative cost.
+  var PROVIDERS = {
+    'OVH':'env. 12 € / an', 'OVH (hébergement Perso)':'dès env. 4 € / mois', 'OVH (messagerie)':'selon l’offre',
+    'GitHub Pages':'gratuit', 'GitHub':'gratuit', 'Supabase (serveurs à Paris)':'gratuit, puis 25 $ / mois si besoin',
+    'Formspree':'gratuit jusqu’à 50 messages / mois', 'Apple Developer':'99 $ / an', 'Google Play Console':'25 $, une fois'
+  };
+  // What the client ticked on the request form, turned into hosting lines.
+  var ACCOUNTS = {
+    'Nom de domaine':['Nom de domaine', 'OVH'], 'Hébergement':['Hébergement du site', 'GitHub Pages'],
+    'Code du site (GitHub)':['Code source', 'GitHub'], 'Messagerie professionnelle':['Messagerie professionnelle', 'OVH (messagerie)'],
+    'Application iPhone':['Compte App Store', 'Apple Developer'], 'Application Android':['Compte Google Play', 'Google Play Console']
+  };
+  var KEY = 'rd-devis-v1', state = {lines: [], host: []};
   var $ = function(id){ return document.getElementById(id); };
   var eur = function(n){ return (Math.round(n * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
   function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ return null; } }
   function save(){
-    var d = {lines: state.lines, acc: state.acc, f: {}};
+    var d = {lines: state.lines, host: state.host, f: {}};
     [].forEach.call(document.querySelectorAll('[data-k]'), function(el){
       d.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : (el.isContentEditable ? el.innerText : el.value);
     });
@@ -302,7 +333,9 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
       if (ln.h) {
         tr.className = 'grp';
         tr.innerHTML = '<td colspan="5"><input class="f label" placeholder="Titre de la partie" value="' + esc(ln.l) + '"><div class="ed sub" contenteditable="true" data-ph="Présentation (facultatif)">' + esc(ln.s || '') + '</div></td>' +
-          '<td class="noprint"><button class="rm" type="button" title="Retirer le titre" aria-label="Retirer le titre">×</button></td>';
+          '<td class="noprint">' + (ln.pf ? '<select class="pfsel" title="Stores visés">' + Object.keys(PLATFORMS).map(function(k){ return '<option value="' + k + '"' + (ln.pf === k ? ' selected' : '') + '>' + PLATFORMS[k].t + '</option>'; }).join('') + '</select>' : '') +
+          '<button class="rm" type="button" title="Retirer le titre" aria-label="Retirer le titre">×</button></td>';
+        if (ln.pf) tr.querySelector('.pfsel').onchange = function(){ setPlatform(i, this.value); };
         tr.querySelector('input').oninput = function(){ ln.l = this.value; save(); };
         tr.querySelector('.sub').oninput = function(){ ln.s = this.innerText; save(); };
         tr.querySelector('.rm').onclick = function(){ state.lines.splice(i, 1); renderLines(); };
@@ -348,17 +381,69 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
     $('vatline').textContent = novat ? 'TVA non applicable, article 293 B du CGI.' : 'Montants hors taxes ; TVA au taux de 20 %.';
     save();
   }
-  function renderAcc(){
-    var ul = $('acclist'); ul.innerHTML = '';
-    state.acc.forEach(function(a){ var li = document.createElement('li'); li.innerHTML = esc(a) + ' <span>' + esc(ACCOUNTS[a] || '') + '</span>'; ul.appendChild(li); });
-    $('accounts').hidden = !state.acc.length;
+  function renderHost(){
+    var tb = $('hostlist'); tb.innerHTML = '';
+    state.host.forEach(function(h, i){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="w"><input class="f" placeholder="Élément" value="' + esc(h.l) + '"></td>' +
+        '<td><input class="f" list="providers" placeholder="Prestataire" value="' + esc(h.w) + '"></td>' +
+        '<td class="c"><input class="f" placeholder="Coût" value="' + esc(h.c) + '"></td>' +
+        '<td class="noprint"><button class="rm" type="button" title="Retirer la ligne" aria-label="Retirer la ligne">×</button></td>';
+      var ins = tr.querySelectorAll('input');
+      ins[0].oninput = function(){ h.l = this.value; save(); };
+      ins[1].oninput = function(){
+        h.w = this.value;
+        // picking a known provider fills in its usual cost
+        if (PROVIDERS[h.w]) { h.c = PROVIDERS[h.w]; ins[2].value = h.c; }
+        save();
+      };
+      ins[2].oninput = function(){ h.c = this.value; save(); };
+      tr.querySelector('.rm').onclick = function(){ state.host.splice(i, 1); renderHost(); };
+      tb.appendChild(tr);
+    });
+    $('accounts').hidden = !state.host.length;
+    document.body.classList.toggle('has-host', !!state.host.length);
     save();
   }
-  function addPreset(k){
+  function addHost(l, w){
+    if (state.host.some(function(h){ return h.l === l; })) return;
+    state.host.push({l: l, w: w, c: PROVIDERS[w] || ''});
+  }
+  // Suggested hosting for the project types present in the quote.
+  function suggestHost(){
+    var heads = state.lines.filter(function(l){ return l.h; }).map(function(l){ return l.l; }).join(' | ').toLowerCase();
+    var mob = state.lines.filter(function(l){ return l.h && l.pf; })[0], web = /page|site|application web/.test(heads);
+    if (web || !mob) { addHost('Nom de domaine', 'OVH'); addHost('Hébergement du site', 'GitHub Pages'); }
+    addHost('Code source', 'GitHub');
+    if (/site vitrine/.test(heads)) addHost('Formulaire de contact', 'Formspree');
+    if (mob || /application web/.test(heads)) addHost('Comptes et base de données', 'Supabase (serveurs à Paris)');
+    if (mob) storeHost(mob.pf);
+    renderHost();
+  }
+  function storeHost(pf){
+    state.host = state.host.filter(function(h){ return h.l !== 'Compte App Store' && h.l !== 'Compte Google Play'; });
+    if (pf !== 'android') addHost('Compte App Store', 'Apple Developer');
+    if (pf !== 'ios') addHost('Compte Google Play', 'Google Play Console');
+  }
+  // Switch the mobile app between both stores, iPhone only or Android only.
+  function setPlatform(i, pf){
+    var P = PLATFORMS[pf], hd = state.lines[i]; if (!P || !hd) return;
+    hd.pf = pf; hd.l = P.h; hd.s = P.s;
+    for (var j = i + 1; j < state.lines.length && !state.lines[j].h; j++) {
+      var ln = state.lines[j];
+      if (ln.k === 'dev') ln.s = P.dev;
+      if (ln.k === 'pub') { ln.l = P.pub; ln.p = P.pp; }
+    }
+    if (state.host.some(function(h){ return /^Compte (App Store|Google Play)$/.test(h.l); })) { storeHost(pf); renderHost(); }
+    renderLines();
+  }
+  function addPreset(k, pf){
     var p = PRESETS[k];
     if (p.parts) {
-      state.lines.push({h: 1, l: p.l, s: p.s});
-      p.parts.forEach(function(x){ state.lines.push({l: x[0], s: x[1], q: 1, u: 'forfait', p: x[2]}); });
+      var at = state.lines.length;
+      state.lines.push({h: 1, l: p.l, s: p.s, pf: p.pf});
+      p.parts.forEach(function(x){ state.lines.push({l: x[0], s: x[1], q: 1, u: 'forfait', p: x[2], k: x[3]}); });
+      if (p.pf && pf && pf !== p.pf) { setPlatform(at, pf); return; }
     } else state.lines.push({l: p.l, s: p.s, q: 1, u: p.u, p: p.p});
     renderLines();
   }
@@ -375,8 +460,8 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
     });
     var d = new Date(), v = new Date(); v.setDate(v.getDate() + 30);
     $('num').value = nextNum(); $('date').value = iso(d); $('valid').value = iso(v);
-    state.lines = []; state.acc = [];
-    renderLines(); renderAcc();
+    state.lines = []; state.host = [];
+    renderLines(); renderHost();
     $('importbox').classList.add('open');
   }
 
@@ -407,16 +492,17 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
     var proj = (r.projet || '').toLowerCase(), idx = -1;
     if (proj.indexOf('page') > -1) idx = 0; else if (proj.indexOf('vitrine') > -1) idx = 1;
     else if (proj.indexOf('pwa') > -1 || proj.indexOf('installable') > -1) idx = 2; else if (proj.indexOf('mobile') > -1) idx = 3;
-    if (idx > -1 && !state.lines.some(function(l){ return l.h && l.l === PRESETS[idx].l; })) {
+    var pf = /iphone/.test(proj) && !/android/.test(proj) ? 'ios' : /android/.test(proj) && !/iphone/.test(proj) ? 'android' : 'both';
+    if (idx > -1 && !state.lines.some(function(l){ return l.h && (l.l === PRESETS[idx].l || (idx === 3 && l.pf)); })) {
       // a bare single line from an older version of the page is replaced by the detailed breakdown
       state.lines = state.lines.filter(function(l){ return !(l.l === PRESETS[idx].l && !l.h); });
-      addPreset(idx);
+      addPreset(idx, pf);
     }
     if (r.elements) {
       r.elements.split(',').map(function(s){ return s.trim(); }).forEach(function(e){
-        if (ACCOUNTS[e] && state.acc.indexOf(e) < 0) state.acc.push(e);
+        if (ACCOUNTS[e]) addHost(ACCOUNTS[e][0], ACCOUNTS[e][1]);
       });
-      renderAcc();
+      renderHost();
     }
     $('importbox').classList.remove('open'); $('importtext').value = ''; save();
   }
@@ -429,12 +515,20 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
 
   // init
   function apply(saved){
-    state.lines = saved.lines || []; state.acc = saved.acc || [];
+    state.lines = saved.lines || []; state.host = saved.host || [];
+    // quotes saved before the hosting table: old ticked accounts become hosting lines
+    (saved.acc || []).forEach(function(a){ if (ACCOUNTS[a]) addHost(ACCOUNTS[a][0], ACCOUNTS[a][1]); });
+    // older mobile quotes: recognise the heading and its lines so the store selector works
+    state.lines.forEach(function(l){
+      if (l.h && !l.pf && /^Application mobile/.test(l.l)) l.pf = /Android/.test(l.l) ? (/iPhone/.test(l.l) ? 'both' : 'android') : 'ios';
+      if (!l.h && !l.k && /^Développement de l’application$/.test(l.l)) l.k = 'dev';
+      if (!l.h && !l.k && /^Publication sur/.test(l.l)) l.k = 'pub';
+    });
     Object.keys(saved.f || {}).forEach(function(k){
       var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
       if (el.type === 'checkbox') el.checked = saved.f[k]; else if (el.isContentEditable) el.innerText = saved.f[k]; else el.value = saved.f[k];
     });
-    renderLines(); renderAcc();
+    renderLines(); renderHost();
   }
   if (QID) {
     // a quote stored in the private space: the owner's address stays in this browser only
@@ -460,6 +554,9 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
 
   [].forEach.call(document.querySelectorAll('[data-k]'), function(el){ el.addEventListener('input', totals); el.addEventListener('change', totals); });
   [].forEach.call(document.querySelectorAll('.add'), function(b){ b.onclick = function(){ addPreset(+b.dataset.preset); }; });
+  $('providers').innerHTML = Object.keys(PROVIDERS).map(function(k){ return '<option value="' + esc(k) + '">'; }).join('');
+  $('b-host').onclick = suggestHost;
+  $('b-hostline').onclick = function(){ state.host.push({l: '', w: '', c: ''}); renderHost(); var ins = $('hostlist').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); };
   $('b-print').onclick = function(){ save(); window.print(); };
   $('b-new').onclick = function(){
     if (QID) { location.href = './'; return; }
