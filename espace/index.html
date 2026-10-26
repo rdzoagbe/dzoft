@@ -211,8 +211,10 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
         <h1>Nouveau mot de passe</h1>
         <label for="n-pass">Mot de passe (8 caractères minimum)</label><input id="n-pass" type="password" minlength="8" autocomplete="new-password" required>
         <button class="btn main" type="submit">Enregistrer</button>
+        <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
       </form>
       <p class="msgline" id="au-msg" role="status" aria-live="polite"></p>
+      <p class="hint" style="text-align:center;margin-top:14px"><a href="../">← Retour au site RD Créations</a></p>
     </div>
   </div>
   <div class="center" id="s-bad" hidden>
@@ -228,6 +230,7 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   </div>
 
   <div id="app" hidden>
+    <p class="msgline ok" id="app-msg" role="status" aria-live="polite" style="margin:0 0 14px"></p>
     <div class="hello"><h1 id="hello"></h1><p>Retrouvez ici votre devis, l’avancement de votre projet, vos documents et nos échanges.</p></div>
     <div class="picker" id="picker" hidden></div>
     <div id="none" class="card" hidden><p id="none-t">Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.</p></div>
@@ -312,7 +315,11 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   $('f-newpass').onsubmit = function(e){
     e.preventDefault();
     if ($('n-pass').value.length < 8) { au('Choisissez un mot de passe de 8 caractères minimum.'); return; }
-    sb.setPassword($('n-pass').value).then(function(){ $('n-pass').value = ''; show('s-load'); load(); }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
+    sb.setPassword($('n-pass').value).then(function(){
+      $('n-pass').value = ''; show('s-load');
+      $('app-msg').textContent = 'Mot de passe enregistré ✓ La prochaine fois, connectez-vous sur rdzoagbe.github.io/rd-creations/espace avec votre e-mail et ce mot de passe.';
+      load();
+    }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
   };
   $('b-out').onclick = function(){
     try { localStorage.removeItem('rd-espace'); } catch(e){}
