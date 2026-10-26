@@ -91,6 +91,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 .modal .acts .sp{flex:1}
 .qlist{margin-top:12px;font-size:14px}
 .qlist li{list-style:none;display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:7px 0}
+.thread{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;margin:10px 0}
+.bub{max-width:82%;border-radius:14px;padding:8px 12px;font-size:14px;white-space:pre-wrap;word-wrap:break-word}
+.bub small{display:block;font-size:11.5px;opacity:.75;margin-top:2px}
+.bub.me{align-self:flex-end;background:#dbe8ff;border-bottom-right-radius:4px}
+.bub.him{align-self:flex-start;background:var(--soft);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bub.new{box-shadow:0 0 0 2px var(--cyan)}
+.chip.msg{background:#e3f9fd;color:#0b6577;border-color:#a5e9f5;font-weight:700}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:30}
 @media (max-width:700px){
   .grid2{grid-template-columns:1fr}
@@ -165,8 +172,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="leads" aria-selected="true">Demandes<span class="n" id="n-new" hidden></span></button>
-      <button class="tab" role="tab" data-tab="clients" aria-selected="false">Clients</button>
-      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
+      <button class="tab" role="tab" data-tab="clients" aria-selected="false">Clients<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
+      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis</button>
     </nav>
   </header>
 
@@ -221,10 +228,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <button class="btn line" id="mc-quote" type="button">Nouveau devis</button>
       <button class="btn line" id="mc-print" type="button">Imprimer la fiche</button>
       <button class="btn line" id="mc-portal" type="button">Copier le lien de son espace</button>
+      <button class="btn line" id="mc-msgs" type="button">Messages</button>
       <span class="sp"></span>
       <button class="btn danger" id="mc-del" type="button">Supprimer</button>
       <button class="btn ghost" id="mc-close" type="button">Fermer</button>
     </div>
+  </div>
+</div>
+
+<!-- messages with one client, with or without a quote -->
+<div class="modal" id="m-thread" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mt-title">
+    <h3 id="mt-title">Messages</h3>
+    <p style="font-size:13.5px;color:var(--mute)" id="mt-sub"></p>
+    <div class="thread" id="mt-list"></div>
+    <textarea id="mt-reply" maxlength="2000" placeholder="Votre réponse : le client la voit dans son espace"></textarea>
+    <div class="acts"><button class="btn main" id="mt-send" type="button">Envoyer</button><span class="sp"></span><button class="btn ghost" id="mt-close" type="button">Fermer</button></div>
   </div>
 </div>
 
@@ -324,10 +343,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
         l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : l.email && l.source === 'formulaire' ? 'espace client en attente de confirmation' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
+      var nu = l.client_id ? data.unread.filter(function(m){ return m.client_id === l.client_id; }).length : 0;
+      if (nu) chips += '<span class="chip msg">' + nu + ' nouveau' + (nu > 1 ? 'x' : '') + ' message' + (nu > 1 ? 's' : '') + '</span>';
       return '<article class="lead" data-id="' + l.id + '"><div class="h"><b>' + esc(l.prenom) + '</b><span class="st ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
         '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' +
         (l.message ? '<div class="txt">' + esc(l.message) + '</div>' : '') +
         '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
+        (l.client_id ? '<button class="btn sm line" data-a="msgs">Messages' + (nu ? ' (' + nu + ')' : '') + '</button>' : '') +
         (l.message && l.message.length > 160 ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
         (l.status === 'nouvelle' ? '<button class="btn sm line" data-a="done">Marquer traitée</button>' : '') +
         (l.status !== 'archivée' ? '<button class="btn sm line" data-a="arch">Archiver</button>' : '<button class="btn sm line" data-a="reopen">Rouvrir</button>') +
@@ -340,6 +362,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var a = b.dataset.a;
     if (a === 'more') { card.classList.toggle('open'); return; }
     if (a === 'quote') return quoteFromLead(l);
+    if (a === 'msgs') return openThread(client(l.client_id) || { id: l.client_id, nom: l.prenom });
     if (a === 'del') { if (!confirm('Supprimer cette demande ?')) return; return sb.remove('leads', l.id).then(loadAll, fail); }
     var st = { done: 'traitée', arch: 'archivée', reopen: 'nouvelle' }[a];
     sb.update('leads', l.id, { status: st }).then(loadAll, fail);
@@ -424,7 +447,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     box.innerHTML = '<table><thead><tr><th>Nom</th><th>Activité</th><th class="hide-m">Contact</th><th class="num">Devis</th></tr></thead><tbody>' +
       rows.map(function(c){
         var n = data.quotes.filter(function(q){ return q.client_id === c.id; }).length;
-        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b>' + (c.user_id ? ' <span class="chip">compte</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
+        var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length;
+        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b>' + (c.user_id ? ' <span class="chip">compte</span>' : '') + (cu ? ' <span class="chip msg">' + cu + ' message' + (cu > 1 ? 's' : '') + '</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
       }).join('') + '</tbody></table>';
   }
   $('clients').onclick = function(e){ var tr = e.target.closest('tr.click'); if (tr) editClient(client(tr.dataset.id)); };
@@ -437,13 +461,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-adr').value = c.adresse || ''; $('mc-notes').value = c.notes || ''; $('mc-email').value = c.email || '';
     $('mc-acc').textContent = c.user_id ? 'Compte actif : il se connecte avec son e-mail.' : 'Pas de compte. S’il en crée un avec l’e-mail ci-contre, il sera relié à cette fiche.';
     c = editing;
-    $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c;
+    $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c; $('mc-msgs').hidden = !c;
+    if (c) { var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length; $('mc-msgs').textContent = 'Messages' + (cu ? ' (' + cu + ')' : ''); }
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
     $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="suivi.html?q=' + q.id + '">suivi</a></span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
   function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), email: $('mc-email').value.trim().toLowerCase(), notes: $('mc-notes').value }; }
   $('mc-close').onclick = function(){ $('m-client').hidden = true; };
+  $('mc-msgs').onclick = function(){ $('m-client').hidden = true; openThread(editing); };
   $('mc-portal').onclick = function(){
     var u = sb.PORTAL + '#' + editing.portal_token;
     (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast('Lien de l’espace client copié. Rendez un devis visible depuis « Suivi client ».'); }, function(){ prompt('Lien de l’espace client :', u); });
@@ -466,6 +492,34 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       (ls.length ? '<h2>Demandes</h2>' + ls.map(function(l){ return '<p><b>' + day(l.created_at) + '</b> · ' + esc(l.projet) + (l.budget ? ' · budget ' + esc(l.budget) : '') + '<br><span style="white-space:pre-wrap">' + esc(l.message) + '</span></p>'; }).join('') : '') +
       '<h2>Devis</h2>' + (qs.length ? '<table><tr><th>N°</th><th>Date</th><th>Statut</th><th>Total</th></tr>' + qs.map(function(q){ return '<tr><td>' + esc(q.numero) + '</td><td>' + day(q.created_at) + '</td><td>' + esc(q.status) + '</td><td>' + eur(q.total) + '</td></tr>'; }).join('') + '</table>' : '<p>Aucun devis.</p>');
     window.print();
+  };
+
+  /* ---------------- messages with a client ---------------- */
+  var talking = null;
+  function openThread(c){
+    talking = c; $('mt-title').textContent = 'Messages · ' + (c.nom || 'client'); $('mt-reply').value = '';
+    $('mt-sub').textContent = c.user_id ? 'Compte client actif : il voit vos réponses dans son espace.' : 'Il voit vos réponses dans son espace (lien privé ou compte).';
+    $('mt-list').innerHTML = '<p style="color:var(--mute)">Chargement…</p>'; $('m-thread').hidden = false;
+    loadThread();
+  }
+  function loadThread(){
+    return sb.select('messages', 'select=*&client_id=eq.' + talking.id + '&order=created_at.asc').then(function(ms){
+      ms = ms || [];
+      $('mt-list').innerHTML = ms.length ? ms.map(function(m){
+        var mine = m.author === 'moi';
+        return '<div class="bub ' + (mine ? 'me' : 'him') + (!mine && !m.read_at ? ' new' : '') + '">' + esc(m.body) + '<small>' + (mine ? 'Vous' : esc(talking.nom || 'Client')) + ' · ' + new Date(m.created_at).toLocaleString('fr-FR') + '</small></div>';
+      }).join('') : '<p style="color:var(--mute)">Aucun message pour l’instant.</p>';
+      $('mt-list').scrollTop = $('mt-list').scrollHeight;
+      var unread = ms.filter(function(m){ return m.author === 'client' && !m.read_at; }), now = new Date().toISOString();
+      if (unread.length) Promise.all(unread.map(function(m){ return sb.update('messages', m.id, { read_at: now }); })).then(loadAll, function(){});
+    }, fail);
+  }
+  $('mt-close').onclick = function(){ $('m-thread').hidden = true; };
+  $('mt-send').onclick = function(){
+    var t = $('mt-reply').value.trim(); if (!t) { $('mt-reply').focus(); return; }
+    // attach the reply to the client's latest visible quote, if any
+    var q = data.quotes.filter(function(x){ return x.client_id === talking.id && x.shared; })[0];
+    sb.insert('messages', { client_id: talking.id, quote_id: q ? q.id : null, author: 'moi', body: t }).then(function(){ $('mt-reply').value = ''; toast('Réponse envoyée.'); loadThread(); }, fail);
   };
 
   /* ---------------- paste a request ---------------- */
