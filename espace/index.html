@@ -315,10 +315,15 @@ footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
   $('f-newpass').onsubmit = function(e){
     e.preventDefault();
     if ($('n-pass').value.length < 8) { au('Choisissez un mot de passe de 8 caractères minimum.'); return; }
-    sb.setPassword($('n-pass').value).then(function(){
-      $('n-pass').value = ''; show('s-load');
-      $('app-msg').textContent = 'Mot de passe enregistré ✓ La prochaine fois, connectez-vous sur rdzoagbe.github.io/rd-creations/espace avec votre e-mail et ce mot de passe.';
-      load();
+    // once saved, the client signs in again with the new password
+    sb.setPassword($('n-pass').value).then(function(u){
+      $('n-pass').value = '';
+      var em = (u && u.email) || '';
+      return sb.signOut().then(function(){
+        $('l-email').value = em; $('l-pass').value = '';
+        form('f-login', 'Mot de passe enregistré ✓ Connectez-vous avec votre nouveau mot de passe.', true);
+        $(em ? 'l-pass' : 'l-email').focus();
+      });
     }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
   };
   $('b-out').onclick = function(){
