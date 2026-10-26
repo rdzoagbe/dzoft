@@ -73,6 +73,8 @@ tr.is-opt .otag{display:inline-block}
 tr.is-opt .tot{font-style:italic;color:var(--mute)}
 .why{font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
 .adders{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+a.tb{text-decoration:none;display:inline-flex;align-items:center}
+.accbanner{max-width:820px;margin:12px auto 0;background:#e7f8ef;border:1px solid #9ed5b3;color:#136c3a;border-radius:12px;padding:10px 14px;font-size:14px}
 .add{border:1px dashed #9fb7d1;background:#f7faff;color:var(--blue);border-radius:8px;padding:6px 10px;font-weight:700;font-size:13px}
 .totals{display:flex;justify-content:flex-end;margin-top:12px}
 .totals table{width:320px;margin:0}
@@ -139,6 +141,7 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
   <b>Devis <span id="sync" style="font-weight:400;font-size:12.5px;color:#9fb3c8;margin-left:6px"></span></b>
   <button class="tb" type="button" id="b-import">Importer une demande</button>
   <button class="tb" type="button" id="b-new">Nouveau devis</button>
+  <a class="tb" id="b-follow" href="#" hidden>Suivi client</a>
   <button class="tb" type="button" id="b-mail">Préparer l’e-mail</button>
   <button class="tb" type="button" id="b-wa">WhatsApp</button>
   <button class="tb main" type="button" id="b-print">Imprimer / PDF</button>
@@ -150,6 +153,7 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
   <div class="row"><button class="ibtn go" type="button" id="b-doimport">Remplir le devis</button><button class="ibtn" type="button" id="b-cancel">Annuler</button></div>
 </div>
 
+<div class="accbanner noprint" id="accbanner" hidden></div>
 <main class="sheet" id="sheet">
   <div class="top">
     <div class="brand">
@@ -539,6 +543,12 @@ tr.is-opt .tot{font-style:italic;color:var(--mute)}
       if (!q) { $('sync').textContent = 'devis introuvable'; return; }
       var d = q.data || {};
       apply(d);
+      $('b-follow').hidden = false; $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
+      if (q.accepted_at) {
+        $('accbanner').hidden = false;
+        $('accbanner').innerHTML = '<b>Devis accepté en ligne</b> le ' + new Date(q.accepted_at).toLocaleString('fr-FR') + ' par ' + esc(q.accepted_name || '') +
+          '. Le client voit la version acceptée : vos modifications ici ne la changent pas. Pour un changement, faites plutôt un nouveau devis.';
+      }
       if (myaddr && !document.querySelector('[data-k="myaddr"]').value) document.querySelector('[data-k="myaddr"]').value = myaddr;
       if (!state.lines.length && d.lead && d.lead.projet) {
         $('importtext').value = 'Projet : ' + d.lead.projet + (d.lead.elements ? '\nÉléments à prévoir : ' + d.lead.elements : '');

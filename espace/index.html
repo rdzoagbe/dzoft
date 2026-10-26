@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Espace client · RD Créations</title>
+<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/rd-creations-app-icon.png">
+<style>
+:root{
+  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#081626; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee;
+  --grad:linear-gradient(135deg,#2f8bff,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#eef3f8;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+a{color:var(--blue2)}
+[hidden]{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.main{background:var(--grad);color:#05213d}
+.btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:default}
+.lnk{background:none;border:0;color:var(--blue2);text-decoration:underline;cursor:pointer;font-size:15px}
+input,textarea{width:100%;border:1px solid #c9d6e4;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);font-size:15px}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:13.5px;font-weight:700;margin:10px 0 5px}
+
+.top{background:var(--navy);color:#fff}
+.top .in{max-width:900px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;gap:10px;align-items:center;color:#fff;text-decoration:none}
+.brand img{width:34px;height:37px;display:block}
+.brand b{display:block;font-size:16px}.brand span{font-size:12.5px;color:#9fb3c8}
+.top .sp{flex:1}
+.top .wa{color:#c4d2e1;font-size:13.5px;text-decoration:none;border:1px solid #27425f;border-radius:20px;padding:6px 12px}
+main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
+.hello h1{font-size:24px;line-height:1.25}
+.hello p{color:var(--mute);margin-top:4px}
+.picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.picker button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:700;color:var(--ink2);cursor:pointer}
+.picker button[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.card{background:#fff;border-radius:16px;border:1px solid var(--line);padding:18px 18px;margin-top:16px}
+.card>h2{font-size:17px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.phead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:20px}
+.phead h2{font-size:20px}
+.pill{font-size:12px;font-weight:800;border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:.03em;background:#e3f9fd;color:#0b6577}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.off{background:#eceff3;color:var(--mute)}
+.phead .num{color:var(--mute);font-size:14px}
+.note{background:#eaf4ff;border:1px solid #cfe3fb;border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;white-space:pre-wrap}
+.note b{display:block;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--blue2);margin-bottom:2px}
+
+/* steps */
+.steps{list-style:none;position:relative}
+.steps li{position:relative;padding:0 0 16px 38px}
+.steps li:last-child{padding-bottom:0}
+.steps li:before{content:"";position:absolute;left:13px;top:26px;bottom:-2px;width:2px;background:var(--line)}
+.steps li:last-child:before{display:none}
+.steps .dot{position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;border:2px solid var(--line);background:#fff;color:var(--mute)}
+.steps li.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.done:before{background:#9ed5b3}
+.steps li.now .dot{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 4px #dbe8ff}
+.steps .t{font-weight:700;padding-top:3px}
+.steps li.now .t:after{content:"En cours";font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;background:#dbe8ff;color:var(--blue2);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:2px}
+.steps .s{font-size:14px;color:var(--mute)}
+.steps .d{font-size:12.5px;color:var(--ok);font-weight:700}
+.steps .n{font-size:14px;color:var(--ink2);background:var(--soft);border-radius:10px;padding:7px 10px;margin-top:5px;white-space:pre-wrap}
+
+/* quote */
+.qv{font-size:14px}
+.qv .qtop{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:3px solid var(--cyan);padding-bottom:12px}
+.qv .qbrand{display:flex;gap:10px;align-items:center}
+.qv .qbrand img{width:40px;height:44px}
+.qv .qbrand b{font-size:18px;display:block}.qv .qbrand span{font-size:12.5px;color:var(--mute)}
+.qv .qmeta{text-align:right;font-size:13.5px}
+.qv .qmeta h3{font-size:20px;letter-spacing:.06em;color:var(--blue2)}
+.qv .qmeta div span{color:var(--mute);margin-right:8px}
+.qv .parties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.qv .party{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.qv h4{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);margin:16px 0 6px}
+.qv .party h4{margin-top:0}
+.qv .desc{background:var(--soft);border-radius:12px;padding:10px 12px;white-space:pre-wrap}
+.qv table{width:100%;border-collapse:collapse}
+.qv th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding:6px 6px;border-bottom:2px solid var(--line)}
+.qv td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.qv .r{text-align:right;white-space:nowrap}
+.qv tr.grp td{background:var(--soft)}
+.qv tr.grp b{font-size:15px;color:var(--navy)}
+.qv .sub{font-size:12.5px;color:var(--mute)}
+.qv tr.opt td{color:var(--mute)}
+.qv .otag{font-size:10.5px;font-weight:800;text-transform:uppercase;background:var(--warnbg);color:var(--warn);border-radius:6px;padding:1px 6px;margin-right:6px}
+.qv .tot{margin:12px 0 0 auto;max-width:360px}
+.qv .tot td{border:0;padding:4px 6px}
+.qv .tot tr.grand td{font-size:17px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px}
+.qv .vat{text-align:right;font-size:12.5px;color:var(--mute);margin-top:4px}
+.qv .why{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+.qv .conds{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13.5px}
+.qv .conds span{color:var(--mute);margin-right:6px}
+.qv .signed{margin-top:14px;border:2px solid #9ed5b3;background:var(--okbg);color:var(--ok);border-radius:12px;padding:10px 12px;font-weight:700}
+.qv .qfoot{margin-top:14px;font-size:11.5px;color:var(--mute);text-align:center;border-top:1px solid var(--line);padding-top:8px}
+.qacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* accept */
+.accept{border:2px solid #cfe3fb}
+.accept p{font-size:14.5px;color:var(--ink2)}
+.accept .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14.5px;margin-top:12px;cursor:pointer}
+.accept .chk input{width:20px;height:20px;flex:none;margin-top:2px}
+.accept .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.accept .legal{font-size:12.5px;color:var(--mute);margin-top:10px}
+.okbox{background:var(--okbg);border:1px solid #9ed5b3;color:var(--ok);border-radius:14px;padding:14px 16px;margin-top:16px;font-size:15px}
+.okbox b{display:block;font-size:16px}
+.warnbox{background:var(--warnbg);border:1px solid #f0d58a;color:var(--warn);border-radius:14px;padding:14px 16px;margin-top:16px;font-size:15px}
+.msgline{font-size:14px;margin-top:10px;border-radius:10px;padding:8px 11px}
+.msgline:empty{display:none}
+.msgline.ok{background:var(--okbg);color:var(--ok)}.msgline.err{background:var(--errbg);color:var(--err)}
+
+/* docs */
+.docs{list-style:none;display:grid;gap:8px}
+.docs a{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-decoration:none;color:var(--ink);font-weight:700}
+.docs a:hover{background:var(--soft)}
+.docs svg{width:20px;height:20px;color:var(--blue2);flex:none}
+
+/* messages */
+.thread{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding:2px}
+.bub{max-width:82%;border-radius:14px;padding:8px 12px;font-size:14.5px;white-space:pre-wrap;word-wrap:break-word}
+.bub small{display:block;font-size:11.5px;opacity:.75;margin-top:2px}
+.bub.me{align-self:flex-end;background:#dbe8ff;border-bottom-right-radius:4px}
+.bub.him{align-self:flex-start;background:var(--soft);border:1px solid var(--line);border-bottom-left-radius:4px}
+.empty{color:var(--mute);font-size:14px}
+.hint{font-size:13px;color:var(--mute);margin-top:6px}
+
+.center{min-height:60vh;display:grid;place-items:center;text-align:center;color:var(--mute)}
+.center .card{max-width:480px}
+footer{max-width:900px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:var(--mute);text-align:center}
+
+@media (max-width:640px){
+  .qv .parties,.qv .conds{grid-template-columns:1fr}
+  .qv .qmeta{text-align:left}
+  .qv .hide-m{display:none}
+  .card{padding:16px 14px}
+  .top .wa span{display:none}
+}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  body.printing .top,body.printing footer,body.printing .hello,body.printing .picker,body.printing .phead,body.printing .note,
+  body.printing .card:not(.quote),body.printing .okbox,body.printing .warnbox,body.printing .qacts,body.printing .card.quote>h2{display:none!important}
+  body.printing main{padding:0;max-width:none}
+  body.printing .card.quote{border:0;padding:0;margin:0}
+  .qv{font-size:12px;zoom:.9}
+  .qv .party,.qv .desc,.qv tr.grp td,.qv .why,.qv .otag,.qv .signed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .qv tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations</b><span>Espace client</span></div></a>
+    <div class="sp"></div>
+    <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp <span>07 82 88 46 46</span></a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="center" id="s-load"><p>Chargement de votre espace…</p></div>
+  <div class="center" id="s-bad" hidden>
+    <div class="card">
+      <h2 style="font-size:19px;margin-bottom:8px">Ce lien ne fonctionne pas</h2>
+      <p>Il est peut-être incomplet ou a été remplacé. Ouvrez le dernier lien reçu par e-mail ou WhatsApp, ou demandez-m’en un nouveau.</p>
+      <p style="margin-top:12px"><a class="btn main" href="https://wa.me/33782884646" target="_blank" rel="noopener">Me contacter</a></p>
+    </div>
+  </div>
+  <div class="center" id="s-err" hidden>
+    <div class="card"><h2 style="font-size:19px;margin-bottom:8px">Connexion impossible</h2><p>Vérifiez votre connexion internet, puis rechargez la page.</p>
+    <p style="margin-top:12px"><button class="btn main" type="button" onclick="location.reload()">Recharger</button></p></div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="hello"><h1 id="hello"></h1><p>Retrouvez ici votre devis, l’avancement de votre projet, vos documents et nos échanges.</p></div>
+    <div class="picker" id="picker" hidden></div>
+    <div id="none" class="card" hidden><p>Aucun devis n’est encore disponible ici. Je vous préviens dès qu’il est prêt.</p></div>
+    <div id="proj"></div>
+
+    <section class="card" id="chat">
+      <h2>Nos échanges</h2>
+      <div class="thread" id="thread"></div>
+      <label for="m-body">Votre message</label>
+      <textarea id="m-body" maxlength="2000" placeholder="Une question, une modification à demander, un retour sur les maquettes…"></textarea>
+      <div class="qacts"><button class="btn main" id="m-send" type="button">Envoyer</button></div>
+      <p class="msgline" id="m-msg" role="status" aria-live="polite"></p>
+      <p class="hint">Je vous réponds sous 48 h. Pour une urgence, appelez-moi ou écrivez-moi sur WhatsApp au 07 82 88 46 46.</p>
+    </section>
+  </div>
+</main>
+<footer>RD Créations · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · Cet espace est personnel : ne partagez pas son lien.</footer>
+
+<script src="../admin/sb.js"></script>
+<script src="../assets/rd-steps.js"></script>
+<script>
+(function(){
+  var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
+  var FORMSPREE_ID = 'xrpppprj';
+  var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
+  var day = function(d){ return d ? new Date(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : ''; };
+  var time = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); };
+  var isoDay = function(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? new Date(s + 'T12:00:00') : null; };
+
+  // The secret link: espace/#<code>. Kept on this device so the page also opens without it.
+  var UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  var m = UUID.exec(location.hash), token = m ? m[0].toLowerCase() : null;
+  try { if (token) localStorage.setItem('rd-espace', token); else token = localStorage.getItem('rd-espace'); } catch(e){}
+  var D = null, current = null;
+
+  function show(id){ ['s-load', 's-bad', 's-err', 'app'].forEach(function(x){ $(x).hidden = x !== id; }); }
+  function notify(subject, text){
+    if (!FORMSPREE_ID) return;
+    fetch('https://formspree.io/f/' + FORMSPREE_ID, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _subject: subject, message: text + '\n\nVoir dans l’espace privé : ' + sb.ADMIN }) }).catch(function(){});
+  }
+  function load(keep){
+    if (!token) { show('s-bad'); return Promise.resolve(); }
+    return sb.rpc('portal_get', { p_token: token }).then(function(d){
+      if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
+      D = d; show('app'); render(keep);
+    }, function(){ show('s-err'); });
+  }
+
+  function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
+  function title(q){
+    var h = (q.data.lines || []).filter(function(l){ return l.h && l.l; }).map(function(l){ return l.l; });
+    return h.length ? h.join(' + ') : 'Devis ' + q.numero;
+  }
+  function steps(q){ return (q.steps && q.steps.length) ? q.steps : window.RDSTEPS; }
+  function expired(q){ var v = isoDay((q.data.f || {}).valid); return !q.accepted_at && v && v < new Date(new Date().toDateString()); }
+  function state(q){
+    if (q.status === 'refusé') return ['Clos', 'off'];
+    if (!q.accepted_at) return expired(q) ? ['Devis expiré', 'warn'] : ['Devis à valider', ''];
+    var st = steps(q), cur = st.filter(function(s){ return !s.done; })[0];
+    return cur ? ['En cours : ' + cur.t, ''] : ['Projet livré', 'ok'];
+  }
+
+  function render(keep){
+    $('hello').textContent = 'Bonjour ' + (first(D.client.nom) || '') + ' 👋';
+    var qs = D.quotes || [];
+    $('none').hidden = !!qs.length;
+    if (!keep || !qs.some(function(q){ return q.id === current; })) current = qs[0] && qs[0].id;
+    $('picker').hidden = qs.length < 2;
+    $('picker').innerHTML = qs.map(function(q){ return '<button type="button" data-id="' + q.id + '" aria-pressed="' + (q.id === current) + '">' + esc(title(q)) + '</button>'; }).join('');
+    var q = qs.filter(function(x){ return x.id === current; })[0];
+    $('proj').innerHTML = q ? project(q) : '';
+    if (q) wire(q);
+    renderThread();
+  }
+  $('picker').onclick = function(e){ var b = e.target.closest('button[data-id]'); if (!b) return; current = b.dataset.id; render(true); };
+
+  function project(q){
+    var f = q.data.f || {}, st = state(q), h = '';
+    h += '<div class="phead"><h2>' + esc(title(q)) + '</h2><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num">Devis ' + esc(q.numero) + '</span></div>';
+    if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
+    if (q.accepted_at) h += '<div class="okbox"><b>Devis accepté ✓</b>Le ' + day(q.accepted_at) + ', par ' + esc(q.accepted_name) + '. Merci pour votre confiance ! Vous suivez ci-dessous chaque étape du projet.</div>';
+    else if (expired(q)) h += '<div class="warnbox">Ce devis a expiré le ' + day(isoDay(f.valid)) + '. Écrivez-moi en bas de la page : je vous en envoie un à jour.</div>';
+    // steps
+    var list = steps(q), now = -1;
+    list.forEach(function(s, i){ if (now < 0 && !s.done) now = i; });
+    h += '<section class="card"><h2>Où en est votre projet</h2><ol class="steps">' + list.map(function(s, i){
+      var dep = s.k === 'deposit' ? depositText(q) : '';
+      return '<li class="' + (s.done ? 'done' : i === now && q.accepted_at ? 'now' : '') + '"><span class="dot">' + (s.done ? '✓' : i + 1) + '</span>' +
+        '<div class="t">' + esc(s.t) + '</div>' + (s.s ? '<div class="s">' + esc(s.s) + dep + '</div>' : '') +
+        (s.done && s.d ? '<div class="d">Fait le ' + day(isoDay(s.d)) + '</div>' : '') +
+        (s.note ? '<div class="n">' + esc(s.note) + '</div>' : '') + '</li>';
+    }).join('') + '</ol></section>';
+    // accept
+    if (!q.accepted_at && !expired(q) && q.status !== 'refusé') {
+      h += '<section class="card accept" id="acc"><h2>Bon pour accord</h2>' +
+        '<p>Si le devis ci-dessous vous convient, vous pouvez l’accepter ici, sans rien imprimer. Une question ou une modification avant ? Écrivez-moi en bas de la page.</p>' +
+        '<label for="a-name">Votre nom et prénom</label><input id="a-name" autocomplete="name" maxlength="120" value="' + esc(D.client.nom) + '">' +
+        '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’en accepte le contenu et les conditions.</span></label>' +
+        '<div class="row"><button class="btn main" id="a-go" type="button" disabled>J’accepte le devis</button><button class="lnk" id="a-ask" type="button">Poser une question</button></div>' +
+        '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
+        '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord »). Votre nom, la date, l’heure et l’adresse de connexion sont enregistrés comme preuve de votre accord.</p></section>';
+    }
+    // quote
+    h += '<section class="card quote"><h2>Votre devis</h2>' + quoteView(q) +
+      '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
+    // documents
+    var docs = (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); });
+    if (docs.length) h += '<section class="card"><h2>Vos documents</h2><ul class="docs">' + docs.map(function(d){
+      return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + esc(d.n || 'Document') + '</a></li>';
+    }).join('') + '</ul></section>';
+    return h;
+  }
+  function amounts(q){
+    var d = q.data, f = d.f || {}, once = 0, month = 0, opt = 0;
+    (d.lines || []).forEach(function(l){ if (l.h) return; var t = (l.q || 0) * (l.p || 0); if (l.o) opt += t; else if (l.u === 'mois') month += t; else once += t; });
+    var novat = f.novat !== false, vat = novat ? 0 : once * 0.2, pct = Math.min(100, Math.max(0, parseFloat(f.deppct) || 0));
+    return { once: once, vat: vat, ttc: once + vat, month: month * (novat ? 1 : 1.2), opt: opt, pct: pct, dep: (once + vat) * pct / 100, novat: novat };
+  }
+  function depositText(q){ var a = amounts(q); return a.pct ? ' Montant : ' + eur(a.dep) + ' (' + a.pct + ' %).' : ''; }
+  function quoteView(q){
+    var d = q.data, f = d.f || {}, a = amounts(q), h = '<div class="qv">';
+    h += '<div class="qtop"><div class="qbrand"><img src="../assets/rd-creations-icon.svg" alt="" width="40" height="44"><div><b>RD Créations</b><span>Roland Dzoagbe · sites web, PWA et applications mobiles</span></div></div>' +
+      '<div class="qmeta"><h3>DEVIS</h3><div><span>N°</span>' + esc(f.num || q.numero) + '</div>' + (f.date ? '<div><span>Date</span>' + day(isoDay(f.date)) + '</div>' : '') +
+      (f.valid ? '<div><span>Valable jusqu’au</span>' + day(isoDay(f.valid)) + '</div>' : '') + '</div></div>';
+    h += '<div class="parties"><div class="party"><h4>Prestataire</h4><b>Roland Dzoagbe</b>, entrepreneur individuel<br>SIRET 104 838 727 00014' + (f.myaddr ? '<br>' + esc(f.myaddr) : '') +
+      '<br>07 82 88 46 46 · rolanddzoagbe@gmail.com</div><div class="party"><h4>Client</h4><b>' + esc(f.cname) + '</b>' + (f.corg ? '<br>' + esc(f.corg) : '') +
+      (f.caddr ? '<br>' + esc(f.caddr) : '') + (f.ccontact ? '<br>' + esc(f.ccontact) : '') + '</div></div>';
+    if (f.desc) h += '<h4>Le projet</h4><div class="desc">' + esc(f.desc) + '</div>';
+    h += '<h4>Prestations</h4><table><thead><tr><th>Désignation</th><th class="r hide-m">Qté</th><th class="r hide-m">Prix unitaire</th><th class="r">Total</th></tr></thead><tbody>' +
+      (d.lines || []).map(function(l){
+        if (l.h) return '<tr class="grp"><td colspan="4"><b>' + esc(l.l) + '</b>' + (l.s ? '<div class="sub">' + esc(l.s) + '</div>' : '') + '</td></tr>';
+        var t = (l.q || 0) * (l.p || 0), per = l.u === 'mois' ? ' / mois' : '';
+        return '<tr' + (l.o ? ' class="opt"' : '') + '><td>' + (l.o ? '<span class="otag">Option</span>' : '') + '<b>' + esc(l.l) + '</b>' + (l.s ? '<div class="sub">' + esc(l.s) + '</div>' : '') + '</td>' +
+          '<td class="r hide-m">' + (l.q || 0) + ' ' + esc(l.u || '') + '</td><td class="r hide-m">' + eur(l.p) + per + '</td><td class="r">' + eur(t) + per + '</td></tr>';
+      }).join('') + '</tbody></table>';
+    h += '<table class="tot"><tr><td>Total des prestations</td><td class="r">' + eur(a.once) + '</td></tr>' +
+      (a.novat ? '' : '<tr><td>TVA 20 %</td><td class="r">' + eur(a.vat) + '</td></tr>') +
+      '<tr class="grand"><td>' + (a.novat ? 'Net à payer' : 'Total TTC') + '</td><td class="r">' + eur(a.ttc) + '</td></tr>' +
+      (a.month ? '<tr><td>Puis, suivi mensuel (optionnel)</td><td class="r">' + eur(a.month) + ' / mois</td></tr>' : '') +
+      (a.opt ? '<tr><td>Options proposées, non comprises</td><td class="r">' + eur(a.opt) + '</td></tr>' : '') +
+      '<tr><td>Acompte à la signature (' + a.pct + ' %)</td><td class="r">' + eur(a.dep) + '</td></tr></table>' +
+      '<div class="vat">' + (a.novat ? 'TVA non applicable, article 293 B du CGI.' : 'Montants hors taxes ; TVA au taux de 20 %.') + '</div>';
+    h += '<div class="why"><b>Comment lire ce devis.</b> Chaque ligne correspond à une partie du travail, avec son prix : le total en est la somme. ' +
+      (a.opt ? 'Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. ' : '') +
+      'Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>';
+    var host = d.host || [];
+    if (host.length) h += '<h4>Hébergement et comptes, à votre nom</h4>' + (f.accnote ? '<p class="sub" style="font-size:13px;margin-bottom:6px">' + esc(f.accnote) + '</p>' : '') +
+      '<table><thead><tr><th>Élément</th><th>Où</th><th>Coût indicatif</th></tr></thead><tbody>' +
+      host.map(function(x){ return '<tr><td><b>' + esc(x.l) + '</b></td><td>' + esc(x.w) + '</td><td>' + esc(x.c) + '</td></tr>'; }).join('') + '</tbody></table>';
+    h += '<h4>Conditions</h4><div class="conds">' +
+      (f.delay ? '<div><span>Délai de réalisation</span>' + esc(f.delay) + '</div>' : '') +
+      '<div><span>Acompte</span>' + a.pct + ' %</div>' + (f.pay ? '<div><span>Paiement</span>' + esc(f.pay) + '</div>' : '') +
+      (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
+      (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
+    if (q.accepted_at) h += '<div class="signed">Bon pour accord donné en ligne le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) + '.</div>';
+    h += '<div class="qfoot">RD Créations · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div></div>';
+    return h;
+  }
+
+  function wire(q){
+    $('q-print').onclick = function(){ document.body.classList.add('printing'); window.print(); };
+    if (!$('acc')) return;
+    var ok = $('a-ok'), go = $('a-go'), nm = $('a-name');
+    $('a-ask').onclick = function(){ $('chat').scrollIntoView({ behavior: 'smooth' }); $('m-body').focus({ preventScroll: true }); };
+    function upd(){ go.disabled = !(ok.checked && nm.value.trim().length >= 2); }
+    ok.onchange = upd; nm.oninput = upd;
+    go.onclick = function(){
+      go.disabled = true; amsg('Enregistrement…', true);
+      sb.rpc('portal_accept', { p_token: token, p_quote: q.id, p_name: nm.value.trim() }).then(function(){
+        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.');
+        return load(true);
+      }, function(e){
+        amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'L’enregistrement n’a pas abouti. Réessayez dans un instant.');
+        upd();
+      });
+    };
+  }
+  function amsg(t, ok){ var e = $('a-msg'); if (!e) return; e.textContent = t; e.className = 'msgline ' + (ok ? 'ok' : 'err'); }
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('printing'); });
+
+  function renderThread(){
+    var ms = D.messages || [], box = $('thread');
+    box.innerHTML = ms.length ? ms.map(function(x){
+      return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + esc(x.body) + '<small>' + (x.author === 'client' ? 'Vous' : 'Roland') + ' · ' + time(x.at) + '</small></div>';
+    }).join('') : '<p class="empty">Pas encore de message. Écrivez-moi ici pour toute question sur votre projet.</p>';
+    box.scrollTop = box.scrollHeight;
+  }
+  $('m-send').onclick = function(){
+    var body = $('m-body').value.trim(), b = $('m-send'), e = $('m-msg');
+    if (!body) { $('m-body').focus(); return; }
+    b.disabled = true; e.className = 'msgline ok'; e.textContent = 'Envoi…';
+    var q = (D.quotes || []).filter(function(x){ return x.id === current; })[0];
+    sb.rpc('portal_message', { p_token: token, p_quote: current || null, p_body: body }).then(function(){
+      notify('Nouveau message de ' + D.client.nom, (q ? 'Devis ' + q.numero + '\n\n' : '') + body);
+      $('m-body').value = ''; e.textContent = 'Message envoyé ✓';
+      return load(true);
+    }, function(err){
+      e.className = 'msgline err'; e.textContent = /trop de messages/.test(err.message) ? 'Trop de messages d’un coup : réessayez dans un moment.' : 'L’envoi n’a pas abouti. Réessayez.';
+    }).then(function(){ b.disabled = false; });
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

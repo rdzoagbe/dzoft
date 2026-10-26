@@ -166,7 +166,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="leads" aria-selected="true">Demandes<span class="n" id="n-new" hidden></span></button>
       <button class="tab" role="tab" data-tab="clients" aria-selected="false">Clients</button>
-      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis</button>
+      <button class="tab" role="tab" data-tab="quotes" aria-selected="false">Devis<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
     </nav>
   </header>
 
@@ -218,6 +218,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <button class="btn main" id="mc-save" type="button">Enregistrer</button>
       <button class="btn line" id="mc-quote" type="button">Nouveau devis</button>
       <button class="btn line" id="mc-print" type="button">Imprimer la fiche</button>
+      <button class="btn line" id="mc-portal" type="button">Copier le lien de son espace</button>
       <span class="sp"></span>
       <button class="btn danger" id="mc-del" type="button">Supprimer</button>
       <button class="btn ghost" id="mc-close" type="button">Fermer</button>
@@ -242,7 +243,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var data = { leads: [], clients: [], quotes: [] }, editing = null;
+  var data = { leads: [], clients: [], quotes: [], unread: [] }, editing = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
@@ -294,8 +295,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Promise.all([
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total&order=created_at.desc')
-    ]).then(function(r){ data.leads = r[0] || []; data.clients = r[1] || []; data.quotes = r[2] || []; render(); }, fail);
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at&order=created_at.desc'),
+      sb.select('messages', 'select=id,client_id,quote_id&author=eq.client&read_at=is.null')
+    ]).then(function(r){ data.leads = r[0] || []; data.clients = r[1] || []; data.quotes = r[2] || []; data.unread = r[3] || []; render(); }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
   function render(){ renderLeads(); renderClients(); renderQuotes(); }
@@ -356,6 +358,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Object.assign({ f: f, lines: [], acc: [] }, extra || {});
   }
   function openQuote(id){ location.href = 'devis.html?q=' + encodeURIComponent(id); }
+  function openFollow(id){ location.href = 'suivi.html?q=' + encodeURIComponent(id); }
+  // unread client messages for a quote (messages sent without a quote count on the client's latest quote)
+  function unreadFor(q){
+    var latest = data.quotes.filter(function(x){ return x.client_id === q.client_id; })[0];
+    return data.unread.filter(function(m){ return m.quote_id === q.id || (!m.quote_id && latest && latest.id === q.id); }).length;
+  }
   function createQuote(c, lead, data0){
     return sb.insert('quotes', { numero: data0.f.num, client_id: c ? c.id : null, lead_id: lead ? lead.id : null, data: data0, total: 0 })
       .then(function(q){ openQuote(q.id); }, fail);
@@ -375,21 +383,25 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var STS = ['brouillon', 'envoyé', 'accepté', 'refusé'];
   function renderQuotes(){
     var s = $('q-search').value.toLowerCase(), box = $('quotes');
+    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
     var rows = data.quotes.filter(function(q){ var c = client(q.client_id) || {}; return !s || (q.numero + ' ' + c.nom + ' ' + c.entreprise).toLowerCase().indexOf(s) > -1; });
     if (!rows.length) { box.innerHTML = '<div class="empty">Aucun devis. Créez-en un depuis une demande, une fiche client ou « + Nouveau devis ».</div>'; return; }
     box.innerHTML = '<table><thead><tr><th>N°</th><th>Client</th><th class="hide-m">Date</th><th class="num">Total</th><th>Statut</th><th></th></tr></thead><tbody>' +
       rows.map(function(q){
         var c = client(q.client_id) || {};
-        return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b></td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
+        var nu = unreadFor(q), flags = (q.accepted_at ? '<span class="chip" style="background:var(--okbg);color:var(--ok);border-color:#9ed5b3">accepté en ligne</span> ' : q.shared ? '<span class="chip">visible client</span> ' : '') +
+          (nu ? '<span class="chip" style="background:#e3f9fd;color:#0b6577;border-color:#a5e9f5">' + nu + ' message' + (nu > 1 ? 's' : '') + '</span>' : '');
+        return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b>' + (flags ? '<div style="margin-top:4px">' + flags + '</div>' : '') + '</td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
           '<td class="hide-m">' + day(q.created_at) + '</td><td class="num">' + eur(q.total) + '</td>' +
           '<td><select data-a="st">' + STS.map(function(x){ return '<option' + (x === q.status ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></td>' +
-          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
+          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm line" data-a="follow">Suivi client</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
       }).join('') + '</tbody></table>';
   }
   $('quotes').onclick = function(e){
     var b = e.target.closest('button[data-a]'); if (!b) return;
     var id = b.closest('tr').dataset.id;
     if (b.dataset.a === 'open') return openQuote(id);
+    if (b.dataset.a === 'follow') return openFollow(id);
     if (b.dataset.a === 'del' && confirm('Supprimer ce devis ?')) sb.remove('quotes', id).then(loadAll, fail);
   };
   $('quotes').onchange = function(e){
@@ -418,13 +430,17 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-nom').value = c.nom || ''; $('mc-ent').value = c.entreprise || ''; $('mc-contact').value = c.contact || '';
     $('mc-adr').value = c.adresse || ''; $('mc-notes').value = c.notes || '';
     c = editing;
-    $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c;
+    $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c;
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
-    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span></span></li>'; }).join('');
+    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="suivi.html?q=' + q.id + '">suivi</a></span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
   function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), notes: $('mc-notes').value }; }
   $('mc-close').onclick = function(){ $('m-client').hidden = true; };
+  $('mc-portal').onclick = function(){
+    var u = sb.PORTAL + '#' + editing.portal_token;
+    (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast('Lien de l’espace client copié. Rendez un devis visible depuis « Suivi client ».'); }, function(){ prompt('Lien de l’espace client :', u); });
+  };
   $('mc-save').onclick = function(){
     var p = editing ? sb.update('clients', editing.id, clientRow()) : sb.insert('clients', clientRow());
     p.then(function(){ $('m-client').hidden = true; toast('Client enregistré.'); loadAll(); }, fail);

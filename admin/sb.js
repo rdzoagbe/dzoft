@@ -7,6 +7,7 @@
   var OWNER = 'roland.dzoagbe@hotmail.com';
   var STORE = 'rd-admin-session';
   var ADMIN = 'https://rdzoagbe.github.io/rd-creations/admin/';
+  var PORTAL = 'https://rdzoagbe.github.io/rd-creations/espace/';
 
   function getSession() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
   function setSession(s) {
@@ -47,7 +48,7 @@
   }
 
   var sb = {
-    OWNER: OWNER, ADMIN: ADMIN,
+    OWNER: OWNER, ADMIN: ADMIN, PORTAL: PORTAL,
     session: getSession,
     signIn: function (email, password) {
       return req('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: email, password: password } }).then(keep);
@@ -93,6 +94,10 @@
     },
     remove: function (table, id) {
       return token().then(function (t) { return req('/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'DELETE', token: t }); });
+    },
+    /* Client space: database functions reached with the client's secret link, never with a login. */
+    rpc: function (name, args) {
+      return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
     },
     /* Public: lets a site visitor drop a request, without reading anything back. */
     submitLead: function (row) {
