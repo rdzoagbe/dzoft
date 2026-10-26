@@ -210,6 +210,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('acc-box').innerHTML = Q.accepted_at ?
       '<div class="ok"><b>Accepté en ligne le ' + when(Q.accepted_at) + '</b> par ' + esc(Q.accepted_name) + (Q.accepted_ip ? ' · adresse IP ' + esc(Q.accepted_ip) : '') +
         ' · montant accepté : ' + eur(Q.accepted_total) + '.<br>Le client voit la version acceptée : les modifications faites ensuite sur le devis ne la changent pas.</div>' +
+        (Q.accepted_terms ? '<div class="' + (Q.accepted_early_start ? 'ok' : 'warn') + '" style="margin-top:8px">CGV ' + esc(Q.accepted_terms) + ' acceptées. ' +
+          (Q.accepted_early_start ? 'Le client a demandé un <b>démarrage immédiat</b> : vous pouvez commencer dès réception de l’acompte.' :
+            'Pas de démarrage anticipé demandé : si le client est un particulier (ou un petit professionnel hors de son activité), attendez la fin du délai de rétractation, le <b>' +
+            new Date(new Date(Q.accepted_at).getTime() + 14 * 864e5).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '</b>, avant de commencer.') + '</div>' : '') +
         '<div class="row" style="margin-top:8px"><button class="btn sm ghost" id="b-unaccept" type="button">Annuler l’acceptation</button></div>' :
       '<p class="muted">' + (Q.shared ? 'En attente : le client peut accepter le devis depuis son espace (bouton « J’accepte le devis »). Vous recevrez un e-mail.' : 'Rendez le devis visible dans l’espace client pour qu’il puisse l’accepter en ligne.') + '</p>';
     if ($('b-unaccept')) $('b-unaccept').onclick = function(){

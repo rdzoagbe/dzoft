@@ -212,6 +212,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <button class="tab" role="tab" data-tab="projects" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v13H3z"/><path d="M8 7V4h8v3"/></svg>Projets</button>
       <button class="tab" role="tab" data-tab="inbox" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg>Messages<span class="n" id="n-msg" hidden title="Messages non lus"></span></button>
       <hr>
+      <button class="tab" role="tab" data-tab="settings" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Paramètres</button>
       <button class="tab" role="tab" data-tab="trash" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg>Corbeille<span class="n" id="n-trash" hidden style="background:#eceff3;color:var(--mute)"></span></button>
   </nav>
 
@@ -259,6 +260,28 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <section id="v-inbox" hidden>
       <div class="bar"><h2>Messages</h2><span style="color:var(--mute);font-size:13.5px">Toutes les conversations avec vos clients</span></div>
       <div id="inbox"></div>
+    </section>
+
+    <section id="v-settings" hidden>
+      <div class="bar"><h2>Paramètres</h2></div>
+      <div class="panel">
+        <h3>Paiement</h3>
+        <p style="font-size:13.5px;color:var(--mute);margin-bottom:6px">Affiché dans « Comment payer », uniquement aux clients qui ont accepté un devis. Leur numéro de devis leur est proposé comme référence de virement.</p>
+        <div class="grid2">
+          <div><label for="p-holder">Titulaire du compte</label><input id="p-holder" placeholder="Roland Dzoagbe"></div>
+          <div><label for="p-bank">Banque (facultatif)</label><input id="p-bank"></div>
+          <div><label for="p-iban">IBAN</label><input id="p-iban" placeholder="FR76 …" autocomplete="off" spellcheck="false"></div>
+          <div><label for="p-bic">BIC (facultatif)</label><input id="p-bic" autocomplete="off" spellcheck="false"></div>
+        </div>
+        <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label><input id="p-link" placeholder="Ex. : lien SumUp, Stripe ou de votre banque">
+        <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
+        <div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" style="font-size:13.5px;color:var(--mute);align-self:center"></span></div>
+      </div>
+      <div class="panel">
+        <h3>Documents légaux</h3>
+        <p style="font-size:14px">Conditions générales de vente (version 2026-10) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/rd-creations/cgv.html</a>. Le client les accepte en même temps que le devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
+        <p style="font-size:14px;margin-top:8px;color:#8a5a00;background:#fff3d6;border-radius:8px;padding:8px 10px">À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.</p>
+      </div>
     </section>
 
     <section id="v-trash" hidden>
@@ -368,7 +391,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
       if ((u.email || '').toLowerCase() !== sb.OWNER) { sb.signOut(); $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); return; }
       $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
-      fromHash(); loadAll();
+      fromHash(); loadAll(); loadSettings();
     }, function(){ $('auth').hidden = false; showForm('f-login'); });
   }
 
@@ -394,8 +417,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); }
 
   /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
-  var VIEWS = ['dash', 'leads', 'clients', 'quotes', 'projects', 'inbox', 'trash'];
-  var SLUG = { dash: 'tableau-de-bord', leads: 'demandes', clients: 'clients', quotes: 'devis', projects: 'projets', inbox: 'messages', trash: 'corbeille' };
+  var VIEWS = ['dash', 'leads', 'clients', 'quotes', 'projects', 'inbox', 'settings', 'trash'];
+  var SLUG = { dash: 'tableau-de-bord', leads: 'demandes', clients: 'clients', quotes: 'devis', projects: 'projets', inbox: 'messages', settings: 'parametres', trash: 'corbeille' };
   function showView(v){
     if (VIEWS.indexOf(v) < 0) v = 'dash';
     [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x.dataset.tab === v); });
@@ -475,6 +498,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         '<div class="prev">' + (m.author === 'moi' ? 'Vous : ' : '') + esc(m.body) + '</div></td><td class="num" style="color:var(--mute);font-size:12.5px">' + new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td></tr>';
     }).join('') + '</tbody></table>';
   }
+
+  /* ---------------- settings ---------------- */
+  var PAY = ['holder', 'bank', 'iban', 'bic', 'link', 'note'];
+  function loadSettings(){
+    sb.select('settings', 'select=payment&id=eq.1').then(function(r){
+      var p = (r && r[0] && r[0].payment) || {};
+      PAY.forEach(function(k){ $('p-' + k).value = p[k] || ''; });
+    }, function(){});
+  }
+  $('p-save').onclick = function(){
+    var p = {};
+    PAY.forEach(function(k){ var v = $('p-' + k).value.trim(); if (v) p[k] = k === 'iban' || k === 'bic' ? v.toUpperCase() : v; });
+    if (p.link && !/^https:\/\//i.test(p.link)) { $('p-msg').textContent = 'Le lien doit commencer par https://'; return; }
+    if (p.iban && !/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,40}$/.test(p.iban)) { $('p-msg').textContent = 'IBAN incomplet ou mal saisi.'; return; }
+    sb.update('settings', 1, { payment: p, updated_at: new Date().toISOString() }).then(function(){ $('p-msg').textContent = 'Enregistré ✓'; toast('Paramètres de paiement enregistrés.'); }, fail);
+  };
 
   /* ---------------- trash ---------------- */
   function renderTrash(){

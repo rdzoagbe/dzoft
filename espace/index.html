@@ -213,6 +213,16 @@ a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
 .em{font-size:13.5px;color:var(--mute);margin-top:2px}
 .en{font-size:13px;color:var(--ink2);margin-top:4px}
 .env .btn{margin-top:8px}
+.withdraw{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:12px}
+.withdraw b{font-size:14px}.withdraw p{font-size:13.5px;margin-top:2px}
+.withdraw .chk{margin-top:8px}
+.infobox{background:#eaf4ff;border:1px solid #cfe3fb;border-radius:12px;padding:10px 14px;margin-top:14px;font-size:14.5px}
+.pay .due{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--soft);border-radius:12px;padding:12px 14px}
+.pay .due b{font-size:22px}
+.rib{display:grid;gap:8px;margin-top:12px}
+.rib div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;border-bottom:1px dotted var(--line);padding-bottom:6px}
+.rib span{color:var(--mute);font-size:13px;min-width:150px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14.5px;letter-spacing:.02em}
 .secure{font-size:13.5px;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
 select{width:100%;border:1px solid #c9d6e4;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);font-size:15px}
 footer{max-width:1180px}
@@ -306,6 +316,7 @@ footer{max-width:1180px}
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   var FORMSPREE_ID = 'xrpppprj';
+  var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return d ? new Date(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : ''; };
@@ -489,6 +500,35 @@ footer{max-width:1180px}
       return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + esc(d.n || 'Document') + '</a></li>';
     }).join('') + '</ul>';
   }
+  function withdrawEnd(d){ var e = new Date(d); e.setDate(e.getDate() + 14); return e; }
+  function withdrawText(q){
+    if (!q.accepted_at || !q.accepted_terms) return '';
+    var end = withdrawEnd(q.accepted_at), open = end > new Date();
+    if (q.accepted_early_start) return '<div class="infobox">Vous avez demandé que le travail commence dès l’acceptation, avant la fin du délai de rétractation de 14 jours.</div>';
+    return open ? '<div class="infobox">Délai de rétractation : jusqu’au <b>' + day(end) + '</b>. Si vous êtes concerné (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>), je commence le travail après cette date. Vous voulez démarrer plus tôt ? <a href="#/messages">Écrivez-le-moi</a>.</div>' : '';
+  }
+  function depositDone(q){ return steps(q).some(function(s){ return s.k === 'deposit' && s.done; }); }
+  function balanceDone(q){ return steps(q).some(function(s){ return s.k === 'handover' && s.done; }); }
+  function payBlock(q){
+    var P = D.payment || {}, a = amounts(q), dep = depositDone(q), bal = balanceDone(q);
+    if (bal) return '<section class="card"><h2>Paiement</h2><p class="muted">Tout est réglé, merci ✓</p></section>';
+    var due = dep ? ['Solde, à régler à la livraison', a.ttc - a.dep] : ['Acompte, pour démarrer le projet', a.dep];
+    var h = '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>';
+    if (P.iban) h += '<div class="rib"><div><span>Titulaire</span><b>' + esc(P.holder || 'Roland Dzoagbe') + '</b></div>' +
+      '<div><span>IBAN</span><b class="mono" id="iban">' + esc(P.iban) + '</b><button class="btn line sm" type="button" data-copy="' + esc(P.iban.replace(/\s+/g, '')) + '">Copier</button></div>' +
+      (P.bic ? '<div><span>BIC</span><b class="mono">' + esc(P.bic) + '</b></div>' : '') + (P.bank ? '<div><span>Banque</span><b>' + esc(P.bank) + '</b></div>' : '') +
+      '<div><span>Référence à indiquer</span><b class="mono">' + esc(q.numero) + '</b><button class="btn line sm" type="button" data-copy="' + esc(q.numero) + '">Copier</button></div></div>';
+    if (/^https:\/\//i.test(P.link || '')) h += '<p style="margin-top:12px"><a class="btn main" href="' + esc(P.link) + '" target="_blank" rel="noopener noreferrer">Payer par carte ↗</a></p>';
+    if (!P.iban && !P.link) h += '<p class="muted">Je vous envoie les coordonnées de paiement avec la facture.</p>';
+    if (P.note) h += '<p class="muted" style="margin-top:8px;white-space:pre-wrap">' + esc(P.note) + '</p>';
+    h += '<p class="muted" style="margin-top:8px">Une facture vous est remise pour chaque paiement. Le paiement apparaît ici dès que je l’ai reçu.</p></section>';
+    return h;
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-copy]'); if (!b) return;
+    var t = b.dataset.copy, done = function(){ b.textContent = 'Copié ✓'; setTimeout(function(){ b.textContent = 'Copier'; }, 1800); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function(){ prompt('À copier :', t); }); else prompt('À copier :', t);
+  });
   function okDocs(q){ return (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); }); }
   function stepsList(q){
     var list = steps(q), now = -1;
@@ -509,7 +549,7 @@ footer{max-width:1180px}
     qs.filter(pending).forEach(function(q){ todo.push(['Votre devis ' + q.numero + ' (' + eur(q.total) + ') attend votre accord', '#/devis/' + q.id, 'Voir le devis']); });
     projects().forEach(function(q){
       var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
-      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Voir le projet']);
+      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer']);
     });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
@@ -549,10 +589,12 @@ footer{max-width:1180px}
     if (pending(q)) h += '<section class="card accept" id="acc"><h2>Bon pour accord</h2>' +
       '<p>Si le devis ci-dessous vous convient, vous pouvez l’accepter ici, sans rien imprimer. Une question ou une modification avant ? <a href="#/messages">Écrivez-moi</a>.</p>' +
       '<label for="a-name">Votre nom et prénom</label><input id="a-name" autocomplete="name" maxlength="120" value="' + esc(D.client.nom) + '">' +
-      '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’en accepte le contenu et les conditions.</span></label>' +
+      '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>' +
+      '<div class="withdraw"><b>Délai de rétractation</b><p>Si vous êtes un particulier, ou un professionnel de 5 salariés au plus et que ce projet ne relève pas de votre activité principale, vous disposez de 14 jours pour changer d’avis, sans frais (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>). Sans demande de votre part, je commence le travail à la fin de ce délai.</p>' +
+      '<label class="chk"><input type="checkbox" id="a-early"><span>Je demande que le travail commence <b>dès maintenant</b>, avant la fin du délai de 14 jours. Je reconnais que si je me rétracte, je paierai le travail déjà réalisé, et que je perdrai mon droit de rétractation une fois la prestation entièrement réalisée.</span></label></div>' +
       '<div class="row"><button class="btn main" id="a-go" type="button" disabled>J’accepte le devis</button></div>' +
       '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
-      '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord »). Votre nom, la date, l’heure et l’adresse de connexion sont enregistrés comme preuve de votre accord.</p></section>';
+      '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord ») et acceptation des conditions générales de vente (version ' + TERMS.slice(1) + '). Votre nom, la date, l’heure, l’adresse de connexion et votre choix sur le délai de rétractation sont enregistrés comme preuve de votre accord.</p></section>';
     h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
     return h;
   }
@@ -565,8 +607,10 @@ footer{max-width:1180px}
     ok.onchange = upd; nm.oninput = upd;
     gob.onclick = function(){
       gob.disabled = true; amsg('Enregistrement…', true);
-      call('accept', { p_quote: q.id, p_name: nm.value.trim() }).then(function(){
-        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.');
+      var early = $('a-early').checked;
+      call('accept', { p_quote: q.id, p_name: nm.value.trim(), p_terms: TERMS, p_early: early }).then(function(){
+        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.\n' +
+          (early ? 'Démarrage immédiat demandé (avant la fin du délai de rétractation).' : 'Pas de démarrage anticipé : commencer après le ' + day(withdrawEnd(new Date())) + ' (fin du délai de rétractation de 14 jours), si le client est concerné.'));
         return load();
       }, function(e){
         amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'L’enregistrement n’a pas abouti. Réessayez dans un instant.');
@@ -588,7 +632,9 @@ footer{max-width:1180px}
     var st = state(q), p = progress(q), h = back('projets', 'Mes projets'), env = envOf(q), docs = okDocs(q);
     h += '<div class="phead"><h1>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num"><a href="#/devis/' + q.id + '">Devis ' + esc(q.numero) + '</a></span></div>';
     if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
+    h += withdrawText(q);
     h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
+    h += payBlock(q);
     h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';
     if (docs.length) h += '<section class="card"><h2>Documents</h2>' + docsList(docs) + '</section>';
     h += '<p style="margin-top:16px"><a class="btn line" href="#/messages">Une question sur ce projet ? Écrivez-moi</a></p>';
@@ -701,7 +747,9 @@ footer{max-width:1180px}
       '<div><span>Acompte</span>' + a.pct + ' %</div>' + (f.pay ? '<div><span>Paiement</span>' + esc(f.pay) + '</div>' : '') +
       (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
       (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
-    if (q.accepted_at) h += '<div class="signed">Bon pour accord donné en ligne le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) + '.</div>';
+    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + TERMS_URL + '" target="_blank" rel="noopener">rdzoagbe.github.io/rd-creations/cgv.html</a></p>';
+    if (q.accepted_at) h += '<div class="signed">Bon pour accord donné en ligne le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
+      (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';
     h += '<div class="qfoot">RD Créations · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div></div>';
     return h;
   }
