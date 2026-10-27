@@ -65,6 +65,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 #files .doc{grid-template-columns:2fr 1fr auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
 .ask{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);grid-column:1/-1;cursor:pointer;margin:0}
 .ask input{width:16px;height:16px}
+.mailrow{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);margin:2px 0 0}
 .vok{grid-column:1/-1;font-size:13px;color:var(--ok);font-weight:700}
 .envr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1.1fr 1fr 2fr auto;gap:6px;align-items:center}
 .envr+.envr{margin-top:8px}
@@ -113,15 +114,16 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="has-client">
       <p class="muted">Client : <b id="cl-name" style="color:var(--ink)"></b>. Un seul lien par client : il y retrouve tous les devis que vous rendez visibles.</p>
       <label class="switch"><input type="checkbox" id="shared"> Visible dans l’espace client</label>
-      <label class="switch" style="font-weight:600"><input type="checkbox" id="mailon" checked> Prévenir le client par e-mail (devis publié, étape terminée, validation demandée, réponse)</label>
       <div class="link"><input id="url" readonly aria-label="Lien de l’espace client"><button class="btn sm line" id="b-copy" type="button">Copier</button></div>
       <div class="row" style="margin-top:8px">
-        <button class="btn sm main" id="b-wa" type="button">Envoyer par WhatsApp</button>
-        <button class="btn sm line" id="b-mail" type="button">Envoyer par e-mail</button>
+        <button class="btn sm main" id="b-mail" type="button">Envoyer l’e-mail du devis</button>
+        <button class="btn sm line" id="b-wa" type="button">Envoyer par WhatsApp</button>
+        <button class="btn sm line" id="b-mymail" type="button">Écrire depuis ma messagerie</button>
         <a class="btn sm line" id="b-open" target="_blank" rel="noopener noreferrer">Voir comme le client</a>
         <span class="sp" style="flex:1"></span>
         <button class="btn sm ghost" id="b-newlink" type="button" title="L’ancien lien cessera de fonctionner">Changer le lien</button>
       </div>
+      <p class="muted" id="mail-state" style="margin-top:6px">Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».</p>
     </div>
   </section>
 
@@ -164,7 +166,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <h2>Messages</h2>
     <div class="thread" id="thread"></div>
     <textarea id="reply" maxlength="2000" placeholder="Votre réponse au client"></textarea>
-    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><span class="muted">Le client la voit dans son espace et reçoit un e-mail si « Prévenir le client » est coché en haut.</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><label class="muted" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="reply-mail" checked style="width:16px;height:16px"> Prévenir aussi le client par e-mail</label></div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
@@ -178,7 +180,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   if (!sb || !sb.session()) { location.replace('./'); return; }
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
-  var Q = null, C = null, clients = [], msgs = [], timer = null;
+  var Q = null, C = null, clients = [], msgs = [], sent = [], timer = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
@@ -194,9 +196,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       return Promise.all([
         Q.client_id ? sb.select('clients', 'select=*&id=eq.' + Q.client_id) : Promise.resolve([]),
         sb.select('clients', 'select=id,nom,entreprise&order=nom.asc'),
-        Q.client_id ? sb.select('messages', 'select=*&client_id=eq.' + Q.client_id + '&order=created_at.asc') : Promise.resolve([])
+        Q.client_id ? sb.select('messages', 'select=*&client_id=eq.' + Q.client_id + '&order=created_at.asc') : Promise.resolve([]),
+        sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; })
       ]).then(function(x){
-        C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || [];
+        C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || [];
         if (!(Q.steps || []).length) Q.steps = fresh();
         render(); markRead();
       });
@@ -217,6 +220,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
     if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : le message l’invite à se connecter ; le lien privé ci-dessous marche aussi)' : ''); $('url').value = url(); $('b-open').href = url(); }
     $('shared').checked = !!Q.shared;
+    var qs = sentAt('quote');
+    $('mail-state').textContent = qs ? 'E-mail du devis envoyé le ' + qs + '.' : Q.shared ? 'Devis visible : le client n’a pas encore reçu d’e-mail. Cliquez sur « Envoyer l’e-mail du devis ».' : 'Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».';
     $('sh-pill').textContent = Q.shared ? 'visible' : 'non visible'; $('sh-pill').className = 'pill' + (Q.shared ? ' on' : '');
     // acceptance
     $('acc-box').innerHTML = Q.accepted_at ?
@@ -240,15 +245,23 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('sync').textContent = 'enregistrement…';
     return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); });
   }
-  // e-mail to the client through the notify-client server function (Brevo)
-  try { $('mailon').checked = localStorage.getItem('rd-mailon') !== '0'; } catch(e){}
-  $('mailon').onchange = function(){ try { localStorage.setItem('rd-mailon', this.checked ? '1' : '0'); } catch(e){} };
-  function notify(kind, extra){
-    if (!$('mailon').checked || !C) return Promise.resolve();
+  // e-mails to the client (Brevo, through the notify-client server function): only sent on a click, after confirmation
+  function mailTo(){ return [C && C.email, C && C.contact].map(function(x){ return (x || '').trim(); }).filter(function(x){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); })[0] || ''; }
+  function sentAt(kind, step){
+    var ref = kind + ':' + QID + ':' + String(step || '').slice(0, 80);
+    var n = sent.filter(function(x){ return x.ref === ref; })[0];
+    return n ? new Date(n.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  }
+  function notify(kind, extra, label, ask){
+    if (!C) return Promise.resolve();
+    var to = mailTo();
+    if (!to) { toast('Ce client n’a pas d’adresse e-mail : ajoutez-la dans sa fiche.'); return Promise.resolve(); }
+    if (ask !== false && !confirm('Envoyer à ' + to + ' l’e-mail « ' + label + ' » ?')) return Promise.resolve();
     var body = { kind: kind, quote_id: QID, client_id: C.id };
     for (var k in extra) body[k] = extra[k];
     return sb.fn('notify-client', body).then(function(r){
-      if (r && r.to && !r.skipped) toast('E-mail envoyé à ' + r.to + '.');
+      toast(r && r.skipped ? 'Déjà envoyé il y a moins de 30 minutes.' : 'E-mail envoyé à ' + (r && r.to || to) + '.');
+      return load();
     }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
   }
   function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }); }, 700); }
@@ -259,8 +272,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (on && !Q.sent_at) row.sent_at = new Date().toISOString();
     if (on && Q.status === 'brouillon') row.status = 'envoyé';
     save(row, true).then(function(){
-      toast(on ? 'Le devis est visible dans l’espace du client.' : 'Le devis n’est plus visible pour le client.');
-      if (on && !Q.accepted_at) setTimeout(function(){ notify('quote'); }, 900);
+      toast(on ? 'Le devis est visible. Cliquez sur « Envoyer l’e-mail du devis » pour prévenir le client.' : 'Le devis n’est plus visible pour le client.');
     });
   };
   $('b-copy').onclick = function(){
@@ -284,7 +296,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   };
   $('b-mail').onclick = function(){
     if (!guard()) return;
-    var c = (C.contact || '').trim();
+    if (Q.accepted_at) { toast('Ce devis est déjà accepté.'); return; }
+    notify('quote', {}, 'Votre devis ' + Q.numero + ' est disponible');
+  };
+  $('b-mymail').onclick = function(){
+    if (!guard()) return;
+    var c = mailTo();
     location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + Q.numero + ' · RD Créations') + '&body=' + encodeURIComponent(invite());
   };
   $('b-newlink').onclick = function(){
@@ -310,7 +327,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<div class="f"><input class="t" value="' + esc(s.t) + '" placeholder="Nom de l’étape"><input type="date" class="d" value="' + esc(s.d || '') + '" aria-label="Date">' +
         '<input class="s" value="' + esc(s.s || '') + '" placeholder="Explication pour le client"><textarea class="n" placeholder="Note pour le client sur cette étape (facultatif)">' + esc(s.note || '') + '</textarea>' +
         (s.vby ? '<p class="vok">✓ Validé par ' + esc(s.vby) + ' le ' + new Date(s.vat).toLocaleString('fr-FR') + '</p>' :
-          !s.done ? '<label class="ask"><input type="checkbox" class="askc"' + (s.ask ? ' checked' : '') + '> Demander au client de valider cette étape' + (s.ask ? ' <b>(en attente de sa validation)</b>' : '') + '</label>' : '') + '</div>' +
+          !s.done ? '<label class="ask"><input type="checkbox" class="askc"' + (s.ask ? ' checked' : '') + '> Demander au client de valider cette étape' + (s.ask ? ' <b>(en attente de sa validation)</b>' : '') + '</label>' : '') +
+        (Q.accepted_at && !s.done && s.ask ? '<p class="mailrow"><button class="btn sm line" type="button" data-m="validate">✉ Envoyer la demande de validation</button>' + (sentAt('validate', s.t) ? ' <span>envoyée le ' + sentAt('validate', s.t) + '</span>' : '') + '</p>' : '') +
+        (Q.accepted_at && s.done && !s.vby && s.k !== 'accept' ? '<p class="mailrow"><button class="btn sm line" type="button" data-m="step">✉ Prévenir le client que c’est fait</button>' + (sentAt('step', s.t) ? ' <span>prévenu le ' + sentAt('step', s.t) + '</span>' : '') + '</p>' : '') + '</div>' +
         '<div class="tools"><button type="button" data-a="up" title="Monter">↑</button><button type="button" data-a="down" title="Descendre">↓</button><button type="button" data-a="rm" title="Retirer">×</button></div></div>';
     }).join('');
   }
@@ -327,15 +346,21 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (e.target.classList.contains('askc')) {
       s = Q.steps[+e.target.closest('.st').dataset.i];
       s.ask = e.target.checked; renderSteps(); later();
-      if (s.ask) setTimeout(function(){ notify('validate', { step: s.t }); }, 900);
       return;
     }
     s.done = e.target.checked; if (s.done && !s.d) s.d = today();
     if (s.done) s.ask = false;
     renderSteps(); later();
-    if (s.done && Q.accepted_at && s.k !== 'accept') setTimeout(function(){ notify('step', { step: s.t }); }, 900);
   };
   $('steps').onclick = function(e){
+    var m = e.target.closest('button[data-m]');
+    if (m) {
+      var st = Q.steps[+m.closest('.st').dataset.i];
+      clearTimeout(timer);
+      return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }).then(function(){
+        notify(m.dataset.m, { step: st.t }, m.dataset.m === 'step' ? 'Votre projet avance : ' + st.t + ' ✓' : 'Votre validation est attendue : ' + st.t);
+      });
+    }
     var b = e.target.closest('button[data-a]'); if (!b) return;
     var i = +b.closest('.st').dataset.i, a = b.dataset.a, L = Q.steps;
     if (a === 'rm') { if (!confirm('Retirer l’étape « ' + L[i].t + ' » ?')) return; L.splice(i, 1); }
@@ -410,7 +435,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   $('b-reply').onclick = function(){
     var t = $('reply').value.trim(); if (!t) { $('reply').focus(); return; }
-    sb.insert('messages', { client_id: C.id, quote_id: QID, author: 'moi', body: t }).then(function(){ $('reply').value = ''; toast('Réponse envoyée.'); notify('message', { text: t }); load(); }, fail);
+    var mail = $('reply-mail').checked;
+    sb.insert('messages', { client_id: C.id, quote_id: QID, author: 'moi', body: t }).then(function(){
+      $('reply').value = ''; toast('Réponse envoyée.');
+      if (mail) notify('message', { text: t }, '', false); else load();
+    }, fail);
   };
 
   /* files exchanged with the client (accounts only: u/<user id>/…) */
