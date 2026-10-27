@@ -223,6 +223,11 @@ a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
 .srow label{margin-top:0}
 .alt2{margin-top:6px}.alt2 .lnk{font-size:13.5px}
 .lnk:disabled{opacity:.5;cursor:default}
+.subh{font-size:14.5px;margin:14px 0 8px}
+.invl{list-style:none;display:grid;gap:8px}
+.invl li{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.invl li>div{flex:1;min-width:180px}
+.invl .amt{display:block;font-size:13.5px;color:var(--ink2)}
 .withdraw{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:12px}
 .withdraw b{font-size:14px}.withdraw p{font-size:13.5px;margin-top:2px}
 .withdraw .chk{margin-top:8px}
@@ -327,8 +332,6 @@ footer{max-width:1180px}
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   var FORMSPREE_ID = 'xrpppprj';
   var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
-  // signature code by e-mail (free); set to true once SMS credits are bought on Brevo
-  var SMS_ON = false;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return d ? new Date(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : ''; };
@@ -527,11 +530,27 @@ footer{max-width:1180px}
   }
   function depositDone(q){ return steps(q).some(function(s){ return s.k === 'deposit' && s.done; }); }
   function balanceDone(q){ return steps(q).some(function(s){ return s.k === 'handover' && s.done; }); }
+  function invoices(q){ return (q.invoices || []).filter(function(x){ return x.n || x.num; }); }
+  function invoiceList(q){
+    var inv = invoices(q); if (!inv.length) return '';
+    return '<h3 class="subh">Vos factures</h3><ul class="invl">' + inv.map(function(x){
+      var url = /^https:\/\//i.test(x.u || '') ? x.u : '';
+      return '<li><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
+        '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Payée' : 'À régler') + '</span>' +
+        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + '</li>';
+    }).join('') + '</ul>';
+  }
   function payBlock(q){
     var P = D.payment || {}, a = amounts(q), dep = depositDone(q), bal = balanceDone(q);
-    if (bal) return '<section class="card"><h2>Paiement</h2><p class="muted">Tout est réglé, merci ✓</p></section>';
+    var open = invoices(q).filter(function(x){ return !x.paid; });
+    if (open.length) return '<section class="card pay"><h2>Comment payer</h2><p class="muted">Réglez votre facture en ligne avec le bouton « Voir et payer »' +
+      (P.iban ? ', ou par virement avec les coordonnées ci-dessous.' : '.') + '</p>' + invoiceList(q) + (P.iban ? rib(P, q, true) : '') + '</section>';
+    if (bal) return '<section class="card"><h2>Paiement</h2><p class="muted">Tout est réglé, merci ✓</p>' + invoiceList(q) + '</section>';
     var due = dep ? ['Solde, à régler à la livraison', a.ttc - a.dep] : ['Acompte, pour démarrer le projet', a.dep];
-    var h = '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>';
+    return '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>' + rib(P, q) + invoiceList(q) + '</section>';
+  }
+  function rib(P, q, withInvoice){
+    var h = '';
     if (P.iban) h += '<div class="rib"><div><span>Titulaire</span><b>' + esc(P.holder || 'Roland Dzoagbe') + '</b></div>' +
       '<div><span>IBAN</span><b class="mono" id="iban">' + esc(P.iban) + '</b><button class="btn line sm" type="button" data-copy="' + esc(P.iban.replace(/\s+/g, '')) + '">Copier</button></div>' +
       (P.bic ? '<div><span>BIC</span><b class="mono">' + esc(P.bic) + '</b></div>' : '') + (P.bank ? '<div><span>Banque</span><b>' + esc(P.bank) + '</b></div>' : '') +
@@ -539,7 +558,7 @@ footer{max-width:1180px}
     if (/^https:\/\//i.test(P.link || '')) h += '<p style="margin-top:12px"><a class="btn main" href="' + esc(P.link) + '" target="_blank" rel="noopener noreferrer">Payer par carte ↗</a></p>';
     if (!P.iban && !P.link) h += '<p class="muted">Je vous envoie les coordonnées de paiement avec la facture.</p>';
     if (P.note) h += '<p class="muted" style="margin-top:8px;white-space:pre-wrap">' + esc(P.note) + '</p>';
-    h += '<p class="muted" style="margin-top:8px">Une facture vous est remise pour chaque paiement. Le paiement apparaît ici dès que je l’ai reçu.</p></section>';
+    if (!withInvoice) h += '<p class="muted" style="margin-top:8px">Une facture vous est remise pour chaque paiement. Le paiement apparaît ici dès que je l’ai reçu.</p>';
     return h;
   }
   document.addEventListener('click', function(e){
@@ -571,6 +590,7 @@ footer{max-width:1180px}
       if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer']);
     });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider']); }); });
+    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer']); }); });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
     var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec RD Créations.');
@@ -612,11 +632,7 @@ footer{max-width:1180px}
       '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>' +
       '<div class="withdraw"><b>Délai de rétractation</b><p>Si vous êtes un particulier, ou un professionnel de 5 salariés au plus et que ce projet ne relève pas de votre activité principale, vous disposez de 14 jours pour changer d’avis, sans frais (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>). Sans demande de votre part, je commence le travail à la fin de ce délai.</p>' +
       '<label class="chk"><input type="checkbox" id="a-early"><span>Je demande que le travail commence <b>dès maintenant</b>, avant la fin du délai de 14 jours. Je reconnais que si je me rétracte, je paierai le travail déjà réalisé, et que je perdrai mon droit de rétractation une fois la prestation entièrement réalisée.</span></label></div>' +
-      '<div class="sign"><b>Signature électronique</b>' + (SMS_ON ?
-        '<p>Pour signer, recevez un code à 6 chiffres sur votre téléphone, puis saisissez-le ci-dessous.</p>' +
-        '<div class="srow"><div><label for="a-phone">Votre numéro de mobile</label><input id="a-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="' + esc(D.client.phone || '') + '"></div>' +
-        '<button class="btn line" id="a-send" type="button" disabled>Recevoir le code par SMS</button></div>' +
-        '<p class="alt2"><button class="lnk" id="a-mail" type="button" disabled>Recevoir le code par e-mail à la place</button></p>' :
+      '<div class="sign"><b>Signature électronique</b>' + (
         '<p>Pour signer, recevez un code à 6 chiffres par e-mail' + (D.email ? ' à <b>' + esc(D.email) + '</b>' : '') + ', puis saisissez-le ci-dessous. Pensez à regarder dans vos courriers indésirables.</p>' +
         '<div class="srow"><button class="btn line" id="a-mail" type="button" disabled>Recevoir mon code par e-mail</button></div>') +
         '<div class="srow" id="a-coderow" hidden><div><label for="a-code">Code reçu</label><input id="a-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>' +
@@ -630,27 +646,24 @@ footer{max-width:1180px}
     var q = id && byId(id); if (!q) return;
     $('q-print').onclick = function(){ document.body.classList.add('printing'); window.print(); };
     if (!$('acc')) return;
-    var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name'), ph = $('a-phone'), sendB = $('a-send'), mailB = $('a-mail'), code = $('a-code');
+    var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name'), mailB = $('a-mail'), code = $('a-code');
     function ready(){ return ok.checked && nm.value.trim().length >= 2; }
     function upd(){
-      if (sendB) sendB.disabled = !(ready() && ph.value.replace(/\D/g, '').length >= 9);
       mailB.disabled = !ready();
       gob.disabled = !(ready() && /^\d{6}$/.test(code.value.trim()));
     }
-    ok.onchange = upd; nm.oninput = upd; if (ph) ph.oninput = upd; code.oninput = function(){ code.value = code.value.replace(/\D/g, '').slice(0, 6); upd(); };
-    function askCode(channel){
-      var b = channel === 'sms' ? sendB : mailB;
-      b.disabled = true; amsg('Envoi du code…', true);
+    ok.onchange = upd; nm.oninput = upd; code.oninput = function(){ code.value = code.value.replace(/\D/g, '').slice(0, 6); upd(); };
+    function askCode(){
+      mailB.disabled = true; amsg('Envoi du code…', true);
       // the server function checks the client (account session or secret link) before sending
-      sb.fn('sign-code', { quote_id: q.id, channel: channel, phone: ph ? ph.value : '', token: token || undefined }).then(function(r){
-        amsg('Code envoyé ' + (r.channel === 'sms' ? 'par SMS au ' : 'par e-mail à ') + r.target + '. Il est valable 10 minutes.', true);
+      sb.fn('sign-code', { quote_id: q.id, token: token || undefined }).then(function(r){
+        amsg('Code envoyé par e-mail à ' + r.target + '. Il est valable 10 minutes. Pensez à vos courriers indésirables.', true);
         $('a-coderow').hidden = false; code.focus();
-        if (sendB) sendB.textContent = 'Renvoyer un code par SMS'; else mailB.textContent = 'Renvoyer un code';
+        mailB.textContent = 'Renvoyer un code';
         setTimeout(upd, 30000);
       }, function(e){ amsg(e.message || 'L’envoi du code n’a pas abouti.'); upd(); });
     }
-    if (sendB) sendB.onclick = function(){ askCode('sms'); };
-    mailB.onclick = function(){ askCode('email'); };
+    mailB.onclick = askCode;
     upd();
     gob.onclick = function(){
       gob.disabled = true; amsg('Signature en cours…', true);
@@ -722,6 +735,7 @@ footer{max-width:1180px}
       '<p class="muted">Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).</p>' +
       '<div class="qacts"><label class="btn main" style="cursor:pointer">Envoyer des fichiers<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
       '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">Chargement…</li></ul>') + '</section>';
+    quotes().filter(function(q){ return invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>Factures · ' + esc(title(q)) + '</h2>' + invoiceList(q).replace('<h3 class="subh">Vos factures</h3>', '') + '</section>'; });
     h += '<section class="card"><h2>Toujours disponibles</h2>' + docsList([{ n: 'Fiche de remise (modèle)', u: 'https://rdzoagbe.github.io/rd-creations/assets/fiche-de-remise-client.pdf' }]) + '</section>';
     if (!qs.length) return h + empty('Les documents de vos projets apparaîtront ici.');
     return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');

@@ -66,6 +66,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .ask{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);grid-column:1/-1;cursor:pointer;margin:0}
 .ask input{width:16px;height:16px}
 .mailrow{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);margin:2px 0 0}
+.invr{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1.4fr 1fr .8fr auto auto;gap:6px;align-items:center}
+.invr+.invr{margin-top:8px}
+.invr .u{grid-column:1/-1}
+.invr.paid{background:#f5fbf7;border-color:#cfe9d8}
+.pd{display:flex;gap:5px;align-items:center;font-size:13px;font-weight:700;margin:0;cursor:pointer}
+.pd input{width:16px;height:16px}
+@media (max-width:640px){.invr{grid-template-columns:1fr 1fr}}
 .vok{grid-column:1/-1;font-size:13px;color:var(--ok);font-weight:700}
 .envr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1.1fr 1fr 2fr auto;gap:6px;align-items:center}
 .envr+.envr{margin-top:8px}
@@ -150,6 +157,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="docs"></div>
   </section>
 
+  <section class="card" id="c-inv" hidden>
+    <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
+    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Business</b> (Factures → Nouvelle facture), puis collez ici son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <div id="invs"></div>
+  </section>
+
   <section class="card" id="c-env" hidden>
     <h2>Environnement <span class="sp"></span><button class="btn sm line" id="ev-host" type="button">Reprendre l’hébergement du devis</button><button class="btn sm line" id="ev-add" type="button">+ Élément</button></h2>
     <p class="muted" style="margin-bottom:8px">Ce que le client voit dans « Environnement » : site en ligne, code (GitHub), hébergement, base de données, stores, nom de domaine. Mettez des liens, <b>jamais de mot de passe</b> : les identifiants se remettent avec la fiche de remise.</p>
@@ -170,6 +183,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
+<datalist id="iv-kinds"><option value="Facture d’acompte"><option value="Facture de solde"><option value="Facture suivi mensuel"><option value="Facture"></datalist>
 <datalist id="ev-providers"><option value="GitHub"><option value="GitHub Pages"><option value="OVH"><option value="Supabase (Paris)"><option value="Google Play Console"><option value="Apple App Store Connect"><option value="Formspree"><option value="Brevo"></datalist>
 
 <script src="sb.js"></script>
@@ -214,6 +228,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function render(){
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
+    $('c-inv').hidden = !Q.accepted_at;
     $('c-files').hidden = !(C && C.user_id);
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
@@ -239,7 +254,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, accepted_terms: null, accepted_early_start: null, accepted_method: null, accepted_target: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderEnv(); renderThread(); renderFiles();
+    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderThread(); renderFiles();
   }
 
   function save(row, reload){
@@ -265,7 +280,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       return load();
     }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
   }
-  function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }); }, 700); }
+  function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }); }, 700); }
 
   /* sharing */
   $('shared').onchange = function(){
@@ -358,7 +373,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (m) {
       var st = Q.steps[+m.closest('.st').dataset.i];
       clearTimeout(timer);
-      return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [] }).then(function(){
+      return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }).then(function(){
         notify(m.dataset.m, { step: st.t }, m.dataset.m === 'step' ? 'Votre projet avance : ' + st.t + ' ✓' : 'Votre validation est attendue : ' + st.t);
       });
     }
@@ -387,6 +402,37 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     later();
   };
   $('docs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; Q.docs.splice(+e.target.closest('.doc').dataset.i, 1); renderDocs(); later(); };
+  /* invoices made in Revolut Business: label, number, amount, link, paid */
+  function deposit(){ var f = ((Q.accepted_data || Q.data || {}).f) || {}, t = +Q.accepted_total || +Q.total || 0; return Math.round(t * (parseFloat(f.deppct) || 30)) / 100; }
+  function renderInv(){
+    Q.invoices = Q.invoices || [];
+    $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x, i){
+      return '<div class="invr' + (x.paid ? ' paid' : '') + '" data-i="' + i + '"><input class="n" list="iv-kinds" value="' + esc(x.n) + '" placeholder="Libellé">' +
+        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° (ex. F-2026-001)">' +
+        '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €">' +
+        '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> Payée</label>' +
+        '<button class="rm" type="button" title="Retirer">×</button>' +
+        '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien Revolut de la facture (https://…)" inputmode="url"></div>';
+    }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
+  }
+  $('invs').oninput = $('invs').onchange = function(e){
+    var row = e.target.closest('.invr'); if (!row) return;
+    var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
+    if (c === 'paid') { x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
+    else if (c === 'amt') x.amt = parseFloat(e.target.value) || 0;
+    else if (c === 'u') { x.u = e.target.value.trim(); e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : ''; }
+    else x[c] = e.target.value;
+    later();
+  };
+  $('invs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; if (!confirm('Retirer cette facture de l’espace du client ?')) return; Q.invoices.splice(+e.target.closest('.invr').dataset.i, 1); renderInv(); later(); };
+  $('iv-add').onclick = function(){
+    Q.invoices = Q.invoices || [];
+    var first = !Q.invoices.length, t = +Q.accepted_total || +Q.total || 0;
+    Q.invoices.push(first ? { n: 'Facture d’acompte', num: '', amt: deposit(), u: '', paid: false }
+      : { n: 'Facture de solde', num: '', amt: Math.round((t - deposit()) * 100) / 100, u: '', paid: false });
+    renderInv(); later(); var r = $('invs').querySelectorAll('input.num'); r[r.length - 1].focus();
+  };
+
   /* environment shown to the client (links and owners, never passwords) */
   var EV_ST = ['actif', 'en cours', 'à créer', 'prévu'];
   function renderEnv(){
