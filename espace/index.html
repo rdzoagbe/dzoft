@@ -704,7 +704,8 @@ footer{max-width:1180px}
         '<button class="btn main" id="a-go" type="button" disabled>Signer et accepter le devis</button></div></div>' +
       '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
       '<p class="legal">Saisir le code vaut signature électronique du devis (« bon pour accord ») et acceptation des conditions générales de vente (version ' + TERMS.slice(1) + '). Votre nom, la date, l’heure, l’adresse de connexion, le moyen de réception du code et votre choix sur le délai de rétractation sont enregistrés comme preuve de votre accord.</p></section>';
-    h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
+    h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button>' +
+      (/^https:\/\//i.test(q.ext_link || '') ? '<a class="btn line" href="' + esc(q.ext_link) + '" target="_blank" rel="noopener noreferrer">Voir le devis sur Revolut ↗</a>' : '') + '</div></section>';
     return h;
   }
   WIRE.devis = function(id){

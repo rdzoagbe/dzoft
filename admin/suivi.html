@@ -137,6 +137,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         <button class="btn sm ghost" id="b-newlink" type="button" title="L’ancien lien cessera de fonctionner">Changer le lien</button>
       </div>
       <p class="muted" id="mail-state" style="margin-top:6px">Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».</p>
+      <label for="ext" style="margin-top:14px">Lien du devis Revolut Business (facultatif)</label>
+      <div class="link"><input id="ext" inputmode="url" placeholder="https://…" aria-describedby="ext-help"><a class="btn sm line" id="ext-open" target="_blank" rel="noopener noreferrer">Ouvrir</a></div>
+      <p class="muted" id="ext-help" style="margin-top:4px">Dans Revolut Business, ouvrez le devis et copiez son lien de partage, puis collez-le ici. Le client verra le bouton « Voir le devis sur Revolut » sur son devis. La signature se fait toujours dans son espace.</p>
     </div>
   </section>
 
@@ -252,7 +255,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function render(){
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
-    $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = !Q.accepted_at;
+    $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = false;
+    $('ext').value = Q.ext_link || ''; $('ext-open').hidden = !Q.ext_link; if (Q.ext_link) $('ext-open').href = Q.ext_link;
     $('c-files').hidden = !(C && C.user_id);
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
@@ -307,6 +311,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }); }, 700); }
 
   /* sharing */
+  $('ext').onchange = function(){
+    var v = this.value.trim();
+    if (v && !/^https:\/\//i.test(v)) { this.style.borderColor = 'var(--err)'; toast('Le lien doit commencer par https://'); return; }
+    this.style.borderColor = ''; Q.ext_link = v;
+    save({ ext_link: v }).then(function(){ $('ext-open').hidden = !v; if (v) $('ext-open').href = v; toast(v ? 'Lien Revolut enregistré : le client le voit sur son devis.' : 'Lien Revolut retiré.'); });
+  };
   $('shared').onchange = function(){
     var on = this.checked, row = { shared: on, steps: Q.steps };
     if (on && !Q.sent_at) row.sent_at = new Date().toISOString();
@@ -467,7 +477,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     return Math.round(m * (f.novat === false ? 1.2 : 1) * 100) / 100;
   }
   function renderCare(){
-    var c = Q.care || {};
+    var c = Q.care || {}, off = !Q.accepted_at;
+    ['cr-on', 'cr-price', 'cr-since', 'cr-next'].forEach(function(id){ $(id).disabled = off; });
+    if (off) { $('cr-bill').disabled = true; $('cr-price').value = quoteMonthly() || ''; $('cr-state').textContent = 'Se règle une fois le devis accepté.' + (quoteMonthly() ? ' Le devis prévoit ' + eur(quoteMonthly()) + ' par mois.' : ''); return; }
     $('cr-on').checked = !!c.on;
     $('cr-price').value = c.price != null ? c.price : (quoteMonthly() || '');
     $('cr-since').value = c.since || ''; $('cr-next').value = c.next || '';
@@ -505,8 +517,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   /* client review: shown on the site only when the client agreed and it is published here */
   function renderReview(){
     var live = (Q.steps || []).some(function(x){ return x.k === 'live' && x.done; });
-    $('c-rv').hidden = !C || !Q.accepted_at || (!live && !RV);
+    $('c-rv').hidden = !C;
     if ($('c-rv').hidden) return;
+    if (!live && !RV) { $('rv').innerHTML = '<p class="muted">Le client pourra laisser un avis depuis son espace dès que l’étape « Mise en ligne » sera cochée. Vous le publierez ensuite ici.</p>'; return; }
     if (!RV) { $('rv').innerHTML = '<p class="muted">Le client peut laisser un avis depuis son espace depuis la mise en ligne. Pas encore d’avis.</p><div class="row" style="margin-top:8px"><button class="btn sm line" id="rv-ask" type="button">Préparer un message pour le demander</button></div>'; 
       $('rv-ask').onclick = function(){ $('reply').value = 'Bonjour ' + first(C.nom) + ',\n\nVotre projet est en ligne, merci encore pour votre confiance ! Si vous avez deux minutes, votre avis m’aiderait beaucoup : vous pouvez le laisser dans votre espace client, sur la page de votre projet (« Votre avis sur le projet »).\n\nBien cordialement,\nRoland'; $('reply').focus(); $('reply').scrollIntoView({ block: 'center' }); };
       return; }
