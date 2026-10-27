@@ -225,7 +225,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('sh-pill').textContent = Q.shared ? 'visible' : 'non visible'; $('sh-pill').className = 'pill' + (Q.shared ? ' on' : '');
     // acceptance
     $('acc-box').innerHTML = Q.accepted_at ?
-      '<div class="ok"><b>Accepté en ligne le ' + when(Q.accepted_at) + '</b> par ' + esc(Q.accepted_name) + (Q.accepted_ip ? ' · adresse IP ' + esc(Q.accepted_ip) : '') +
+      '<div class="ok"><b>' + (Q.accepted_method ? 'Signé électroniquement' : 'Accepté en ligne') + ' le ' + when(Q.accepted_at) + '</b> par ' + esc(Q.accepted_name) +
+        (Q.accepted_method ? ' · code reçu ' + (Q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(Q.accepted_target || '') : '') + (Q.accepted_ip ? ' · adresse IP ' + esc(Q.accepted_ip) : '') +
         ' · montant accepté : ' + eur(Q.accepted_total) + '.<br>Le client voit la version acceptée : les modifications faites ensuite sur le devis ne la changent pas.</div>' +
         (Q.accepted_terms ? '<div class="' + (Q.accepted_early_start ? 'ok' : 'warn') + '" style="margin-top:8px">CGV ' + esc(Q.accepted_terms) + ' acceptées. ' +
           (Q.accepted_early_start ? 'Le client a demandé un <b>démarrage immédiat</b> : vous pouvez commencer dès réception de l’acompte.' :
@@ -235,7 +236,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       '<p class="muted">' + (Q.shared ? 'En attente : le client peut accepter le devis depuis son espace (bouton « J’accepte le devis »). Vous recevrez un e-mail.' : 'Rendez le devis visible dans l’espace client pour qu’il puisse l’accepter en ligne.') + '</p>';
     if ($('b-unaccept')) $('b-unaccept').onclick = function(){
       if (!confirm('Annuler l’acceptation ? Le client devra accepter de nouveau le devis.')) return;
-      save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, status: 'envoyé' }, true);
+      save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, accepted_terms: null, accepted_early_start: null, accepted_method: null, accepted_target: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
     renderSteps(); renderDocs(); renderEnv(); renderThread(); renderFiles();

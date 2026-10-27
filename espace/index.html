@@ -216,6 +216,13 @@ a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
 .note2{background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:8px;white-space:pre-wrap}
 .valid{border-color:#9fc2ff}
 .docs a span.muted{white-space:nowrap}
+.sign{border:1px solid #cfe3fb;background:#f7fbff;border-radius:12px;padding:12px;margin-top:12px}
+.sign b{font-size:14.5px}.sign p{font-size:13.5px;margin-top:2px}
+.srow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:8px}
+.srow>div{flex:1;min-width:200px}
+.srow label{margin-top:0}
+.alt2{margin-top:6px}.alt2 .lnk{font-size:13.5px}
+.lnk:disabled{opacity:.5;cursor:default}
 .withdraw{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:12px}
 .withdraw b{font-size:14px}.withdraw p{font-size:13.5px;margin-top:2px}
 .withdraw .chk{margin-top:8px}
@@ -597,9 +604,14 @@ footer{max-width:1180px}
       '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>' +
       '<div class="withdraw"><b>Délai de rétractation</b><p>Si vous êtes un particulier, ou un professionnel de 5 salariés au plus et que ce projet ne relève pas de votre activité principale, vous disposez de 14 jours pour changer d’avis, sans frais (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>). Sans demande de votre part, je commence le travail à la fin de ce délai.</p>' +
       '<label class="chk"><input type="checkbox" id="a-early"><span>Je demande que le travail commence <b>dès maintenant</b>, avant la fin du délai de 14 jours. Je reconnais que si je me rétracte, je paierai le travail déjà réalisé, et que je perdrai mon droit de rétractation une fois la prestation entièrement réalisée.</span></label></div>' +
-      '<div class="row"><button class="btn main" id="a-go" type="button" disabled>J’accepte le devis</button></div>' +
+      '<div class="sign"><b>Signature électronique</b><p>Pour signer, recevez un code à 6 chiffres sur votre téléphone, puis saisissez-le ci-dessous.</p>' +
+        '<div class="srow"><div><label for="a-phone">Votre numéro de mobile</label><input id="a-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="' + esc(D.client.phone || '') + '"></div>' +
+        '<button class="btn line" id="a-send" type="button" disabled>Recevoir le code par SMS</button></div>' +
+        '<p class="alt2"><button class="lnk" id="a-mail" type="button" disabled>Recevoir le code par e-mail à la place</button></p>' +
+        '<div class="srow" id="a-coderow" hidden><div><label for="a-code">Code reçu</label><input id="a-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>' +
+        '<button class="btn main" id="a-go" type="button" disabled>Signer et accepter le devis</button></div></div>' +
       '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
-      '<p class="legal">Accepter ici vaut signature du devis (« bon pour accord ») et acceptation des conditions générales de vente (version ' + TERMS.slice(1) + '). Votre nom, la date, l’heure, l’adresse de connexion et votre choix sur le délai de rétractation sont enregistrés comme preuve de votre accord.</p></section>';
+      '<p class="legal">Saisir le code vaut signature électronique du devis (« bon pour accord ») et acceptation des conditions générales de vente (version ' + TERMS.slice(1) + '). Votre nom, la date, l’heure, l’adresse de connexion, le moyen de réception du code et votre choix sur le délai de rétractation sont enregistrés comme preuve de votre accord.</p></section>';
     h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button></div></section>';
     return h;
   }
@@ -607,18 +619,37 @@ footer{max-width:1180px}
     var q = id && byId(id); if (!q) return;
     $('q-print').onclick = function(){ document.body.classList.add('printing'); window.print(); };
     if (!$('acc')) return;
-    var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name');
-    function upd(){ gob.disabled = !(ok.checked && nm.value.trim().length >= 2); }
-    ok.onchange = upd; nm.oninput = upd;
+    var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name'), ph = $('a-phone'), sendB = $('a-send'), mailB = $('a-mail'), code = $('a-code');
+    function ready(){ return ok.checked && nm.value.trim().length >= 2; }
+    function upd(){
+      sendB.disabled = !(ready() && ph.value.replace(/\D/g, '').length >= 9); mailB.disabled = !ready();
+      gob.disabled = !(ready() && /^\d{6}$/.test(code.value.trim()));
+    }
+    ok.onchange = upd; nm.oninput = upd; ph.oninput = upd; code.oninput = function(){ code.value = code.value.replace(/\D/g, '').slice(0, 6); upd(); };
+    function askCode(channel){
+      var b = channel === 'sms' ? sendB : mailB;
+      b.disabled = true; amsg('Envoi du code…', true);
+      // the server function checks the client (account session or secret link) before sending
+      sb.fn('sign-code', { quote_id: q.id, channel: channel, phone: ph.value, token: token || undefined }).then(function(r){
+        amsg('Code envoyé ' + (r.channel === 'sms' ? 'par SMS au ' : 'par e-mail à ') + r.target + '. Il est valable 10 minutes.', true);
+        $('a-coderow').hidden = false; code.focus();
+        sendB.textContent = 'Renvoyer un code par SMS';
+        setTimeout(upd, 30000);
+      }, function(e){ amsg(e.message || 'L’envoi du code n’a pas abouti.'); upd(); });
+    }
+    sendB.onclick = function(){ askCode('sms'); };
+    mailB.onclick = function(){ askCode('email'); };
+    upd(); sendB.disabled = true;
     gob.onclick = function(){
-      gob.disabled = true; amsg('Enregistrement…', true);
+      gob.disabled = true; amsg('Signature en cours…', true);
       var early = $('a-early').checked;
-      call('accept', { p_quote: q.id, p_name: nm.value.trim(), p_terms: TERMS, p_early: early }).then(function(){
+      call('accept_signed', { p_quote: q.id, p_name: nm.value.trim(), p_terms: TERMS, p_early: early, p_code: code.value.trim() }).then(function(r){
+        if (r && r.ok === false) { amsg(r.error.charAt(0).toUpperCase() + r.error.slice(1) + '.'); upd(); return; }
         notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.\n' +
           (early ? 'Démarrage immédiat demandé (avant la fin du délai de rétractation).' : 'Pas de démarrage anticipé : commencer après le ' + day(withdrawEnd(new Date())) + ' (fin du délai de rétractation de 14 jours), si le client est concerné.'));
         return load();
       }, function(e){
-        amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'L’enregistrement n’a pas abouti. Réessayez dans un instant.');
+        amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'La signature n’a pas abouti. Réessayez dans un instant.');
         upd();
       });
     };
@@ -822,7 +853,8 @@ footer{max-width:1180px}
       (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
       (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
     h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + TERMS_URL + '" target="_blank" rel="noopener">rdzoagbe.github.io/rd-creations/cgv.html</a></p>';
-    if (q.accepted_at) h += '<div class="signed">Bon pour accord donné en ligne le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
+    if (q.accepted_at) h += '<div class="signed">' + (q.accepted_method ? 'Signé électroniquement' : 'Bon pour accord donné en ligne') + ' le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
+      (q.accepted_method ? ' (code reçu ' + (q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(q.accepted_target || '') + ')' : '') +
       (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';
     h += '<div class="qfoot">RD Créations · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div></div>';
     return h;
