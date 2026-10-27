@@ -447,7 +447,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           <span class="alt">WhatsApp et e-mail : sans espace client.</span>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
-        <p class="full privacy" id="privacy">Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir les mentions légales). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
+        <p class="full privacy" id="privacy">Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
       </form>
       </div>
       <div class="direct">
@@ -476,6 +476,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     <div class="frow">
       <span>© <span id="y">2026</span> RD Créations · Roland Dzoagbe, entrepreneur individuel</span>
       <a href="cgv.html">Conditions générales de vente</a>
+      <a href="confidentialite.html">Confidentialité</a>
       <a href="espace/">Espace client</a>
       <a href="https://rdzoagbe.github.io/Portfolio.RDzoagbe/" target="_blank" rel="noopener">Parcours professionnel</a>
     </div>
@@ -483,7 +484,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       <summary>Mentions légales</summary>
       <p><b>Éditeur :</b> Roland Dzoagbe, entrepreneur individuel (EI, micro-entreprise), 93140 Bondy. SIREN 104 838 727 · SIRET 104 838 727 00014. Contact : rolanddzoagbe@gmail.com · 07 82 88 46 46.<br>
       <b>Hébergement :</b> GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.<br>
-      <b>Données personnelles :</b> ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience. Les informations envoyées avec le formulaire de devis (prénom, activité, contact, description du projet) servent uniquement à vous répondre et à préparer votre devis. Elles sont conservées dans une base de données hébergée en France (Supabase, Paris) et, avec le bouton « Envoyer ma demande », transmises par e-mail via le service Formspree. Si vous créez votre espace client, votre e-mail et votre mot de passe (chiffré) y sont aussi conservés, et votre navigateur garde votre connexion (stockage local nécessaire au fonctionnement de l’espace, sans cookie publicitaire ni mesure d’audience). Elles sont supprimées trois ans après notre dernier échange. Vous pouvez demander à les consulter, les corriger ou les supprimer à tout moment : roland.dzoagbe@hotmail.com.</p>
+      <b>Données personnelles :</b> ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience. Les données envoyées avec le formulaire de devis et dans l’espace client servent uniquement à vous répondre et à réaliser votre projet. Le détail (données, durées, prestataires, vos droits) est dans la <a href="confidentialite.html">politique de confidentialité</a>. Contact : roland.dzoagbe@hotmail.com.</p>
     </details>
   </div>
 </footer>
@@ -617,7 +618,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   if (FORMSPREE_ID) {
     document.getElementById('send-direct').hidden = false;
     document.getElementById('send-direct').addEventListener('click', sendDirect);
-    document.getElementById('privacy').textContent = 'Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir les mentions légales). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail et votre espace client est créé ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même, sans espace client.';
+    document.getElementById('privacy').innerHTML = 'Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail et votre espace client est créé ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même, sans espace client.';
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
