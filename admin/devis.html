@@ -110,7 +110,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 @media print{
   @page{size:A4;margin:12mm}
   body{background:#fff}
-  .noprint,.tools,.importbox,.adders,.hostadd,.rm{display:none!important}
+  .noprint,.tools,.importbox,.adders,.hostadd,.rm,tr.blank{display:none!important}
   .sheet{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
   input.f,.ed{border:0!important;background:transparent!important;padding:0}
   .ed:empty:before{content:""}
@@ -348,13 +348,15 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
         return;
       }
       tr.classList.toggle('is-opt', !!ln.o);
+      // a blank line (no label, no price) stays editable here but is left out of the printed quote
+      tr.classList.toggle('blank', !String(ln.l || '').trim() && !(+ln.p));
       tr.innerHTML = '<td><span class="otag">Option</span><input class="f label" placeholder="Désignation" value="' + esc(ln.l) + '"><div class="ed sub" contenteditable="true" data-ph="Détail (facultatif)">' + esc(ln.s) + '</div></td>' +
         '<td class="num"><input class="f q" type="number" min="0" step="1" value="' + ln.q + '"></td>' +
         '<td><select><option' + (ln.u === 'forfait' ? ' selected' : '') + '>forfait</option><option' + (ln.u === 'unité' ? ' selected' : '') + '>unité</option><option' + (ln.u === 'jour' ? ' selected' : '') + '>jour</option><option' + (ln.u === 'mois' ? ' selected' : '') + '>mois</option></select></td>' +
         '<td class="num"><input class="f pu" type="number" min="0" step="1" value="' + ln.p + '"></td>' +
         '<td class="num tot"></td><td class="noprint"><label class="optc" title="Proposer cette ligne en option, hors total"><input type="checkbox" class="opt"' + (ln.o ? ' checked' : '') + '> option</label><button class="rm" type="button" title="Retirer la ligne" aria-label="Retirer la ligne">×</button></td>';
       var ins = tr.querySelectorAll('input');
-      ins[0].oninput = function(){ ln.l = this.value; save(); };
+      ins[0].oninput = function(){ ln.l = this.value; tr.classList.toggle('blank', !ln.l.trim() && !(+ln.p)); save(); };
       tr.querySelector('.sub').oninput = function(){ ln.s = this.innerText; save(); };
       ins[1].oninput = function(){ ln.q = parseFloat(this.value) || 0; totals(); };
       ins[2].oninput = function(){ ln.p = parseFloat(this.value) || 0; totals(); };

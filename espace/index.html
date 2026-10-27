@@ -438,11 +438,17 @@ footer{max-width:1180px}
   function byId(id){ return quotes().filter(function(q){ return q.id === id; })[0]; }
   function progress(q){ var s = steps(q), d = s.filter(function(x){ return x.done; }).length; return s.length ? Math.round(d * 100 / s.length) : 0; }
   function current(q){ return steps(q).filter(function(s){ return !s.done; })[0]; }
+  // the next step to do, worded as something pending (step titles are written as done: « Acompte reçu »)
+  function stepLabel(s){
+    var L = { deposit: 'En attente de l’acompte', design: 'Maquettes en cours', build: 'Réalisation en cours', test: 'Vos essais et retours',
+              live: 'Mise en ligne en cours', handover: 'Remise des accès' };
+    return s.ask ? 'Votre validation est attendue' : (L[s.k] || 'Étape en cours : ' + s.t);
+  }
   function state(q){
     if (q.status === 'refusé') return ['Clos', 'off'];
     if (!q.accepted_at) return expired(q) ? ['Expiré', 'warn'] : ['À valider', ''];
     var cur = current(q);
-    return cur ? ['En cours : ' + cur.t, ''] : ['Livré', 'ok'];
+    return cur ? [stepLabel(cur), ''] : ['Livré', 'ok'];
   }
   // messages from Roland the client has not seen yet on this device
   function seenKey(){ return 'rd-espace-seen-' + (D.email || token || ''); }
@@ -835,6 +841,7 @@ footer{max-width:1180px}
     h += '<h4>Prestations</h4><table><thead><tr><th>Désignation</th><th class="r hide-m">Qté</th><th class="r hide-m">Prix unitaire</th><th class="r">Total</th></tr></thead><tbody>' +
       (d.lines || []).map(function(l){
         if (l.h) return '<tr class="grp"><td colspan="4"><b>' + esc(l.l) + '</b>' + (l.s ? '<div class="sub">' + esc(l.s) + '</div>' : '') + '</td></tr>';
+        if (!String(l.l || '').trim() && !(+l.p)) return '';
         var t = (l.q || 0) * (l.p || 0), per = l.u === 'mois' ? ' / mois' : '';
         return '<tr' + (l.o ? ' class="opt"' : '') + '><td>' + (l.o ? '<span class="otag">Option</span>' : '') + '<b>' + esc(l.l) + '</b>' + (l.s ? '<div class="sub">' + esc(l.s) + '</div>' : '') + '</td>' +
           '<td class="r hide-m">' + (l.q || 0) + ' ' + esc(l.u || '') + '</td><td class="r hide-m">' + eur(l.p) + per + '</td><td class="r">' + eur(t) + per + '</td></tr>';
