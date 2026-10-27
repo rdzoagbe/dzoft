@@ -137,9 +137,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         <button class="btn sm ghost" id="b-newlink" type="button" title="L’ancien lien cessera de fonctionner">Changer le lien</button>
       </div>
       <p class="muted" id="mail-state" style="margin-top:6px">Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».</p>
-      <label for="ext" style="margin-top:14px">Lien du devis Revolut Business (facultatif)</label>
+      <label for="ext" style="margin-top:14px">Lien du devis Revolut Pro (facultatif)</label>
       <div class="link"><input id="ext" inputmode="url" placeholder="https://…" aria-describedby="ext-help"><a class="btn sm line" id="ext-open" target="_blank" rel="noopener noreferrer">Ouvrir</a></div>
-      <p class="muted" id="ext-help" style="margin-top:4px">Dans Revolut Business, ouvrez le devis et copiez son lien de partage, puis collez-le ici. Le client verra le bouton « Voir le devis sur Revolut » sur son devis. La signature se fait toujours dans son espace.</p>
+      <p class="muted" id="ext-help" style="margin-top:4px">Dans Revolut Pro, ouvrez le devis et copiez son lien de partage, puis collez-le ici. Le client verra le bouton « Voir le devis sur Revolut » sur son devis. La signature se fait toujours dans son espace.</p>
     </div>
   </section>
 
@@ -168,13 +168,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Business</b> (Factures → Nouvelle facture), reprenez ici son numéro (INV-…) et, si Revolut en donne un, son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Pro</b> (Factures → Nouvelle facture), reprenez ici son numéro (INV-…) et, si Revolut en donne un, son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
     <div id="invs"></div>
   </section>
 
   <section class="card" id="c-care" hidden>
     <h2>Suivi mensuel <span class="sp"></span><button class="btn sm line" id="cr-bill" type="button">+ Facture du suivi</button></h2>
-    <p class="muted" style="margin-bottom:8px">Hébergement, mises à jour et petites modifications après la livraison (article 12 des CGV). Le client voit le suivi dans son espace. « + Facture du suivi » ajoute la facture du mois dans « Factures » et avance la prochaine échéance d’un mois : créez-la aussi dans Revolut Business et collez son lien.</p>
+    <p class="muted" style="margin-bottom:8px">Hébergement, mises à jour et petites modifications après la livraison (article 12 des CGV). Le client voit le suivi dans son espace. « + Facture du suivi » ajoute la facture du mois dans « Factures » et avance la prochaine échéance d’un mois : créez-la aussi dans Revolut Pro et collez son lien.</p>
     <div class="carer">
       <label class="pd"><input type="checkbox" id="cr-on"> Suivi actif</label>
       <label>Prix par mois (€)<input id="cr-price" type="number" min="0" step="0.01" inputmode="decimal"></label>
@@ -436,7 +436,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     later();
   };
   $('docs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; Q.docs.splice(+e.target.closest('.doc').dataset.i, 1); renderDocs(); later(); };
-  /* invoices made in Revolut Business: label, number, amount, link, paid */
+  /* invoices made in Revolut Pro: label, number, amount, link, paid */
   function deposit(){ var f = ((Q.accepted_data || Q.data || {}).f) || {}, t = +Q.accepted_total || +Q.total || 0; return Math.round(t * (parseFloat(f.deppct) || 30)) / 100; }
   function renderInv(){
     Q.invoices = Q.invoices || [];
