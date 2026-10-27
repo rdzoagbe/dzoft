@@ -73,6 +73,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .pd{display:flex;gap:5px;align-items:center;font-size:13px;font-weight:700;margin:0;cursor:pointer}
 .pd input{width:16px;height:16px}
 @media (max-width:640px){.invr{grid-template-columns:1fr 1fr}}
+.rvq{margin:8px 0;padding:10px 14px;background:#f3f7fb;border-radius:12px;white-space:pre-wrap;font-size:14.5px}
+.rvst{color:#f5a623;font-size:19px;letter-spacing:2px}
 .carer{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:10px;align-items:end}
 .carer label{margin:0}
 .carer .pd{align-self:center}
@@ -191,6 +193,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="files"></div>
   </section>
 
+  <section class="card" id="c-rv" hidden>
+    <h2>Avis du client</h2>
+    <div id="rv"></div>
+  </section>
+
   <section class="card" id="c-msg" hidden>
     <h2>Messages</h2>
     <div class="thread" id="thread"></div>
@@ -210,7 +217,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   if (!sb || !sb.session()) { location.replace('./'); return; }
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
-  var Q = null, C = null, clients = [], msgs = [], sent = [], timer = null;
+  var Q = null, C = null, clients = [], msgs = [], sent = [], timer = null, RV = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
@@ -227,9 +234,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         Q.client_id ? sb.select('clients', 'select=*&id=eq.' + Q.client_id) : Promise.resolve([]),
         sb.select('clients', 'select=id,nom,entreprise&order=nom.asc'),
         Q.client_id ? sb.select('messages', 'select=*&client_id=eq.' + Q.client_id + '&order=created_at.asc') : Promise.resolve([]),
-        sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; })
+        sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; }),
+        sb.select('reviews', 'select=*&quote_id=eq.' + encodeURIComponent(QID)).catch(function(){ return []; })
       ]).then(function(x){
-        C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || [];
+        C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || []; RV = (x[4] || [])[0] || null;
         if (!(Q.steps || []).length) Q.steps = fresh();
         render(); markRead();
       });
@@ -270,7 +278,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, accepted_terms: null, accepted_early_start: null, accepted_method: null, accepted_target: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderThread(); renderFiles();
+    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles();
   }
 
   function save(row, reload){
@@ -493,6 +501,27 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     clearTimeout(timer);
     save({ invoices: Q.invoices, care: c }).then(function(){ renderInv(); renderCare(); toast('Facture du suivi de ' + m + ' ajoutée : complétez son numéro et son lien Revolut.'); var r = $('invs').querySelectorAll('input.num'); if (r.length) r[r.length - 1].focus(); });
   };
+
+  /* client review: shown on the site only when the client agreed and it is published here */
+  function renderReview(){
+    var live = (Q.steps || []).some(function(x){ return x.k === 'live' && x.done; });
+    $('c-rv').hidden = !C || !Q.accepted_at || (!live && !RV);
+    if ($('c-rv').hidden) return;
+    if (!RV) { $('rv').innerHTML = '<p class="muted">Le client peut laisser un avis depuis son espace depuis la mise en ligne. Pas encore d’avis.</p><div class="row" style="margin-top:8px"><button class="btn sm line" id="rv-ask" type="button">Préparer un message pour le demander</button></div>'; 
+      $('rv-ask').onclick = function(){ $('reply').value = 'Bonjour ' + first(C.nom) + ',\n\nVotre projet est en ligne, merci encore pour votre confiance ! Si vous avez deux minutes, votre avis m’aiderait beaucoup : vous pouvez le laisser dans votre espace client, sur la page de votre projet (« Votre avis sur le projet »).\n\nBien cordialement,\nRoland'; $('reply').focus(); $('reply').scrollIntoView({ block: 'center' }); };
+      return; }
+    $('rv').innerHTML = '<div class="rvst" aria-label="' + RV.rating + ' sur 5">' + '★★★★★'.slice(0, RV.rating) + '☆☆☆☆☆'.slice(0, 5 - RV.rating) + '</div>' +
+      '<div class="rvq">' + esc(RV.body) + '</div><p class="muted">' + esc(RV.name) + (RV.activity ? ' · ' + esc(RV.activity) : '') + ' · ' + when(RV.updated_at || RV.created_at) + '</p>' +
+      (RV.consent ? '<label class="pd" style="margin-top:10px"><input type="checkbox" id="rv-pub"' + (RV.published ? ' checked' : '') + '> Publié sur le site</label>' :
+        '<div class="warn" style="margin-top:10px">Le client n’a pas autorisé la publication : cet avis reste privé.</div>') +
+      '<label for="rv-reply">Votre réponse publique (facultatif)</label><textarea id="rv-reply" maxlength="1000" placeholder="Merci pour votre confiance…">' + esc(RV.reply || '') + '</textarea>' +
+      '<div class="row" style="margin-top:8px"><button class="btn sm line" id="rv-save" type="button">Enregistrer la réponse</button><button class="btn sm ghost" id="rv-del" type="button">Supprimer l’avis</button></div>' +
+      '<p class="muted" style="margin-top:8px">Règle affichée sur le site : vous publiez tous les avis autorisés, positifs comme négatifs, sauf s’ils sont injurieux, hors sujet ou contiennent des données personnelles.</p>';
+    function upd(row, msg){ return sb.update('reviews', RV.id, row).then(function(){ for (var k in row) RV[k] = row[k]; renderReview(); toast(msg); }, fail); }
+    if ($('rv-pub')) $('rv-pub').onchange = function(){ var on = this.checked; upd({ published: on, published_at: on ? new Date().toISOString() : null }, on ? 'Avis publié sur le site.' : 'Avis retiré du site.'); };
+    $('rv-save').onclick = function(){ upd({ reply: $('rv-reply').value.trim() }, 'Réponse enregistrée.'); };
+    $('rv-del').onclick = function(){ if (!confirm('Supprimer définitivement cet avis ? Le client pourra en déposer un nouveau.')) return; sb.remove('reviews', RV.id).then(function(){ RV = null; renderReview(); toast('Avis supprimé.'); }, fail); };
+  }
 
   /* environment shown to the client (links and owners, never passwords) */
   var EV_ST = ['actif', 'en cours', 'à créer', 'prévu'];

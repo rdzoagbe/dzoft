@@ -113,6 +113,14 @@ main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
 .warnbox{background:var(--warnbg);border:1px solid #f0d58a;color:var(--warn);border-radius:14px;padding:14px 16px;margin-top:16px;font-size:15px}
 .msgline{font-size:14px;margin-top:10px;border-radius:10px;padding:8px 11px}
 .msgline:empty{display:none}
+.stars{display:flex;gap:4px;margin:6px 0 4px}
+.stars button{border:0;background:none;cursor:pointer;font-size:30px;line-height:1;color:#c9d6e4;padding:2px}
+.stars button.on{color:#f5a623}
+.stars button:focus-visible{outline:2px solid var(--cyan);border-radius:6px}
+.rvshow .st{color:#f5a623;font-size:20px;letter-spacing:2px}
+.rvshow blockquote{margin:8px 0;padding:10px 14px;background:var(--soft);border-radius:12px;color:var(--ink);font-size:15px;white-space:pre-wrap}
+.rvgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media (max-width:620px){.rvgrid{grid-template-columns:1fr}}
 .msgline.ok{background:var(--okbg);color:var(--ok)}.msgline.err{background:var(--errbg);color:var(--err)}
 
 /* docs */
@@ -557,6 +565,54 @@ footer{max-width:1180px}
       '<div class="due"><span>Depuis le ' + d(c.since) + (c.next ? ' · prochaine facture le ' + d(c.next) : '') + '</span><b>' + eur(c.price || 0) + ' / mois</b></div>' +
       '<p class="muted" style="margin-top:10px">Hébergement, mises à jour, sécurité et petites modifications. Sans engagement : vous pouvez l’arrêter à tout moment, il prend fin à la fin du mois en cours (<a href="' + TERMS_URL + '#a12" target="_blank" rel="noopener">article 12 des CGV</a>). Pour une modification ou pour l’arrêter, <a href="#/messages">écrivez-moi</a>.</p></section>';
   }
+  var RV_EDIT = {};
+  function liveDone(q){ return steps(q).some(function(s){ return s.k === 'live' && s.done; }); }
+  function starsTxt(n){ return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n); }
+  function shortName(n){ var p = String(n || '').trim().split(/\s+/); return p.length > 1 ? p[0] + ' ' + p[p.length - 1].charAt(0).toUpperCase() + '.' : p[0] || ''; }
+  function reviewBlock(q){
+    if (!liveDone(q)) return '';
+    var r = q.review;
+    if (r && !RV_EDIT[q.id]) {
+      var stt = !r.consent ? 'Merci ! Vous n’avez pas autorisé sa publication : il reste entre nous.' : r.published ? 'Publié sur le site de RD Créations. Merci !' : 'Merci ! Je le relis et le publie sur le site très bientôt.';
+      return '<section class="card rvshow" id="avis"><h2>Votre avis</h2><div class="st" aria-label="' + r.rating + ' sur 5">' + starsTxt(r.rating) + '</div><blockquote>' + esc(r.body) + '</blockquote>' +
+        '<p class="muted">' + esc(r.name) + (r.activity ? ' · ' + esc(r.activity) : '') + '</p><p class="muted" style="margin-top:6px">' + stt + '</p>' +
+        (r.reply ? '<p style="margin-top:8px"><b>Ma réponse :</b> ' + esc(r.reply) + '</p>' : '') +
+        '<div class="row" style="margin-top:12px"><button class="btn line sm" type="button" id="rv-edit">Modifier mon avis</button><a class="btn line sm" href="#/messages">Demander son retrait</a></div></section>';
+    }
+    var c = D.client || {};
+    return '<section class="card accept" id="avis"><h2>Votre avis sur le projet</h2>' +
+      '<p>Votre retour m’aide à progresser et aide les prochains clients à me faire confiance. Deux minutes suffisent.</p>' +
+      '<div class="stars" role="radiogroup" aria-label="Votre note">' + [1, 2, 3, 4, 5].map(function(n){ return '<button type="button" role="radio" data-star="' + n + '" aria-label="' + n + ' sur 5" aria-checked="false">★</button>'; }).join('') + '</div>' +
+      '<label for="rv-body">Votre avis</label><textarea id="rv-body" maxlength="1500" placeholder="Comment s’est passé le projet ? Qu’est-ce qui vous a plu, qu’est-ce qui pourrait être mieux ?">' + esc(r ? r.body : '') + '</textarea>' +
+      '<div class="rvgrid"><div><label for="rv-name">Nom affiché</label><input id="rv-name" maxlength="60" value="' + esc(r ? r.name : shortName(c.nom)) + '"></div>' +
+      '<div><label for="rv-act">Activité (facultatif)</label><input id="rv-act" maxlength="80" placeholder="Ex. : boulangerie à Bondy" value="' + esc(r ? r.activity : (c.entreprise || '')) + '"></div></div>' +
+      '<label class="chk"><input type="checkbox" id="rv-ok"' + (!r || r.consent ? ' checked' : '') + '> J’accepte que cet avis soit publié sur le site de RD Créations, avec le nom et l’activité ci-dessus.</label>' +
+      '<div class="row"><button class="btn main" type="button" id="rv-send">' + (r ? 'Enregistrer mon avis' : 'Envoyer mon avis') + '</button>' + (r ? '<button class="btn line" type="button" id="rv-cancel">Annuler</button>' : '') + '</div>' +
+      '<p class="msgline" id="rv-msg" role="status" aria-live="polite"></p>' +
+      '<p class="legal">Je relis chaque avis avant de le publier. Je publie tous les avis autorisés, positifs comme négatifs, sauf s’ils sont injurieux, hors sujet ou contiennent des données personnelles. Vous pouvez le modifier ou demander son retrait à tout moment.</p></section>';
+  }
+  function wireReview(q){
+    if ($('rv-edit')) $('rv-edit').onclick = function(){ RV_EDIT[q.id] = true; route(); };
+    if (!$('rv-send')) return;
+    var rating = q.review ? q.review.rating : 0, stars = document.querySelectorAll('.stars button');
+    function paint(){ [].forEach.call(stars, function(b){ var n = +b.dataset.star; b.classList.toggle('on', n <= rating); b.setAttribute('aria-checked', n === rating ? 'true' : 'false'); }); }
+    [].forEach.call(stars, function(b){ b.onclick = function(){ rating = +b.dataset.star; paint(); }; });
+    paint();
+    if ($('rv-cancel')) $('rv-cancel').onclick = function(){ RV_EDIT[q.id] = false; route(); };
+    $('rv-send').onclick = function(){
+      var body = $('rv-body').value.trim(), name = $('rv-name').value.trim(), act = $('rv-act').value.trim(), ok = $('rv-ok').checked, m = $('rv-msg');
+      m.className = 'msgline err';
+      if (!rating) { m.textContent = 'Choisissez une note de 1 à 5 étoiles.'; return; }
+      if (body.length < 10) { m.textContent = 'Écrivez au moins quelques mots (10 caractères).'; $('rv-body').focus(); return; }
+      if (name.length < 2) { m.textContent = 'Indiquez le nom à afficher.'; $('rv-name').focus(); return; }
+      this.disabled = true; m.className = 'msgline ok'; m.textContent = 'Enregistrement…';
+      var btn = this;
+      call('review', { p_quote: q.id, p_rating: rating, p_body: body, p_name: name, p_activity: act, p_consent: ok }).then(function(){
+        notify('Nouvel avis de ' + (D.client.nom || name) + ' (' + rating + '/5)', 'Avis sur ' + title(q) + ' (' + q.numero + ') : ' + rating + '/5\n\n' + body + '\n\nPublication ' + (ok ? 'autorisée : à relire et publier depuis la fiche projet.' : 'non autorisée.'));
+        RV_EDIT[q.id] = false; return load();
+      }, function(e){ btn.disabled = false; m.className = 'msgline err'; m.textContent = 'L’avis n’a pas été enregistré' + (e && e.message ? ' : ' + e.message : '') + '. Réessayez.'; });
+    };
+  }
   function rib(P, q, withInvoice){
     var h = '';
     if (P.iban) h += '<div class="rib"><div><span>Titulaire</span><b>' + esc(P.holder || 'Roland Dzoagbe') + '</b></div>' +
@@ -599,6 +655,7 @@ footer{max-width:1180px}
     });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider']); }); });
     projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer']); }); });
+    projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis']); });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
     var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec RD Créations.');
@@ -698,6 +755,8 @@ footer{max-width:1180px}
   };
   WIRE.projets = function(id){
     var q = id && byId(id); if (!q) return;
+    wireReview(q);
+    if (/\/avis$/.test(location.hash) && $('avis')) $('avis').scrollIntoView();
     [].forEach.call(document.querySelectorAll('.valid'), function(box){
       var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;
       b.onclick = function(){
@@ -724,6 +783,7 @@ footer{max-width:1180px}
         '<p class="msgline" role="status" aria-live="polite"></p><p class="legal">Votre validation est enregistrée avec votre nom, la date et l’heure.</p></section>';
     });
     h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
+    h += reviewBlock(q);
     h += payBlock(q) + careBlock(q);
     h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';
     if (docs.length) h += '<section class="card"><h2>Documents</h2>' + docsList(docs) + '</section>';

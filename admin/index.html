@@ -427,14 +427,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
       sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
-      sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc')
+      sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
+      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; })
     ]).then(function(r){
       // deleted requests and quotes stay in the trash until removed for good
       var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
       data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
       data.clients = r[1] || [];
       data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
-      data.messages = r[3] || [];
+      data.messages = r[3] || []; data.reviews = r[4] || [];
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
     }, fail);
@@ -487,6 +488,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     Object.keys(byClient).forEach(function(id){ todo.push([byClient[id] + ' message' + (byClient[id] > 1 ? 's' : '') + ' de ' + ((client(id) || {}).nom || 'client'), 'thread:' + id, 'Répondre']); });
     data.quotes.filter(function(q){ return !q.shared && q.status === 'brouillon'; }).forEach(function(q){ todo.push(['Devis ' + q.numero + ' en brouillon pour ' + ((client(q.client_id) || {}).nom || '—') + ' : à finir et envoyer', 'quote:' + q.id, 'Ouvrir']); });
     running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
+    (data.reviews || []).filter(function(v){ return v.consent && !v.published; }).forEach(function(v){ todo.push(['Nouvel avis de ' + ((client(v.client_id) || {}).nom || 'client') + ' (' + v.rating + '/5) à relire et publier', 'follow:' + v.quote_id, 'Relire']); });
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
     $('todo').innerHTML = todo.length ? todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Rien d’urgent 👌</li>';
