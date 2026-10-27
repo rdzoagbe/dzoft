@@ -327,6 +327,8 @@ footer{max-width:1180px}
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   var FORMSPREE_ID = 'xrpppprj';
   var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
+  // signature code by e-mail (free); set to true once SMS credits are bought on Brevo
+  var SMS_ON = false;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return d ? new Date(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : ''; };
@@ -604,10 +606,13 @@ footer{max-width:1180px}
       '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>' +
       '<div class="withdraw"><b>Délai de rétractation</b><p>Si vous êtes un particulier, ou un professionnel de 5 salariés au plus et que ce projet ne relève pas de votre activité principale, vous disposez de 14 jours pour changer d’avis, sans frais (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>). Sans demande de votre part, je commence le travail à la fin de ce délai.</p>' +
       '<label class="chk"><input type="checkbox" id="a-early"><span>Je demande que le travail commence <b>dès maintenant</b>, avant la fin du délai de 14 jours. Je reconnais que si je me rétracte, je paierai le travail déjà réalisé, et que je perdrai mon droit de rétractation une fois la prestation entièrement réalisée.</span></label></div>' +
-      '<div class="sign"><b>Signature électronique</b><p>Pour signer, recevez un code à 6 chiffres sur votre téléphone, puis saisissez-le ci-dessous.</p>' +
+      '<div class="sign"><b>Signature électronique</b>' + (SMS_ON ?
+        '<p>Pour signer, recevez un code à 6 chiffres sur votre téléphone, puis saisissez-le ci-dessous.</p>' +
         '<div class="srow"><div><label for="a-phone">Votre numéro de mobile</label><input id="a-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="' + esc(D.client.phone || '') + '"></div>' +
         '<button class="btn line" id="a-send" type="button" disabled>Recevoir le code par SMS</button></div>' +
-        '<p class="alt2"><button class="lnk" id="a-mail" type="button" disabled>Recevoir le code par e-mail à la place</button></p>' +
+        '<p class="alt2"><button class="lnk" id="a-mail" type="button" disabled>Recevoir le code par e-mail à la place</button></p>' :
+        '<p>Pour signer, recevez un code à 6 chiffres par e-mail' + (D.email ? ' à <b>' + esc(D.email) + '</b>' : '') + ', puis saisissez-le ci-dessous. Pensez à regarder dans vos courriers indésirables.</p>' +
+        '<div class="srow"><button class="btn line" id="a-mail" type="button" disabled>Recevoir mon code par e-mail</button></div>') +
         '<div class="srow" id="a-coderow" hidden><div><label for="a-code">Code reçu</label><input id="a-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>' +
         '<button class="btn main" id="a-go" type="button" disabled>Signer et accepter le devis</button></div></div>' +
       '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
@@ -622,24 +627,25 @@ footer{max-width:1180px}
     var ok = $('a-ok'), gob = $('a-go'), nm = $('a-name'), ph = $('a-phone'), sendB = $('a-send'), mailB = $('a-mail'), code = $('a-code');
     function ready(){ return ok.checked && nm.value.trim().length >= 2; }
     function upd(){
-      sendB.disabled = !(ready() && ph.value.replace(/\D/g, '').length >= 9); mailB.disabled = !ready();
+      if (sendB) sendB.disabled = !(ready() && ph.value.replace(/\D/g, '').length >= 9);
+      mailB.disabled = !ready();
       gob.disabled = !(ready() && /^\d{6}$/.test(code.value.trim()));
     }
-    ok.onchange = upd; nm.oninput = upd; ph.oninput = upd; code.oninput = function(){ code.value = code.value.replace(/\D/g, '').slice(0, 6); upd(); };
+    ok.onchange = upd; nm.oninput = upd; if (ph) ph.oninput = upd; code.oninput = function(){ code.value = code.value.replace(/\D/g, '').slice(0, 6); upd(); };
     function askCode(channel){
       var b = channel === 'sms' ? sendB : mailB;
       b.disabled = true; amsg('Envoi du code…', true);
       // the server function checks the client (account session or secret link) before sending
-      sb.fn('sign-code', { quote_id: q.id, channel: channel, phone: ph.value, token: token || undefined }).then(function(r){
+      sb.fn('sign-code', { quote_id: q.id, channel: channel, phone: ph ? ph.value : '', token: token || undefined }).then(function(r){
         amsg('Code envoyé ' + (r.channel === 'sms' ? 'par SMS au ' : 'par e-mail à ') + r.target + '. Il est valable 10 minutes.', true);
         $('a-coderow').hidden = false; code.focus();
-        sendB.textContent = 'Renvoyer un code par SMS';
+        if (sendB) sendB.textContent = 'Renvoyer un code par SMS'; else mailB.textContent = 'Renvoyer un code';
         setTimeout(upd, 30000);
       }, function(e){ amsg(e.message || 'L’envoi du code n’a pas abouti.'); upd(); });
     }
-    sendB.onclick = function(){ askCode('sms'); };
+    if (sendB) sendB.onclick = function(){ askCode('sms'); };
     mailB.onclick = function(){ askCode('email'); };
-    upd(); sendB.disabled = true;
+    upd();
     gob.onclick = function(){
       gob.disabled = true; amsg('Signature en cours…', true);
       var early = $('a-early').checked;
