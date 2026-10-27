@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réalisations · RD Créations</title>
+<meta name="description" content="Les projets réalisés par RD Créations : l’application mobile Ahenora (iOS, Android, web), la plateforme StackLens, l’espace client RD Créations et un site personnel bilingue.">
+<link rel="canonical" href="https://rdzoagbe.github.io/rd-creations/realisations.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rdzoagbe.github.io/rd-creations/realisations.html">
+<meta property="og:title" content="Réalisations · RD Créations">
+<meta property="og:description" content="Applications mobiles, plateformes web et sites : des projets en ligne, utilisés et maintenus.">
+<meta property="og:image" content="https://rdzoagbe.github.io/rd-creations/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="RD Créations">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#081626">
+<link rel="icon" href="assets/rd-creations-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/rd-creations-app-icon.png">
+<style>
+
+:root{
+  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#081626; --navy2:#0e2a49; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee; --sky:#7fd7f5;
+  --grad:linear-gradient(135deg,#2f8bff,#22d3ee);
+  --r:14px; --max:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-999px;top:8px;background:#fff;color:var(--ink);padding:8px 12px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px;border-radius:6px}
+
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(8,22,38,.86);backdrop-filter:saturate(160%) blur(10px);-webkit-backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid rgba(255,255,255,.08)}
+.bar{display:flex;align-items:center;gap:18px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;letter-spacing:.02em}
+.logo{width:30px;height:33px;display:block}
+nav{margin-left:auto;display:flex;gap:4px}
+nav a{color:#c6d4e3;text-decoration:none;font-size:14.5px;padding:8px 11px;border-radius:8px}
+nav a:hover{color:#fff;background:rgba(255,255,255,.07)}
+.acc-link svg{width:18px;height:18px}
+.acc-link{display:inline-flex;align-items:center;gap:7px;color:#c6d4e3;text-decoration:none;font-size:14px;font-weight:600;padding:8px 12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;white-space:nowrap}
+.acc-link:hover{color:#fff;background:rgba(255,255,255,.07)}
+header .btn,.brand span{white-space:nowrap}
+@media (max-width:420px){.acc-link{padding:8px 9px} .acc-link span{display:none} header .btn{padding:9px 12px;font-size:13.5px} .brand span{font-size:15px}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;border:0;border-radius:11px;padding:12px 18px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--grad);color:#05213d;box-shadow:0 10px 24px rgba(34,158,238,.28)}
+.btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-ghost:hover{background:rgba(255,255,255,.13)}
+.btn-wa{background:#1fa855;color:#fff}
+.btn-wa:hover{background:#1b974c}
+.btn-line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.bar .btn{padding:9px 14px;font-size:14px}
+.btn svg{width:18px;height:18px;flex:none}
+
+/* hero */
+.hero{color:#fff;background:
+   radial-gradient(700px 420px at 85% 0%,rgba(47,139,255,.35),transparent 65%),
+   radial-gradient(520px 380px at 100% 100%,rgba(34,211,238,.18),transparent 60%),
+   linear-gradient(125deg,#06101c 0%,#0b1d33 55%,#0e2a49 100%);
+   padding:72px 0 84px;position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:48px;align-items:center}
+.eyebrow{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sky)}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.08;letter-spacing:-.02em;margin:14px 0 18px}
+h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18.5px;color:#c4d2e1;max-width:36em}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.trust{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:28px;font-size:14.5px;color:#b9cadb;list-style:none}
+.trust li{display:flex;align-items:center;gap:8px}
+.trust svg{width:18px;height:18px;color:var(--cyan);flex:none}
+.me{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:26px;text-align:center}
+.me img{width:132px;height:132px;border-radius:50%;object-fit:cover;margin:0 auto 16px;border:3px solid rgba(127,215,245,.55)}
+.me b{display:block;font-size:19px}
+.me span{display:block;color:var(--sky);font-size:14.5px;margin-top:2px}
+.me p{color:#b9cadb;font-size:14.5px;margin-top:12px}
+
+/* sections */
+section{padding:84px 0}
+.soft{background:var(--soft)}
+.head{max-width:720px;margin-bottom:38px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue2)}
+h2{font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.015em;margin:8px 0 12px}
+.head p{color:var(--ink2);font-size:17px}
+
+/* work */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.work{border:1px solid var(--line);border-radius:18px;padding:26px;background:#fff;display:flex;flex-direction:column}
+.tag{align-self:flex-start;display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);background:#e8f2ff;border-radius:999px;padding:4px 10px}
+.work h3{font-size:22px;margin:12px 0 6px}
+.work p{color:var(--ink2);font-size:15.5px}
+.links{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:auto;padding-top:20px}
+.store-badge{display:inline-flex;align-items:center;gap:7px;background:#000;color:#fff;border:1px solid #a6a6a6;border-radius:8px;padding:5px 11px 5px 9px;text-decoration:none;line-height:1;height:42px}
+.store-badge svg{width:21px;height:21px;flex:none}
+.store-badge small{display:block;font-size:9px;opacity:.9;margin-bottom:2px}
+.store-badge b{display:block;font-size:15px}
+.textlink{font-weight:700;color:var(--blue2);text-decoration:none;font-size:15px;padding:8px 2px}
+.textlink:hover{text-decoration:underline}
+
+nav a[aria-current=page]{color:#fff;background:rgba(255,255,255,.1)}
+
+/* page */
+.phero{padding:60px 0 64px}
+.phero h1{font-size:clamp(30px,4.4vw,46px)}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;list-style:none}
+.facts li{font-size:14px;color:#c6d4e3;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px}
+.case{display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:start}
+.case+.case{margin-top:84px;padding-top:84px;border-top:1px solid var(--line)}
+.case:nth-of-type(even) .shots{order:2}
+.shots{display:grid;gap:14px;min-width:0;position:sticky;top:92px}
+.frame{border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:0 22px 50px rgba(11,27,46,.13)}
+.frame:before{content:"";display:block;height:22px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 13px 50%,#c9d6e4 3.5px,transparent 4px),radial-gradient(circle at 26px 50%,#c9d6e4 3.5px,transparent 4px),radial-gradient(circle at 39px 50%,#c9d6e4 3.5px,transparent 4px),#eef3f8}
+.frame img{width:100%;height:auto}
+.shots figcaption{font-size:13px;color:var(--mute);text-align:center}
+.case h2{margin:12px 0 4px}
+.case h3{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
+.case p{color:var(--ink2);font-size:16px}
+.case .note{margin-top:14px;font-weight:600;color:var(--ink)}
+.did{list-style:none;display:grid;gap:8px}
+.did li{position:relative;padding-left:26px;color:var(--ink2);font-size:15.5px}
+.did li:before{content:"";position:absolute;left:0;top:4px;width:17px;height:17px;border-radius:50%;background:#e3f9fd url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5 5.5-6' fill='none' stroke='%231d63c9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.case .links{padding-top:22px}
+.cta{color:#fff;background:linear-gradient(125deg,#06101c 0%,#0b1d33 55%,#0e2a49 100%);text-align:center}
+.cta h2{color:#fff}
+.cta p{color:#c4d2e1;font-size:17px;max-width:34em;margin:0 auto}
+.cta .ctas{justify-content:center}
+
+footer{background:#06101c;color:#8fa3b8;font-size:14px;padding:30px 0}
+.frow{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center}
+footer a{color:#c6d4e3}
+footer details{background:transparent;border:1px solid rgba(255,255,255,.12);margin:18px 0 0}
+footer summary{font-size:14px;color:#c6d4e3;padding:12px 44px 12px 16px}
+footer summary:after{color:var(--sky);right:16px}
+footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
+
+@media (max-width:960px){
+  .case{grid-template-columns:1fr;gap:26px}
+  .case:nth-of-type(even) .shots{order:0}
+  .shots{position:static}
+  .grid4,.steps{grid-template-columns:1fr 1fr}
+  .hero-grid,.cgrid{grid-template-columns:1fr}
+  .me{display:flex;align-items:center;gap:18px;text-align:left;padding:18px}
+  .me img{width:84px;height:84px;margin:0}
+  .me p{margin-top:6px}
+  nav{display:none}
+  .bar .btn{margin-left:auto}
+}
+@media (max-width:620px){
+  section{padding:60px 0}
+  .hero{padding:48px 0 60px}
+  .grid4,.steps,.grid2{grid-template-columns:1fr}
+  form{grid-template-columns:1fr;padding:20px}
+  .lead{font-size:17px}
+  .ctas .btn{flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="RD Créations, accueil"><img class="logo" src="assets/rd-creations-icon.svg" alt="" width="30" height="33"><span>RD Créations</span></a>
+    <nav aria-label="Navigation principale">
+      <a href="./#services">Services</a><a href="realisations.html" aria-current="page">Réalisations</a><a href="./#methode">Méthode</a><a href="./#faq">Questions</a>
+    </nav>
+    <a class="acc-link" href="espace/" aria-label="Espace client"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Espace client</span></a>
+    <a class="btn btn-primary" href="./#devis">Devis gratuit</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero phero">
+  <div class="wrap">
+    <span class="eyebrow">Réalisations</span>
+    <h1>Des projets <em>en ligne</em>, utilisés et maintenus</h1>
+    <p class="lead">Pas de maquettes ni de projets fictifs : chaque réalisation ci-dessous est publiée et je la fais évoluer moi-même. Pour chacune : le besoin de départ, ce que j’ai construit et où la voir.</p>
+    <ul class="facts">
+      <li>Application sur l’App Store et Google Play</li>
+      <li>Plateforme web avec abonnements</li>
+      <li>Espace client et outil de devis</li>
+      <li>Site vitrine bilingue</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+
+    <article class="case" id="ahenora">
+      <figure class="shots">
+        <div class="frame"><img src="assets/realisations/ahenora.webp" width="1120" height="604" alt="Page d’accueil d’Ahenora : le tableau des tâches des enfants et l’agenda familial sur téléphone" decoding="async"></div>
+      </figure>
+      <div>
+        <span class="tag">Application mobile · iOS, Android, web</span>
+        <h2>Ahenora</h2>
+        <h3>Le besoin</h3>
+        <p>Une famille jongle entre les corvées des enfants, l’agenda, les repas et la paperasse, souvent éparpillés entre plusieurs applications, parfois sur deux maisons.</p>
+        <h3>Ce que j’ai réalisé</h3>
+        <ul class="did">
+          <li>Un tableau des tâches pour les enfants : étoiles, récompense du week-end, argent de poche, mode enfant et comptes ados.</li>
+          <li>Un agenda familial partagé, avec import depuis Google Agenda et Outlook.</li>
+          <li>Repas, listes de courses utilisables hors connexion et idées de recettes par IA.</li>
+          <li>La paperasse numérisée et transformée en tâches, un coffre-fort pour les documents et une messagerie familiale.</li>
+          <li>Une organisation pensée aussi pour les parents séparés, sur deux foyers.</li>
+          <li>Publication sur l’App Store, Google Play et en application web, en quatre langues.</li>
+        </ul>
+        <div class="links">
+          <a class="store-badge" href="https://apps.apple.com/us/app/ahenora-family-organizer/id6806811163" target="_blank" rel="noopener" aria-label="Ahenora sur l’App Store"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg><span><small>Télécharger dans l’</small><b>App Store</b></span></a>
+          <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.householdcoo.app" target="_blank" rel="noopener" aria-label="Ahenora sur Google Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.61 1.81L13.5 12 3.61 22.19c-.25-.24-.36-.56-.36-.93V2.74c0-.37.11-.69.36-.93z" fill="#2196F3"/><path d="M17.05 15.55L13.5 12l3.55-3.55 4.09 2.35c.83.48.83 1.92 0 2.4z" fill="#FFC107"/><path d="M17.05 8.45L13.5 12 3.61 1.81c.4-.4 1.05-.5 1.6-.19z" fill="#4CAF50"/><path d="M17.05 15.55l-11.84 6.83c-.55.31-1.2.21-1.6-.19L13.5 12z" fill="#F44336"/></svg><span><small>DISPONIBLE SUR</small><b>Google Play</b></span></a>
+          <a class="textlink" href="https://ahenora.com" target="_blank" rel="noopener">ahenora.com →</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="case" id="stacklens">
+      <figure class="shots">
+        <div class="frame"><img src="assets/realisations/stacklens.webp" width="1120" height="604" alt="Page d’accueil de StackLens : exemple d’audit des abonnements logiciels avec doublons et hausses de prix" loading="lazy" decoding="async"></div>
+      </figure>
+      <div>
+        <span class="tag">Plateforme web · SaaS</span>
+        <h2>StackLens</h2>
+        <h3>Le besoin</h3>
+        <p>Les entreprises paient des logiciels oubliés, en double, ou dont le prix a augmenté sans que personne ne le remarque. Les experts-comptables le voient passer dans les relevés, sans outil pour le traiter.</p>
+        <h3>Ce que j’ai réalisé</h3>
+        <ul class="did">
+          <li>Un audit des abonnements logiciels à partir des relevés bancaires et des fichiers FEC : doublons, abonnements oubliés, hausses de prix, renouvellements.</li>
+          <li>Un audit gratuit pour essayer en quelques minutes.</li>
+          <li>Un espace pour les cabinets comptables et les directeurs financiers à temps partagé, jusqu’à cinquante dossiers clients.</li>
+          <li>Le suivi des outils, des collaborateurs, des appareils, des accès, des départs et de la sécurité.</li>
+          <li>Abonnements payants avec Stripe, données hébergées en Europe.</li>
+        </ul>
+        <div class="links">
+          <a class="textlink" href="https://stacklens.fr" target="_blank" rel="noopener">stacklens.fr →</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="case" id="rd-creations">
+      <figure class="shots">
+        <div class="frame"><img src="assets/realisations/espace-client.webp" width="1120" height="604" alt="Espace client RD Créations : avancement d’un projet étape par étape" loading="lazy" decoding="async"></div>
+        <div class="frame"><img src="assets/realisations/admin.webp" width="1120" height="604" alt="Tableau de bord RD Créations : nouvelles demandes, messages et projets en cours" loading="lazy" decoding="async"></div>
+        <figcaption>Captures avec des données de démonstration.</figcaption>
+      </figure>
+      <div>
+        <span class="tag">Site, espace client et outil de gestion</span>
+        <h2>La plateforme RD Créations</h2>
+        <h3>Le besoin</h3>
+        <p>Offrir à chaque client un suivi clair de son projet, du devis à la livraison, sans échanges perdus entre e-mails, SMS et pièces jointes.</p>
+        <h3>Ce que j’ai réalisé</h3>
+        <ul class="did">
+          <li>Ce site, avec une demande de devis qui crée l’espace du client en une seule étape.</li>
+          <li>Un espace client : devis signé en ligne avec un code reçu par e-mail, avancement du projet, validation des étapes, factures, documents et messagerie.</li>
+          <li>Un outil de gestion : demandes, clients, devis imprimables, projets, messages et corbeille.</li>
+          <li>Connexion protégée par double authentification, données hébergées en France.</li>
+        </ul>
+        <p class="note">C’est l’espace que vous utiliserez si nous travaillons ensemble.</p>
+        <div class="links">
+          <a class="textlink" href="espace/">Voir l’espace client →</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="case" id="portfolio">
+      <figure class="shots">
+        <div class="frame"><img src="assets/realisations/portfolio.webp" width="1120" height="604" alt="Site personnel de Roland Dzoagbe : présentation du parcours et téléchargement du CV" loading="lazy" decoding="async"></div>
+      </figure>
+      <div>
+        <span class="tag">Site vitrine</span>
+        <h2>Site personnel bilingue</h2>
+        <h3>Le besoin</h3>
+        <p>Présenter un parcours professionnel à des recruteurs, en France comme à l’international, de façon plus vivante qu’un CV.</p>
+        <h3>Ce que j’ai réalisé</h3>
+        <ul class="did">
+          <li>Un site d’une page en français et en anglais, avec mode sombre.</li>
+          <li>Le parcours, les compétences et les résultats mis en valeur, avec le CV en téléchargement.</li>
+          <li>Hébergement gratuit sur GitHub Pages.</li>
+        </ul>
+        <div class="links">
+          <a class="textlink" href="https://rdzoagbe.github.io/Portfolio.RDzoagbe/" target="_blank" rel="noopener">Voir le site →</a>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Votre projet pourrait être le prochain</h2>
+    <p>Site vitrine, application web ou application mobile : décrivez votre besoin, je vous réponds sous 48 h avec un devis à prix fixe.</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="./#devis">Demander un devis gratuit</a>
+      <a class="btn btn-ghost" href="./#services">Voir les services et les prix</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="frow">
+      <span>© <span id="y">2026</span> RD Créations · Roland Dzoagbe, entrepreneur individuel</span>
+      <a href="cgv.html">Conditions générales de vente</a>
+      <a href="espace/">Espace client</a>
+      <a href="https://rdzoagbe.github.io/Portfolio.RDzoagbe/" target="_blank" rel="noopener">Parcours professionnel</a>
+    </div>
+    <details id="mentions">
+      <summary>Mentions légales</summary>
+      <p><b>Éditeur :</b> Roland Dzoagbe, entrepreneur individuel (EI, micro-entreprise), 93140 Bondy. SIREN 104 838 727 · SIRET 104 838 727 00014. Contact : rolanddzoagbe@gmail.com · 07 82 88 46 46.<br>
+      <b>Hébergement :</b> GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.<br>
+      <b>Données personnelles :</b> ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience. Les informations envoyées avec le formulaire de devis (prénom, activité, contact, description du projet) servent uniquement à vous répondre et à préparer votre devis. Elles sont conservées dans une base de données hébergée en France (Supabase, Paris) et, avec le bouton « Envoyer ma demande », transmises par e-mail via le service Formspree. Si vous créez votre espace client, votre e-mail et votre mot de passe (chiffré) y sont aussi conservés, et votre navigateur garde votre connexion (stockage local nécessaire au fonctionnement de l’espace, sans cookie publicitaire ni mesure d’audience). Elles sont supprimées trois ans après notre dernier échange. Vous pouvez demander à les consulter, les corriger ou les supprimer à tout moment : roland.dzoagbe@hotmail.com.</p>
+    </details>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
