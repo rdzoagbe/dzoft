@@ -168,7 +168,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Business</b> (Factures → Nouvelle facture), puis collez ici son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Business</b> (Factures → Nouvelle facture), reprenez ici son numéro (INV-…) et, si Revolut en donne un, son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
     <div id="invs"></div>
   </section>
 
@@ -442,7 +442,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     Q.invoices = Q.invoices || [];
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x, i){
       return '<div class="invr' + (x.paid ? ' paid' : '') + '" data-i="' + i + '"><input class="n" list="iv-kinds" value="' + esc(x.n) + '" placeholder="Libellé">' +
-        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° (ex. F-2026-001)">' +
+        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° Revolut (ex. INV-2)">' +
         '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €">' +
         '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> Payée</label>' +
         '<button class="rm" type="button" title="Retirer">×</button>' +
