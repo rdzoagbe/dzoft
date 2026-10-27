@@ -549,6 +549,14 @@ footer{max-width:1180px}
     var due = dep ? ['Solde, à régler à la livraison', a.ttc - a.dep] : ['Acompte, pour démarrer le projet', a.dep];
     return '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>' + rib(P, q) + invoiceList(q) + '</section>';
   }
+  function careBlock(q){
+    var c = q.care; if (!c || (!c.on && !c.end)) return '';
+    var d = function(v){ return v ? day(v + 'T12:00:00') : ''; };
+    if (!c.on) return '<section class="card"><h2>Suivi mensuel</h2><p class="muted">Le suivi mensuel ' + (new Date(c.end + 'T23:59:59') > new Date() ? 'prend fin le ' : 's’est arrêté le ') + d(c.end) + '. Besoin d’une modification ? <a href="#/messages">Écrivez-moi</a>.</p></section>';
+    return '<section class="card pay"><h2>Suivi mensuel <span class="pill ok">actif</span></h2>' +
+      '<div class="due"><span>Depuis le ' + d(c.since) + (c.next ? ' · prochaine facture le ' + d(c.next) : '') + '</span><b>' + eur(c.price || 0) + ' / mois</b></div>' +
+      '<p class="muted" style="margin-top:10px">Hébergement, mises à jour, sécurité et petites modifications. Sans engagement : vous pouvez l’arrêter à tout moment, il prend fin à la fin du mois en cours (<a href="' + TERMS_URL + '#a12" target="_blank" rel="noopener">article 12 des CGV</a>). Pour une modification ou pour l’arrêter, <a href="#/messages">écrivez-moi</a>.</p></section>';
+  }
   function rib(P, q, withInvoice){
     var h = '';
     if (P.iban) h += '<div class="rib"><div><span>Titulaire</span><b>' + esc(P.holder || 'Roland Dzoagbe') + '</b></div>' +
@@ -716,7 +724,7 @@ footer{max-width:1180px}
         '<p class="msgline" role="status" aria-live="polite"></p><p class="legal">Votre validation est enregistrée avec votre nom, la date et l’heure.</p></section>';
     });
     h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
-    h += payBlock(q);
+    h += payBlock(q) + careBlock(q);
     h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';
     if (docs.length) h += '<section class="card"><h2>Documents</h2>' + docsList(docs) + '</section>';
     h += '<p style="margin-top:16px"><a class="btn line" href="#/messages">Une question sur ce projet ? Écrivez-moi</a></p>';

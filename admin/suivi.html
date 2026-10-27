@@ -73,6 +73,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .pd{display:flex;gap:5px;align-items:center;font-size:13px;font-weight:700;margin:0;cursor:pointer}
 .pd input{width:16px;height:16px}
 @media (max-width:640px){.invr{grid-template-columns:1fr 1fr}}
+.carer{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:10px;align-items:end}
+.carer label{margin:0}
+.carer .pd{align-self:center}
+@media (max-width:640px){.carer{grid-template-columns:1fr 1fr}.carer .pd{grid-column:1/-1}}
 .vok{grid-column:1/-1;font-size:13px;color:var(--ok);font-weight:700}
 .envr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1.1fr 1fr 2fr auto;gap:6px;align-items:center}
 .envr+.envr{margin-top:8px}
@@ -163,6 +167,18 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="invs"></div>
   </section>
 
+  <section class="card" id="c-care" hidden>
+    <h2>Suivi mensuel <span class="sp"></span><button class="btn sm line" id="cr-bill" type="button">+ Facture du suivi</button></h2>
+    <p class="muted" style="margin-bottom:8px">Hébergement, mises à jour et petites modifications après la livraison (article 12 des CGV). Le client voit le suivi dans son espace. « + Facture du suivi » ajoute la facture du mois dans « Factures » et avance la prochaine échéance d’un mois : créez-la aussi dans Revolut Business et collez son lien.</p>
+    <div class="carer">
+      <label class="pd"><input type="checkbox" id="cr-on"> Suivi actif</label>
+      <label>Prix par mois (€)<input id="cr-price" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      <label>Début<input id="cr-since" type="date"></label>
+      <label>Prochaine facture<input id="cr-next" type="date"></label>
+    </div>
+    <p id="cr-state" class="muted" style="margin-top:8px"></p>
+  </section>
+
   <section class="card" id="c-env" hidden>
     <h2>Environnement <span class="sp"></span><button class="btn sm line" id="ev-host" type="button">Reprendre l’hébergement du devis</button><button class="btn sm line" id="ev-add" type="button">+ Élément</button></h2>
     <p class="muted" style="margin-bottom:8px">Ce que le client voit dans « Environnement » : site en ligne, code (GitHub), hébergement, base de données, stores, nom de domaine. Mettez des liens, <b>jamais de mot de passe</b> : les identifiants se remettent avec la fiche de remise.</p>
@@ -228,7 +244,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function render(){
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
-    $('c-inv').hidden = !Q.accepted_at;
+    $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = !Q.accepted_at;
     $('c-files').hidden = !(C && C.user_id);
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
@@ -254,7 +270,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, accepted_terms: null, accepted_early_start: null, accepted_method: null, accepted_target: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderThread(); renderFiles();
+    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderThread(); renderFiles();
   }
 
   function save(row, reload){
@@ -431,6 +447,51 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     Q.invoices.push(first ? { n: 'Facture d’acompte', num: '', amt: deposit(), u: '', paid: false }
       : { n: 'Facture de solde', num: '', amt: Math.round((t - deposit()) * 100) / 100, u: '', paid: false });
     renderInv(); later(); var r = $('invs').querySelectorAll('input.num'); r[r.length - 1].focus();
+  };
+
+  /* monthly care after delivery: { on, price, since, next, end } */
+  function iso(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function plusMonth(v){ var d = new Date(v + 'T12:00:00'), day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return iso(d); }
+  function longDate(v){ return v ? new Date(v + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
+  function quoteMonthly(){
+    var a = Q.accepted_data || Q.data || {}, f = a.f || {}, m = 0;
+    (a.lines || []).forEach(function(l){ if (!l.h && !l.o && l.u === 'mois') m += (parseFloat(l.q) || 0) * (parseFloat(l.p) || 0); });
+    return Math.round(m * (f.novat === false ? 1.2 : 1) * 100) / 100;
+  }
+  function renderCare(){
+    var c = Q.care || {};
+    $('cr-on').checked = !!c.on;
+    $('cr-price').value = c.price != null ? c.price : (quoteMonthly() || '');
+    $('cr-since').value = c.since || ''; $('cr-next').value = c.next || '';
+    $('cr-bill').disabled = !c.on;
+    $('cr-state').innerHTML = c.on ? 'Actif depuis le ' + esc(longDate(c.since)) + ' · ' + eur(c.price || 0) + ' par mois' + (c.next ? ' · prochaine facture le <b>' + esc(longDate(c.next)) + '</b>' : '') + '.'
+      : c.end ? (new Date(c.end + 'T23:59:59') > new Date() ? 'Arrêt demandé : le suivi prend fin le ' : 'Arrêté le ') + esc(longDate(c.end)) + '.' : 'Pas de suivi pour ce projet.' + (quoteMonthly() ? ' Le devis prévoit ' + eur(quoteMonthly()) + ' par mois.' : '');
+  }
+  function saveCare(){ return save({ care: Q.care }).then(renderCare); }
+  $('cr-on').onchange = function(){
+    var c = Q.care || {};
+    if (this.checked) {
+      var start = c.since && !c.end ? c.since : iso(new Date());
+      Q.care = { on: true, price: parseFloat($('cr-price').value) || quoteMonthly() || 15, since: start, next: c.next && !c.end ? c.next : start, end: null };
+    } else {
+      if (!confirm('Arrêter le suivi mensuel ? Il s’arrête à la fin du mois en cours (article 12 des CGV).')) { this.checked = true; return; }
+      var d = new Date(); Q.care = Object.assign({}, c, { on: false, end: iso(new Date(d.getFullYear(), d.getMonth() + 1, 0)), next: null });
+    }
+    saveCare();
+  };
+  $('cr-price').onchange = $('cr-since').onchange = $('cr-next').onchange = function(){
+    if (!Q.care || !Q.care.on) return renderCare();
+    Q.care.price = parseFloat($('cr-price').value) || 0; Q.care.since = $('cr-since').value || Q.care.since; Q.care.next = $('cr-next').value || Q.care.next;
+    saveCare();
+  };
+  $('cr-bill').onclick = function(){
+    var c = Q.care; if (!c || !c.on) return;
+    var due = c.next || iso(new Date()), m = new Date(due + 'T12:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    Q.invoices = Q.invoices || [];
+    Q.invoices.push({ n: 'Suivi mensuel · ' + m, num: '', amt: c.price || 0, u: '', paid: false, care: due });
+    c.next = plusMonth(due);
+    clearTimeout(timer);
+    save({ invoices: Q.invoices, care: c }).then(function(){ renderInv(); renderCare(); toast('Facture du suivi de ' + m + ' ajoutée : complétez son numéro et son lien Revolut.'); var r = $('invs').querySelectorAll('input.num'); if (r.length) r[r.length - 1].focus(); });
   };
 
   /* environment shown to the client (links and owners, never passwords) */
