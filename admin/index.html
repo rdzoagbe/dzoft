@@ -563,10 +563,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         .then(function(){ return sb.mfa.enroll(); }).then(function(r){
           enrolling = r.id;
           box.innerHTML = '<ol style="font-size:14px;margin-left:18px;display:grid;gap:6px"><li>Dans votre application, ajoutez un compte en scannant ce QR code :</li></ol>' +
-            '<img alt="QR code à scanner" src="' + esc(r.totp.qr_code) + '" style="width:180px;height:180px;display:block;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px">' +
+            '<img id="mfa-qr" alt="QR code à scanner" style="width:180px;height:180px;display:block;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px">' +
             '<p style="font-size:12.5px;color:var(--mute)">Pas de scanner ? Saisissez cette clé : <code style="user-select:all">' + esc(r.totp.secret) + '</code></p>' +
             '<ol start="2" style="font-size:14px;margin:10px 0 0 18px"><li>Tapez le code à 6 chiffres affiché :</li></ol>' +
             '<div style="display:flex;gap:8px;margin-top:6px;max-width:320px"><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"><button class="btn main sm" id="mfa-ok" type="button">Confirmer</button></div>';
+          // the QR code comes as SVG markup (sometimes behind a non-standard data: prefix): rebuild a clean, encoded image
+          var qr = String(r.totp.qr_code || ''), at = qr.indexOf('<svg');
+          if (at >= 0) $('mfa-qr').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(qr.slice(at));
+          else if (/^data:image\//.test(qr)) $('mfa-qr').src = qr;
           $('mfa-ok').onclick = function(){
             var code = $('mfa-code').value.replace(/\D/g, '');
             if (code.length !== 6) { toast('Le code fait 6 chiffres.'); return; }
