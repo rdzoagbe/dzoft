@@ -63,8 +63,7 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Nom de domaine `dzoft.fr` + `dzoft.com` (libres, chez OVHcloud) : plus tard, quand le premier
   client aura payé. Ensuite : fichier `CNAME`, DNS, remplacer l'adresse partout, e-mail
   contact@dzoft.fr, expéditeur Brevo sur le domaine.
-- Recoller les modèles d'e-mails Supabase et mettre le nom d'expéditeur SMTP sur DZOFT.
-- Fiche Google : produits, lien de réservation, premier post.
-- Revolut Pro : nom commercial DZOFT. Médiateur de la consommation (CM2C).
+- Médiateur de la consommation (CM2C) : adhésion, puis compléter l'article 16 de `cgv.html`
+  (nom, site et adresse du médiateur, actuellement « à compléter »).
 - Liste de prospects locaux + kit de prospection : en pause, à sa demande.
 - Devis D-2026-001 (Rodney) : brouillon, il en parle d'abord avec lui.
