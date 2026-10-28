@@ -448,7 +448,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
         <div class="full"><label for="contact">Your email or phone, so I can reply</label><p class="fhelp">Needed only for direct form submission; optional for WhatsApp or email.</p><input id="contact" name="contact" autocomplete="email" placeholder="e.g. name@example.com or +44 7700 900123"></div>
         <div class="full"><label for="message">Your project idea</label><p class="fhelp" id="message-help">In a few lines, tell me what you want to improve and what the website or app should let people do. Detailed answers are optional.</p><textarea id="message" name="message" rows="7" maxlength="3000" aria-describedby="message-help" placeholder="e.g. I run a bakery in Bondy. I’d like a website with our products, opening hours and cake orders for the weekend. I already have a logo and photos. I’d like it online before Christmas."></textarea></div>
                 <details class="full quote-more" id="quote-more">
-          <summary><span>Help me prepare a more accurate estimate</span><small>Optional · about 2 minutes</small></summary>
+          <summary><span>Help me prepare a more accurate estimate</span><small>Optional · about 3 minutes</small></summary>
           <p class="fhelp">No need for a formal specification. Answer only what you can; these details help me scope the project and reduce follow-up questions.</p>
           <div class="quote-more-grid">
 <div><label for="activite">Your business</label><input id="activite" name="activite" placeholder="e.g. bakery, coach, charity"></div>
@@ -467,15 +467,113 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
               <option value="Autre">Something else</option>
             </select>
           </div>
-          <div class="full" id="pages-box" hidden>
-            <label for="pages">Roughly how many pages or sections?</label>
-            <select id="pages" name="pages">
+          <div class="full project-brief" id="page-brief" hidden>
+            <label for="page-action">What should visitors do first?</label>
+            <select id="page-action" name="page-action">
               <option value="">Not sure yet</option>
-              <option value="1 à 2 pages">1–2 pages</option>
-              <option value="3 à 5 pages">3–5 pages</option>
-              <option value="6 pages ou plus">6 or more pages</option>
+              <option value="contact">Contact you or request a quote</option>
+              <option value="appointment">Book an appointment</option>
+              <option value="call">Call or send a message</option>
+              <option value="order">Place an order or pay</option>
+              <option value="download">Download a resource</option>
+              <option value="other">Something else</option>
             </select>
-            <p class="fhelp">An estimate is enough; we can define the page list together.</p>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Which sections should the page include?</legend>
+              <p class="fhelp">Choose the useful sections; we can refine them together.</p>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="page_sections" value="offer"><span>Offer or introduction</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="services"><span>Services and prices</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="proof"><span>Reviews or testimonials</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="portfolio"><span>Work or gallery</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="faq"><span>Frequently asked questions</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="contact"><span>Contact or booking</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="full project-brief" id="showcase-brief" hidden>
+            <div class="quote-more-grid">
+              <div id="pages-box">
+                <label for="pages">Roughly how many pages or sections?</label>
+                <select id="pages" name="pages">
+                  <option value="">Not sure yet</option>
+                  <option value="1 à 2 pages">1–2 pages</option>
+                  <option value="3 à 5 pages">3–5 pages</option>
+                  <option value="6 pages ou plus">6 or more pages</option>
+                </select>
+              </div>
+              <div>
+                <label for="content-editing">Would you like to update text and photos yourself?</label>
+                <select id="content-editing" name="content_editing">
+                  <option value="">Not sure yet</option>
+                  <option value="Oui, souvent">Yes, regularly</option>
+                  <option value="Oui, ponctuellement">Yes, occasionally</option>
+                  <option value="Non">No, not needed</option>
+                </select>
+              </div>
+              <div class="full">
+                <label for="site-languages">Should the website be available in multiple languages?</label>
+                <select id="site-languages" name="site_languages">
+                  <option value="">Not sure yet</option>
+                  <option value="Français uniquement">French only</option>
+                  <option value="Français et anglais">French and English</option>
+                  <option value="Autres langues">Other languages</option>
+                </select>
+              </div>
+            </div>
+            <p class="fhelp">An estimate is enough; we can define the page list and content together.</p>
+          </div>
+          <div class="full project-brief" id="pwa-brief" hidden>
+            <label for="pwa-audience">Who will mainly use the web app?</label>
+            <select id="pwa-audience" name="pwa_audience">
+              <option value="">Not sure yet</option>
+              <option value="Clients ou grand public">My customers or the public</option>
+              <option value="Mon équipe">My team</option>
+              <option value="Clients et équipe">Customers and my team</option>
+            </select>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Which needs matter for this web app?</legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="pwa_features" value="offline"><span>Work with a weak or no connection</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="notifications"><span>Send notifications</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="sync"><span>Save and sync data or forms</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="device"><span>Use phone features (camera, location…)</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="unsure"><span>Work it out together</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="full project-brief" id="mobile-brief" hidden>
+            <div class="quote-more-grid">
+              <div id="pf-box">
+                <label for="plateforme">Which phones should it support?</label>
+                <select id="plateforme" name="plateforme">
+                  <option value="Je ne sais pas encore">Not sure yet</option>
+                  <option value="iPhone et Android">iPhone and Android</option>
+                  <option value="iPhone seulement">iPhone only</option>
+                  <option value="Android seulement">Android only</option>
+                </select>
+                <p class="fhelp">Store fees are explained below.</p>
+              </div>
+              <div>
+                <label for="mobile-audience">Who will mainly use the app?</label>
+                <select id="mobile-audience" name="mobile_audience">
+                  <option value="">Not sure yet</option>
+                  <option value="Clients ou grand public">My customers or the public</option>
+                  <option value="Mon équipe">My team</option>
+                  <option value="Clients et équipe">Customers and my team</option>
+                </select>
+              </div>
+            </div>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Which mobile-specific features should we plan for?</legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="mobile_features" value="notifications"><span>Push notifications</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="device"><span>Camera or location</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="offline"><span>Offline use</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="payments"><span>In-app payments or subscriptions</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="unsure"><span>Work it out together</span></label>
+              </div>
+            </fieldset>
           </div>
           <fieldset class="full brief-group" aria-describedby="actions-help">
             <legend>What should the website or app let people do?</legend>
@@ -526,16 +624,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option value="Je ne sais pas">I don’t know</option><option value="Moins de 300 €">Under €300</option><option value="300 à 700 €">€300 to €700</option>
             <option value="700 à 1 500 €">€700 to €1,500</option><option value="Plus de 1 500 €">Over €1,500</option>
           </select></div>
-          <div class="full" id="pf-box" hidden>
-            <label for="plateforme">Which phones should it support?</label>
-            <select id="plateforme" name="plateforme">
-              <option value="Je ne sais pas encore">Not sure yet</option>
-              <option value="iPhone et Android">iPhone and Android</option>
-              <option value="iPhone seulement">iPhone only</option>
-              <option value="Android seulement">Android only</option>
-            </select>
-            <p class="fhelp">iPhone: App Store (Apple account, US$99/year, charged in euros). Android: Google Play (Google account, US$25 one-off).</p>
-          </div>
           <details class="full needs-more" id="needs-more">
             <summary>Accounts and costs to plan for (optional)</summary>
             <p class="fhelp">Select anything you would like to discuss in the quote. Accounts stay in your name.</p>
@@ -641,7 +729,21 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     function add(fr, english, value){ if (value) L.push((en ? english : fr) + value); }
     add('Ville / zone : ', 'Town / service area: ', (d.get('zone') || '').trim().slice(0,200));
     if (d.get('objectif')) add('Objectif principal : ', 'Main goal: ', label('objectif'));
-    if (d.get('projet') === 'Site vitrine' && d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+    var project = d.get('projet');
+    if (project === 'Page de présentation') {
+      if (d.get('page-action')) add('Action principale : ', 'Primary call to action: ', label('page-action'));
+      add('Rubriques à prévoir : ', 'Sections to include: ', selectedChoices('page_sections'));
+    } else if (project === 'Site vitrine') {
+      if (d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+      if (d.get('content_editing')) add('Mise à jour du contenu : ', 'Content updates: ', label('content-editing'));
+      if (d.get('site_languages')) add('Langues du site : ', 'Website languages: ', label('site-languages'));
+    } else if (project === 'Application web installable (PWA)') {
+      if (d.get('pwa_audience')) add('Utilisateurs de l’application web : ', 'Web app users: ', label('pwa-audience'));
+      add('Fonctions spécifiques à l’application web : ', 'Web app requirements: ', selectedChoices('pwa_features'));
+    } else if (project === 'Application mobile') {
+      if (d.get('mobile_audience')) add('Utilisateurs de l’application mobile : ', 'Mobile app users: ', label('mobile-audience'));
+      add('Fonctions mobiles à prévoir : ', 'Mobile app requirements: ', selectedChoices('mobile_features'));
+    }
     add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
     add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
     add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
@@ -764,23 +866,38 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     document.getElementById('send-direct').addEventListener('click', sendDirect);
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
-  var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  var pagesBox = document.getElementById('pages-box'), quoteMore = document.getElementById('quote-more');
-  function showPf(){
-    var project = document.getElementById('projet').value;
-    pfBox.hidden = project !== 'Application mobile';
-    pagesBox.hidden = project !== 'Site vitrine';
-    if (!pfBox.hidden || !pagesBox.hidden) quoteMore.open = true;
-  }
+  var pfSel = document.getElementById('plateforme'), quoteMore = document.getElementById('quote-more');
   function tickStores(){
-    var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
+    var mobile = document.getElementById('projet').value === 'Application mobile';
+    var v = mobile ? pfSel.value : '';
+    var want = {'Application iPhone': /iPhone/.test(v), 'Application Android': /Android/.test(v)};
     Object.keys(want).forEach(function(k){
       var b = document.querySelector('.ho-item[data-item="' + k + '"]');
       if (b) b.setAttribute('aria-pressed', want[k] ? 'true' : 'false');
     });
   }
-  document.getElementById('projet').addEventListener('change', function(){ showPf(); if (!pfBox.hidden) tickStores(); });
+  function showProjectDetails(){
+    var project = document.getElementById('projet').value;
+    var boxes = {
+      'Page de présentation': 'page-brief',
+      'Site vitrine': 'showcase-brief',
+      'Application web installable (PWA)': 'pwa-brief',
+      'Application mobile': 'mobile-brief'
+    };
+    Object.keys(boxes).forEach(function(key){
+      document.getElementById(boxes[key]).hidden = project !== key;
+    });
+    [].forEach.call(document.querySelectorAll('.ho-item[data-item="Application iPhone"], .ho-item[data-item="Application Android"]'), function(b){
+      var item = b.closest('li');
+      if (item) item.hidden = project !== 'Application mobile';
+      if (project !== 'Application mobile') b.setAttribute('aria-pressed', 'false');
+    });
+    if (project && project !== 'Je ne sais pas encore') quoteMore.open = true;
+    if (project === 'Application mobile') tickStores();
+  }
+  document.getElementById('projet').addEventListener('change', showProjectDetails);
   pfSel.addEventListener('change', tickStores);
+  showProjectDetails();
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   // Already signed in to the client space: the request joins their space.
   if (window.RDsb && window.RDsb.session()) {
