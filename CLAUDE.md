@@ -49,6 +49,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Fonctions edge (source dans `supabase/functions`, `verify_jwt: true`) : `notify-client`
   (e-mails projet) et `sign-code` (code de signature). Envoi par l'API Brevo, expéditeur « DZOFT ».
   Secrets : `BREVO_API_KEY`, `SENDER_EMAIL`. Redéployer après chaque modification du code.
+- `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
+  stockage, droits), générée le 2026-10-28 ; à régénérer après toute modification de la base.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
   Supabase, Authentication → Emails).
 
