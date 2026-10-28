@@ -503,7 +503,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       <article class="work">
         <span class="tag">Plateforme web</span>
         <h3>StackLens</h3>
-        <p>Suivi des abonnements logiciels d’une entreprise : licences, accès des collaborateurs, renouvellements automatiques et dépenses, dans un seul tableau de bord. Hébergé en Europe, conforme RGPD.</p>
+        <p>Suivi des abonnements logiciels d’une entreprise : licences, accès des collaborateurs, renouvellements automatiques et dépenses, dans un seul tableau de bord. Données stockées dans l’Union européenne, certains traitements aux États-Unis (détail dans sa <a href="https://stacklens.fr/sub-processors" target="_blank" rel="noopener">liste des sous-traitants</a>).</p>
         <div class="links">
           <a class="textlink" href="https://stacklens.fr" target="_blank" rel="noopener">stacklens.fr →</a>
         </div>
@@ -618,7 +618,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           <span class="alt">WhatsApp et e-mail : sans espace client.</span>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
-        <p class="full privacy" id="privacy">Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
+        <p class="full privacy" id="privacy">Quel que soit le bouton choisi, votre demande est enregistrée dès votre clic dans mon outil de suivi sécurisé (hébergé en France), uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
       </form>
       </div>
       <div class="direct">
@@ -792,7 +792,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   if (FORMSPREE_ID) {
     document.getElementById('send-direct').hidden = false;
     document.getElementById('send-direct').addEventListener('click', sendDirect);
-    document.getElementById('privacy').innerHTML = 'Votre demande est enregistrée de façon sécurisée, uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail et votre espace client est créé ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même, sans espace client.';
+    document.getElementById('privacy').innerHTML = 'Quel que soit le bouton choisi, votre demande est enregistrée dès votre clic dans mon outil de suivi sécurisé (hébergé en France), uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail et votre espace client est créé ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même, sans espace client.';
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');

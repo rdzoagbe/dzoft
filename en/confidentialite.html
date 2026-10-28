@@ -84,9 +84,9 @@ th{color:var(--ink);font-size:13px}
   <ul>
     <li><b>Quote request</b>: first name, business, email or phone, type of project and platform, budget, ticked needs and project description.</li>
     <li><b>Appointments</b>: if you book a call, your first name, last name, email and phone, and the slot chosen.</li>
-    <li><b>Client area</b>: email address and password. The password is encrypted: I cannot read it.</li>
+    <li><b>Client area</b>: email address and password. The password is not stored as such, but in hashed form (irreversibly transformed): I cannot read it.</li>
     <li><b>Project follow-up</b>: your messages, the files you send (logo, photos, texts), your step approvals with the name entered, the date and the time.</li>
-    <li><b>Acceptance of a quote</b>: the name entered, the date and time, the IP address, the email address that received the signature code, the version of the terms and conditions accepted and your choice about starting before the end of the withdrawal period. The six-digit code is never stored in plain text, only in an encrypted form from which it cannot be recovered.</li>
+    <li><b>Acceptance of a quote</b>: the name entered, the date and time, the IP address, the email address that received the signature code, the version of the terms and conditions accepted and your choice about starting before the end of the withdrawal period. The six-digit code is never stored in plain text, only in hashed form (with a random salt) from which it cannot be recovered.</li>
     <li><b>Reviews</b>: if you leave a review, the rating, the text, the name and business you choose to display, and whether or not you agree to its publication.</li>
     <li><b>Invoicing</b>: name, company, address, amounts and invoice references.</li>
     <li><b>Emails sent</b>: a log records the date, the type of email (quote, message, step) and the recipient address.</li>

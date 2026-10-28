@@ -502,7 +502,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       <article class="work">
         <span class="tag">Web platform</span>
         <h3>StackLens</h3>
-        <p>Tracks a company’s software subscriptions: licences, staff access, auto-renewals and spending, in a single dashboard. Hosted in Europe, GDPR-compliant.</p>
+        <p>Tracks a company’s software subscriptions: licences, staff access, auto-renewals and spending, in a single dashboard. Data stored in the European Union, some processing in the United States (details in its <a href="https://stacklens.fr/sub-processors" target="_blank" rel="noopener">list of sub-processors</a>).</p>
         <div class="links">
           <a class="textlink" href="https://stacklens.fr" target="_blank" rel="noopener">stacklens.fr →</a>
         </div>
@@ -617,7 +617,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           <span class="alt">WhatsApp and email: no client area.</span>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
-        <p class="full privacy" id="privacy">Your request is stored securely, only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me; with WhatsApp or email, it opens in your app and you send it yourself.</p>
+        <p class="full privacy" id="privacy">Whichever button you choose, your request is saved as soon as you click, in my secure follow-up tool (hosted in France), only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me; with WhatsApp or email, it opens in your app and you send it yourself.</p>
       </form>
       </div>
       <div class="direct">
@@ -794,7 +794,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   if (FORMSPREE_ID) {
     document.getElementById('send-direct').hidden = false;
     document.getElementById('send-direct').addEventListener('click', sendDirect);
-    document.getElementById('privacy').innerHTML = 'Your request is stored securely, only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me and your client area is created; with WhatsApp or email, it opens in your app and you send it yourself, with no client area.';
+    document.getElementById('privacy').innerHTML = 'Whichever button you choose, your request is saved as soon as you click, in my secure follow-up tool (hosted in France), only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me and your client area is created; with WhatsApp or email, it opens in your app and you send it yourself, with no client area.';
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
