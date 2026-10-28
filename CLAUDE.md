@@ -76,5 +76,7 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   contact@dzoft.fr, expéditeur Brevo sur le domaine.
 - Médiateur de la consommation (CM2C) : adhésion, puis compléter l'article 16 de `cgv.html`
   (nom, site et adresse du médiateur, actuellement « à compléter »).
-- Liste de prospects locaux + kit de prospection : en pause, à sa demande.
+- Prospection locale : kit + liste de départ (Bondy : boulangeries, coiffeurs, plombiers,
+  sans site d'après PagesJaunes) livrés le 2026-10-28 en privé, volontairement HORS du dépôt
+  (public). À lui de contacter ; vérifier chaque fiche sur Google avant contact.
 - Devis D-2026-001 (Rodney) : brouillon, il en parle d'abord avec lui.
