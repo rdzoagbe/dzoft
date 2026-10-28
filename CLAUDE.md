@@ -22,8 +22,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   balises hreflang, sitemap). **Toute modification de texte sur l'accueil ou les réalisations doit être
   reportée dans `en/`.** Dans le formulaire anglais, les valeurs envoyées restent en français (admin) ;
   seuls les libellés sont traduits. `en/cgv.html` : traduction des CGV, pour information (bandeau :
-  la version française fait foi) ; **toute modification de `cgv.html` doit être reportée dans `en/cgv.html`**.
-  Confidentialité, espace client, admin et démos : en français seulement.
+  la version française fait foi), idem `en/confidentialite.html` ; **toute modification de `cgv.html` ou
+  `confidentialite.html` doit être reportée dans `en/`**. Espace client, admin et démos : en français seulement.
 - `espace/` espace client (connexion par compte ou par lien secret `#<portal_token>`) :
   devis signé avec un code e-mail, avancement, validation des étapes, factures, documents,
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).

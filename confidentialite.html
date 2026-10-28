@@ -6,6 +6,9 @@
 <title>Confidentialité · DZOFT</title>
 <meta name="description" content="Politique de confidentialité de DZOFT : données collectées, finalités, durées de conservation, prestataires et droits.">
 <link rel="canonical" href="https://rdzoagbe.github.io/dzoft/confidentialite.html">
+<link rel="alternate" hreflang="fr" href="https://rdzoagbe.github.io/dzoft/confidentialite.html">
+<link rel="alternate" hreflang="en" href="https://rdzoagbe.github.io/dzoft/en/confidentialite.html">
+<link rel="alternate" hreflang="x-default" href="https://rdzoagbe.github.io/dzoft/confidentialite.html">
 <meta name="theme-color" content="#0B1020">
 <link rel="icon" href="assets/dzoft-favicon.svg" type="image/svg+xml">
 <style>
@@ -46,6 +49,11 @@ table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
 th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:8px 8px 8px 0;color:var(--ink2)}
 th{color:var(--ink);font-size:13px}
 .tw{overflow-x:auto}
+.lang{display:flex;align-items:center;font-size:13.5px;font-weight:700;letter-spacing:.03em}
+.lang a{color:#8fa3b8;text-decoration:none;padding:6px 4px;border-radius:6px}
+.lang a:hover,.lang a[aria-current]{color:#fff}
+.lang span{color:rgba(255,255,255,.28)}
+@media (max-width:420px){.top .in{gap:8px}.top button{padding:6px 9px;font-size:12.5px}.brand span{display:none}}
 </style>
 </head>
 <body>
@@ -54,6 +62,7 @@ th{color:var(--ink);font-size:13px}
     <a class="brand" href="./"><img src="assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Confidentialité</span></div></a>
     <div class="sp"></div>
     <button type="button" class="noprint" onclick="window.print()">Imprimer ou PDF</button>
+    <div class="lang noprint" role="group" aria-label="Langue"><a href="confidentialite.html" lang="fr" aria-current="true">FR</a><span aria-hidden="true">|</span><a href="en/confidentialite.html" lang="en" hreflang="en">EN</a></div>
   </div>
 </header>
 <main>
@@ -137,5 +146,11 @@ th{color:var(--ink);font-size:13px}
 </article>
 </main>
 <footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · <a href="cgv.html">Conditions générales de vente</a> · <a href="./">Retour au site</a></footer>
+<script>
+/* Language switch: keep the section the visitor is on (same ids in both languages). */
+[].forEach.call(document.querySelectorAll('.lang a'), function(a){
+  a.addEventListener('click', function(){ if (location.hash) a.href = a.getAttribute('href').split('#')[0] + location.hash; });
+});
+</script>
 </body>
 </html>
