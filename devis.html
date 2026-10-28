@@ -726,7 +726,11 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       _subject: 'Demande de devis - ' + (d.get('prenom') || '').trim(),
       prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
       projet: projet(d), budget: d.get('budget'), contact: contact, espace_client: me ? me.email : 'non',
-      elements: picked() || 'Aucun',\n      objectif: d.get('objectif') ? label('objectif') : '', pages: d.get('projet') === 'Site vitrine' && d.get('pages') ? label('pages') : '',\n      zone: (d.get('zone') || '').trim(), actions: selectedChoices('actions'), assets: selectedChoices('assets'), site_existant: (d.get('site_existant') || '').trim(),\n      exemples: (d.get('exemples') || '').trim(), echeance: d.get('echeance') ? label('echeance') : '',\n      message: brief(d), _gotcha: d.get('_gotcha') || ''
+      elements: picked() || 'Aucun',
+      objectif: d.get('objectif') ? label('objectif') : '', pages: d.get('projet') === 'Site vitrine' && d.get('pages') ? label('pages') : '',
+      zone: (d.get('zone') || '').trim(), actions: selectedChoices('actions'), assets: selectedChoices('assets'), site_existant: (d.get('site_existant') || '').trim(),
+      exemples: (d.get('exemples') || '').trim(), echeance: d.get('echeance') ? label('echeance') : '',
+      message: brief(d), _gotcha: d.get('_gotcha') || ''
     };
     if (accEmail()) data.email = accEmail();
     sending = true; status.className = 'full fstatus'; status.textContent = 'Envoi en cours…';
