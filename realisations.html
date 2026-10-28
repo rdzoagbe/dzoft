@@ -209,6 +209,16 @@ nav a[aria-current=page]{color:#fff;background:rgba(255,255,255,.1)}
 .did li{position:relative;padding-left:26px;color:var(--ink2);font-size:15.5px}
 .did li:before{content:"";position:absolute;left:0;top:4px;width:17px;height:17px;border-radius:50%;background:#e3f9fd url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5 5.5-6' fill='none' stroke='%231d63c9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
 .case .links{padding-top:22px}
+.demos{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:8px}
+.demo-c{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:box-shadow .2s,transform .2s}
+.demo-c:hover{box-shadow:0 18px 40px rgba(11,27,46,.12);transform:translateY(-2px)}
+.demo-c img{width:100%;height:auto;aspect-ratio:1120/604;object-fit:cover;border-bottom:1px solid var(--line)}
+.demo-c div{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
+.demo-c h3{font-size:19px;margin:10px 0 6px}
+.demo-c p{color:var(--ink2);font-size:15px}
+.demo-c .go{margin-top:auto;padding-top:14px;font-weight:700;color:var(--blue2)}
+@media (max-width:960px){.demos{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.demos{grid-template-columns:1fr}}
 .cta{color:#fff;background:linear-gradient(125deg,#06101c 0%,#0b1d33 55%,#0e2a49 100%);text-align:center}
 .cta h2{color:#fff}
 .cta p{color:#c4d2e1;font-size:17px;max-width:34em;margin:0 auto}
@@ -270,6 +280,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       <li>Plateforme web avec abonnements</li>
       <li>Espace client et outil de devis</li>
       <li>Site vitrine bilingue</li>
+      <li>3 sites de démonstration</li>
     </ul>
   </div>
 </section>
@@ -375,7 +386,32 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   </div>
 </section>
 
-<section class="soft" id="avis-clients" hidden>
+<section class="soft" id="demos">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Sites de démonstration</span>
+      <h2>Ce que vous pouvez avoir dès 400 €</h2>
+      <p>Trois sites vitrines complets pour des commerces et artisans fictifs, à visiter comme de vrais sites. Chacun a un outil utile au métier : commande à l’avance, prise de rendez-vous, demande de devis avec photos.</p>
+    </div>
+    <div class="demos">
+      <a class="demo-c" href="demos/boulangerie/">
+        <img src="assets/realisations/demo-boulangerie.webp" alt="Démo : site de la boulangerie Le Fournil des Coquelicots" width="1120" height="604" loading="lazy">
+        <div><span class="tag">Boulangerie · pâtisserie</span><h3>Le Fournil des Coquelicots</h3><p>Horaires du jour mis à jour automatiquement, carte des pains et commande à retirer le lendemain.</p><span class="go">Voir la démo →</span></div>
+      </a>
+      <a class="demo-c" href="demos/coiffure/">
+        <img src="assets/realisations/demo-coiffure.webp" alt="Démo : site du salon de coiffure Atelier Nacre" width="1120" height="604" loading="lazy">
+        <div><span class="tag">Coiffure · beauté</span><h3>Atelier Nacre</h3><p>Prestations et tarifs par catégorie, galerie du salon et réservation d’un créneau en trente secondes.</p><span class="go">Voir la démo →</span></div>
+      </a>
+      <a class="demo-c" href="demos/plombier/">
+        <img src="assets/realisations/demo-plombier.webp" alt="Démo : site du plombier chauffagiste Dubreuil" width="1120" height="604" loading="lazy">
+        <div><span class="tag">Artisan du bâtiment</span><h3>Dubreuil Plomberie</h3><p>Bouton d’appel d’urgence, vérification de la zone d’intervention, tarifs indicatifs et devis avec photos.</p><span class="go">Voir la démo →</span></div>
+      </a>
+    </div>
+    <p class="fine" style="margin-top:18px;font-size:13.5px;color:var(--mute)">Entreprises, adresses et numéros inventés. Photos : Unsplash.</p>
+  </div>
+</section>
+
+<section id="avis-clients" hidden>
   <div class="wrap">
     <div class="head">
       <span class="kicker">Avis clients</span>

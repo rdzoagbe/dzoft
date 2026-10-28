@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Le Fournil des Coquelicots · Boulangerie-pâtisserie (démo)</title>
+<meta name="description" content="Site de démonstration réalisé par RD Créations : une boulangerie-pâtisserie de quartier, entreprise fictive.">
+<meta name="theme-color" content="#2b1d14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23b4532a'/%3E%3Cpath d='M32 14c6 8 6 28 0 36-6-8-6-28 0-36z' fill='%23f3dfb6'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#fbf6ee;--paper:#fffdf8;--ink:#2b1d14;--ink2:#5b4636;--line:#e8dccb;--terra:#b4532a;--terra2:#963f1c;--wheat:#e9c98f;--green:#3f5a3c;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:110px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+img{max-width:100%;display:block}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.demo{background:#1d1d1f;color:#e9e9ec;font-size:13.5px;text-align:center;padding:8px 16px}
+.demo a{color:#7fd7f5;font-weight:700}
+header{position:sticky;top:0;z-index:20;background:rgba(251,246,238,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:18px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo svg{width:38px;height:38px}
+.logo b{font-family:var(--serif);font-size:20px;line-height:1.1}
+.logo small{display:block;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--terra)}
+nav{margin-left:auto;display:flex;gap:2px}
+nav a{text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;color:var(--ink2)}
+nav a:hover{background:#f1e6d4;color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;border:0;border-radius:999px;padding:12px 20px;cursor:pointer}
+.btn svg{width:18px;height:18px}
+.btn-t{background:var(--terra);color:#fff}.btn-t:hover{background:var(--terra2)}
+.btn-l{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn-w{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.4)}
+.hero{position:relative;color:#fff;min-height:560px;display:flex;align-items:flex-end}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,18,10,.15) 20%,rgba(30,18,10,.82))}
+.hero .wrap{position:relative;z-index:1;padding-bottom:64px;width:100%}
+.open{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.open i{width:9px;height:9px;border-radius:50%;background:#7bd88f}
+.open.closed i{background:#f08a6b}
+.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(36px,5.6vw,64px);line-height:1.05;margin:16px 0 14px;max-width:13em}
+.hero p{font-size:18.5px;max-width:34em;color:#f3e7d6}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+section{padding:84px 0}
+.kick{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--terra)}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(28px,3.6vw,40px);line-height:1.15;margin:6px 0 12px}
+.lead{color:var(--ink2);font-size:17px;max-width:40em}
+.promise{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:-46px;position:relative;z-index:2}
+.promise div{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 16px 40px rgba(43,29,20,.08)}
+.promise b{display:block;font-family:var(--serif);font-size:19px}
+.promise span{color:var(--ink2);font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.photo{border-radius:22px;overflow:hidden;aspect-ratio:4/3;box-shadow:0 22px 50px rgba(43,29,20,.16)}
+.photo img{width:100%;height:100%;object-fit:cover}
+.menu{list-style:none;margin-top:22px;display:grid;gap:2px}
+.menu li{display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.menu b{font-weight:600}
+.menu small{display:block;color:var(--ink2);font-size:13.5px}
+.menu .dots{flex:1}
+.menu .p{font-family:var(--serif);font-weight:700;font-size:18px;white-space:nowrap}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#eaf0e6;color:var(--green);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.dark{background:var(--ink);color:#f3e7d6}
+.dark h2{color:#fff}.dark .lead{color:#d8c7b2}.dark .kick{color:var(--wheat)}
+.order{display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;align-items:start}
+.steps{list-style:none;counter-reset:s;display:grid;gap:14px;margin-top:22px}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;color:#e9dccb}
+.steps li:before{content:counter(s);flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--wheat);color:var(--ink);font-weight:800}
+form{background:var(--paper);color:var(--ink);border-radius:22px;padding:26px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+input,select,textarea{width:100%;font:inherit;font-size:15.5px;color:var(--ink);border:1px solid #d9c9b3;border-radius:12px;padding:11px 12px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 3px rgba(180,83,42,.18)}
+textarea{min-height:100px;resize:vertical}
+.full{grid-column:1/-1}
+.note{font-size:13px;color:var(--ink2)}
+.ok{background:#e9f4e6;color:#2c5a27;border-radius:12px;padding:12px 14px;font-size:14.5px}
+.ok:empty{display:none}
+.hours{width:100%;border-collapse:collapse;margin-top:18px;font-size:16px}
+.hours td{padding:11px 4px;border-bottom:1px solid var(--line)}
+.hours td+td{text-align:right;font-variant-numeric:tabular-nums}
+.hours tr.today td{font-weight:800;color:var(--terra)}
+.hours tr.today td:first-child:after{content:" · aujourd’hui";font-weight:600;font-size:13px}
+.map{border-radius:22px;background:radial-gradient(circle at 60% 45%,var(--terra) 0 9px,rgba(180,83,42,.25) 10px 22px,transparent 23px),repeating-linear-gradient(35deg,transparent 0 46px,rgba(255,255,255,.75) 46px 54px),repeating-linear-gradient(-55deg,transparent 0 70px,rgba(255,255,255,.6) 70px 80px),#e9dcc6;aspect-ratio:4/3;display:flex;align-items:flex-end;padding:16px}
+.map span{background:#fff;border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+footer{background:#21160f;color:#cdbba5;font-size:14px;padding:34px 0}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer a{color:var(--wheat)}
+@media (max-width:900px){nav{display:none}.two,.order{grid-template-columns:1fr}.promise{grid-template-columns:1fr;margin-top:24px}.bar .btn span{display:none}.bar .btn{margin-left:auto}}
+@media (max-width:600px){section{padding:60px 0}.hero{min-height:520px}form{grid-template-columns:1fr;padding:20px}.hero p{font-size:17px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="demo">Site de démonstration réalisé par <a href="../../">RD Créations</a> · entreprise, adresse et numéros fictifs · <a href="../../#devis">Je veux le même →</a></div>
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#b4532a"/><path d="M32 12c7 9 7 31 0 40-7-9-7-31 0-40z" fill="#f3dfb6"/><path d="M32 18v28" stroke="#b4532a" stroke-width="2"/></svg><span><small>Boulangerie · Pâtisserie</small><b>Le Fournil des Coquelicots</b></span></a>
+    <nav aria-label="Menu"><a href="#pains">Nos pains</a><a href="#patisserie">Pâtisserie</a><a href="#commande">Commander</a><a href="#infos">Horaires &amp; accès</a></nav>
+    <a class="btn btn-t" href="tel:+33100000000"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2z"/></svg><span>01 00 00 00 00</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" style="padding:0">
+  <img src="img/hero.webp" alt="Pains au levain sur le comptoir de la boulangerie" width="1600" height="1000">
+  <div class="wrap">
+    <span class="open" id="open"><i></i><span>Horaires du jour</span></span>
+    <h1>Du pain au levain, pétri et cuit ici chaque matin</h1>
+    <p>Baguettes de tradition, pains de campagne, viennoiseries pur beurre et pâtisseries de saison, à deux pas de la gare.</p>
+    <div class="ctas"><a class="btn btn-t" href="#commande">Commander pour demain</a><a class="btn btn-w" href="#infos">Horaires et accès</a></div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="promise">
+    <div><b>Farines locales</b><span>Blé d’Île-de-France, moulu sur meule de pierre.</span></div>
+    <div><b>Levain naturel</b><span>Des fermentations lentes pour un pain qui se garde.</span></div>
+    <div><b>Fait maison</b><span>Tout est façonné et cuit dans notre fournil.</span></div>
+  </div>
+</div>
+
+<section id="pains">
+  <div class="wrap two">
+    <div class="photo"><img src="img/pains.webp" alt="Pains de campagne et baguettes en vitrine" width="1200" height="900" loading="lazy"></div>
+    <div>
+      <span class="kick">Nos pains</span>
+      <h2>Le pain du quotidien, fait comme autrefois</h2>
+      <p class="lead">Chaque pain est façonné à la main. Les pains spéciaux sortent du four à 7 h et à 16 h.</p>
+      <ul class="menu">
+        <li><span><b>Baguette de tradition</b><small>Croûte croustillante, mie alvéolée</small></span><span class="dots"></span><span class="p">1,30 €</span></li>
+        <li><span><b>Pain de campagne au levain</b><small>800 g, se garde 4 jours</small></span><span class="dots"></span><span class="p">4,60 €</span></li>
+        <li><span><b>Pain aux céréales</b><small>Lin, tournesol, sésame</small></span><span class="dots"></span><span class="p">3,90 €</span></li>
+        <li><span><b>Petit épeautre</b><span class="tag">Bio</span><small>Le vendredi et le samedi</small></span><span class="dots"></span><span class="p">5,20 €</span></li>
+        <li><span><b>Fougasse olives et thym</b></span><span class="dots"></span><span class="p">3,40 €</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="patisserie" style="background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap two">
+    <div>
+      <span class="kick">Viennoiseries &amp; pâtisseries</span>
+      <h2>Pur beurre, et des desserts qui changent avec les saisons</h2>
+      <p class="lead">Croissants feuilletés sur trois jours, tartes aux fruits du marché et entremets sur commande pour vos fêtes.</p>
+      <ul class="menu">
+        <li><span><b>Croissant pur beurre</b></span><span class="dots"></span><span class="p">1,20 €</span></li>
+        <li><span><b>Pain au chocolat</b></span><span class="dots"></span><span class="p">1,30 €</span></li>
+        <li><span><b>Flan pâtissier</b><small>La part</small></span><span class="dots"></span><span class="p">3,20 €</span></li>
+        <li><span><b>Tarte du moment</b><small>6 parts, sur commande</small></span><span class="dots"></span><span class="p">24 €</span></li>
+        <li><span><b>Gâteau d’anniversaire</b><small>Sur commande, 48 h à l’avance</small></span><span class="dots"></span><span class="p">dès 28 €</span></li>
+      </ul>
+    </div>
+    <div class="photo"><img src="img/vitrine.webp" alt="Vitrine de viennoiseries et de pâtisseries" width="1200" height="900" loading="lazy"></div>
+  </div>
+</section>
+
+<section class="dark" id="commande">
+  <div class="wrap order">
+    <div>
+      <span class="kick">Commande à l’avance</span>
+      <h2>Réservez, on vous le met de côté</h2>
+      <p class="lead">Fini la vitrine vide à 19 h : commandez la veille, retirez à l’heure qui vous arrange. Paiement sur place.</p>
+      <ol class="steps">
+        <li>Choisissez le jour et l’heure de retrait.</li>
+        <li>Indiquez ce que vous voulez : pains, viennoiseries, gâteau.</li>
+        <li>Nous vous confirmons par SMS, puis tout est prêt à votre arrivée.</li>
+      </ol>
+    </div>
+    <form id="f" novalidate>
+      <div><label for="f-n">Prénom et nom</label><input id="f-n" autocomplete="name" required></div>
+      <div><label for="f-t">Téléphone</label><input id="f-t" type="tel" autocomplete="tel" required></div>
+      <div><label for="f-d">Jour de retrait</label><input id="f-d" type="date" required></div>
+      <div><label for="f-h">Heure</label><select id="f-h"><option>7 h – 9 h</option><option>9 h – 12 h</option><option>12 h – 15 h</option><option>16 h – 20 h</option></select></div>
+      <div class="full"><label for="f-c">Votre commande</label><textarea id="f-c" placeholder="Ex. : 2 baguettes de tradition, 6 croissants, 1 tarte aux pommes" required></textarea></div>
+      <div class="full"><button class="btn btn-t" type="submit">Envoyer ma commande</button></div>
+      <p class="full ok" id="f-ok" role="status" aria-live="polite"></p>
+      <p class="full note">Démonstration : rien n’est envoyé. Sur le vrai site, la commande arrive par e-mail ou SMS au boulanger.</p>
+    </form>
+  </div>
+</section>
+
+<section id="infos">
+  <div class="wrap two" style="align-items:start">
+    <div>
+      <span class="kick">Horaires &amp; accès</span>
+      <h2>Ouvert six jours sur sept</h2>
+      <table class="hours" id="hours"></table>
+    </div>
+    <div>
+      <div class="map"><span><b>12 rue des Lilas, 93140 Bondy</b><br>Adresse fictive · 3 min à pied de la gare</span></div>
+      <p class="note" style="margin-top:10px">Sur le vrai site : plan interactif, itinéraire et lien vers votre fiche Google.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© Le Fournil des Coquelicots · entreprise fictive</span>
+    <span>Site de démonstration conçu par <a href="../../">RD Créations</a></span>
+    <a href="../../realisations.html">Voir les autres réalisations</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var H = [null, ['6 h 30', '20 h'], ['6 h 30', '20 h'], ['6 h 30', '20 h'], ['6 h 30', '20 h'], ['6 h 30', '20 h'], ['7 h', '19 h 30']];
+  var names = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  H[0] = ['7 h', '13 h']; H[1] = null;
+  var order = [1, 2, 3, 4, 5, 6, 0], now = new Date(), d = now.getDay();
+  document.getElementById('hours').innerHTML = order.map(function(i){
+    return '<tr' + (i === d ? ' class="today"' : '') + '><td>' + names[i] + '</td><td>' + (H[i] ? H[i][0] + ' – ' + H[i][1] : 'Fermé') + '</td></tr>';
+  }).join('');
+  function mins(t){ var m = t.match(/(\d+) h ?(\d+)?/); return +m[1] * 60 + (+m[2] || 0); }
+  var o = document.getElementById('open'), t = now.getHours() * 60 + now.getMinutes(), h = H[d];
+  var isOpen = h && t >= mins(h[0]) && t < mins(h[1]);
+  o.classList.toggle('closed', !isOpen);
+  o.lastChild.textContent = isOpen ? 'Ouvert maintenant · jusqu’à ' + h[1] : h && t < mins(h[0]) ? 'Ouvre aujourd’hui à ' + h[0] : 'Fermé pour le moment';
+  var tomorrow = new Date(now.getTime() + 864e5), iso = function(x){ return x.toISOString().slice(0, 10); };
+  var fd = document.getElementById('f-d'); fd.min = iso(tomorrow); fd.value = iso(tomorrow);
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var n = document.getElementById('f-n').value.trim(), c = document.getElementById('f-c').value.trim(), ok = document.getElementById('f-ok');
+    if (!n || !c) { ok.style.background = '#fbe9e4'; ok.style.color = '#8a2e14'; ok.textContent = 'Indiquez votre nom et votre commande.'; return; }
+    ok.style.background = ''; ok.style.color = '';
+    ok.textContent = 'Merci ' + n.split(' ')[0] + ' ! Votre commande pour le ' + new Date(fd.value + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' (' + document.getElementById('f-h').value + ') est notée. (Démonstration : rien n’a été envoyé.)';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Dubreuil Plomberie Chauffage · Bondy (démo)</title>
+<meta name="description" content="Site de démonstration réalisé par RD Créations : un plombier chauffagiste en Seine-Saint-Denis, entreprise fictive.">
+<meta name="theme-color" content="#0f2740">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f2740'/%3E%3Cpath d='M32 12c8 12 14 19 14 27a14 14 0 0 1-28 0c0-8 6-15 14-27z' fill='%23f26b1d'/%3E%3C/svg%3E">
+<style>
+:root{--navy:#0f2740;--navy2:#173a5e;--ink:#132233;--ink2:#4d5e70;--line:#dfe5ec;--bg:#f4f6f9;--or:#f26b1d;--or2:#d9560b}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.55}
+img{max-width:100%;display:block}
+a{color:inherit}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+.demo{background:#1d1d1f;color:#e9e9ec;font-size:13.5px;text-align:center;padding:8px 16px}
+.demo a{color:#7fd7f5;font-weight:700}
+.urg{background:var(--or);color:#fff;font-size:14.5px;font-weight:600}
+.urg .wrap{display:flex;justify-content:center;gap:8px;padding-top:7px;padding-bottom:7px;text-align:center}
+.urg a{font-weight:800}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 4px 16px rgba(15,39,64,.05)}
+.bar{display:flex;align-items:center;gap:18px;height:70px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo svg{width:40px;height:40px}
+.logo b{display:block;font-size:19px;letter-spacing:-.01em;line-height:1.1}
+.logo small{display:block;font-size:12px;color:var(--ink2);font-weight:600;letter-spacing:.04em}
+nav{margin-left:auto;display:flex;gap:2px}
+nav a{text-decoration:none;font-size:15px;font-weight:600;padding:8px 12px;border-radius:8px;color:var(--ink2)}
+nav a:hover{background:var(--bg);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:800;font-size:15.5px;text-decoration:none;border:0;border-radius:10px;padding:13px 20px;cursor:pointer}
+.btn svg{width:19px;height:19px;flex:none}
+.btn-o{background:var(--or);color:#fff}.btn-o:hover{background:var(--or2)}
+.btn-n{background:var(--navy);color:#fff}.btn-n:hover{background:var(--navy2)}
+.btn-w{background:#fff;color:var(--navy)}
+.hero{position:relative;color:#fff;background:var(--navy)}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.75}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,39,64,.95) 35%,rgba(15,39,64,.15));z-index:1}
+.hero .wrap{position:relative;z-index:2;padding-top:84px;padding-bottom:84px}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.pill i{width:9px;height:9px;border-radius:50%;background:#5ee08a;box-shadow:0 0 0 4px rgba(94,224,138,.25)}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.06;letter-spacing:-.02em;margin:18px 0 16px;max-width:15em}
+h1 span{color:#ffb27d}
+.hero p{font-size:18.5px;color:#d4deea;max-width:34em}
+.checks{list-style:none;display:flex;flex-wrap:wrap;gap:10px 26px;margin:24px 0 30px;font-weight:600}
+.checks li{display:flex;align-items:center;gap:8px}
+.checks svg{width:20px;height:20px;color:#ffb27d}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+section{padding:84px 0}
+.kick{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--or)}
+h2{font-size:clamp(28px,3.6vw,40px);line-height:1.12;letter-spacing:-.015em;margin:8px 0 12px}
+.lead{color:var(--ink2);font-size:17px;max-width:40em}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.svc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;transition:box-shadow .2s,transform .2s}
+.svc:hover{box-shadow:0 16px 36px rgba(15,39,64,.1);transform:translateY(-2px)}
+.ic{width:46px;height:46px;border-radius:12px;background:#fff1e8;color:var(--or);display:grid;place-items:center;margin-bottom:14px}
+.ic svg{width:24px;height:24px}
+.svc h3{font-size:18px}
+.svc p{color:var(--ink2);font-size:15px;margin-top:6px}
+.soft{background:var(--bg)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.photo{border-radius:20px;overflow:hidden;aspect-ratio:4/3}
+.photo img{width:100%;height:100%;object-fit:cover}
+.steps{list-style:none;counter-reset:s;display:grid;gap:16px;margin-top:24px}
+.steps li{counter-increment:s;display:flex;gap:14px}
+.steps li:before{content:counter(s);flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--navy);color:#fff;font-weight:800}
+.steps b{display:block;color:var(--ink)}
+.steps span{color:var(--ink2);font-size:15px}
+.zone{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:start}
+.towns{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.towns span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600}
+.check{background:var(--navy);color:#fff;border-radius:18px;padding:26px}
+.check label{font-weight:700;display:block;margin-bottom:8px}
+.row{display:flex;gap:8px}
+input,select,textarea{width:100%;font:inherit;font-size:15.5px;color:var(--ink);border:1px solid #cdd6e0;border-radius:10px;padding:11px 12px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(242,107,29,.2)}
+textarea{min-height:110px;resize:vertical}
+.res{margin-top:12px;font-weight:600;font-size:15px;min-height:1.5em}
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:15.5px;background:#fff;border-radius:14px;overflow:hidden}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line)}
+th{background:var(--navy);color:#fff;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase}
+td+td{text-align:right;font-weight:800;white-space:nowrap}
+.fine{font-size:13.5px;color:var(--ink2);margin-top:10px}
+form{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;display:grid;grid-template-columns:1fr 1fr;gap:14px;box-shadow:0 18px 40px rgba(15,39,64,.08)}
+form label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.full{grid-column:1/-1}
+.radios{display:flex;flex-wrap:wrap;gap:8px}
+.radios label{display:flex;align-items:center;gap:8px;border:1px solid #cdd6e0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;margin:0}
+.radios input{width:auto}
+.radios label:has(input:checked){border-color:var(--or);background:#fff4ec}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.ok{background:#e8f6ee;color:#1e6a3c;border-radius:10px;padding:12px 14px;font-size:15px}
+.ok:empty{display:none}
+details{background:#fff;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+summary{cursor:pointer;padding:16px 18px;font-weight:700;list-style:none}
+summary::-webkit-details-marker{display:none}
+details p{padding:0 18px 16px;color:var(--ink2)}
+footer{background:var(--navy);color:#b9c7d6;font-size:14px;padding:32px 0 90px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer a{color:#ffb27d}
+.sticky{display:none}
+@media (max-width:900px){nav{display:none}.bar .btn{margin-left:auto}.grid3{grid-template-columns:1fr 1fr}.split,.zone{grid-template-columns:1fr}}
+@media (max-width:600px){section{padding:60px 0}.grid3{grid-template-columns:1fr}form{grid-template-columns:1fr;padding:20px}.bar .btn span{display:none}.hero .wrap{padding-top:56px;padding-bottom:56px}
+  .sticky{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.25)}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.svc{transition:none}}
+</style>
+</head>
+<body>
+<div class="demo">Site de démonstration réalisé par <a href="../../">RD Créations</a> · entreprise, adresse et numéros fictifs · <a href="../../#devis">Je veux le même →</a></div>
+<div class="urg"><div class="wrap">Fuite d’eau, plus d’eau chaude ? Urgences 7 j/7 : <a href="tel:+33100000000">01 00 00 00 00</a></div></div>
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0f2740"/><path d="M32 12c8 12 14 19 14 27a14 14 0 0 1-28 0c0-8 6-15 14-27z" fill="#f26b1d"/></svg><span><b>Dubreuil</b><small>PLOMBERIE · CHAUFFAGE</small></span></a>
+    <nav aria-label="Menu"><a href="#services">Services</a><a href="#zone">Zone</a><a href="#tarifs">Tarifs</a><a href="#devis">Devis</a></nav>
+    <a class="btn btn-o" href="#devis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg><span>Devis gratuit</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" style="padding:0">
+  <img src="img/hero.webp" alt="Plombier réparant le siphon sous un évier" width="1600" height="1000">
+  <div class="wrap">
+    <span class="pill"><i></i>Artisan disponible cette semaine</span>
+    <h1>Votre plombier chauffagiste à <span>Bondy</span> et en Seine-Saint-Denis</h1>
+    <p>Dépannage, chauffe-eau, chaudière et salle de bain. Un seul interlocuteur, un prix annoncé avant les travaux.</p>
+    <ul class="checks">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Devis gratuit sous 24 h</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Urgences en 2 h</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Travaux garantis</li>
+    </ul>
+    <div class="ctas"><a class="btn btn-o" href="tel:+33100000000"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2z"/></svg>Appeler maintenant</a><a class="btn btn-w" href="#devis">Demander un devis</a></div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <span class="kick">Services</span>
+    <h2>Du petit dépannage à la rénovation</h2>
+    <p class="lead">Particuliers, copropriétés et commerces. Matériel de marques reconnues, pièces garanties.</p>
+    <div class="grid3">
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2.7c4 6 7 9.4 7 13a7 7 0 0 1-14 0c0-3.6 3-7 7-13z"/></svg></div><h3>Fuite et dépannage</h3><p>Recherche de fuite, joints, raccords, robinetterie qui goutte.</p></article>
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4M12 6v6"/></svg></div><h3>Chauffe-eau</h3><p>Réparation ou remplacement de ballon électrique et thermodynamique.</p></article>
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21s-4-3-4-8a8 8 0 0 1 16 0c0 5-4 8-4 8"/><path d="M12 13c1.5-2 1.5-3.5 0-5-1.5 1.5-1.5 3 0 5z"/></svg></div><h3>Chaudière et chauffage</h3><p>Entretien annuel, désembouage, radiateurs, pompe à chaleur.</p></article>
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12h16v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M6 12V5a2 2 0 0 1 4 0"/></svg></div><h3>Salle de bain</h3><p>Rénovation clé en main, douche à l’italienne, adaptation PMR.</p></article>
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h7l2-3 2 6 2-3h5"/></svg></div><h3>Débouchage</h3><p>Évier, WC, douche et canalisations, au furet ou à l’hydrocurage.</p></article>
+      <article class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 7l3-3 3 3-3 3M17 4v6M4 20l9-9"/></svg></div><h3>Robinetterie</h3><p>Mitigeurs, WC suspendus, adoucisseurs et petits équipements.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="soft">
+  <div class="wrap split">
+    <div class="photo"><img src="img/sdb.webp" alt="Plombier intervenant dans une salle de bain" width="1200" height="900" loading="lazy"></div>
+    <div>
+      <span class="kick">Comment ça se passe</span>
+      <h2>Pas de mauvaise surprise sur la facture</h2>
+      <ol class="steps">
+        <li><span><b>Vous décrivez le problème</b><span>Par téléphone ou avec le formulaire, photos à l’appui.</span></span></li>
+        <li><span><b>Nous fixons un prix</b><span>Devis écrit avant toute intervention, même en urgence.</span></span></li>
+        <li><span><b>Intervention et garantie</b><span>Chantier propre, facture détaillée, travaux garantis.</span></span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="zone">
+  <div class="wrap zone">
+    <div>
+      <span class="kick">Zone d’intervention</span>
+      <h2>Bondy et toutes les villes voisines</h2>
+      <p class="lead">Basés à Bondy, nous intervenons dans un rayon de 15 km, sans frais de déplacement supplémentaires.</p>
+      <div class="towns" id="towns"></div>
+    </div>
+    <div class="check">
+      <label for="z-in">Intervenez-vous chez moi ?</label>
+      <div class="row"><input id="z-in" placeholder="Votre ville ou code postal" autocomplete="address-level2" list="z-list"><button class="btn btn-o" type="button" id="z-go">Vérifier</button></div>
+      <datalist id="z-list"></datalist>
+      <p class="res" id="z-res" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<section class="soft" id="tarifs">
+  <div class="wrap split" style="align-items:start">
+    <div>
+      <span class="kick">Tarifs indicatifs</span>
+      <h2>Des prix clairs, affichés</h2>
+      <table>
+        <thead><tr><th>Prestation</th><th>À partir de</th></tr></thead>
+        <tbody>
+          <tr><td>Déplacement et diagnostic</td><td>49 €</td></tr>
+          <tr><td>Recherche de fuite</td><td>120 €</td></tr>
+          <tr><td>Remplacement de mitigeur</td><td>140 €</td></tr>
+          <tr><td>Débouchage de canalisation</td><td>110 €</td></tr>
+          <tr><td>Chauffe-eau 200 L posé</td><td>890 €</td></tr>
+          <tr><td>Entretien de chaudière gaz</td><td>119 €</td></tr>
+        </tbody>
+      </table>
+      <p class="fine">Prix fictifs, donnés pour la démonstration.</p>
+    </div>
+    <div class="photo" style="margin-top:34px"><img src="img/vanne.webp" alt="Vanne de chauffage avec manomètre" width="1200" height="900" loading="lazy"></div>
+  </div>
+</section>
+
+<section id="devis">
+  <div class="wrap split" style="align-items:start">
+    <div>
+      <span class="kick">Devis gratuit</span>
+      <h2>Décrivez votre besoin, réponse sous 24 h</h2>
+      <p class="lead">Ajoutez une ou deux photos : c’est souvent suffisant pour vous donner un prix sans se déplacer.</p>
+      <details><summary>Intervenez-vous le week-end ?</summary><p>Oui, pour les urgences (fuite, plus d’eau chaude en hiver), 7 j/7.</p></details>
+      <details><summary>Le devis est-il vraiment gratuit ?</summary><p>Oui, et sans engagement. Seul le déplacement pour un dépannage effectué est facturé.</p></details>
+      <details><summary>Quels moyens de paiement ?</summary><p>Carte, virement, chèque. Paiement en plusieurs fois possible pour les gros travaux.</p></details>
+    </div>
+    <form id="f" novalidate>
+      <div class="full"><label for="f-type">Type de travaux</label><select id="f-type"><option>Fuite / dépannage</option><option>Chauffe-eau</option><option>Chaudière / chauffage</option><option>Salle de bain</option><option>Débouchage</option><option>Autre</option></select></div>
+      <div class="full"><span style="display:block;font-size:14px;font-weight:700;margin-bottom:6px">Urgence</span><div class="radios"><label><input type="radio" name="u" value="Aujourd’hui" checked> Aujourd’hui</label><label><input type="radio" name="u" value="Cette semaine"> Cette semaine</label><label><input type="radio" name="u" value="Pas pressé"> Pas pressé</label></div></div>
+      <div class="full"><label for="f-msg">Description</label><textarea id="f-msg" placeholder="Ex. : le ballon d’eau chaude fuit par le bas depuis ce matin"></textarea></div>
+      <div class="full"><label for="f-ph">Photos (facultatif)</label><input id="f-ph" type="file" accept="image/*" multiple><div class="thumbs" id="thumbs"></div></div>
+      <div><label for="f-n">Nom</label><input id="f-n" autocomplete="name"></div>
+      <div><label for="f-t">Téléphone</label><input id="f-t" type="tel" autocomplete="tel"></div>
+      <div class="full"><label for="f-v">Ville</label><input id="f-v" autocomplete="address-level2"></div>
+      <div class="full"><button class="btn btn-n" type="submit" style="width:100%">Envoyer ma demande</button></div>
+      <p class="full ok" id="f-ok" role="status" aria-live="polite"></p>
+      <p class="full fine" style="margin:0">Démonstration : rien n’est envoyé et vos photos restent sur votre appareil.</p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© Dubreuil Plomberie Chauffage · entreprise fictive</span>
+    <span>Site de démonstration conçu par <a href="../../">RD Créations</a></span>
+    <a href="../../realisations.html">Voir les autres réalisations</a>
+  </div>
+</footer>
+<a class="btn btn-o sticky" href="tel:+33100000000"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2z"/></svg>Urgence : appeler</a>
+
+<script>
+(function(){
+  var T = [['Bondy', '93140'], ['Noisy-le-Sec', '93130'], ['Les Pavillons-sous-Bois', '93320'], ['Bobigny', '93000'], ['Romainville', '93230'], ['Rosny-sous-Bois', '93110'], ['Villemomble', '93250'], ['Le Raincy', '93340'], ['Livry-Gargan', '93190'], ['Aulnay-sous-Bois', '93600'], ['Drancy', '93700'], ['Montreuil', '93100'], ['Pantin', '93500'], ['Neuilly-Plaisance', '93360'], ['Gagny', '93220']];
+  var norm = function(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); };
+  document.getElementById('towns').innerHTML = T.map(function(t){ return '<span>' + t[0] + '</span>'; }).join('');
+  document.getElementById('z-list').innerHTML = T.map(function(t){ return '<option value="' + t[0] + '">'; }).join('');
+  function check(){
+    var v = norm(document.getElementById('z-in').value), r = document.getElementById('z-res');
+    if (!v) { r.textContent = ''; return; }
+    var hit = T.filter(function(t){ return norm(t[0]) === v || t[1] === v; })[0];
+    r.style.color = hit ? '#7ee2a4' : '#ffc79f';
+    r.textContent = hit ? '✓ Oui, nous intervenons à ' + hit[0] + ', sans supplément.' : 'Nous n’avons pas trouvé cette ville dans notre zone. Appelez-nous : selon l’intervention, nous pouvons souvent venir.';
+  }
+  document.getElementById('z-go').addEventListener('click', check);
+  document.getElementById('z-in').addEventListener('keydown', function(e){ if (e.key === 'Enter') check(); });
+  document.getElementById('f-ph').addEventListener('change', function(){
+    var box = document.getElementById('thumbs'); box.innerHTML = '';
+    [].slice.call(this.files, 0, 6).forEach(function(f){ var i = new Image(); i.alt = f.name; i.src = URL.createObjectURL(f); box.appendChild(i); });
+  });
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var ok = document.getElementById('f-ok'), n = document.getElementById('f-n').value.trim(), t = document.getElementById('f-t').value.trim();
+    ok.style.background = ''; ok.style.color = '';
+    if (!n || !t) { ok.style.background = '#fdeee6'; ok.style.color = '#93380b'; ok.textContent = 'Indiquez votre nom et votre téléphone pour qu’on vous rappelle.'; return; }
+    var u = document.querySelector('input[name=u]:checked').value;
+    ok.textContent = 'Merci ' + n.split(' ')[0] + ' ! Demande « ' + document.getElementById('f-type').value + ' » (' + u.toLowerCase() + ') bien reçue : vous seriez rappelé ' + (u === 'Aujourd’hui' ? 'dans l’heure' : 'sous 24 h') + '. (Démonstration : rien n’a été envoyé.)';
+  });
+})();
+</script>
+</body>
+</html>

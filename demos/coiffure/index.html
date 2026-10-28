@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Atelier Nacre · Coiffure et beauté (démo)</title>
+<meta name="description" content="Site de démonstration réalisé par RD Créations : un salon de coiffure et de beauté, entreprise fictive.">
+<meta name="theme-color" content="#1d1a1c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1a1c'/%3E%3Ctext x='32' y='43' font-family='Georgia' font-size='30' fill='%23d9b8a8' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ink:#1d1a1c;--ink2:#5c5257;--line:#ece3df;--blush:#f6ece8;--rose:#a86e61;--rose2:#8e5649;--gold:#b8956a;--serif:Didot,"Bodoni MT","Bodoni 72","Playfair Display",Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.6}
+img{max-width:100%;display:block}
+a{color:inherit}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+.demo{background:#1d1d1f;color:#e9e9ec;font-size:13.5px;text-align:center;padding:8px 16px}
+.demo a{color:#7fd7f5;font-weight:700}
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:20px;height:70px}
+.logo{text-decoration:none;font-family:var(--serif);font-size:26px;letter-spacing:.04em}
+.logo em{font-style:italic;color:var(--rose)}
+nav{margin-left:auto;display:flex;gap:6px}
+nav a{text-decoration:none;font-size:14.5px;letter-spacing:.04em;padding:8px 12px;color:var(--ink2)}
+nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:14.5px;letter-spacing:.03em;text-decoration:none;border:0;border-radius:4px;padding:13px 22px;cursor:pointer}
+.btn-d{background:var(--ink);color:#fff}.btn-d:hover{background:#3a3236}
+.btn-r{background:var(--rose);color:#fff}.btn-r:hover{background:var(--rose2)}
+.btn-l{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;min-height:620px}
+.hero .txt{background:var(--blush);display:flex;flex-direction:column;justify-content:center;padding:60px max(20px,calc((100vw - 1140px)/2 + 20px));padding-right:56px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--rose)}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5.4vw,68px);line-height:1.04;margin:18px 0 18px}
+h1 em{font-style:italic;color:var(--rose)}
+.hero p{font-size:18px;color:var(--ink2);max-width:28em}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.hero .pic{position:relative}
+.hero .pic img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;left:-36px;bottom:48px;background:#fff;padding:16px 20px;box-shadow:0 18px 40px rgba(29,26,28,.14);font-size:14px}
+.badge b{display:block;font-family:var(--serif);font-size:24px;font-weight:400}
+section{padding:96px 0}
+.head{text-align:center;max-width:640px;margin:0 auto 46px}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(32px,4vw,46px);line-height:1.1;margin:10px 0 12px}
+h2 em{font-style:italic;color:var(--rose)}
+.head p{color:var(--ink2);font-size:17px}
+.tabs{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:30px}
+.tabs button{font:inherit;font-size:14.5px;letter-spacing:.04em;background:none;border:1px solid var(--line);border-radius:999px;padding:9px 18px;cursor:pointer;color:var(--ink2)}
+.tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.prices{max-width:760px;margin:0 auto;list-style:none}
+.prices li{display:flex;align-items:baseline;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.prices b{font-weight:600;font-size:16.5px}
+.prices small{display:block;color:var(--ink2);font-size:14px}
+.prices .d{flex:1}
+.prices .dur{color:var(--ink2);font-size:13.5px;white-space:nowrap}
+.prices .p{font-family:var(--serif);font-size:21px;white-space:nowrap;min-width:70px;text-align:right}
+.fine{text-align:center;color:var(--ink2);font-size:13.5px;margin-top:18px}
+.atelier{background:var(--ink);color:#e9dfdb}
+.atelier h2{color:#fff}
+.gal{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+.gal figure{overflow:hidden;aspect-ratio:3/4}
+.gal figure:first-child{grid-row:span 2;aspect-ratio:auto}
+.gal img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.gal figure:hover img{transform:scale(1.04)}
+.gal .q{display:flex;flex-direction:column;justify-content:center;padding:26px;background:#2a2427;aspect-ratio:auto}
+.gal .q p{font-family:var(--serif);font-size:23px;line-height:1.35;color:#fff}
+.gal .q span{margin-top:14px;color:var(--gold);font-size:13.5px;letter-spacing:.1em;text-transform:uppercase}
+.book{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}
+.panel{border:1px solid var(--line);padding:28px}
+.lbl{display:block;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin:18px 0 10px}
+.lbl:first-child{margin-top:0}
+select,input{width:100%;font:inherit;font-size:15.5px;color:var(--ink);border:1px solid #d9cdc8;border-radius:4px;padding:12px;background:#fff}
+select:focus,input:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(168,110,97,.18)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:inherit;font-size:14px;background:#fff;border:1px solid #d9cdc8;border-radius:4px;padding:9px 12px;cursor:pointer;min-width:64px;line-height:1.25}
+.chips button small{display:block;font-size:11.5px;color:var(--ink2)}
+.chips button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chips button[aria-pressed=true] small{color:#d8ccc8}
+.chips button:disabled{opacity:.38;text-decoration:line-through;cursor:not-allowed}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sum{background:var(--blush);padding:14px 16px;margin-top:20px;font-size:15px}
+.sum:empty{display:none}
+.ok{background:#eaf4ec;color:#245c34;padding:14px 16px;margin-top:14px;font-size:15px}
+.ok:empty{display:none}
+.info dl{display:grid;grid-template-columns:auto 1fr;gap:8px 20px;margin-top:18px;font-size:15.5px}
+.info dt{color:var(--ink2)}
+.note{font-size:13px;color:var(--ink2);margin-top:12px}
+footer{border-top:1px solid var(--line);padding:30px 0;font-size:14px;color:var(--ink2)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer a{color:var(--rose)}
+@media (max-width:900px){nav{display:none}.bar .btn{margin-left:auto}.hero{grid-template-columns:1fr}.hero .txt{padding:48px 20px}.hero .pic{height:420px}.badge{left:16px;bottom:16px}.book{grid-template-columns:1fr}.gal{grid-template-columns:1fr 1fr}.gal figure:first-child{grid-column:span 2;grid-row:auto;aspect-ratio:4/3}}
+@media (max-width:600px){section{padding:64px 0}.prices .dur{display:none}.two{grid-template-columns:1fr}.panel{padding:20px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.gal img{transition:none}}
+</style>
+</head>
+<body>
+<div class="demo">Site de démonstration réalisé par <a href="../../">RD Créations</a> · entreprise, adresse et numéros fictifs · <a href="../../#devis">Je veux le même →</a></div>
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top">Atelier <em>Nacre</em></a>
+    <nav aria-label="Menu"><a href="#tarifs">Prestations</a><a href="#atelier">L’atelier</a><a href="#rdv">Rendez-vous</a><a href="#infos">Infos</a></nav>
+    <a class="btn btn-d" href="#rdv">Réserver</a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" style="padding:0">
+  <div class="txt">
+    <span class="eyebrow">Coiffure · Couleur · Soins</span>
+    <h1>Des cheveux qui vous <em>ressemblent</em></h1>
+    <p>Coupe, couleur végétale, balayage et soins profonds, dans un salon lumineux où l’on prend le temps de vous écouter.</p>
+    <div class="ctas"><a class="btn btn-r" href="#rdv">Prendre rendez-vous</a><a class="btn btn-l" href="#tarifs">Voir les tarifs</a></div>
+  </div>
+  <div class="pic">
+    <img src="img/brushing.webp" alt="Coiffeuse réalisant un brushing au sèche-cheveux et à la brosse ronde" width="900" height="1080">
+    <div class="badge"><b>Réservation en ligne</b>24 h/24, confirmation immédiate</div>
+  </div>
+</section>
+
+<section id="tarifs">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Prestations &amp; tarifs</span>
+      <h2>Simple, <em>clair</em>, sans surprise</h2>
+      <p>Les prix comprennent le shampooing et le coiffage. Le tarif exact dépend de la longueur, on vous le confirme avant de commencer.</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Catégories">
+      <button role="tab" data-t="femmes" aria-selected="true">Femmes</button>
+      <button role="tab" data-t="hommes" aria-selected="false">Hommes</button>
+      <button role="tab" data-t="enfants" aria-selected="false">Enfants</button>
+      <button role="tab" data-t="couleur" aria-selected="false">Couleur &amp; soins</button>
+    </div>
+    <ul class="prices" id="prices" role="tabpanel"></ul>
+    <p class="fine">Prix indicatifs d’une entreprise fictive.</p>
+  </div>
+</section>
+
+<section class="atelier" id="atelier">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--gold)">L’atelier</span>
+      <h2>Un lieu pensé pour <em>vous détendre</em></h2>
+      <p style="color:#cbbfba">Bacs massants, produits sans sulfates et une équipe formée aux cheveux bouclés et frisés.</p>
+    </div>
+    <div class="gal">
+      <figure><img src="img/hero.webp" alt="Le salon : fauteuils noirs, miroirs ronds et mur de briques" width="1600" height="1000" loading="lazy"></figure>
+      <figure><img src="img/chignon.webp" alt="Coiffeuse réalisant un chignon" width="1200" height="900" loading="lazy"></figure>
+      <figure><img src="img/boucles.webp" alt="Boucles réalisées au fer" width="1200" height="900" loading="lazy"></figure>
+      <div class="q"><p>« On ressort avec une coupe, mais surtout avec des conseils pour l’entretenir chez soi. »</p><span>Notre philosophie</span></div>
+      <figure style="background:#2a2427;display:grid;place-items:center;padding:24px;aspect-ratio:auto"><p style="font-size:15px;color:#d8ccc8;text-align:center">Ici, sur le vrai site :<br>vos photos de réalisations ou votre fil Instagram.</p></figure>
+    </div>
+  </div>
+</section>
+
+<section id="rdv">
+  <div class="wrap book">
+    <div>
+      <span class="eyebrow">Rendez-vous en ligne</span>
+      <h2>Réservez en <em>trente secondes</em></h2>
+      <p style="color:var(--ink2);font-size:17px">Choisissez une prestation, un jour et un créneau libre. Vous recevez la confirmation par SMS et un rappel la veille.</p>
+      <p class="note">Démonstration : aucun rendez-vous n’est réellement pris. Sur un vrai site, le planning se synchronise avec votre agenda ou votre logiciel de caisse.</p>
+    </div>
+    <div class="panel">
+      <label class="lbl" for="b-s">1. Prestation</label>
+      <select id="b-s"></select>
+      <span class="lbl">2. Jour</span>
+      <div class="chips" id="b-d"></div>
+      <span class="lbl">3. Créneau</span>
+      <div class="chips" id="b-h"></div>
+      <span class="lbl">4. Vos coordonnées</span>
+      <div class="two"><input id="b-n" placeholder="Prénom et nom" autocomplete="name" aria-label="Prénom et nom"><input id="b-t" type="tel" placeholder="Téléphone" autocomplete="tel" aria-label="Téléphone"></div>
+      <div class="sum" id="b-sum" aria-live="polite"></div>
+      <button class="btn btn-r" type="button" id="b-go" style="margin-top:16px;width:100%">Confirmer le rendez-vous</button>
+      <div class="ok" id="b-ok" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="infos" style="background:var(--blush)">
+  <div class="wrap book info">
+    <div>
+      <span class="eyebrow">Infos pratiques</span>
+      <h2>Nous <em>trouver</em></h2>
+      <dl>
+        <dt>Adresse</dt><dd>8 avenue des Tilleuls, 93140 Bondy<br><small style="color:var(--ink2)">Adresse fictive</small></dd>
+        <dt>Téléphone</dt><dd>01 00 00 00 00</dd>
+        <dt>Horaires</dt><dd>Mardi au vendredi : 9 h 30 – 19 h<br>Samedi : 9 h – 18 h<br>Dimanche et lundi : fermé</dd>
+        <dt>Paiement</dt><dd>Carte, espèces, chèques cadeaux du salon</dd>
+      </dl>
+    </div>
+    <div class="panel" style="background:#fff">
+      <span class="lbl">Bon à savoir</span>
+      <p style="font-size:15.5px;color:var(--ink2)">Un empêchement ? Annulez gratuitement jusqu’à 24 h avant votre rendez-vous, depuis le lien du SMS de confirmation.</p>
+      <span class="lbl">Carte cadeau</span>
+      <p style="font-size:15.5px;color:var(--ink2)">Offrez une prestation ou un montant libre, à retirer au salon.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© Atelier Nacre · entreprise fictive</span>
+    <span>Site de démonstration conçu par <a href="../../">RD Créations</a></span>
+    <a href="../../realisations.html">Voir les autres réalisations</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var P = {
+    femmes: [['Coupe, shampooing, coiffage', 'Cheveux courts à longs', 45, 48], ['Brushing', 'Coiffage seul', 30, 28], ['Chignon ou attache', 'Mariage, soirée', 60, 55], ['Coupe frange', 'Entre deux coupes', 10, 8]],
+    hommes: [['Coupe homme', 'Shampooing et coiffage', 30, 26], ['Coupe et taille de barbe', 'Au rasoir et à la tondeuse', 45, 38], ['Taille de barbe', '', 20, 16]],
+    enfants: [['Coupe enfant', 'Moins de 10 ans', 20, 16], ['Coupe junior', 'De 10 à 16 ans', 30, 22]],
+    couleur: [['Couleur végétale', 'Racines ou complète', 90, 62], ['Balayage', 'Avec patine', 150, 95], ['Soin profond', 'Masque et massage du cuir chevelu', 20, 18], ['Lissage brésilien', 'Sur devis selon la longueur', 180, 160]]
+  };
+  var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var dur = function(m){ return m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) : '') : m + ' min'; };
+  function show(t){
+    document.getElementById('prices').innerHTML = P[t].map(function(x){
+      return '<li><span><b>' + esc(x[0]) + '</b>' + (x[1] ? '<small>' + esc(x[1]) + '</small>' : '') + '</span><span class="d"></span><span class="dur">' + dur(x[2]) + '</span><span class="p">' + x[3] + ' €</span></li>';
+    }).join('');
+    [].forEach.call(document.querySelectorAll('.tabs button'), function(b){ b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); });
+  }
+  document.querySelector('.tabs').addEventListener('click', function(e){ var b = e.target.closest('button'); if (b) show(b.dataset.t); });
+  show('femmes');
+
+  // booking demo
+  var sel = document.getElementById('b-s');
+  sel.innerHTML = Object.keys(P).map(function(k){ return '<optgroup label="' + { femmes: 'Femmes', hommes: 'Hommes', enfants: 'Enfants', couleur: 'Couleur & soins' }[k] + '">' + P[k].map(function(x){ return '<option>' + esc(x[0]) + ' · ' + x[3] + ' €</option>'; }).join('') + '</optgroup>'; }).join('');
+  var days = [], d = new Date();
+  while (days.length < 8) { d = new Date(d.getTime() + 864e5); if (d.getDay() !== 0 && d.getDay() !== 1) days.push(d); }
+  var pick = { d: 0, h: '' };
+  function seed(i, h){ var m = parseInt(h, 10) * 60 + +h.split(':')[1]; return (i * 7 + m / 30) % 4 === 1; }
+  function hh(h){ return h.replace(':00', ' h').replace(':', ' h '); }
+  function renderDays(){
+    document.getElementById('b-d').innerHTML = days.map(function(x, i){
+      return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === pick.d) + '">' + x.toLocaleDateString('fr-FR', { weekday: 'short' }) + '<small>' + x.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</small></button>';
+    }).join('');
+    var sat = days[pick.d].getDay() === 6, hours = sat ? ['9:00', '9:30', '10:30', '11:00', '14:00', '15:00', '16:30'] : ['9:30', '10:00', '11:30', '13:30', '14:30', '16:00', '17:00', '18:00'];
+    document.getElementById('b-h').innerHTML = hours.map(function(h){
+      var full = seed(pick.d, h);
+      return '<button type="button" data-h="' + h + '" aria-pressed="' + (h === pick.h) + '"' + (full ? ' disabled title="Complet"' : '') + '>' + hh(h) + '</button>';
+    }).join('');
+    summary();
+  }
+  function summary(){
+    document.getElementById('b-sum').textContent = pick.h ? 'Votre rendez-vous : ' + sel.value.split(' · ')[0] + ', ' + days[pick.d].toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' à ' + hh(pick.h) + '.' : '';
+  }
+  document.getElementById('b-d').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; pick.d = +b.dataset.i; pick.h = ''; renderDays(); });
+  document.getElementById('b-h').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b || b.disabled) return; pick.h = b.dataset.h; renderDays(); });
+  sel.addEventListener('change', summary);
+  document.getElementById('b-go').addEventListener('click', function(){
+    var ok = document.getElementById('b-ok'), n = document.getElementById('b-n').value.trim();
+    ok.style.background = ''; ok.style.color = '';
+    if (!pick.h || !n) { ok.style.background = '#fbecea'; ok.style.color = '#8a2f22'; ok.textContent = !pick.h ? 'Choisissez un créneau.' : 'Indiquez votre nom.'; return; }
+    ok.textContent = 'C’est noté, ' + n.split(' ')[0] + ' ! ' + document.getElementById('b-sum').textContent.replace('Votre rendez-vous : ', '') + ' (Démonstration : aucun rendez-vous n’a été pris.)';
+  });
+  renderDays();
+})();
+</script>
+</body>
+</html>
