@@ -314,6 +314,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .privacy{font-size:13.5px;color:var(--mute)}
 .fhelp{font-size:13px;color:var(--mute);margin:2px 0 6px;line-height:1.45}
 #message{min-height:150px}
+.quote-more{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#f8fbfe}
+.quote-more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--blue2);list-style:none}
+.quote-more summary::-webkit-details-marker{display:none}
+.quote-more summary:after{content:"＋";float:right;color:var(--blue2)}
+.quote-more[open] summary:after{content:"−"}
+.quote-more>p{margin:8px 0 0}
+.quote-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .fstatus{font-size:14px;font-weight:600;border-radius:10px;padding:10px 12px}
 .fstatus:empty{display:none}
@@ -375,6 +382,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   nav{display:none}
   .bar .btn{margin-left:auto}
 }
+.quote-more-grid{grid-template-columns:1fr}
 @media (max-width:620px){
   section{padding:60px 0}
   .hero{padding:48px 0 60px}
@@ -408,13 +416,13 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     <div class="head">
       <span class="kicker">Devis gratuit</span>
       <h1>Parlez-moi de votre projet</h1>
-      <p>Quelques lignes suffisent. Je vous réponds sous 48 h avec une première estimation.</p>
+      <p>Pour commencer, votre prénom, le type de projet et une brève description suffisent. Votre activité, le budget et les frais à prévoir sont facultatifs.</p>
     </div>
     <div class="cgrid">
       <div class="cleft">
       <form id="devis-form" novalidate>
         <div><label for="prenom">Votre prénom</label><input id="prenom" name="prenom" autocomplete="given-name" required></div>
-        <div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
+
         <div><label for="projet">Type de projet</label>
           <select id="projet" name="projet" required>
             <option value="">Choisir…</option>
@@ -422,6 +430,15 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option>Application web installable (PWA)</option><option>Application mobile</option>
             <option>Je ne sais pas encore</option>
           </select></div>
+
+
+        <div class="full"><label for="contact">Votre e-mail ou téléphone, pour vous répondre</label><p class="fhelp">Obligatoire uniquement pour l’envoi direct ; facultatif avec WhatsApp ou e-mail.</p><input id="contact" name="contact" autocomplete="email" placeholder="Ex. : nom@exemple.fr ou 06 12 34 56 78"></div>
+        <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">Racontez-la avec vos mots : ce que vous voulez faire, pour qui, ce qui existe déjà (logo, textes, photos, ancien site), des sites ou applications que vous aimez, et pour quand.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
+        <details class="full quote-more" id="quote-more">
+          <summary>Ajouter des précisions (facultatif)</summary>
+          <p class="fhelp">Activité, budget, plateforme et frais à prévoir : répondez uniquement à ce qui est utile pour votre projet.</p>
+          <div class="quote-more-grid">
+        <div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
         <div class="full" id="pf-box" hidden><label for="plateforme">Sur quels téléphones ?</label>
           <select id="plateforme" name="plateforme">
             <option>iPhone et Android</option><option>iPhone seulement</option><option>Android seulement</option><option>Je ne sais pas encore</option>
@@ -432,8 +449,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option>Je ne sais pas</option><option>Moins de 300 €</option><option>300 à 700 €</option>
             <option>700 à 1 500 €</option><option>Plus de 1 500 €</option>
           </select></div>
-        <div class="full"><label for="contact">Votre e-mail ou téléphone, pour vous répondre</label><input id="contact" name="contact" autocomplete="email" placeholder="Ex. : nom@exemple.fr ou 06 12 34 56 78"></div>
-        <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">Racontez-la avec vos mots : ce que vous voulez faire, pour qui, ce qui existe déjà (logo, textes, photos, ancien site), des sites ou applications que vous aimez, et pour quand.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
         <div class="full needs">
           <span class="needs-t">Ce qu’il faudra prévoir <small>facultatif : cochez ce que vous savez déjà</small></span>
           <ul class="ho-list" aria-label="Éléments à prévoir">
@@ -446,6 +461,9 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           </ul>
           <p class="needs-note">Tous ces comptes seront à votre nom et payés par vous. À la livraison, vous recevez votre fiche de remise et vous pouvez retirer mon accès à tout moment, sans que rien ne s’arrête. <a href="assets/fiche-de-remise-client.pdf?v=2" target="_blank" rel="noopener">Voir la fiche de remise (PDF)</a></p>
         </div>
+          </div>
+        </details>
+
         <p class="in full" id="acc-in" hidden>Connecté avec <b id="acc-who"></b> : votre demande sera ajoutée à votre espace. <a href="espace/">Ouvrir mon espace</a></p>
         <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="full fbtns">
@@ -610,7 +628,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       } else {
         status.textContent = 'Merci ' + who + ', votre demande est bien envoyée. Je vous réponds sous 48 h.';
       }
-      f.reset(); showPf();
+      f.reset(); showPf(); quoteMore.open = false;
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
     }).catch(function(){
       status.className = 'full fstatus err';
@@ -626,7 +644,11 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  function showPf(){ pfBox.hidden = document.getElementById('projet').value !== 'Application mobile'; }
+  var quoteMore = document.getElementById('quote-more');
+  function showPf(){
+    pfBox.hidden = document.getElementById('projet').value !== 'Application mobile';
+    if (!pfBox.hidden) quoteMore.open = true;
+  }
   function tickStores(){
     var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
     Object.keys(want).forEach(function(k){
