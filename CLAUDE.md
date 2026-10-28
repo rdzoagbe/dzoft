@@ -15,12 +15,15 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 ## Le site
 - HTML/CSS/JS sans framework ni build, servi par **GitHub Pages** depuis `main` (racine) :
   https://rdzoagbe.github.io/dzoft/ . On pousse directement sur `main`.
-- `index.html` accueil (services, démos, avis, méthode, FAQ, devis via Formspree) ·
-  `realisations.html` · `cgv.html` · `confidentialite.html` · `404.html` ·
+- `index.html` accueil raccourci : héros, forfaits condensés, 2 réalisations, méthode et FAQ en bref,
+  formulaire de devis (Formspree). Les ancres `#services`, `#methode`, `#faq`, `#devis` y existent toujours.
+- Une page par onglet : `services.html` (forfaits complets), `realisations.html`, `methode.html`,
+  `faq.html` (JSON-LD FAQPage) ; même modèle : bandeau héros, section CTA, nav avec `aria-current`.
+- `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
-- `en/index.html` et `en/realisations.html` : version anglaise (sélecteur « FR | EN » en haut à droite,
-  balises hreflang, sitemap). **Toute modification de texte sur l'accueil ou les réalisations doit être
-  reportée dans `en/`.** Dans le formulaire anglais, les valeurs envoyées restent en français (admin) ;
+- `en/` : version anglaise page à page (index, services, methode, faq, realisations, cgv,
+  confidentialite ; sélecteur « FR | EN » en haut à droite, balises hreflang, sitemap).
+  **Toute modification de texte sur une page du site doit être reportée dans `en/`.** Dans le formulaire anglais, les valeurs envoyées restent en français (admin) ;
   seuls les libellés sont traduits. `en/cgv.html` : traduction des CGV, pour information (bandeau :
   la version française fait foi), idem `en/confidentialite.html` ; **toute modification de `cgv.html` ou
   `confidentialite.html` doit être reportée dans `en/`**. Espace client, admin et démos : en français seulement.
