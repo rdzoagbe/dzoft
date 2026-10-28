@@ -449,7 +449,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
         <div class="full"><label for="contact">Votre e-mail ou téléphone, pour vous répondre</label><p class="fhelp">Obligatoire uniquement pour l’envoi direct ; facultatif avec WhatsApp ou e-mail.</p><input id="contact" name="contact" autocomplete="email" placeholder="Ex. : nom@exemple.fr ou 06 12 34 56 78"></div>
         <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">En quelques lignes, dites-moi ce que le projet doit améliorer et ce que vous voulez pouvoir faire. Les réponses détaillées restent facultatives.</p><textarea id="message" name="message" rows="7" maxlength="3000" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
                 <details class="full quote-more" id="quote-more">
-          <summary><span>Préparer une estimation plus précise</span><small>Facultatif · environ 2 min</small></summary>
+          <summary><span>Préparer une estimation plus précise</span><small>Facultatif · environ 3 min</small></summary>
           <p class="fhelp">Pas besoin d’un cahier des charges. Répondez uniquement à ce que vous savez ; ces détails m’aident à cadrer le projet et à limiter les questions de suivi.</p>
           <div class="quote-more-grid">
 <div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
@@ -468,15 +468,113 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
               <option value="Autre">Autre objectif</option>
             </select>
           </div>
-          <div class="full" id="pages-box" hidden>
-            <label for="pages">Combien de pages ou rubriques environ ?</label>
-            <select id="pages" name="pages">
+          <div class="full project-brief" id="page-brief" hidden>
+            <label for="page-action">Que voulez-vous que le visiteur fasse en premier ?</label>
+            <select id="page-action" name="page-action">
               <option value="">Je ne sais pas encore</option>
-              <option value="1 à 2 pages">1 à 2 pages</option>
-              <option value="3 à 5 pages">3 à 5 pages</option>
-              <option value="6 pages ou plus">6 pages ou plus</option>
+              <option value="contact">Vous contacter ou demander un devis</option>
+              <option value="appointment">Prendre rendez-vous</option>
+              <option value="call">Appeler ou envoyer un message</option>
+              <option value="order">Commander ou payer</option>
+              <option value="download">Télécharger une ressource</option>
+              <option value="other">Autre action</option>
             </select>
-            <p class="fhelp">Une estimation suffit ; nous préciserons la liste ensemble.</p>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Quelles rubriques souhaitez-vous afficher ?</legend>
+              <p class="fhelp">Choisissez les rubriques utiles ; nous pourrons compléter ensemble.</p>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="page_sections" value="offer"><span>Présentation de l’offre</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="services"><span>Services et tarifs</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="proof"><span>Avis ou témoignages</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="portfolio"><span>Réalisations ou galerie</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="faq"><span>Questions fréquentes</span></label>
+                <label class="choice"><input type="checkbox" name="page_sections" value="contact"><span>Contact ou réservation</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="full project-brief" id="showcase-brief" hidden>
+            <div class="quote-more-grid">
+              <div id="pages-box">
+                <label for="pages">Combien de pages ou rubriques environ ?</label>
+                <select id="pages" name="pages">
+                  <option value="">Je ne sais pas encore</option>
+                  <option value="1 à 2 pages">1 à 2 pages</option>
+                  <option value="3 à 5 pages">3 à 5 pages</option>
+                  <option value="6 pages ou plus">6 pages ou plus</option>
+                </select>
+              </div>
+              <div>
+                <label for="content-editing">Souhaitez-vous modifier vous-même les textes et photos ?</label>
+                <select id="content-editing" name="content_editing">
+                  <option value="">Je ne sais pas encore</option>
+                  <option value="Oui, souvent">Oui, régulièrement</option>
+                  <option value="Oui, ponctuellement">Oui, de temps en temps</option>
+                  <option value="Non">Non, pas nécessaire</option>
+                </select>
+              </div>
+              <div class="full">
+                <label for="site-languages">Le site doit-il être disponible en plusieurs langues ?</label>
+                <select id="site-languages" name="site_languages">
+                  <option value="">Je ne sais pas encore</option>
+                  <option value="Français uniquement">Français uniquement</option>
+                  <option value="Français et anglais">Français et anglais</option>
+                  <option value="Autres langues">Autres langues</option>
+                </select>
+              </div>
+            </div>
+            <p class="fhelp">Une estimation suffit ; nous préciserons la liste des pages et le contenu ensemble.</p>
+          </div>
+          <div class="full project-brief" id="pwa-brief" hidden>
+            <label for="pwa-audience">Qui utilisera principalement l’application web ?</label>
+            <select id="pwa-audience" name="pwa_audience">
+              <option value="">Je ne sais pas encore</option>
+              <option value="Clients ou grand public">Mes clients ou le grand public</option>
+              <option value="Mon équipe">Mon équipe</option>
+              <option value="Clients et équipe">Mes clients et mon équipe</option>
+            </select>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Quels besoins sont importants pour cette application ?</legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="pwa_features" value="offline"><span>Fonctionner avec une connexion faible ou sans réseau</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="notifications"><span>Envoyer des notifications</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="sync"><span>Enregistrer et synchroniser des données ou formulaires</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="device"><span>Utiliser des fonctions du téléphone (caméra, position…)</span></label>
+                <label class="choice"><input type="checkbox" name="pwa_features" value="unsure"><span>À définir ensemble</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="full project-brief" id="mobile-brief" hidden>
+            <div class="quote-more-grid">
+              <div id="pf-box">
+                <label for="plateforme">Sur quels téléphones ?</label>
+                <select id="plateforme" name="plateforme">
+                  <option value="Je ne sais pas encore">Je ne sais pas encore</option>
+                  <option value="iPhone et Android">iPhone et Android</option>
+                  <option value="iPhone seulement">iPhone seulement</option>
+                  <option value="Android seulement">Android seulement</option>
+                </select>
+                <p class="fhelp">Les frais de publication sont détaillés plus bas.</p>
+              </div>
+              <div>
+                <label for="mobile-audience">Qui utilisera principalement l’application ?</label>
+                <select id="mobile-audience" name="mobile_audience">
+                  <option value="">Je ne sais pas encore</option>
+                  <option value="Clients ou grand public">Mes clients ou le grand public</option>
+                  <option value="Mon équipe">Mon équipe</option>
+                  <option value="Clients et équipe">Mes clients et mon équipe</option>
+                </select>
+              </div>
+            </div>
+            <fieldset class="brief-group" style="margin-top:12px">
+              <legend>Quelles fonctions mobiles faut-il prévoir ?</legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" name="mobile_features" value="notifications"><span>Notifications push</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="device"><span>Caméra ou géolocalisation</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="offline"><span>Fonctionnement sans connexion</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="payments"><span>Paiements ou abonnements dans l’application</span></label>
+                <label class="choice"><input type="checkbox" name="mobile_features" value="unsure"><span>À définir ensemble</span></label>
+              </div>
+            </fieldset>
           </div>
           <fieldset class="full brief-group" aria-describedby="actions-help">
             <legend>Que devra permettre le site ou l’application ?</legend>
@@ -527,16 +625,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option>Je ne sais pas</option><option>Moins de 300 €</option><option>300 à 700 €</option>
             <option>700 à 1 500 €</option><option>Plus de 1 500 €</option>
           </select></div>
-          <div class="full" id="pf-box" hidden>
-            <label for="plateforme">Sur quels téléphones ?</label>
-            <select id="plateforme" name="plateforme">
-              <option value="Je ne sais pas encore">Je ne sais pas encore</option>
-              <option value="iPhone et Android">iPhone et Android</option>
-              <option value="iPhone seulement">iPhone seulement</option>
-              <option value="Android seulement">Android seulement</option>
-            </select>
-            <p class="fhelp">iPhone : App Store (compte Apple, 99 $ US/an, prélevés en euros). Android : Google Play (compte Google, 25 $ US une seule fois).</p>
-          </div>
           <details class="full needs-more" id="needs-more">
             <summary>Comptes et frais à prévoir (facultatif)</summary>
             <p class="fhelp">Cochez ce que vous souhaitez aborder dans le devis. Les comptes restent à votre nom.</p>
@@ -640,7 +728,21 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     function add(fr, english, value){ if (value) L.push((en ? english : fr) + value); }
     add('Ville / zone : ', 'Town / service area: ', (d.get('zone') || '').trim().slice(0,200));
     if (d.get('objectif')) add('Objectif principal : ', 'Main goal: ', label('objectif'));
-    if (d.get('projet') === 'Site vitrine' && d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+    var project = d.get('projet');
+    if (project === 'Page de présentation') {
+      if (d.get('page-action')) add('Action principale : ', 'Primary call to action: ', label('page-action'));
+      add('Rubriques à prévoir : ', 'Sections to include: ', selectedChoices('page_sections'));
+    } else if (project === 'Site vitrine') {
+      if (d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+      if (d.get('content_editing')) add('Mise à jour du contenu : ', 'Content updates: ', label('content-editing'));
+      if (d.get('site_languages')) add('Langues du site : ', 'Website languages: ', label('site-languages'));
+    } else if (project === 'Application web installable (PWA)') {
+      if (d.get('pwa_audience')) add('Utilisateurs de l’application web : ', 'Web app users: ', label('pwa-audience'));
+      add('Fonctions spécifiques à l’application web : ', 'Web app requirements: ', selectedChoices('pwa_features'));
+    } else if (project === 'Application mobile') {
+      if (d.get('mobile_audience')) add('Utilisateurs de l’application mobile : ', 'Mobile app users: ', label('mobile-audience'));
+      add('Fonctions mobiles à prévoir : ', 'Mobile app requirements: ', selectedChoices('mobile_features'));
+    }
     add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
     add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
     add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
@@ -761,23 +863,38 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     document.getElementById('send-direct').addEventListener('click', sendDirect);
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
-  var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  var pagesBox = document.getElementById('pages-box'), quoteMore = document.getElementById('quote-more');
-  function showPf(){
-    var project = document.getElementById('projet').value;
-    pfBox.hidden = project !== 'Application mobile';
-    pagesBox.hidden = project !== 'Site vitrine';
-    if (!pfBox.hidden || !pagesBox.hidden) quoteMore.open = true;
-  }
+  var pfSel = document.getElementById('plateforme'), quoteMore = document.getElementById('quote-more');
   function tickStores(){
-    var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
+    var mobile = document.getElementById('projet').value === 'Application mobile';
+    var v = mobile ? pfSel.value : '';
+    var want = {'Application iPhone': /iPhone/.test(v), 'Application Android': /Android/.test(v)};
     Object.keys(want).forEach(function(k){
       var b = document.querySelector('.ho-item[data-item="' + k + '"]');
       if (b) b.setAttribute('aria-pressed', want[k] ? 'true' : 'false');
     });
   }
-  document.getElementById('projet').addEventListener('change', function(){ showPf(); if (!pfBox.hidden) tickStores(); });
+  function showProjectDetails(){
+    var project = document.getElementById('projet').value;
+    var boxes = {
+      'Page de présentation': 'page-brief',
+      'Site vitrine': 'showcase-brief',
+      'Application web installable (PWA)': 'pwa-brief',
+      'Application mobile': 'mobile-brief'
+    };
+    Object.keys(boxes).forEach(function(key){
+      document.getElementById(boxes[key]).hidden = project !== key;
+    });
+    [].forEach.call(document.querySelectorAll('.ho-item[data-item="Application iPhone"], .ho-item[data-item="Application Android"]'), function(b){
+      var item = b.closest('li');
+      if (item) item.hidden = project !== 'Application mobile';
+      if (project !== 'Application mobile') b.setAttribute('aria-pressed', 'false');
+    });
+    if (project && project !== 'Je ne sais pas encore') quoteMore.open = true;
+    if (project === 'Application mobile') tickStores();
+  }
+  document.getElementById('projet').addEventListener('change', showProjectDetails);
   pfSel.addEventListener('change', tickStores);
+  showProjectDetails();
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   // Already signed in to the client space: the request joins their space.
   if (window.RDsb && window.RDsb.session()) {
