@@ -622,7 +622,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (!rows.length) { box.innerHTML = '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
     box.innerHTML = rows.map(function(l){
       var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
-        l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : l.email && l.source === 'formulaire' ? 'espace client en attente de confirmation' : '']
+        l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
       var nu = l.client_id ? data.unread.filter(function(m){ return m.client_id === l.client_id; }).length : 0;
       if (nu) chips += '<span class="chip msg">' + nu + ' nouveau' + (nu > 1 ? 'x' : '') + ' message' + (nu > 1 ? 's' : '') + '</span>';

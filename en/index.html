@@ -336,17 +336,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .needs .ho-item[aria-pressed=true]{background:#e3f9fd;border-color:var(--cyan)}
 .needs-note{font-size:13px;color:var(--mute)}
 .needs-note a{color:var(--blue2);font-weight:600}
-.account{border-top:1px solid var(--line);padding-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
-.account .needs-t,.account .fhelp{grid-column:1/-1}
-.account .fhelp a{color:var(--blue2);font-weight:600}
-.account .in{background:#e7f8ef;color:#136c3a;border-radius:10px;padding:9px 12px;font-size:14px}
-@media (max-width:620px){.account{grid-template-columns:1fr}}
-.pw{position:relative}
-.pw input{padding-right:46px}
-.pw .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;color:var(--mute);border-radius:8px;cursor:pointer;display:grid;place-items:center}
-.pw .eye:hover{color:var(--ink);background:var(--soft)}
-.pw .eye svg{width:20px;height:20px}
-.alt{font-size:13px;color:var(--mute);align-self:center}
+.in{background:#e7f8ef;color:#136c3a;border-radius:10px;padding:9px 12px;font-size:14px}
 .ho-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
 .ho-item{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;color:#e4edf6;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
 .ho-item:hover{background:rgba(255,255,255,.1)}
@@ -599,22 +589,14 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           </ul>
           <p class="needs-note">All these accounts will be in your name and paid by you. On delivery, you receive your handover sheet and can remove my access at any time, without anything stopping. <a href="../assets/fiche-de-remise-client.pdf?v=2" target="_blank" rel="noopener">See the handover sheet (PDF, in French)</a></p>
         </div>
-        <div class="full account" id="account">
-          <span class="needs-t">Your client area</span>
-          <p class="fhelp" id="acc-help">To send your request from here, create your client area at the same time: you will follow your request there, receive your quote and be able to message me. The client area is in French for now.</p>
-          <div id="acc-f1"><label for="acc-email">Your email</label><input id="acc-email" type="email" autocomplete="email" placeholder="name@example.com"></div>
-          <div id="acc-f2"><label for="acc-pass">Choose a password</label><input id="acc-pass" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"></div>
-          <p class="fhelp" id="acc-login">Already have a client area? <a href="../espace/">Sign in</a>, then come back here: the request will be added to it.</p>
-          <p class="in full" id="acc-in" hidden>Signed in as <b id="acc-who"></b>: your request will be added to your client area. <a href="../espace/">Open my client area</a></p>
-        </div>
+        <p class="in full" id="acc-in" hidden>Signed in as <b id="acc-who"></b>: your request will be added to your client area. <a href="../espace/">Open my client area</a></p>
         <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="full fbtns">
-          <button class="btn btn-primary" type="button" id="send-direct" hidden>Send my request and create my client area</button>
+          <button class="btn btn-primary" type="button" id="send-direct" hidden>Send my request</button>
           <button class="btn btn-wa" type="button" id="send-wa">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.2h.01c5.46 0 9.91-4.45 9.91-9.91A9.85 9.85 0 0 0 12.04 2zm5.8 14.13c-.25.69-1.44 1.32-2 1.37-.51.05-1 .24-3.37-.7-2.85-1.12-4.65-4.04-4.79-4.23-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.56-.35.75-.35l.54.01c.17.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.17-.3.37-.42.5-.14.14-.29.29-.12.57.17.28.74 1.22 1.59 1.97 1.09.97 2.01 1.27 2.3 1.41.28.14.45.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.64-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.69-.18 1.38z"/></svg>
             Send on WhatsApp</button>
           <button class="btn btn-line" type="button" id="send-mail">Send by email</button>
-          <span class="alt">WhatsApp and email: no client area.</span>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
         <p class="full privacy" id="privacy">Whichever button you choose, your request is saved as soon as you click, in my secure follow-up tool (hosted in France), only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me; with WhatsApp or email, it opens in your app and you send it yourself.</p>
@@ -698,19 +680,22 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   var FORMSPREE_ID = 'xrpppprj';
   // Signed-in client (client space session): the request goes straight into their space.
   var me = null;
-  function accEmail(){ return me ? me.email : document.getElementById('acc-email').value.trim(); }
+  function accEmail(){
+    if (me) return me.email;
+    var c = (document.getElementById('contact').value || '').trim();
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c) ? c : '';
+  }
   function valid(direct){
     var ok = true;
-    var ids = ['prenom','projet'].concat(direct && !me ? ['acc-email','acc-pass'] : []);
+    var ids = ['prenom','projet'].concat(direct && !me ? ['contact'] : []);
     ids.forEach(function(id){
       var el = document.getElementById(id), v = el.value.trim();
-      var bad = !v || (id === 'acc-email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) || (id === 'acc-pass' && el.value.length < 8);
-      if (bad) { el.setAttribute('aria-invalid','true'); if (ok) el.focus(); ok = false; }
+      if (!v) { el.setAttribute('aria-invalid','true'); if (ok) el.focus(); ok = false; }
       else el.removeAttribute('aria-invalid');
     });
-    if (!ok && direct && !me && document.querySelector('#account [aria-invalid=true]')) {
+    if (!ok && direct && !me && document.getElementById('contact').getAttribute('aria-invalid')) {
       status.className = 'full fstatus err';
-      status.textContent = 'Enter your email and a password of at least 8 characters to create your client area.';
+      status.textContent = 'Enter your email or phone number, so I can reply to you.';
     }
     return ok;
   }
@@ -754,11 +739,10 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     var data = {
       _subject: 'Demande de devis (site en anglais) - ' + (d.get('prenom') || '').trim(), langue: 'anglais',
       prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
-      projet: projet(d), budget: d.get('budget'), contact: contact, espace_client: accEmail() || 'non',
+      projet: projet(d), budget: d.get('budget'), contact: contact, espace_client: me ? me.email : 'non',
       elements: picked() || 'Aucun', message: (d.get('message') || '').trim(), _gotcha: d.get('_gotcha') || ''
     };
-    if (accEmail()) data.email = accEmail(); else if (contact.indexOf('@') > 0) data.email = contact;
-    var email = accEmail(), pass = document.getElementById('acc-pass').value;
+    if (accEmail()) data.email = accEmail();
     sending = true; status.className = 'full fstatus'; status.textContent = 'Sending…';
     [].forEach.call(btns, function(b){ b.disabled = true; });
     fetch('https://formspree.io/f/' + FORMSPREE_ID, {
@@ -770,16 +754,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       if (me) {
         status.innerHTML = 'Thank you ' + esc(who) + ', your request has been sent and added to your client area. I will reply within 48 hours. <a href="../espace/">Open my client area</a>';
       } else {
-        status.textContent = 'Thank you ' + who + ', your request has been sent. Creating your client area…';
-        window.RDsb.signUp(email, pass, window.RDsb.PORTAL).then(function(u){
-          var exists = u && u.identities && !u.identities.length;
-          status.innerHTML = exists ?
-            'Thank you ' + esc(who) + ', your request has been sent. You already have a client area with ' + esc(email) + ': <a href="../espace/">sign in</a> to follow it.' :
-            'Thank you ' + esc(who) + ', your request has been sent! Last step: open the email sent to <b>' + esc(email) + '</b> (check your spam folder) and click the link to activate your client area. I will reply within 48 hours.';
-        }, function(e){
-          status.innerHTML = 'Thank you ' + esc(who) + ', your request has been sent. Your client area could not be created' +
-            (/password|weak/i.test(e.message) ? ' (password too simple)' : '') + ': you can create it later from the <a href="../espace/">client area</a>, with the same email address.';
-        });
+        status.textContent = 'Thank you ' + who + ', your request has been sent. I will reply within 48 hours.';
       }
       f.reset(); showPf();
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
@@ -794,7 +769,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   if (FORMSPREE_ID) {
     document.getElementById('send-direct').hidden = false;
     document.getElementById('send-direct').addEventListener('click', sendDirect);
-    document.getElementById('privacy').innerHTML = 'Whichever button you choose, your request is saved as soon as you click, in my secure follow-up tool (hosted in France), only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me and your client area is created; with WhatsApp or email, it opens in your app and you send it yourself, with no client area.';
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
@@ -809,14 +783,12 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   document.getElementById('projet').addEventListener('change', function(){ showPf(); if (!pfBox.hidden) tickStores(); });
   pfSel.addEventListener('change', tickStores);
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  // Already signed in to the client space: no account fields, the request joins their space.
+  // Already signed in to the client space: the request joins their space.
   if (window.RDsb && window.RDsb.session()) {
     window.RDsb.me().then(function(u){
       if (!u || !u.email || u.email.toLowerCase() === window.RDsb.OWNER) return;
       me = { id: u.id, email: u.email };
-      ['acc-f1', 'acc-f2', 'acc-login', 'acc-help'].forEach(function(id){ document.getElementById(id).hidden = true; });
       document.getElementById('acc-in').hidden = false; document.getElementById('acc-who').textContent = u.email;
-      document.getElementById('send-direct').textContent = 'Send my request';
     }, function(){});
   }
   document.getElementById('send-wa').addEventListener('click', sendWa);
@@ -824,20 +796,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   [].forEach.call(document.querySelectorAll('.ho-item'), function(b){
     b.addEventListener('click', function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
   });
-})();
-</script>
-<script>
-/* Show/hide toggle on the password field. */
-(function () {
-  var inp = document.getElementById('acc-pass'); if (!inp) return;
-  var open = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  var shut = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
-  var box = document.createElement('div'); box.className = 'pw';
-  inp.parentNode.insertBefore(box, inp); box.appendChild(inp);
-  var b = document.createElement('button'); b.type = 'button'; b.className = 'eye';
-  function show(on){ inp.type = on ? 'text' : 'password'; b.innerHTML = on ? shut : open; b.setAttribute('aria-label', on ? 'Hide password' : 'Show password'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-  b.addEventListener('click', function(){ show(inp.type === 'password'); inp.focus(); });
-  show(false); box.appendChild(b);
 })();
 </script>
 <script>
