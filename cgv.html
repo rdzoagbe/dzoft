@@ -6,6 +6,9 @@
 <title>Conditions générales de vente · DZOFT</title>
 <meta name="description" content="Conditions générales de vente des prestations DZOFT : sites web, applications web installables et applications mobiles.">
 <link rel="canonical" href="https://rdzoagbe.github.io/dzoft/cgv.html">
+<link rel="alternate" hreflang="fr" href="https://rdzoagbe.github.io/dzoft/cgv.html">
+<link rel="alternate" hreflang="en" href="https://rdzoagbe.github.io/dzoft/en/cgv.html">
+<link rel="alternate" hreflang="x-default" href="https://rdzoagbe.github.io/dzoft/cgv.html">
 <meta name="theme-color" content="#0B1020">
 <link rel="icon" href="assets/dzoft-favicon.svg" type="image/svg+xml">
 <style>
@@ -41,6 +44,11 @@ li{margin:3px 0}
 .todo{background:#fff3d6;color:#8a5a00;border-radius:6px;padding:0 4px}
 footer{max-width:860px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:var(--mute);text-align:center}
 @media (max-width:640px){.doc{padding:20px 16px}.toc{columns:1}h1{font-size:22px}}
+.lang{display:flex;align-items:center;font-size:13.5px;font-weight:700;letter-spacing:.03em}
+.lang a{color:#8fa3b8;text-decoration:none;padding:6px 4px;border-radius:6px}
+.lang a:hover,.lang a[aria-current]{color:#fff}
+.lang span{color:rgba(255,255,255,.28)}
+@media (max-width:420px){.top .in{gap:8px}.top button{padding:6px 9px;font-size:12.5px}.brand span{display:none}}
 @media print{.top,footer,.toc,.noprint{display:none!important}body{background:#fff}.doc{border:0;padding:0}main{padding:0}}
 </style>
 </head>
@@ -50,6 +58,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
     <a class="brand" href="./"><img src="assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Conditions générales de vente</span></div></a>
     <div class="sp"></div>
     <button type="button" class="noprint" onclick="window.print()">Imprimer ou PDF</button>
+    <div class="lang noprint" role="group" aria-label="Langue"><a href="cgv.html" lang="fr" aria-current="true">FR</a><span aria-hidden="true">|</span><a href="en/cgv.html" lang="en" hreflang="en">EN</a></div>
   </div>
 </header>
 <main>
@@ -165,5 +174,11 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:va
 </article>
 </main>
 <footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · <a href="confidentialite.html">Confidentialité</a> · <a href="./">Retour au site</a></footer>
+<script>
+/* Language switch: keep the section the visitor is on (same ids in both languages). */
+[].forEach.call(document.querySelectorAll('.lang a'), function(a){
+  a.addEventListener('click', function(){ if (location.hash) a.href = a.getAttribute('href').split('#')[0] + location.hash; });
+});
+</script>
 </body>
 </html>
