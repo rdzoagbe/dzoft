@@ -122,6 +122,9 @@ main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
 .stars button.on{color:#f5a623}
 .stars button:focus-visible{outline:2px solid var(--cyan);border-radius:6px}
 .rvshow .st{color:#f5a623;font-size:20px;letter-spacing:2px}
+.rvshow .gbox{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+.rvshow .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rvshow .gbox .row{margin-top:10px}
 .rvshow blockquote{margin:8px 0;padding:10px 14px;background:var(--soft);border-radius:12px;color:var(--ink);font-size:15px;white-space:pre-wrap}
 .rvgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 @media (max-width:620px){.rvgrid{grid-template-columns:1fr}}
@@ -344,6 +347,7 @@ footer{max-width:1180px}
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   var FORMSPREE_ID = 'xrpppprj';
   var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
+  var GOOGLE_REVIEW = 'https://g.page/r/CYguS5Uj8gxpECE/review';
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return d ? new Date(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : ''; };
@@ -581,7 +585,10 @@ footer{max-width:1180px}
       return '<section class="card rvshow" id="avis"><h2>Votre avis</h2><div class="st" aria-label="' + r.rating + ' sur 5">' + starsTxt(r.rating) + '</div><blockquote>' + esc(r.body) + '</blockquote>' +
         '<p class="muted">' + esc(r.name) + (r.activity ? ' · ' + esc(r.activity) : '') + '</p><p class="muted" style="margin-top:6px">' + stt + '</p>' +
         (r.reply ? '<p style="margin-top:8px"><b>Ma réponse :</b> ' + esc(r.reply) + '</p>' : '') +
-        '<div class="row" style="margin-top:12px"><button class="btn line sm" type="button" id="rv-edit">Modifier mon avis</button><a class="btn line sm" href="#/messages">Demander son retrait</a></div></section>';
+        '<div class="row" style="margin-top:12px"><button class="btn line sm" type="button" id="rv-edit">Modifier mon avis</button><a class="btn line sm" href="#/messages">Demander son retrait</a></div>' +
+        // offered whatever the rating: Google forbids asking only happy clients
+        '<div class="gbox"><b>Vous pouvez aussi le publier sur Google</b><p class="muted">C’est ce qui aide le plus les commerçants et indépendants du coin à me trouver. Copiez votre texte, puis collez-le sur ma fiche Google.</p>' +
+        '<div class="row"><button class="btn line sm" type="button" data-copy="' + esc(r.body) + '">Copier mon avis</button><a class="btn main sm" href="' + GOOGLE_REVIEW + '" target="_blank" rel="noopener">Laisser un avis Google</a></div></div></section>';
     }
     var c = D.client || {};
     return '<section class="card accept" id="avis"><h2>Votre avis sur le projet</h2>' +
@@ -631,7 +638,7 @@ footer{max-width:1180px}
   }
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-copy]'); if (!b) return;
-    var t = b.dataset.copy, done = function(){ b.textContent = 'Copié ✓'; setTimeout(function(){ b.textContent = 'Copier'; }, 1800); };
+    var t = b.dataset.copy, label = b.dataset.label || (b.dataset.label = b.textContent), done = function(){ b.textContent = 'Copié ✓'; setTimeout(function(){ b.textContent = label; }, 1800); };
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function(){ prompt('À copier :', t); }); else prompt('À copier :', t);
   });
   function okDocs(q){ return (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); }); }
