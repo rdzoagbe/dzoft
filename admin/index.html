@@ -4,13 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Espace privé · RD Créations</title>
-<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
+<title>Espace privé · DZOFT</title>
+<link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
 <style>
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
+h1,h2,h3,.brand b{font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
 :root{
-  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
-  --navy:#081626; --navy2:#0e2a49; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee; --sky:#7fd7f5;
-  --grad:linear-gradient(135deg,#2f8bff,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
+  --ink:#0B1020; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#0B1020; --navy2:#16204A; --blue:#4361EE; --blue2:#3448D6; --cyan:#22d3ee; --sky:#7fd7f5;
+  --grad:linear-gradient(135deg,#4361EE,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#eef3f8;line-height:1.45;-webkit-font-smoothing:antialiased}
@@ -18,7 +22,7 @@ button,input,select,textarea{font:inherit}
 a{color:var(--blue2)}
 [hidden]{display:none!important}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none}
-.btn.main{background:var(--grad);color:#05213d}
+.btn.main{background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff}
 .btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost{background:transparent;color:var(--ink2);padding:8px 10px}
 .btn.danger{background:#fff;border:1px solid #f0c9c4;color:var(--err)}
@@ -37,7 +41,7 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 .auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
 .auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
 .brand{display:flex;gap:10px;align-items:center;margin-bottom:14px}
-.logo{width:34px;height:37px;flex:none;display:block}
+.logo{width:34px;height:34px;flex:none;display:block}
 .brand b{font-size:16px;display:block}.brand span{font-size:12.5px;color:var(--mute)}
 .auth h1{font-size:20px;margin-bottom:4px}
 .auth p.intro{font-size:14px;color:var(--mute)}
@@ -154,7 +158,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <!-- ============ sign in ============ -->
 <section class="auth" id="auth" hidden>
   <div class="card">
-    <div class="brand"><img class="logo" src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations · espace privé</b><span>Clients, demandes et devis</span></div></div>
+    <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · espace privé</b><span>Clients, demandes et devis</span></div></div>
 
     <form id="f-login">
       <h1>Connexion</h1>
@@ -184,7 +188,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-mfa" hidden>
       <h1>Code de vérification</h1>
-      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « RD Créations ».</p>
+      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ».</p>
       <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
       <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
       <div class="row"><a id="mfa-out">Se déconnecter</a></div>
@@ -203,7 +207,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="app" hidden>
   <header class="top">
     <div class="in">
-      <div class="brand"><img class="logo" src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations</b><span>Espace privé</span></div></div>
+      <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace privé</span></div></div>
       <div class="sp"></div>
       <span class="who hide-m" id="who"></span>
       <a class="btn sm line" href="../" target="_blank" rel="noopener">Voir le site</a>

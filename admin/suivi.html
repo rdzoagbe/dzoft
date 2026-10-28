@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Fiche projet · RD Créations</title>
-<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
+<title>Fiche projet · DZOFT</title>
+<link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
 <style>
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
+h1,h2,h3,.brand b{font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
 :root{
-  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
-  --navy:#081626; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee;
-  --grad:linear-gradient(135deg,#2f8bff,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
+  --ink:#0B1020; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#0B1020; --blue:#4361EE; --blue2:#3448D6; --cyan:#22d3ee;
+  --grad:linear-gradient(135deg,#4361EE,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#eef3f8;line-height:1.45;-webkit-font-smoothing:antialiased}
@@ -19,7 +23,7 @@ button,input,select,textarea{font:inherit}
 a{color:var(--blue2)}
 [hidden]{display:none!important}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:9px 13px;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none}
-.btn.main{background:var(--grad);color:#05213d}
+.btn.main{background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff}
 .btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
 .btn.ghost{background:transparent;color:var(--ink2)}
 .btn.danger{background:#fff;border:1px solid #f0c9c4;color:var(--err)}
@@ -330,7 +334,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(function(){ toast('Lien copié.'); }, function(){ document.execCommand('copy'); toast('Lien copié.'); });
   };
   function invite(){
-    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client RD Créations' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : '') + ' :\n' + inviteUrl() +
+    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client DZOFT' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : '') + ' :\n' + inviteUrl() +
       '\n\nVous pouvez le consulter, me poser vos questions et l’accepter en ligne. Vous y suivrez ensuite chaque étape de votre projet.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
   }
   function guard(){
@@ -352,7 +356,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   $('b-mymail').onclick = function(){
     if (!guard()) return;
     var c = mailTo();
-    location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + Q.numero + ' · RD Créations') + '&body=' + encodeURIComponent(invite());
+    location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + Q.numero + ' · DZOFT') + '&body=' + encodeURIComponent(invite());
   };
   $('b-newlink').onclick = function(){
     if (!confirm('Changer le lien de ' + C.nom + ' ? L’ancien lien cessera de fonctionner : il faudra lui envoyer le nouveau.')) return;
@@ -545,7 +549,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<input class="w" value="' + esc(x.w) + '" placeholder="Service (ex. : OVH, GitHub)" list="ev-providers">' +
         '<input class="u" value="' + esc(x.u) + '" placeholder="https://…" inputmode="url">' +
         '<button class="rm" type="button" title="Retirer">×</button>' +
-        '<select class="o"><option value="client"' + (x.o !== 'rd' ? ' selected' : '') + '>À son nom</option><option value="rd"' + (x.o === 'rd' ? ' selected' : '') + '>Géré par RD Créations</option></select>' +
+        '<select class="o"><option value="client"' + (x.o !== 'rd' ? ' selected' : '') + '>À son nom</option><option value="rd"' + (x.o === 'rd' ? ' selected' : '') + '>Géré par DZOFT</option></select>' +
         '<select class="st">' + EV_ST.map(function(v){ return '<option' + (x.st === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select>' +
         '<textarea class="n" placeholder="Note pour le client (facultatif), ex. : identifiants remis le 12/11">' + esc(x.n || '') + '</textarea></div>';
     }).join('') : '<p class="muted">Rien pour l’instant. « Reprendre l’hébergement du devis » remplit la liste à partir du devis.</p>';

@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Espace client · RD Créations</title>
-<link rel="icon" href="../assets/rd-creations-favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../assets/rd-creations-app-icon.png">
+<title>Espace client · DZOFT</title>
+<link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/dzoft-apple-touch-icon.png">
 <style>
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
+h1,h2,h3,.brand b{font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
 :root{
-  --ink:#0b1b2e; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
-  --navy:#081626; --blue:#2f6ff5; --blue2:#1d63c9; --cyan:#22d3ee;
-  --grad:linear-gradient(135deg,#2f8bff,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
+  --ink:#0B1020; --ink2:#3b4d63; --mute:#5d6f83; --line:#dbe4ee; --soft:#f3f7fb;
+  --navy:#0B1020; --blue:#4361EE; --blue2:#3448D6; --cyan:#22d3ee;
+  --grad:linear-gradient(135deg,#4361EE,#22d3ee); --ok:#136c3a; --okbg:#e7f8ef; --warn:#8a5a00; --warnbg:#fff3d6; --err:#a3271c; --errbg:#fdecea;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#eef3f8;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -20,7 +24,7 @@ button,input,select,textarea{font:inherit}
 a{color:var(--blue2)}
 [hidden]{display:none!important}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
-.btn.main{background:var(--grad);color:#05213d}
+.btn.main{background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff}
 .btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
 .btn:disabled{opacity:.55;cursor:default}
 .lnk{background:none;border:0;color:var(--blue2);text-decoration:underline;cursor:pointer;font-size:15px}
@@ -31,7 +35,7 @@ label{display:block;font-size:13.5px;font-weight:700;margin:10px 0 5px}
 .top{background:var(--navy);color:#fff}
 .top .in{max-width:900px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
 .brand{display:flex;gap:10px;align-items:center;color:#fff;text-decoration:none}
-.brand img{width:34px;height:37px;display:block}
+.brand img{width:34px;height:34px;display:block}
 .brand b{display:block;font-size:16px}.brand span{font-size:12.5px;color:#9fb3c8}
 .top .sp{flex:1}
 .top .wa{color:#c4d2e1;font-size:13.5px;text-decoration:none;border:1px solid #27425f;border-radius:20px;padding:6px 12px}
@@ -71,7 +75,7 @@ main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
 .qv{font-size:14px}
 .qv .qtop{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:3px solid var(--cyan);padding-bottom:12px}
 .qv .qbrand{display:flex;gap:10px;align-items:center}
-.qv .qbrand img{width:40px;height:44px}
+.qv .qbrand .wordmark{height:36px;width:auto;display:block;margin-bottom:6px}
 .qv .qbrand b{font-size:18px;display:block}.qv .qbrand span{font-size:12.5px;color:var(--mute)}
 .qv .qmeta{text-align:right;font-size:13.5px}
 .qv .qmeta h3{font-size:20px;letter-spacing:.06em;color:var(--blue2)}
@@ -269,7 +273,7 @@ footer{max-width:1180px}
 <body>
 <header class="top">
   <div class="in">
-    <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/rd-creations-icon.svg" alt="" width="34" height="37"><div><b>RD Créations</b><span>Espace client</span></div></a>
+    <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace client</span></div></a>
     <div class="sp"></div>
     <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp <span>07 82 88 46 46</span></a>
     <button class="out" id="b-out" type="button" hidden>Déconnexion</button>
@@ -310,7 +314,7 @@ footer{max-width:1180px}
       <div class="links"><button type="button" data-go="f-login">Retour à la connexion</button></div>
     </form>
     <p class="msgline" id="au-msg" role="status" aria-live="polite"></p>
-    <p class="hint" style="text-align:center;margin-top:14px"><a href="../">← Retour au site RD Créations</a></p>
+    <p class="hint" style="text-align:center;margin-top:14px"><a href="../">← Retour au site DZOFT</a></p>
   </div>
 </div>
 
@@ -330,7 +334,7 @@ footer{max-width:1180px}
   <nav class="side" id="nav" aria-label="Menu de l’espace client"></nav>
   <main class="content" id="view" tabindex="-1"></main>
 </div>
-<footer>RD Créations · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
+<footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
 <script src="../admin/sb.js"></script>
@@ -497,7 +501,7 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
     (WIRE[page] || function(){})(id);
-    document.title = (NAV.filter(function(n){ return n[0] === page; })[0] || NAV[0])[1] + ' · Espace client RD Créations';
+    document.title = (NAV.filter(function(n){ return n[0] === page; })[0] || NAV[0])[1] + ' · Espace client DZOFT';
     var cur = $('nav').querySelector('[aria-current]'); if (cur && cur.scrollIntoView && window.innerWidth < 900) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
     window.scrollTo(0, 0);
   }
@@ -519,7 +523,7 @@ footer{max-width:1180px}
     return '<div class="envlist">' + items.map(function(x){
       var st = ST[x.st] || ST['prévu'], url = /^https:\/\//i.test(x.u || '') ? x.u : '';
       return '<div class="env"><div class="eh"><b>' + esc(x.l) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
-        '<div class="em">' + (x.w ? esc(x.w) + ' · ' : '') + (x.o === 'rd' ? 'géré par RD Créations' : 'à votre nom') + '</div>' +
+        '<div class="em">' + (x.w ? esc(x.w) + ' · ' : '') + (x.o === 'rd' ? 'géré par DZOFT' : 'à votre nom') + '</div>' +
         (x.n ? '<div class="en">' + esc(x.n) + '</div>' : '') +
         (url ? '<a class="btn line sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Ouvrir ↗</a>' : '') + '</div>';
     }).join('') + '</div>';
@@ -573,7 +577,7 @@ footer{max-width:1180px}
     if (!liveDone(q)) return '';
     var r = q.review;
     if (r && !RV_EDIT[q.id]) {
-      var stt = !r.consent ? 'Merci ! Vous n’avez pas autorisé sa publication : il reste entre nous.' : r.published ? 'Publié sur le site de RD Créations. Merci !' : 'Merci ! Je le relis et le publie sur le site très bientôt.';
+      var stt = !r.consent ? 'Merci ! Vous n’avez pas autorisé sa publication : il reste entre nous.' : r.published ? 'Publié sur le site de DZOFT. Merci !' : 'Merci ! Je le relis et le publie sur le site très bientôt.';
       return '<section class="card rvshow" id="avis"><h2>Votre avis</h2><div class="st" aria-label="' + r.rating + ' sur 5">' + starsTxt(r.rating) + '</div><blockquote>' + esc(r.body) + '</blockquote>' +
         '<p class="muted">' + esc(r.name) + (r.activity ? ' · ' + esc(r.activity) : '') + '</p><p class="muted" style="margin-top:6px">' + stt + '</p>' +
         (r.reply ? '<p style="margin-top:8px"><b>Ma réponse :</b> ' + esc(r.reply) + '</p>' : '') +
@@ -586,7 +590,7 @@ footer{max-width:1180px}
       '<label for="rv-body">Votre avis</label><textarea id="rv-body" maxlength="1500" placeholder="Comment s’est passé le projet ? Qu’est-ce qui vous a plu, qu’est-ce qui pourrait être mieux ?">' + esc(r ? r.body : '') + '</textarea>' +
       '<div class="rvgrid"><div><label for="rv-name">Nom affiché</label><input id="rv-name" maxlength="60" value="' + esc(r ? r.name : shortName(c.nom)) + '"></div>' +
       '<div><label for="rv-act">Activité (facultatif)</label><input id="rv-act" maxlength="80" placeholder="Ex. : boulangerie à Bondy" value="' + esc(r ? r.activity : (c.entreprise || '')) + '"></div></div>' +
-      '<label class="chk"><input type="checkbox" id="rv-ok"' + (!r || r.consent ? ' checked' : '') + '> J’accepte que cet avis soit publié sur le site de RD Créations, avec le nom et l’activité ci-dessus.</label>' +
+      '<label class="chk"><input type="checkbox" id="rv-ok"' + (!r || r.consent ? ' checked' : '') + '> J’accepte que cet avis soit publié sur le site de DZOFT, avec le nom et l’activité ci-dessus.</label>' +
       '<div class="row"><button class="btn main" type="button" id="rv-send">' + (r ? 'Enregistrer mon avis' : 'Envoyer mon avis') + '</button>' + (r ? '<button class="btn line" type="button" id="rv-cancel">Annuler</button>' : '') + '</div>' +
       '<p class="msgline" id="rv-msg" role="status" aria-live="polite"></p>' +
       '<p class="legal">Je relis chaque avis avant de le publier. Je publie tous les avis autorisés, positifs comme négatifs, sauf s’ils sont injurieux, hors sujet ou contiennent des données personnelles. Vous pouvez le modifier ou demander son retrait à tout moment.</p></section>';
@@ -658,7 +662,7 @@ footer{max-width:1180px}
     projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis']); });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
-    var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec RD Créations.');
+    var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec DZOFT.');
     if (note) h += '<div class="note"><b>Le mot de Roland · ' + esc(title(note)) + '</b>' + esc(note.note) + '</div>';
     h += '<section class="card"><h2>À faire</h2>' + (todo.length ? '<ul class="todo">' + todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><a class="btn main sm" href="' + t[1] + '">' + t[2] + '</a></li>'; }).join('') + '</ul>' :
       '<p class="muted">Rien à faire pour le moment 👌 Je vous préviens dès qu’il y a du nouveau.</p>') + '</section>';
@@ -914,7 +918,7 @@ footer{max-width:1180px}
   function depositText(q){ var a = amounts(q); return a.pct ? ' Montant : ' + eur(a.dep) + ' (' + a.pct + ' %).' : ''; }
   function quoteView(q){
     var d = q.data, f = d.f || {}, a = amounts(q), h = '<div class="qv">';
-    h += '<div class="qtop"><div class="qbrand"><img src="../assets/rd-creations-icon.svg" alt="" width="40" height="44"><div><b>RD Créations</b><span>Roland Dzoagbe · sites web, PWA et applications mobiles</span></div></div>' +
+    h += '<div class="qtop"><div class="qbrand"><div><img class="wordmark" src="../assets/dzoft-logo-light.svg" alt="DZOFT" width="164" height="36"><span>Roland Dzoagbe · sites web, applications et solutions numériques</span></div></div>' +
       '<div class="qmeta"><h3>DEVIS</h3><div><span>N°</span>' + esc(f.num || q.numero) + '</div>' + (f.date ? '<div><span>Date</span>' + day(isoDay(f.date)) + '</div>' : '') +
       (f.valid ? '<div><span>Valable jusqu’au</span>' + day(isoDay(f.valid)) + '</div>' : '') + '</div></div>';
     h += '<div class="parties"><div class="party"><h4>Prestataire</h4><b>Roland Dzoagbe</b>, entrepreneur individuel<br>SIRET 104 838 727 00014' + (f.myaddr ? '<br>' + esc(f.myaddr) : '') +
@@ -952,7 +956,7 @@ footer{max-width:1180px}
     if (q.accepted_at) h += '<div class="signed">' + (q.accepted_method ? 'Signé électroniquement' : 'Bon pour accord donné en ligne') + ' le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
       (q.accepted_method ? ' (code reçu ' + (q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(q.accepted_target || '') + ')' : '') +
       (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';
-    h += '<div class="qfoot">RD Créations · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div></div>';
+    h += '<div class="qfoot">DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.</div></div>';
     return h;
   }
 

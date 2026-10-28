@@ -1,4 +1,4 @@
-# RD Créations
+# DZOFT
 
 Site de l'activité de création de sites web, d'applications web installables (PWA) et d'applications mobiles de Roland Dzoagbe, entrepreneur individuel.
 
@@ -9,4 +9,4 @@ Site de l'activité de création de sites web, d'applications web installables (
 - E-mails de confirmation et de mot de passe : voir `docs/emails-supabase.md` (envoi via le SMTP Brevo configuré dans Supabase).
 - Formulaire de devis : Formspree (`xrpppprj`) et enregistrement de la demande dans Supabase.
 
-Le logo utilise la police Cinzel (licence SIL Open Font, voir `assets/`).
+Le logo DZOFT utilise la police Unbounded (convertie en tracés) et le site la police Sora, toutes deux sous licence SIL Open Font (voir `assets/fonts/`).
