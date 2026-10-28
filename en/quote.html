@@ -313,6 +313,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .privacy{font-size:13.5px;color:var(--mute)}
 .fhelp{font-size:13px;color:var(--mute);margin:2px 0 6px;line-height:1.45}
 #message{min-height:150px}
+.quote-more{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#f8fbfe}
+.quote-more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--blue2);list-style:none}
+.quote-more summary::-webkit-details-marker{display:none}
+.quote-more summary:after{content:"＋";float:right;color:var(--blue2)}
+.quote-more[open] summary:after{content:"−"}
+.quote-more>p{margin:8px 0 0}
+.quote-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .fstatus{font-size:14px;font-weight:600;border-radius:10px;padding:10px 12px}
 .fstatus:empty{display:none}
@@ -374,6 +381,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   nav{display:none}
   .bar .btn{margin-left:auto}
 }
+.quote-more-grid{grid-template-columns:1fr}
 @media (max-width:620px){
   section{padding:60px 0}
   .hero{padding:48px 0 60px}
@@ -407,13 +415,13 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     <div class="head">
       <span class="kicker">Free quote</span>
       <h1>Tell me about your project</h1>
-      <p>A few lines are enough. I will reply within 48 hours with a first estimate.</p>
+      <p>To start, share your first name, project type and a short description. Your business details, budget and extra costs are optional.</p>
     </div>
     <div class="cgrid">
       <div class="cleft">
       <form id="devis-form" novalidate>
         <div><label for="prenom">Your first name</label><input id="prenom" name="prenom" autocomplete="given-name" required></div>
-        <div><label for="activite">Your business</label><input id="activite" name="activite" placeholder="e.g. bakery, coach, charity"></div>
+
         <div><label for="projet">Type of project</label>
           <select id="projet" name="projet" required>
             <option value="">Choose…</option>
@@ -421,6 +429,15 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option value="Application web installable (PWA)">Installable web app (PWA)</option><option value="Application mobile">Mobile app</option>
             <option value="Je ne sais pas encore">Not sure yet</option>
           </select></div>
+
+
+        <div class="full"><label for="contact">Your email or phone, so I can reply</label><p class="fhelp">Needed only for direct form submission; optional for WhatsApp or email.</p><input id="contact" name="contact" autocomplete="email" placeholder="e.g. name@example.com or +44 7700 900123"></div>
+        <div class="full"><label for="message">Your project idea</label><p class="fhelp" id="message-help">Describe it in your own words: what you want to do, for whom, what already exists (logo, texts, photos, old website), websites or apps you like, and your deadline.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="e.g. I run a bakery in Bondy. I’d like a website with our products, opening hours and cake orders for the weekend. I already have a logo and photos. I’d like it online before Christmas."></textarea></div>
+        <details class="full quote-more" id="quote-more">
+          <summary>Add details (optional)</summary>
+          <p class="fhelp">Your business, budget, target platform and costs to plan for: answer only what is useful for your project.</p>
+          <div class="quote-more-grid">
+        <div><label for="activite">Your business</label><input id="activite" name="activite" placeholder="e.g. bakery, coach, charity"></div>
         <div class="full" id="pf-box" hidden><label for="plateforme">On which phones?</label>
           <select id="plateforme" name="plateforme">
             <option value="iPhone et Android">iPhone and Android</option><option value="iPhone seulement">iPhone only</option><option value="Android seulement">Android only</option><option value="Je ne sais pas encore">Not sure yet</option>
@@ -431,8 +448,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             <option value="Je ne sais pas">I don’t know</option><option value="Moins de 300 €">Under €300</option><option value="300 à 700 €">€300 to €700</option>
             <option value="700 à 1 500 €">€700 to €1,500</option><option value="Plus de 1 500 €">Over €1,500</option>
           </select></div>
-        <div class="full"><label for="contact">Your email or phone, so I can reply</label><input id="contact" name="contact" autocomplete="email" placeholder="e.g. name@example.com or +44 7700 900123"></div>
-        <div class="full"><label for="message">Your project idea</label><p class="fhelp" id="message-help">Describe it in your own words: what you want to do, for whom, what already exists (logo, texts, photos, old website), websites or apps you like, and your deadline.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="e.g. I run a bakery in Bondy. I’d like a website with our products, opening hours and cake orders for the weekend. I already have a logo and photos. I’d like it online before Christmas."></textarea></div>
         <div class="full needs">
           <span class="needs-t">What you will need <small>optional: tick what you already know</small></span>
           <ul class="ho-list" aria-label="Items to plan for">
@@ -445,6 +460,9 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           </ul>
           <p class="needs-note">All these accounts will be in your name and paid by you. On delivery, you receive your handover sheet and can remove my access at any time, without anything stopping. <a href="../assets/fiche-de-remise-client.pdf?v=2" target="_blank" rel="noopener">See the handover sheet (PDF, in French)</a></p>
         </div>
+          </div>
+        </details>
+
         <p class="in full" id="acc-in" hidden>Signed in as <b id="acc-who"></b>: your request will be added to your client area. <a href="../espace/">Open my client area</a></p>
         <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="full fbtns">
@@ -612,7 +630,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       } else {
         status.textContent = 'Thank you ' + who + ', your request has been sent. I will reply within 48 hours.';
       }
-      f.reset(); showPf();
+      f.reset(); showPf(); quoteMore.open = false;
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
     }).catch(function(){
       status.className = 'full fstatus err';
@@ -628,7 +646,11 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  function showPf(){ pfBox.hidden = document.getElementById('projet').value !== 'Application mobile'; }
+  var quoteMore = document.getElementById('quote-more');
+  function showPf(){
+    pfBox.hidden = document.getElementById('projet').value !== 'Application mobile';
+    if (!pfBox.hidden) quoteMore.open = true;
+  }
   function tickStores(){
     var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
     Object.keys(want).forEach(function(k){
