@@ -318,9 +318,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .quote-more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--blue2);list-style:none}
 .quote-more summary::-webkit-details-marker{display:none}
 .quote-more summary:after{content:"＋";float:right;color:var(--blue2)}
-.quote-more[open] summary:after{content:"−"}
+.quote-more[open]>summary:after{content:"−"}
 .quote-more>p{margin:8px 0 0}
 .quote-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
+.quote-more summary{position:relative;padding-right:24px}
+.quote-more summary:after{content:"＋";position:absolute;right:0;top:0;color:var(--blue2)}
+.quote-more summary small{display:block;margin-top:2px;font-size:12.5px;font-weight:500;color:var(--mute)}
+.quote-more fieldset{min-width:0;margin:0;padding:0;border:0}
+.quote-more legend{margin-bottom:6px;font-size:14px;font-weight:700;color:var(--ink)}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.choice{display:flex;align-items:flex-start;gap:9px;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink2);font-size:13.5px;font-weight:500;line-height:1.4;cursor:pointer}
+.choice input{width:17px;height:17px;flex:none;margin:2px 0 0;padding:0;accent-color:var(--blue2)}
+.choice:focus-within{outline:2px solid rgba(67,97,238,.28);outline-offset:2px}
+.choice:has(input:checked){border-color:var(--blue2);background:#eef3ff;color:var(--ink)}
+.needs-more{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px}
+.needs-more summary{color:var(--ink2);font-size:13.5px}
+.needs-more summary:after{content:"＋";position:absolute;right:0;top:0}
+.needs-more[open] summary:after{content:"−"}
+.needs-more .needs{border-top:0;padding-top:10px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .fstatus{font-size:14px;font-weight:600;border-radius:10px;padding:10px 12px}
 .fstatus:empty{display:none}
@@ -337,7 +352,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .needs-t{display:block;font-size:14px;font-weight:700}
 .needs-t small{font-weight:400;color:var(--mute);font-size:12.5px;margin-left:6px}
 .needs .ho-list{margin:10px 0 8px}
-@media (max-width:620px){.needs .ho-list{grid-template-columns:1fr}}
+@media (max-width:620px){.needs .ho-list{grid-template-columns:1fr}.quote-more-grid{grid-template-columns:1fr}.choice-grid{grid-template-columns:1fr}}
 .needs .ho-item{background:var(--soft);border-color:#c9d6e4;color:var(--ink)}
 .needs .ho-item:hover{background:#e9f1f8}
 .needs .ho-item:before{border-color:#9fb3c8}
@@ -382,7 +397,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   nav{display:none}
   .bar .btn{margin-left:auto}
 }
-.quote-more-grid{grid-template-columns:1fr}
 @media (max-width:620px){
   section{padding:60px 0}
   .hero{padding:48px 0 60px}
@@ -416,7 +430,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     <div class="head">
       <span class="kicker">Devis gratuit</span>
       <h1>Parlez-moi de votre projet</h1>
-      <p>Pour commencer, votre prénom, le type de projet et une brève description suffisent. Votre activité, le budget et les frais à prévoir sont facultatifs.</p>
+      <p>Votre prénom, le type de projet et quelques lignes suffisent pour commencer. Le brief facultatif m’aide à estimer le bon périmètre et à limiter les questions de suivi.</p>
     </div>
     <div class="cgrid">
       <div class="cleft">
@@ -433,23 +447,100 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
 
 
         <div class="full"><label for="contact">Votre e-mail ou téléphone, pour vous répondre</label><p class="fhelp">Obligatoire uniquement pour l’envoi direct ; facultatif avec WhatsApp ou e-mail.</p><input id="contact" name="contact" autocomplete="email" placeholder="Ex. : nom@exemple.fr ou 06 12 34 56 78"></div>
-        <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">Racontez-la avec vos mots : ce que vous voulez faire, pour qui, ce qui existe déjà (logo, textes, photos, ancien site), des sites ou applications que vous aimez, et pour quand.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
-        <details class="full quote-more" id="quote-more">
-          <summary>Ajouter des précisions (facultatif)</summary>
-          <p class="fhelp">Activité, budget, plateforme et frais à prévoir : répondez uniquement à ce qui est utile pour votre projet.</p>
+        <div class="full"><label for="message">Votre idée de projet</label><p class="fhelp" id="message-help">En quelques lignes, dites-moi ce que le projet doit améliorer et ce que vous voulez pouvoir faire. Les réponses détaillées restent facultatives.</p><textarea id="message" name="message" rows="7" maxlength="3000" aria-describedby="message-help" placeholder="Ex. : je tiens une boulangerie à Bondy. Je voudrais un site avec nos produits, nos horaires et la commande de gâteaux pour le week-end. J’ai déjà un logo et des photos. J’aimerais qu’il soit en ligne avant Noël."></textarea></div>
+                <details class="full quote-more" id="quote-more">
+          <summary><span>Préparer une estimation plus précise</span><small>Facultatif · environ 2 min</small></summary>
+          <p class="fhelp">Pas besoin d’un cahier des charges. Répondez uniquement à ce que vous savez ; ces détails m’aident à cadrer le projet et à limiter les questions de suivi.</p>
           <div class="quote-more-grid">
-        <div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
-        <div class="full" id="pf-box" hidden><label for="plateforme">Sur quels téléphones ?</label>
-          <select id="plateforme" name="plateforme">
-            <option>iPhone et Android</option><option>iPhone seulement</option><option>Android seulement</option><option>Je ne sais pas encore</option>
-          </select>
-          <p class="fhelp">iPhone : publiée sur l’App Store (compte Apple, 99 $ US / an, prélevés en euros). Android : publiée sur Google Play (compte Google, 25 $ US une seule fois).</p></div>
-        <div><label for="budget">Budget envisagé</label>
+<div><label for="activite">Votre activité</label><input id="activite" name="activite" placeholder="Ex. : boulangerie, coach, association"></div>
+          <div><label for="zone">Ville ou zone d’intervention</label><input id="zone" name="zone" maxlength="200" placeholder="Ex. : Bondy et alentours"></div>
+
+          <div class="full">
+            <label for="objectif">Quel résultat compte le plus pour vous ?</label>
+            <select id="objectif" name="objectif">
+              <option value="">Je ne sais pas encore</option>
+              <option value="Présenter mes offres">Présenter mes offres</option>
+              <option value="Recevoir plus de demandes">Recevoir plus de demandes</option>
+              <option value="Faciliter les réservations">Faciliter les réservations</option>
+              <option value="Recevoir des commandes">Recevoir des commandes ou paiements</option>
+              <option value="Créer un espace client">Créer un espace client ou outil interne</option>
+              <option value="Simplifier une tâche">Automatiser ou simplifier une tâche</option>
+              <option value="Autre">Autre objectif</option>
+            </select>
+          </div>
+          <div class="full" id="pages-box" hidden>
+            <label for="pages">Combien de pages ou rubriques environ ?</label>
+            <select id="pages" name="pages">
+              <option value="">Je ne sais pas encore</option>
+              <option value="1 à 2 pages">1 à 2 pages</option>
+              <option value="3 à 5 pages">3 à 5 pages</option>
+              <option value="6 pages ou plus">6 pages ou plus</option>
+            </select>
+            <p class="fhelp">Une estimation suffit ; nous préciserons la liste ensemble.</p>
+          </div>
+          <fieldset class="full brief-group" aria-describedby="actions-help">
+            <legend>Que devra permettre le site ou l’application ?</legend>
+            <p class="fhelp" id="actions-help">Plusieurs réponses possibles. Choisissez les besoins essentiels ; vous pourrez préciser les détails dans votre message.</p>
+            <div class="choice-grid">
+              <label class="choice"><input type="checkbox" name="actions" value="Présenter mes services, produits et tarifs"><span>Présenter mes services, produits et tarifs</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Recevoir des demandes ou des devis"><span>Recevoir des demandes ou des devis</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Permettre de prendre rendez-vous"><span>Permettre de prendre rendez-vous</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Recevoir des commandes ou des paiements"><span>Recevoir des commandes ou des paiements</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Créer un compte ou un espace client"><span>Créer un compte ou un espace client</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Gérer le contenu ou les demandes"><span>Gérer le contenu ou les demandes</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Connecter un outil existant"><span>Connecter un outil existant</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="À définir ensemble"><span>Je ne sais pas encore, à définir ensemble</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="full brief-group" aria-describedby="assets-help">
+            <legend>Quels éléments avez-vous déjà ?</legend>
+            <p class="fhelp" id="assets-help">Plusieurs réponses possibles.</p>
+            <div class="choice-grid">
+              <label class="choice"><input type="checkbox" name="assets" value="Logo / identité visuelle"><span>Logo ou identité visuelle</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Textes et tarifs"><span>Textes, descriptions et tarifs</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Photos / visuels"><span>Photos ou visuels</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Catalogue ou liste des services"><span>Catalogue ou liste des services / produits</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Outils à connecter"><span>Outils à connecter (agenda, paiement…)</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Aide à la création"><span>J’aurai besoin d’aide pour le contenu ou les visuels</span></label>
+            </div>
+          </fieldset>
+          <div class="full">
+            <label for="site-existant">Votre site ou application actuelle (lien, si existant)</label>
+            <input id="site-existant" name="site_existant" type="url" maxlength="400" autocomplete="url" placeholder="https://…">
+          </div>
+          <div class="full">
+            <label for="exemples">Des exemples que vous aimez (un ou plusieurs liens, facultatif)</label>
+            <input id="exemples" name="exemples" type="text" maxlength="500" placeholder="https://…">
+          </div>
+          <div class="full">
+            <label for="echeance">Quand aimeriez-vous le lancer ?</label>
+            <select id="echeance" name="echeance">
+              <option value="">Je ne sais pas encore</option>
+              <option value="Au plus vite">Au plus vite (date à préciser)</option>
+              <option value="Dans 2 à 6 semaines">Dans 2 à 6 semaines</option>
+              <option value="Dans 1 à 3 mois">Dans 1 à 3 mois</option>
+              <option value="Flexible">Je suis flexible</option>
+            </select>
+          </div>
+<div><label for="budget">Budget envisagé</label>
           <select id="budget" name="budget">
             <option>Je ne sais pas</option><option>Moins de 300 €</option><option>300 à 700 €</option>
             <option>700 à 1 500 €</option><option>Plus de 1 500 €</option>
           </select></div>
-        <div class="full needs">
+          <div class="full" id="pf-box" hidden>
+            <label for="plateforme">Sur quels téléphones ?</label>
+            <select id="plateforme" name="plateforme">
+              <option value="Je ne sais pas encore">Je ne sais pas encore</option>
+              <option value="iPhone et Android">iPhone et Android</option>
+              <option value="iPhone seulement">iPhone seulement</option>
+              <option value="Android seulement">Android seulement</option>
+            </select>
+            <p class="fhelp">iPhone : App Store (compte Apple, 99 $ US/an, prélevés en euros). Android : Google Play (compte Google, 25 $ US une seule fois).</p>
+          </div>
+          <details class="full needs-more" id="needs-more">
+            <summary>Comptes et frais à prévoir (facultatif)</summary>
+            <p class="fhelp">Cochez ce que vous souhaitez aborder dans le devis. Les comptes restent à votre nom.</p>
+<div class="full needs">
           <span class="needs-t">Ce qu’il faudra prévoir <small>facultatif : cochez ce que vous savez déjà</small></span>
           <ul class="ho-list" aria-label="Éléments à prévoir">
             <li><button type="button" class="ho-item" aria-pressed="false" data-item="Nom de domaine"><span>Nom de domaine</span><small>env. 12 € / an</small></button></li>
@@ -461,6 +552,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           </ul>
           <p class="needs-note">Tous ces comptes seront à votre nom et payés par vous. À la livraison, vous recevez votre fiche de remise et vous pouvez retirer mon accès à tout moment, sans que rien ne s’arrête. <a href="assets/fiche-de-remise-client.pdf?v=2" target="_blank" rel="noopener">Voir la fiche de remise (PDF)</a></p>
         </div>
+          </details>
           </div>
         </details>
 
@@ -533,19 +625,41 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   var f = document.getElementById('devis-form');
   // "Application mobile (iPhone seulement)": the platform travels inside the project type.
   function projet(d){
-    var p = d.get('projet') || '';
-    return p === 'Application mobile' ? p + ' (' + (d.get('plateforme') || 'iPhone et Android') + ')' : p;
+    var p = d.get('projet') || '', pf = d.get('plateforme') || '';
+    return p === 'Application mobile' && pf && pf !== 'Je ne sais pas encore' ? p + ' (' + pf + ')' : p;
+  }
+  function label(id){ var el = document.getElementById(id); return el.options[el.selectedIndex].text; }
+  function selectedChoices(name){
+    return [].map.call(f.querySelectorAll('input[name="' + name + '"]:checked'), function(input){
+      var span = input.parentNode.querySelector('span');
+      return span ? span.textContent.trim() : '';
+    }).filter(Boolean).join(', ');
+  }
+  function brief(d){
+    var L = [], en = document.documentElement.lang === 'en';
+    function add(fr, english, value){ if (value) L.push((en ? english : fr) + value); }
+    add('Ville / zone : ', 'Town / service area: ', (d.get('zone') || '').trim().slice(0,200));
+    if (d.get('objectif')) add('Objectif principal : ', 'Main goal: ', label('objectif'));
+    if (d.get('projet') === 'Site vitrine' && d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+    add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
+    add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
+    add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
+    add('Exemples appréciés : ', 'Reference examples: ', (d.get('exemples') || '').trim().slice(0,500));
+    if (d.get('echeance')) add('Échéance souhaitée : ', 'Target timing: ', label('echeance'));
+    add('Précisions : ', 'Additional details: ', (d.get('message') || '').trim());
+    return L.join('\n').slice(0,5000);
   }
   function compose(){
     var d = new FormData(f), L = ['Bonjour Roland,', '', 'Je souhaite un devis.'];
     L.push('Prénom : ' + (d.get('prenom') || '').trim());
     if ((d.get('activite') || '').trim()) L.push('Activité : ' + d.get('activite').trim());
     L.push('Projet : ' + projet(d));
-    L.push('Budget : ' + d.get('budget'));
+    if (d.get('budget') && d.get('budget') !== 'Je ne sais pas') L.push('Budget : ' + label('budget'));
     var items = picked();
-    if (items) L.push('Éléments à prévoir : ' + items);
+    if (items) L.push('Comptes et frais à prévoir : ' + items);
     if ((d.get('contact') || '').trim()) L.push('Pour me répondre : ' + d.get('contact').trim());
-    if ((d.get('message') || '').trim()) { L.push(''); L.push(d.get('message').trim()); }
+    var details = brief(d);
+    if (details) { L.push(''); L.push(details); }
     return L.join('\n');
   }
   // Formspree form id (the part after formspree.io/f/). Empty: direct sending stays hidden.
@@ -579,7 +693,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       prenom: (d.get('prenom') || '').trim().slice(0, 100), activite: (d.get('activite') || '').trim().slice(0, 200),
       projet: projet(d).slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
       contact: (d.get('contact') || '').trim().slice(0, 200), elements: picked().slice(0, 500),
-      message: (d.get('message') || '').trim().slice(0, 5000), source: source,
+      message: brief(d), source: source,
       email: accEmail().toLowerCase().slice(0, 200)
     };
     if (me) row.user_id = me.id;
@@ -612,7 +726,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       _subject: 'Demande de devis - ' + (d.get('prenom') || '').trim(),
       prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
       projet: projet(d), budget: d.get('budget'), contact: contact, espace_client: me ? me.email : 'non',
-      elements: picked() || 'Aucun', message: (d.get('message') || '').trim(), _gotcha: d.get('_gotcha') || ''
+      elements: picked() || 'Aucun',\n      objectif: d.get('objectif') ? label('objectif') : '', pages: d.get('projet') === 'Site vitrine' && d.get('pages') ? label('pages') : '',\n      zone: (d.get('zone') || '').trim(), actions: selectedChoices('actions'), assets: selectedChoices('assets'), site_existant: (d.get('site_existant') || '').trim(),\n      exemples: (d.get('exemples') || '').trim(), echeance: d.get('echeance') ? label('echeance') : '',\n      message: brief(d), _gotcha: d.get('_gotcha') || ''
     };
     if (accEmail()) data.email = accEmail();
     sending = true; status.className = 'full fstatus'; status.textContent = 'Envoi en cours…';
@@ -644,10 +758,12 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  var quoteMore = document.getElementById('quote-more');
+  var pagesBox = document.getElementById('pages-box'), quoteMore = document.getElementById('quote-more');
   function showPf(){
-    pfBox.hidden = document.getElementById('projet').value !== 'Application mobile';
-    if (!pfBox.hidden) quoteMore.open = true;
+    var project = document.getElementById('projet').value;
+    pfBox.hidden = project !== 'Application mobile';
+    pagesBox.hidden = project !== 'Site vitrine';
+    if (!pfBox.hidden || !pagesBox.hidden) quoteMore.open = true;
   }
   function tickStores(){
     var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};

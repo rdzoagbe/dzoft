@@ -317,9 +317,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .quote-more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--blue2);list-style:none}
 .quote-more summary::-webkit-details-marker{display:none}
 .quote-more summary:after{content:"＋";float:right;color:var(--blue2)}
-.quote-more[open] summary:after{content:"−"}
+.quote-more[open]>summary:after{content:"−"}
 .quote-more>p{margin:8px 0 0}
 .quote-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
+.quote-more summary{position:relative;padding-right:24px}
+.quote-more summary:after{content:"＋";position:absolute;right:0;top:0;color:var(--blue2)}
+.quote-more summary small{display:block;margin-top:2px;font-size:12.5px;font-weight:500;color:var(--mute)}
+.quote-more fieldset{min-width:0;margin:0;padding:0;border:0}
+.quote-more legend{margin-bottom:6px;font-size:14px;font-weight:700;color:var(--ink)}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.choice{display:flex;align-items:flex-start;gap:9px;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink2);font-size:13.5px;font-weight:500;line-height:1.4;cursor:pointer}
+.choice input{width:17px;height:17px;flex:none;margin:2px 0 0;padding:0;accent-color:var(--blue2)}
+.choice:focus-within{outline:2px solid rgba(67,97,238,.28);outline-offset:2px}
+.choice:has(input:checked){border-color:var(--blue2);background:#eef3ff;color:var(--ink)}
+.needs-more{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px}
+.needs-more summary{color:var(--ink2);font-size:13.5px}
+.needs-more summary:after{content:"＋";position:absolute;right:0;top:0}
+.needs-more[open] summary:after{content:"−"}
+.needs-more .needs{border-top:0;padding-top:10px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .fstatus{font-size:14px;font-weight:600;border-radius:10px;padding:10px 12px}
 .fstatus:empty{display:none}
@@ -336,7 +351,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .needs-t{display:block;font-size:14px;font-weight:700}
 .needs-t small{font-weight:400;color:var(--mute);font-size:12.5px;margin-left:6px}
 .needs .ho-list{margin:10px 0 8px}
-@media (max-width:620px){.needs .ho-list{grid-template-columns:1fr}}
+@media (max-width:620px){.needs .ho-list{grid-template-columns:1fr}.quote-more-grid{grid-template-columns:1fr}.choice-grid{grid-template-columns:1fr}}
 .needs .ho-item{background:var(--soft);border-color:#c9d6e4;color:var(--ink)}
 .needs .ho-item:hover{background:#e9f1f8}
 .needs .ho-item:before{border-color:#9fb3c8}
@@ -381,7 +396,6 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   nav{display:none}
   .bar .btn{margin-left:auto}
 }
-.quote-more-grid{grid-template-columns:1fr}
 @media (max-width:620px){
   section{padding:60px 0}
   .hero{padding:48px 0 60px}
@@ -415,7 +429,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     <div class="head">
       <span class="kicker">Free quote</span>
       <h1>Tell me about your project</h1>
-      <p>To start, share your first name, project type and a short description. Your business details, budget and extra costs are optional.</p>
+      <p>Your first name, project type and a few lines are enough to get started. The optional brief helps me scope an estimate and reduce follow-up questions.</p>
     </div>
     <div class="cgrid">
       <div class="cleft">
@@ -432,23 +446,100 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
 
 
         <div class="full"><label for="contact">Your email or phone, so I can reply</label><p class="fhelp">Needed only for direct form submission; optional for WhatsApp or email.</p><input id="contact" name="contact" autocomplete="email" placeholder="e.g. name@example.com or +44 7700 900123"></div>
-        <div class="full"><label for="message">Your project idea</label><p class="fhelp" id="message-help">Describe it in your own words: what you want to do, for whom, what already exists (logo, texts, photos, old website), websites or apps you like, and your deadline.</p><textarea id="message" name="message" rows="7" aria-describedby="message-help" placeholder="e.g. I run a bakery in Bondy. I’d like a website with our products, opening hours and cake orders for the weekend. I already have a logo and photos. I’d like it online before Christmas."></textarea></div>
-        <details class="full quote-more" id="quote-more">
-          <summary>Add details (optional)</summary>
-          <p class="fhelp">Your business, budget, target platform and costs to plan for: answer only what is useful for your project.</p>
+        <div class="full"><label for="message">Your project idea</label><p class="fhelp" id="message-help">In a few lines, tell me what you want to improve and what the website or app should let people do. Detailed answers are optional.</p><textarea id="message" name="message" rows="7" maxlength="3000" aria-describedby="message-help" placeholder="e.g. I run a bakery in Bondy. I’d like a website with our products, opening hours and cake orders for the weekend. I already have a logo and photos. I’d like it online before Christmas."></textarea></div>
+                <details class="full quote-more" id="quote-more">
+          <summary><span>Help me prepare a more accurate estimate</span><small>Optional · about 2 minutes</small></summary>
+          <p class="fhelp">No need for a formal specification. Answer only what you can; these details help me scope the project and reduce follow-up questions.</p>
           <div class="quote-more-grid">
-        <div><label for="activite">Your business</label><input id="activite" name="activite" placeholder="e.g. bakery, coach, charity"></div>
-        <div class="full" id="pf-box" hidden><label for="plateforme">On which phones?</label>
-          <select id="plateforme" name="plateforme">
-            <option value="iPhone et Android">iPhone and Android</option><option value="iPhone seulement">iPhone only</option><option value="Android seulement">Android only</option><option value="Je ne sais pas encore">Not sure yet</option>
-          </select>
-          <p class="fhelp">iPhone: published on the App Store (Apple account, US$99 / year). Android: published on Google Play (Google account, US$25 one-off).</p></div>
-        <div><label for="budget">Expected budget</label>
+<div><label for="activite">Your business</label><input id="activite" name="activite" placeholder="e.g. bakery, coach, charity"></div>
+          <div><label for="zone">Town or service area</label><input id="zone" name="zone" maxlength="200" placeholder="e.g. Bondy and nearby towns"></div>
+
+          <div class="full">
+            <label for="objectif">What outcome matters most?</label>
+            <select id="objectif" name="objectif">
+              <option value="">Not sure yet</option>
+              <option value="Présenter mes offres">Show my services or products</option>
+              <option value="Recevoir plus de demandes">Get more enquiries</option>
+              <option value="Faciliter les réservations">Make bookings easier</option>
+              <option value="Recevoir des commandes">Take orders or payments</option>
+              <option value="Créer un espace client">Create a client or internal workspace</option>
+              <option value="Simplifier une tâche">Automate or simplify a task</option>
+              <option value="Autre">Something else</option>
+            </select>
+          </div>
+          <div class="full" id="pages-box" hidden>
+            <label for="pages">Roughly how many pages or sections?</label>
+            <select id="pages" name="pages">
+              <option value="">Not sure yet</option>
+              <option value="1 à 2 pages">1–2 pages</option>
+              <option value="3 à 5 pages">3–5 pages</option>
+              <option value="6 pages ou plus">6 or more pages</option>
+            </select>
+            <p class="fhelp">An estimate is enough; we can define the page list together.</p>
+          </div>
+          <fieldset class="full brief-group" aria-describedby="actions-help">
+            <legend>What should the website or app let people do?</legend>
+            <p class="fhelp" id="actions-help">Select the essential actions; you can add details in your message.</p>
+            <div class="choice-grid">
+              <label class="choice"><input type="checkbox" name="actions" value="Présenter mes services, produits et tarifs"><span>Show my services, products and prices</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Recevoir des demandes ou des devis"><span>Get enquiries or quote requests</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Permettre de prendre rendez-vous"><span>Allow people to book appointments</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Recevoir des commandes ou des paiements"><span>Take orders or payments online</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Créer un compte ou un espace client"><span>Create user accounts or a client area</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Gérer le contenu ou les demandes"><span>Manage content or requests</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="Connecter un outil existant"><span>Connect an existing service</span></label>
+              <label class="choice"><input type="checkbox" name="actions" value="À définir ensemble"><span>Not sure yet; define it together</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="full brief-group" aria-describedby="assets-help">
+            <legend>What do you already have?</legend>
+            <p class="fhelp" id="assets-help">Select all that apply.</p>
+            <div class="choice-grid">
+              <label class="choice"><input type="checkbox" name="assets" value="Logo / identité visuelle"><span>Logo or visual identity</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Textes et tarifs"><span>Text, descriptions and prices</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Photos / visuels"><span>Photos or other visuals</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Catalogue ou liste des services"><span>Service or product list</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Outils à connecter"><span>Tools to connect (calendar, payments…)</span></label>
+              <label class="choice"><input type="checkbox" name="assets" value="Aide à la création"><span>I need help with content or visuals</span></label>
+            </div>
+          </fieldset>
+          <div class="full">
+            <label for="site-existant">Your current website or app (link, if you have one)</label>
+            <input id="site-existant" name="site_existant" type="url" maxlength="400" autocomplete="url" placeholder="https://…">
+          </div>
+          <div class="full">
+            <label for="exemples">Examples you like (one or more links, optional)</label>
+            <input id="exemples" name="exemples" type="text" maxlength="500" placeholder="https://…">
+          </div>
+          <div class="full">
+            <label for="echeance">When would you like to launch?</label>
+            <select id="echeance" name="echeance">
+              <option value="">Not sure yet</option>
+              <option value="Au plus vite">As soon as possible (date to confirm)</option>
+              <option value="Dans 2 à 6 semaines">In 2–6 weeks</option>
+              <option value="Dans 1 à 3 mois">In 1–3 months</option>
+              <option value="Flexible">I’m flexible</option>
+            </select>
+          </div>
+<div><label for="budget">Expected budget</label>
           <select id="budget" name="budget">
             <option value="Je ne sais pas">I don’t know</option><option value="Moins de 300 €">Under €300</option><option value="300 à 700 €">€300 to €700</option>
             <option value="700 à 1 500 €">€700 to €1,500</option><option value="Plus de 1 500 €">Over €1,500</option>
           </select></div>
-        <div class="full needs">
+          <div class="full" id="pf-box" hidden>
+            <label for="plateforme">Which phones should it support?</label>
+            <select id="plateforme" name="plateforme">
+              <option value="Je ne sais pas encore">Not sure yet</option>
+              <option value="iPhone et Android">iPhone and Android</option>
+              <option value="iPhone seulement">iPhone only</option>
+              <option value="Android seulement">Android only</option>
+            </select>
+            <p class="fhelp">iPhone: App Store (Apple account, US$99/year, charged in euros). Android: Google Play (Google account, US$25 one-off).</p>
+          </div>
+          <details class="full needs-more" id="needs-more">
+            <summary>Accounts and costs to plan for (optional)</summary>
+            <p class="fhelp">Select anything you would like to discuss in the quote. Accounts stay in your name.</p>
+<div class="full needs">
           <span class="needs-t">What you will need <small>optional: tick what you already know</small></span>
           <ul class="ho-list" aria-label="Items to plan for">
             <li><button type="button" class="ho-item" aria-pressed="false" data-item="Nom de domaine"><span>Domain name</span><small>approx. €12 / year</small></button></li>
@@ -460,6 +551,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           </ul>
           <p class="needs-note">All these accounts will be in your name and paid by you. On delivery, you receive your handover sheet and can remove my access at any time, without anything stopping. <a href="../assets/fiche-de-remise-client.pdf?v=2" target="_blank" rel="noopener">See the handover sheet (PDF, in French)</a></p>
         </div>
+          </details>
           </div>
         </details>
 
@@ -533,21 +625,44 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   var f = document.getElementById('devis-form');
   // "Application mobile (iPhone seulement)": the platform travels inside the project type.
   function projet(d){
-    var p = d.get('projet') || '';
-    return p === 'Application mobile' ? p + ' (' + (d.get('plateforme') || 'iPhone et Android') + ')' : p;
+    var p = d.get('projet') || '', pf = d.get('plateforme') || '';
+    return p === 'Application mobile' && pf && pf !== 'Je ne sais pas encore' ? p + ' (' + pf + ')' : p;
   }
   // The values stay in French (they feed the admin); the message the visitor sends shows the English labels.
   function label(id){ var el = document.getElementById(id); return el.options[el.selectedIndex].text; }
+  function selectedChoices(name){
+    return [].map.call(f.querySelectorAll('input[name="' + name + '"]:checked'), function(input){
+      var span = input.parentNode.querySelector('span');
+      return span ? span.textContent.trim() : '';
+    }).filter(Boolean).join(', ');
+  }
+  function brief(d){
+    var L = [], en = document.documentElement.lang === 'en';
+    function add(fr, english, value){ if (value) L.push((en ? english : fr) + value); }
+    add('Ville / zone : ', 'Town / service area: ', (d.get('zone') || '').trim().slice(0,200));
+    if (d.get('objectif')) add('Objectif principal : ', 'Main goal: ', label('objectif'));
+    if (d.get('projet') === 'Site vitrine' && d.get('pages')) add('Pages estimées : ', 'Estimated pages: ', label('pages'));
+    add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
+    add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
+    add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
+    add('Exemples appréciés : ', 'Reference examples: ', (d.get('exemples') || '').trim().slice(0,500));
+    if (d.get('echeance')) add('Échéance souhaitée : ', 'Target timing: ', label('echeance'));
+    add('Précisions : ', 'Additional details: ', (d.get('message') || '').trim());
+    return L.join('\n').slice(0,5000);
+  }
   function compose(){
     var d = new FormData(f), L = ['Hello Roland,', '', 'I would like a quote.'];
     L.push('First name: ' + (d.get('prenom') || '').trim());
     if ((d.get('activite') || '').trim()) L.push('Business: ' + d.get('activite').trim());
-    L.push('Project: ' + label('projet') + (d.get('projet') === 'Application mobile' ? ' (' + label('plateforme') + ')' : ''));
-    L.push('Budget: ' + label('budget'));
-    var items = [].map.call(document.querySelectorAll('.ho-item[aria-pressed=true] span'), function(e){ return e.textContent; }).join(', ');
-    if (items) L.push('Items to plan for: ' + items);
+    var project = label('projet');
+    if (d.get('projet') === 'Application mobile' && d.get('plateforme') && d.get('plateforme') !== 'Je ne sais pas encore') project += ' (' + label('plateforme') + ')';
+    L.push('Project: ' + project);
+    if (d.get('budget') && d.get('budget') !== 'Je ne sais pas') L.push('Budget: ' + label('budget'));
+    var items = picked();
+    if (items) L.push('Accounts and costs to discuss: ' + items);
     if ((d.get('contact') || '').trim()) L.push('How to reach me: ' + d.get('contact').trim());
-    if ((d.get('message') || '').trim()) { L.push(''); L.push(d.get('message').trim()); }
+    var details = brief(d);
+    if (details) { L.push(''); L.push(details); }
     return L.join('\n');
   }
   // Formspree form id (the part after formspree.io/f/). Empty: direct sending stays hidden.
@@ -581,7 +696,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       prenom: (d.get('prenom') || '').trim().slice(0, 100), activite: (d.get('activite') || '').trim().slice(0, 200),
       projet: projet(d).slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
       contact: (d.get('contact') || '').trim().slice(0, 200), elements: picked().slice(0, 500),
-      message: (d.get('message') || '').trim().slice(0, 5000), source: source,
+      message: brief(d), source: source,
       email: accEmail().toLowerCase().slice(0, 200)
     };
     if (me) row.user_id = me.id;
@@ -614,7 +729,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       _subject: 'Demande de devis (site en anglais) - ' + (d.get('prenom') || '').trim(), langue: 'anglais',
       prenom: (d.get('prenom') || '').trim(), activite: (d.get('activite') || '').trim(),
       projet: projet(d), budget: d.get('budget'), contact: contact, espace_client: me ? me.email : 'non',
-      elements: picked() || 'Aucun', message: (d.get('message') || '').trim(), _gotcha: d.get('_gotcha') || ''
+      elements: picked() || 'Aucun',\n      objectif: d.get('objectif') ? label('objectif') : '', pages: d.get('projet') === 'Site vitrine' && d.get('pages') ? label('pages') : '',\n      zone: (d.get('zone') || '').trim(), actions: selectedChoices('actions'), assets: selectedChoices('assets'), site_existant: (d.get('site_existant') || '').trim(),\n      exemples: (d.get('exemples') || '').trim(), echeance: d.get('echeance') ? label('echeance') : '',\n      message: brief(d), _gotcha: d.get('_gotcha') || ''
     };
     if (accEmail()) data.email = accEmail();
     sending = true; status.className = 'full fstatus'; status.textContent = 'Sending…';
@@ -646,10 +761,12 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   }
   // Platform question only for a mobile app; it also ticks the matching store accounts.
   var pfBox = document.getElementById('pf-box'), pfSel = document.getElementById('plateforme');
-  var quoteMore = document.getElementById('quote-more');
+  var pagesBox = document.getElementById('pages-box'), quoteMore = document.getElementById('quote-more');
   function showPf(){
-    pfBox.hidden = document.getElementById('projet').value !== 'Application mobile';
-    if (!pfBox.hidden) quoteMore.open = true;
+    var project = document.getElementById('projet').value;
+    pfBox.hidden = project !== 'Application mobile';
+    pagesBox.hidden = project !== 'Site vitrine';
+    if (!pfBox.hidden || !pagesBox.hidden) quoteMore.open = true;
   }
   function tickStores(){
     var v = pfSel.value, want = {'Application iPhone': /iPhone/.test(v) , 'Application Android': /Android/.test(v)};
