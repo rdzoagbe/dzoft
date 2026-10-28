@@ -7,8 +7,8 @@
   var OWNER = 'roland.dzoagbe@hotmail.com';
   // The client space and the request form keep their own session, apart from the private space.
   var STORE = global.RD_STORE || 'rd-admin-session';
-  var ADMIN = 'https://rdzoagbe.github.io/rd-creations/admin/';
-  var PORTAL = 'https://rdzoagbe.github.io/rd-creations/espace/';
+  var ADMIN = 'https://rdzoagbe.github.io/dzoft/admin/';
+  var PORTAL = 'https://rdzoagbe.github.io/dzoft/espace/';
 
   function getSession() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
   function setSession(s) {

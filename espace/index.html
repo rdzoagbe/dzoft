@@ -809,7 +809,7 @@ footer{max-width:1180px}
       '<div class="qacts"><label class="btn main" style="cursor:pointer">Envoyer des fichiers<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
       '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">Chargement…</li></ul>') + '</section>';
     quotes().filter(function(q){ return invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>Factures · ' + esc(title(q)) + '</h2>' + invoiceList(q).replace('<h3 class="subh">Vos factures</h3>', '') + '</section>'; });
-    h += '<section class="card"><h2>Toujours disponibles</h2>' + docsList([{ n: 'Fiche de remise (modèle)', u: 'https://rdzoagbe.github.io/rd-creations/assets/fiche-de-remise-client.pdf' }]) + '</section>';
+    h += '<section class="card"><h2>Toujours disponibles</h2>' + docsList([{ n: 'Fiche de remise (modèle)', u: 'https://rdzoagbe.github.io/dzoft/assets/fiche-de-remise-client.pdf' }]) + '</section>';
     if (!qs.length) return h + empty('Les documents de vos projets apparaîtront ici.');
     return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');
   };
@@ -952,7 +952,7 @@ footer{max-width:1180px}
       '<div><span>Acompte</span>' + a.pct + ' %</div>' + (f.pay ? '<div><span>Paiement</span>' + esc(f.pay) + '</div>' : '') +
       (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
       (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
-    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + TERMS_URL + '" target="_blank" rel="noopener">rdzoagbe.github.io/rd-creations/cgv.html</a></p>';
+    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + TERMS_URL + '" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a></p>';
     if (q.accepted_at) h += '<div class="signed">' + (q.accepted_method ? 'Signé électroniquement' : 'Bon pour accord donné en ligne') + ' le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
       (q.accepted_method ? ' (code reçu ' + (q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(q.accepted_target || '') + ')' : '') +
       (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';

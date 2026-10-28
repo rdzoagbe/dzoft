@@ -2,7 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const OWNER = "roland.dzoagbe@hotmail.com";
-const PORTAL = "https://rdzoagbe.github.io/rd-creations/espace/";
+const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -30,7 +30,7 @@ function mail(title: string, paras: string[], button: string, link: string) {
   ${paras.map((p) => `<p>${p}</p>`).join("\n  ")}
   <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${esc(button)}</a></p>
   <p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p>
-  <p style="font-size:12px;color:#5d6f83">Vous recevez cet e-mail parce que vous êtes client de DZOFT. Votre espace : <a href="${PORTAL}" style="color:#3448D6">rdzoagbe.github.io/rd-creations/espace</a></p>
+  <p style="font-size:12px;color:#5d6f83">Vous recevez cet e-mail parce que vous êtes client de DZOFT. Votre espace : <a href="${PORTAL}" style="color:#3448D6">rdzoagbe.github.io/dzoft/espace</a></p>
 </div>`;
 }
 
