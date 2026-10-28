@@ -6,6 +6,9 @@
 <title>Réalisations · DZOFT</title>
 <meta name="description" content="Les projets réalisés par DZOFT : l’application mobile Ahenora (iOS, Android, web), la plateforme StackLens, l’espace client DZOFT et un site personnel bilingue.">
 <link rel="canonical" href="https://rdzoagbe.github.io/dzoft/realisations.html">
+<link rel="alternate" hreflang="fr" href="https://rdzoagbe.github.io/dzoft/realisations.html">
+<link rel="alternate" hreflang="en" href="https://rdzoagbe.github.io/dzoft/en/realisations.html">
+<link rel="alternate" hreflang="x-default" href="https://rdzoagbe.github.io/dzoft/realisations.html">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rdzoagbe.github.io/dzoft/realisations.html">
 <meta property="og:title" content="Réalisations · DZOFT">
@@ -136,7 +139,12 @@ nav a:hover{color:#fff;background:rgba(255,255,255,.07)}
 .acc-link{display:inline-flex;align-items:center;gap:7px;color:#c6d4e3;text-decoration:none;font-size:14px;font-weight:600;padding:8px 12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;white-space:nowrap}
 .acc-link:hover{color:#fff;background:rgba(255,255,255,.07)}
 header .btn,.brand span{white-space:nowrap}
-@media (max-width:420px){.acc-link{padding:8px 9px} .acc-link span{display:none} header .btn{padding:9px 12px;font-size:13.5px} .brand span{font-size:15px}}
+.lang{display:flex;align-items:center;font-size:13.5px;font-weight:700;letter-spacing:.03em}
+.lang a{color:#8fa3b8;text-decoration:none;padding:6px 5px;border-radius:6px}
+.lang a:hover{color:#fff;background:rgba(255,255,255,.07)}
+.lang a[aria-current]{color:#fff}
+.lang span{color:rgba(255,255,255,.28)}
+@media (max-width:420px){.bar{gap:10px} .logo{height:24px} .lang{font-size:13px} .lang a{padding:6px 3px} .acc-link{padding:8px 9px} .acc-link span{display:none} header .btn{padding:9px 12px;font-size:13.5px} .brand span{font-size:15px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;border:0;border-radius:11px;padding:12px 18px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s}
 .btn:hover{transform:translateY(-1px)}
 .btn-primary{background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff;box-shadow:0 10px 24px rgba(67,97,238,.32)}
@@ -271,6 +279,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     </nav>
     <a class="acc-link" href="espace/" aria-label="Espace client"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Espace client</span></a>
     <a class="btn btn-primary" href="./#devis">Devis gratuit</a>
+    <div class="lang" role="group" aria-label="Langue"><a href="realisations.html" lang="fr" aria-current="true">FR</a><span aria-hidden="true">|</span><a href="en/realisations.html" lang="en" hreflang="en">EN</a></div>
   </div>
 </header>
 
@@ -463,5 +472,11 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
 <script src="admin/sb.js"></script>
 <script src="assets/rd-reviews.js"></script>
 <script src="assets/rd-booking.js"></script>
+<script>
+/* Language switch: keep the section the visitor is on (same ids in both languages). */
+[].forEach.call(document.querySelectorAll('.lang a'), function(a){
+  a.addEventListener('click', function(){ if (location.hash) a.href = a.getAttribute('href').split('#')[0] + location.hash; });
+});
+</script>
 </body>
 </html>

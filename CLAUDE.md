@@ -18,6 +18,11 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - `index.html` accueil (services, démos, avis, méthode, FAQ, devis via Formspree) ·
   `realisations.html` · `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
+- `en/index.html` et `en/realisations.html` : version anglaise (sélecteur « FR | EN » en haut à droite,
+  balises hreflang, sitemap). **Toute modification de texte sur l'accueil ou les réalisations doit être
+  reportée dans `en/`.** Dans le formulaire anglais, les valeurs envoyées restent en français (admin) ;
+  seuls les libellés sont traduits. CGV, confidentialité, espace client, admin et démos : en français
+  seulement (la version anglaise renvoie vers les CGV françaises, qui font foi).
 - `espace/` espace client (connexion par compte ou par lien secret `#<portal_token>`) :
   devis signé avec un code e-mail, avancement, validation des étapes, factures, documents,
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).
