@@ -664,6 +664,11 @@ footer{max-width:1180px}
       var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
       if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer']);
     });
+    // Right after acceptance, the client can already send their content: asked until the design step is done.
+    projects().forEach(function(q){
+      var started = steps(q).some(function(s){ return (s.k === 'design' || s.k === 'build') && s.done; });
+      if (!started) todo.push(['Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', '#/documents', 'Envoyer']);
+    });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider']); }); });
     projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer']); }); });
     projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis']); });
