@@ -291,7 +291,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   function save(row, reload){
     $('sync').textContent = 'enregistrement…';
-    return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); });
+    return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); return true; }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); return false; });
   }
   // e-mails to the client (Brevo, through the notify-client server function): only sent on a click, after confirmation
   function mailTo(){ return [C && C.email, C && C.contact].map(function(x){ return (x || '').trim(); }).filter(function(x){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); })[0] || ''; }
@@ -322,11 +322,22 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     save({ ext_link: v }).then(function(){ $('ext-open').hidden = !v; if (v) $('ext-open').href = v; toast(v ? 'Lien Revolut enregistré : le client le voit sur son devis.' : 'Lien Revolut retiré.'); });
   };
   $('shared').onchange = function(){
-    var on = this.checked, row = { shared: on, steps: Q.steps };
+    var on = this.checked, leadId = Q.lead_id, row = { shared: on, steps: Q.steps };
     if (on && !Q.sent_at) row.sent_at = new Date().toISOString();
     if (on && Q.status === 'brouillon') row.status = 'envoyé';
-    save(row, true).then(function(){
-      toast(on ? 'Le devis est visible. Cliquez sur « Envoyer l’e-mail du devis » pour prévenir le client.' : 'Le devis n’est plus visible pour le client.');
+    save(row, true).then(function(ok){
+      if (!ok) return;
+      var updateLead = !on || !leadId ? Promise.resolve() :
+        sb.select('leads', 'select=id,status&id=eq.' + encodeURIComponent(leadId)).then(function(rows){
+          var lead = rows && rows[0];
+          if (!lead || ['gagnée', 'perdue', 'archivée'].indexOf(lead.status) > -1) return;
+          return sb.update('leads', leadId, { status: 'devis envoyé' });
+        });
+      updateLead.then(function(){
+        toast(on ? 'Le devis est visible. Cliquez sur « Envoyer l’e-mail du devis » pour prévenir le client.' : 'Le devis n’est plus visible pour le client.');
+      }, function(){
+        toast('Le devis est visible, mais le statut de la demande n’a pas pu être mis à jour.');
+      });
     });
   };
   $('b-copy').onclick = function(){
