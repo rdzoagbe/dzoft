@@ -441,7 +441,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Promise.all([
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
       sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; })
     ]).then(function(r){
@@ -503,7 +503,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     data.unread.forEach(function(m){ byClient[m.client_id] = (byClient[m.client_id] || 0) + 1; });
     Object.keys(byClient).forEach(function(id){ todo.push([byClient[id] + ' message' + (byClient[id] > 1 ? 's' : '') + ' de ' + ((client(id) || {}).nom || 'client'), 'thread:' + id, 'Répondre']); });
     data.quotes.filter(function(q){ return !q.shared && q.status === 'brouillon'; }).forEach(function(q){ todo.push(['Devis ' + q.numero + ' en brouillon pour ' + ((client(q.client_id) || {}).nom || '—') + ' : à finir et envoyer', 'quote:' + q.id, 'Ouvrir']); });
+    waiting().forEach(function(q){
+      var t0 = q.sent_at || q.updated_at, days = Math.floor((Date.now() - new Date(t0)) / 864e5);
+      if (days >= 5) todo.push(['Devis ' + q.numero + ' envoyé le ' + day(t0) + ' à ' + ((client(q.client_id) || {}).nom || '—') + ' : sans réponse depuis ' + days + ' jours, pensez à relancer', 'follow:' + q.id, 'Suivi']);
+    });
+    data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && q.valid && new Date(q.valid + 'T23:59:59') < new Date(); })
+      .forEach(function(q){ todo.push(['Devis ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ') expiré le ' + day(q.valid + 'T12:00:00') + ' : prolongez sa validité ou classez-le', 'follow:' + q.id, 'Suivi']); });
     running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
+    running.forEach(function(q){
+      var s = steps(q), i = -1;
+      s.forEach(function(x, j){ if (x.done) i = j; });
+      var last = s[i], next = s[i + 1];
+      if (last && last.vby && next && !next.done && !next.ask) todo.push([((client(q.client_id) || {}).nom || 'Le client') + ' a validé « ' + last.t + ' » (' + q.numero + ') : à vous de jouer, étape « ' + next.t + ' »', 'follow:' + q.id, 'Suivi']);
+    });
     (data.reviews || []).filter(function(v){ return v.consent && !v.published; }).forEach(function(v){ todo.push(['Nouvel avis de ' + ((client(v.client_id) || {}).nom || 'client') + ' (' + v.rating + '/5) à relire et publier', 'follow:' + v.quote_id, 'Relire']); });
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });

@@ -34,6 +34,9 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
+  Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
+  sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
+  factures de suivi dues, avis à publier, messages non lus.
 - `assets/rd-booking.js` (lien Google Agenda), `assets/rd-reviews.js` (avis publiés),
   `assets/rd-steps.js`, logos `dzoft-*`, polices Sora auto-hébergées dans `assets/fonts`.
 - SEO : JSON-LD dans `index.html` et `realisations.html`, `sitemap.xml`, `robots.txt`,
