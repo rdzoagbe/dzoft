@@ -655,7 +655,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     ['Éléments déjà disponibles', 'Existing materials', 'Déjà disponible', 'e'],
     ['Site ou application actuelle', 'Current website or app', 'Site actuel', 'e'],
     ['Exemples appréciés', 'Reference examples', 'Exemples appréciés', 'e'],
-    ['Échéance souhaitée', 'Target timing', 'Échéance souhaitée', 'p'],
+    ['Échéance souhaitée', 'Target timing', 'Échéance souhaitée', 'd'],
     ['Précisions', 'Additional details', 'Précisions', 'n']
   ];
   var BRIEF_G = { p: 'Projet', o: 'Objectif', f: 'Contenu et fonctions', e: 'Existant', d: 'Délai', n: 'Précisions du client' };
@@ -764,10 +764,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function quoteFromLead(l){
     // a client account may already have its file (created when the client signed in)
     var mine = l.user_id && data.clients.filter(function(c){ return c.user_id === l.user_id; })[0];
-    var mk = l.client_id ? sb.update('leads', l.id, { status: 'devis envoyé' }).then(function(){ return client(l.client_id); }) : mine ?
-      sb.update('leads', l.id, { client_id: mine.id, status: 'devis envoyé' }).then(function(){ return mine; }) :
+    var mk = l.client_id ? Promise.resolve(client(l.client_id)) : mine ?
+      sb.update('leads', l.id, { client_id: mine.id }).then(function(){ return mine; }) :
       sb.insert('clients', { nom: l.prenom, entreprise: l.activite || '', contact: l.contact || l.email || '', email: l.email || '', user_id: l.user_id || null, notes: l.message || '' })
-        .then(function(c){ return sb.update('leads', l.id, { client_id: c.id, status: 'devis envoyé' }).then(function(){ return c; }); });
+        .then(function(c){ return sb.update('leads', l.id, { client_id: c.id }).then(function(){ return c; }); });
     mk.then(function(c){
       var q = blankQuote(c, { lead: { projet: l.projet, budget: l.budget, elements: l.elements } });
       q.f.desc = [l.message, l.budget ? 'Budget indiqué : ' + l.budget : ''].filter(Boolean).join('\n\n');
