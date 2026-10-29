@@ -62,6 +62,9 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   Secrets : `BREVO_API_KEY`, `SENDER_EMAIL`. Redéployer après chaque modification du code.
 - `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
   stockage, droits), générée le 2026-10-28 ; à régénérer après toute modification de la base.
+- Sauvegarde des données : le schéma est dans Git, PAS les données. Export JSON complet remis
+  à Roland en privé le 2026-10-29 (hors dépôt public) ; à refaire après chaque signature ou
+  changement important — demander l'export à Claude.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
   Supabase, Authentication → Emails).
 
@@ -87,4 +90,6 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Prospection locale : kit + liste de départ (Bondy : boulangeries, coiffeurs, plombiers,
   sans site d'après PagesJaunes) livrés le 2026-10-28 en privé, volontairement HORS du dépôt
   (public). À lui de contacter ; vérifier chaque fiche sur Google avant contact.
-- Devis D-2026-001 (Rodney) : brouillon, il en parle d'abord avec lui.
+- Devis D-2026-001 (Rodney, application mobile, 1 500 €) : envoyé le 28/10/2026, visible dans
+  son espace, valable jusqu'au 25/11/2026 ; en attente d'acceptation en ligne (le tableau de
+  bord relancera tout seul après 5 jours sans réponse).
