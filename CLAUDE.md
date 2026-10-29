@@ -15,8 +15,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 ## Le site
 - HTML/CSS/JS sans framework ni build, servi par **GitHub Pages** depuis `main` (racine) :
   https://rdzoagbe.github.io/dzoft/ . On pousse directement sur `main`.
-- `index.html` accueil raccourci : héros, forfaits condensés, 2 réalisations, méthode et FAQ en bref,
-  formulaire de devis (Formspree). Les ancres `#services`, `#methode`, `#faq`, `#devis` y existent toujours.
+- `index.html` accueil court : héros, 2 réalisations, CTA. Les anciennes ancres `#services`,
+  `#methode`, `#faq`, `#devis` redirigent chacune vers sa page (petit script dans le `<head>`).
 - Une page par onglet : `services.html` (forfaits complets), `realisations.html`, `methode.html`,
   `faq.html` (JSON-LD FAQPage) ; même modèle : bandeau héros, section CTA, nav avec `aria-current`.
 - `devis.html` (et `en/quote.html`) : formulaire de devis avec brief adapté au type de projet ;

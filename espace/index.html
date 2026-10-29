@@ -685,12 +685,12 @@ footer{max-width:1180px}
   };
   VIEWS.demandes = function(){
     var rq = D.requests || [], qs = quotes(), h = head('Mes demandes', 'Ce que vous m’avez envoyé depuis le site.');
-    if (!rq.length) return h + empty(token ? 'Vos demandes envoyées par WhatsApp ou par e-mail ne s’affichent pas ici, mais vos devis oui.' : 'Aucune demande pour le moment.', '<a class="btn main" href="../#devis">Faire une demande</a>');
+    if (!rq.length) return h + empty(token ? 'Vos demandes envoyées par WhatsApp ou par e-mail ne s’affichent pas ici, mais vos devis oui.' : 'Aucune demande pour le moment.', '<a class="btn main" href="../devis.html">Faire une demande</a>');
     return h + '<div class="items">' + rq.map(function(r){
       var st = r.status === 'perdue' ? ['Close', 'off'] : qs.length && r.status !== 'nouvelle' ? ['Traitée', 'ok'] : r.status === 'nouvelle' ? ['Reçue', ''] : ['Devis en préparation', 'warn'];
       return '<div class="item"><div class="ih"><b>' + esc(r.projet || 'Demande') + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
         '<div class="im">Envoyée le ' + day(r.at) + (r.budget ? ' · budget : ' + esc(r.budget) : '') + '</div>' + (r.message ? '<div class="txt">' + esc(r.message) + '</div>' : '') + '</div>';
-    }).join('') + '</div><p style="margin-top:14px"><a class="btn line" href="../#devis">Faire une nouvelle demande</a></p>';
+    }).join('') + '</div><p style="margin-top:14px"><a class="btn line" href="../devis.html">Faire une nouvelle demande</a></p>';
   };
   VIEWS.devis = function(id){
     if (id) return quoteDetail(byId(id));
