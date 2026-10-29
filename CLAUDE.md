@@ -7,7 +7,7 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - **DZOFT** est le nom commercial de **Roland Dzoagbe, entrepreneur individuel** (micro-entreprise),
   93140 Bondy. SIREN 104 838 727, SIRET 104 838 727 00014. TVA non applicable, art. 293 B du CGI.
 - Contact public : rolanddzoagbe@gmail.com · 07 82 88 46 46 (WhatsApp).
-  Compte propriétaire (admin, Supabase) : roland.dzoagbe@hotmail.com.
+  L’adresse du compte propriétaire (admin, Supabase) reste dans Supabase Auth et hors de ce dépôt public.
 - Offres : page de présentation dès 200 €, site vitrine dès 400 €, PWA dès 700 €,
   application mobile dès 1 500 €, suivi mensuel dès 15 €/mois.
 - Ancien nom : RD Créations (abandonné en octobre 2026, ne plus l'utiliser).
@@ -62,9 +62,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   Secrets : `BREVO_API_KEY`, `SENDER_EMAIL`. Redéployer après chaque modification du code.
 - `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
   stockage, droits), générée le 2026-10-28 ; à régénérer après toute modification de la base.
-- Sauvegarde des données : le schéma est dans Git, PAS les données. Export JSON complet remis
-  à Roland en privé le 2026-10-29 (hors dépôt public) ; à refaire après chaque signature ou
-  changement important — demander l'export à Claude.
+- Sauvegardes : le schéma est dans Git, pas les données. Conserver les exports JSON chiffrés
+  hors du dépôt public et les mettre à jour après chaque signature ou changement important.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
   Supabase, Authentication → Emails).
 
@@ -90,6 +89,6 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Prospection locale : kit + liste de départ (Bondy : boulangeries, coiffeurs, plombiers,
   sans site d'après PagesJaunes) livrés le 2026-10-28 en privé, volontairement HORS du dépôt
   (public). À lui de contacter ; vérifier chaque fiche sur Google avant contact.
-- Devis D-2026-001 (Rodney, application mobile, 1 500 €) : envoyé le 28/10/2026, visible dans
-  son espace, valable jusqu'au 25/11/2026 ; en attente d'acceptation en ligne (le tableau de
-  bord relancera tout seul après 5 jours sans réponse).
+- Le dépôt GitHub est public : ne jamais y inscrire de nom de client, contenu de devis,
+  export de données, adresse de compte privé ou identifiant secret. Garder les notes commerciales
+  et les sauvegardes hors Git.
