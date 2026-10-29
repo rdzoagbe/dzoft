@@ -83,8 +83,11 @@ main{min-width:0}
 .inbox .prev{color:var(--mute);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr;padding-top:0;gap:12px}
-  .side{position:sticky;top:0;z-index:9;flex-direction:row;overflow-x:auto;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px;gap:4px;scrollbar-width:none}
-  .side::-webkit-scrollbar{display:none}
+  .side{position:sticky;top:0;z-index:9;flex-direction:row;overflow-x:auto;overscroll-behavior-x:contain;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px 6px;gap:4px;scrollbar-width:thin;scrollbar-color:var(--blue) #e5ebf3}
+  .side::-webkit-scrollbar{height:5px}
+  .side::-webkit-scrollbar-track{background:#e5ebf3;border-radius:5px}
+  .side::-webkit-scrollbar-thumb{background:var(--blue);border-radius:5px}
+  .side::-webkit-scrollbar-thumb:hover{background:var(--blue2)}
   .side hr{display:none}
   .tab{flex:none;width:auto;padding:8px 11px;font-size:13.5px;white-space:nowrap}
   .tab svg{width:17px;height:17px}

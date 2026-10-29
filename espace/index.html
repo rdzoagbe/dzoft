@@ -258,8 +258,11 @@ select{width:100%;border:1px solid #c9d6e4;border-radius:10px;padding:10px 12px;
 footer{max-width:1180px}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr;padding-top:0;gap:14px}
-  .side{position:sticky;top:0;z-index:5;flex-direction:row;overflow-x:auto;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px;gap:4px;scrollbar-width:none}
-  .side::-webkit-scrollbar{display:none}
+  .side{position:sticky;top:0;z-index:5;flex-direction:row;overflow-x:auto;overscroll-behavior-x:contain;border-radius:0;margin:0 -16px;border-width:0 0 1px;padding:8px 10px 6px;gap:4px;scrollbar-width:thin;scrollbar-color:var(--blue) #e5ebf3}
+  .side::-webkit-scrollbar{height:5px}
+  .side::-webkit-scrollbar-track{background:#e5ebf3;border-radius:5px}
+  .side::-webkit-scrollbar-thumb{background:var(--blue);border-radius:5px}
+  .side::-webkit-scrollbar-thumb:hover{background:var(--blue2)}
   .side .who{display:none}
   .side a{flex:none;padding:8px 11px;font-size:13.5px;white-space:nowrap}
   .side svg{width:17px;height:17px}
@@ -337,7 +340,7 @@ footer{max-width:1180px}
   <nav class="side" id="nav" aria-label="Menu de l’espace client"></nav>
   <main class="content" id="view" tabindex="-1"></main>
 </div>
-<footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
+<footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · rolanddzoagbe@gmail.com · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
 <script src="../admin/sb.js"></script>
