@@ -1,6 +1,6 @@
 -- ============================================================================
 -- DZOFT · copie de référence du schéma Supabase (projet rzghbvmszbjlqkdjzpxc)
--- Générée le 2026-10-28 depuis la base réelle (lecture seule).
+-- Générée le 2026-10-28, mise à jour le 2026-10-29 (leads : statuts de suivi + next_at) depuis la base réelle (lecture seule).
 --
 -- Ce fichier documente l'état de la base : tables, index, RLS, fonctions,
 -- stockage et droits. Ce n'est PAS un script d'installation à exécuter tel
@@ -35,10 +35,13 @@ create table public.leads (
   elements   text not null default '' check (char_length(elements) <= 500),
   message    text not null default '' check (char_length(message) <= 5000),
   source     text not null default 'site' check (char_length(source) <= 30),
-  status     text not null default 'nouvelle' check (status in ('nouvelle', 'traitée', 'archivée')),
+  status     text not null default 'nouvelle'
+    check (status in ('nouvelle', 'contactée', 'devis envoyé', 'gagnée', 'perdue', 'traitée', 'archivée')),
+    -- 'traitée' : ancien statut conservé pour les lignes existantes
   client_id  uuid references public.clients (id) on delete set null,
   email      text not null default '',
   user_id    uuid references auth.users (id) on delete set null,
+  next_at    date,            -- date de relance prévue (suivi admin, migration 2026-10-29)
   deleted_at timestamptz
 );
 create index leads_client_id_idx  on public.leads (client_id);

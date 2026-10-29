@@ -19,6 +19,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   formulaire de devis (Formspree). Les ancres `#services`, `#methode`, `#faq`, `#devis` y existent toujours.
 - Une page par onglet : `services.html` (forfaits complets), `realisations.html`, `methode.html`,
   `faq.html` (JSON-LD FAQPage) ; même modèle : bandeau héros, section CTA, nav avec `aria-current`.
+- `devis.html` (et `en/quote.html`) : formulaire de devis avec brief adapté au type de projet ;
+  le brief part dans `leads.message` en lignes « Libellé : valeur », que l'admin regroupe par rubriques.
 - `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
 - `en/` : version anglaise page à page (index, services, methode, faq, realisations, cgv,
@@ -46,6 +48,9 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 ## Supabase (projet `rzghbvmszbjlqkdjzpxc`, Paris)
 - Tables : leads, clients, quotes (steps, docs, env, invoices, care, ext_link…), messages,
   notifications, sign_codes, settings, reviews. RLS partout.
+- Suivi des demandes (`leads.status`) : nouvelle → contactée → devis envoyé → gagnée / perdue,
+  plus archivée (« traitée » hérité) ; `leads.next_at` = date de relance, rappelée sur le tableau
+  de bord. Côté client, « perdue » s'affiche « Close », jamais le statut interne.
 - Modèle des fonctions SQL `SECURITY DEFINER` : `client_*` internes (aucun droit),
   `my_*` pour le client connecté (authenticated), `portal_*` pour le lien secret (anon).
   L'admin est reconnu par son e-mail propriétaire.

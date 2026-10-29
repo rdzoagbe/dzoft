@@ -107,7 +107,18 @@ main{min-width:0}
 .st{font-size:11.5px;font-weight:800;border-radius:20px;padding:2px 9px;text-transform:uppercase;letter-spacing:.03em}
 .st.nouvelle,.st.brouillon{background:#e3f9fd;color:#0b6577}
 .st.traitée,.st.envoyé{background:var(--warnbg);color:var(--warn)}
-.st.archivée,.st.refusé{background:#eceff3;color:var(--mute)}
+.st.archivée,.st.refusé,.st.perdue{background:#eceff3;color:var(--mute)}
+.st.contactée{background:#fff3d6;color:#8a5a00}
+.st.gagnée{background:#e7f8ef;color:#136c3a}
+.brief{margin-top:8px;display:grid;gap:3px 14px;grid-template-columns:max-content 1fr;font-size:14px;max-height:5em;overflow:hidden}
+.lead.open .brief{max-height:none}
+.brief .gh{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:7px}
+.brief span{color:var(--mute)}
+.brief b{font-weight:500;color:var(--ink2);white-space:pre-wrap;min-width:0;overflow-wrap:anywhere}
+.lead .acts select{width:auto;font-size:13.5px;padding:7px 8px}
+.lead .next-in{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);white-space:nowrap}
+.lead .next-in input{font:inherit;font-size:13px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;color:var(--ink2);background:#fff}
+.chip.due{background:#fdecea;color:#a3271c;font-weight:700}
 .st.accepté{background:var(--okbg);color:var(--ok)}
 .lead .txt{font-size:14px;color:var(--ink2);white-space:pre-wrap;margin-top:4px;max-height:4.4em;overflow:hidden}
 .lead.open .txt{max-height:none}
@@ -238,7 +249,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <section id="v-leads" hidden>
       <div class="bar">
         <h2>Demandes reçues</h2>
-        <select id="lead-filter" style="width:auto"><option value="open">À traiter</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
+        <select id="lead-filter" style="width:auto"><option value="open">À suivre</option><option value="relance">Relance prévue</option><option value="gagnée">Gagnées</option><option value="perdue">Perdues</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
         <button class="btn sm line" id="b-paste" type="button">Coller une demande</button>
       </div>
       <div class="list" id="leads"></div>
@@ -487,6 +498,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('kpis').innerHTML = K.map(function(k){ return '<button class="kpi' + (k[3] ? ' hot' : '') + '" type="button" data-go="' + k[0] + '"><b>' + k[1] + '</b><span>' + k[2] + '</span></button>'; }).join('');
     var todo = [];
     data.leads.filter(function(l){ return l.status === 'nouvelle'; }).forEach(function(l){ todo.push(['Nouvelle demande de ' + l.prenom + ' · ' + (l.projet || ''), 'leads', 'Voir']); });
+    data.leads.filter(function(l){ return leadOpen(l) && l.next_at && l.next_at <= iso(new Date()); }).forEach(function(l){ todo.push(['Relancer ' + l.prenom + ' · ' + (l.projet || '') + ' (prévu le ' + day(l.next_at + 'T12:00:00') + ')', 'leads', 'Voir']); });
     var byClient = {};
     data.unread.forEach(function(m){ byClient[m.client_id] = (byClient[m.client_id] || 0) + 1; });
     Object.keys(byClient).forEach(function(id){ todo.push([byClient[id] + ' message' + (byClient[id] > 1 ? 's' : '') + ' de ' + ((client(id) || {}).nom || 'client'), 'thread:' + id, 'Répondre']); });
@@ -613,27 +625,84 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   };
 
   /* ---------------- leads ---------------- */
+  /* The quote form writes the brief as "Libellé : valeur" lines (or "Label: value" on the
+     English page). Known labels are split out and grouped; anything else stays free text. */
+  var BRIEF_L = [
+    ['Ville / zone', 'Town / service area', 'Ville / zone', 'p'],
+    ['Objectif principal', 'Main goal', 'Objectif principal', 'o'],
+    ['Action principale', 'Primary call to action', 'Action principale', 'o'],
+    ['Actions attendues', 'Key actions', 'Actions attendues', 'o'],
+    ['Rubriques à prévoir', 'Sections to include', 'Rubriques', 'f'],
+    ['Pages estimées', 'Estimated pages', 'Pages estimées', 'f'],
+    ['Mise à jour du contenu', 'Content updates', 'Mise à jour du contenu', 'f'],
+    ['Langues du site', 'Website languages', 'Langues du site', 'f'],
+    ['Utilisateurs de l’application web', 'Web app users', 'Utilisateurs', 'f'],
+    ['Fonctions spécifiques à l’application web', 'Web app requirements', 'Fonctions à prévoir', 'f'],
+    ['Utilisateurs de l’application mobile', 'Mobile app users', 'Utilisateurs', 'f'],
+    ['Fonctions mobiles à prévoir', 'Mobile app requirements', 'Fonctions à prévoir', 'f'],
+    ['Éléments déjà disponibles', 'Existing materials', 'Déjà disponible', 'e'],
+    ['Site ou application actuelle', 'Current website or app', 'Site actuel', 'e'],
+    ['Exemples appréciés', 'Reference examples', 'Exemples appréciés', 'e'],
+    ['Échéance souhaitée', 'Target timing', 'Échéance souhaitée', 'p'],
+    ['Précisions', 'Additional details', 'Précisions', 'n']
+  ];
+  var BRIEF_G = { p: 'Projet', o: 'Objectif', f: 'Contenu et fonctions', e: 'Existant', d: 'Délai', n: 'Précisions du client' };
+  function parseBrief(t){
+    var out = [], cur = null, pre = [];
+    String(t || '').split('\n').forEach(function(ln){
+      var hit = null;
+      for (var i = 0; i < BRIEF_L.length && !hit; i++) {
+        var b = BRIEF_L[i];
+        if (ln.lastIndexOf(b[0] + ' : ', 0) === 0) hit = { l: b[2], g: b[3], v: ln.slice(b[0].length + 3) };
+        else if (ln.lastIndexOf(b[1] + ': ', 0) === 0) hit = { l: b[2], g: b[3], v: ln.slice(b[1].length + 2) };
+      }
+      if (hit) { cur = hit; out.push(cur); }
+      else if (cur) cur.v += '\n' + ln;
+      else pre.push(ln);
+    });
+    return out.length ? { pre: pre.join('\n').trim(), rows: out } : null;
+  }
+  function briefHtml(br){
+    var h = '';
+    ['p', 'o', 'f', 'e', 'd', 'n'].forEach(function(g){
+      var rows = br.rows.filter(function(r){ return r.g === g; });
+      if (!rows.length) return;
+      if (g !== 'p' && g !== 'd') h += '<div class="gh">' + BRIEF_G[g] + '</div>';
+      h += rows.map(function(r){ return '<span>' + esc(r.l) + '</span><b>' + esc(r.v.trim()) + '</b>'; }).join('');
+    });
+    return '<div class="brief">' + h + '</div>';
+  }
+  var LEAD_ST = ['nouvelle', 'contactée', 'devis envoyé', 'gagnée', 'perdue', 'archivée'];
+  function leadOpen(l){ return ['archivée', 'gagnée', 'perdue'].indexOf(l.status) < 0; }
   $('lead-filter').onchange = renderLeads;
   function renderLeads(){
-    var f = $('lead-filter').value, box = $('leads');
+    var f = $('lead-filter').value, box = $('leads'), today = iso(new Date());
     var nNew = data.leads.filter(function(l){ return l.status === 'nouvelle'; }).length;
     $('n-new').hidden = !nNew; $('n-new').textContent = nNew;
-    var rows = data.leads.filter(function(l){ return f === 'all' ? true : f === 'open' ? l.status !== 'archivée' : l.status === f; });
+    var rows = data.leads.filter(function(l){
+      return f === 'all' ? true : f === 'open' ? leadOpen(l) : f === 'relance' ? leadOpen(l) && l.next_at : l.status === f;
+    });
     if (!rows.length) { box.innerHTML = '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
     box.innerHTML = rows.map(function(l){
-      var chips = [l.activite, l.projet, l.budget && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
+      var chips = [l.activite, l.projet, l.budget && l.budget !== 'Je ne sais pas' && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
         l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
+      if (l.next_at && leadOpen(l)) chips += '<span class="chip' + (l.next_at <= today ? ' due' : '') + '">' +
+        (l.next_at <= today ? 'À relancer (prévu le ' : 'Relance le ') + day(l.next_at + 'T12:00:00') + (l.next_at <= today ? ')' : '') + '</span>';
       var nu = l.client_id ? data.unread.filter(function(m){ return m.client_id === l.client_id; }).length : 0;
       if (nu) chips += '<span class="chip msg">' + nu + ' nouveau' + (nu > 1 ? 'x' : '') + ' message' + (nu > 1 ? 's' : '') + '</span>';
+      var br = l.message ? parseBrief(l.message) : null;
+      var body = br ? (br.pre ? '<div class="txt">' + esc(br.pre) + '</div>' : '') + briefHtml(br)
+                    : (l.message ? '<div class="txt">' + esc(l.message) + '</div>' : '');
+      var more = l.message && (br ? br.rows.length > 2 : l.message.length > 160);
+      var opts = LEAD_ST.indexOf(l.status) < 0 ? [l.status].concat(LEAD_ST) : LEAD_ST;
       return '<article class="lead" data-id="' + l.id + '"><div class="h"><b>' + esc(l.prenom) + '</b><span class="st ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
-        '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' +
-        (l.message ? '<div class="txt">' + esc(l.message) + '</div>' : '') +
+        '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' + body +
         '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
         (l.client_id ? '<button class="btn sm line" data-a="msgs">Messages' + (nu ? ' (' + nu + ')' : '') + '</button>' : '') +
-        (l.message && l.message.length > 160 ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
-        (l.status === 'nouvelle' ? '<button class="btn sm line" data-a="done">Marquer traitée</button>' : '') +
-        (l.status !== 'archivée' ? '<button class="btn sm line" data-a="arch">Archiver</button>' : '<button class="btn sm line" data-a="reopen">Rouvrir</button>') +
+        (more ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
+        '<select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' +
+        '<label class="next-in">relance le <input type="date" data-a="next" value="' + esc(l.next_at || '') + '" aria-label="Date de relance"></label>' +
         '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
     }).join('');
   }
@@ -645,8 +714,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (a === 'quote') return quoteFromLead(l);
     if (a === 'msgs') return openThread(client(l.client_id) || { id: l.client_id, nom: l.prenom });
     if (a === 'del') { if (!confirm('Mettre cette demande à la corbeille ? Vous pourrez la restaurer.')) return; return sb.update('leads', l.id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Demande mise à la corbeille.'); loadAll(); }, fail); }
-    var st = { done: 'traitée', arch: 'archivée', reopen: 'nouvelle' }[a];
-    sb.update('leads', l.id, { status: st }).then(loadAll, fail);
+  };
+  $('leads').onchange = function(e){
+    var el = e.target.closest('[data-a]'); if (!el) return;
+    var card = el.closest('.lead'), l = data.leads.filter(function(x){ return x.id === card.dataset.id; })[0];
+    if (el.dataset.a === 'st') return sb.update('leads', l.id, { status: el.value }).then(function(){ toast('Statut : ' + el.value + '.'); loadAll(); }, fail);
+    if (el.dataset.a === 'next') return sb.update('leads', l.id, { next_at: el.value || null })
+      .then(function(){ toast(el.value ? 'Relance notée pour le ' + day(el.value + 'T12:00:00') + '.' : 'Relance retirée.'); loadAll(); }, fail);
   };
 
   /* ---------------- quotes ---------------- */
@@ -678,10 +752,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function quoteFromLead(l){
     // a client account may already have its file (created when the client signed in)
     var mine = l.user_id && data.clients.filter(function(c){ return c.user_id === l.user_id; })[0];
-    var mk = l.client_id ? sb.update('leads', l.id, { status: 'traitée' }).then(function(){ return client(l.client_id); }) : mine ?
-      sb.update('leads', l.id, { client_id: mine.id, status: 'traitée' }).then(function(){ return mine; }) :
+    var mk = l.client_id ? sb.update('leads', l.id, { status: 'devis envoyé' }).then(function(){ return client(l.client_id); }) : mine ?
+      sb.update('leads', l.id, { client_id: mine.id, status: 'devis envoyé' }).then(function(){ return mine; }) :
       sb.insert('clients', { nom: l.prenom, entreprise: l.activite || '', contact: l.contact || l.email || '', email: l.email || '', user_id: l.user_id || null, notes: l.message || '' })
-        .then(function(c){ return sb.update('leads', l.id, { client_id: c.id, status: 'traitée' }).then(function(){ return c; }); });
+        .then(function(c){ return sb.update('leads', l.id, { client_id: c.id, status: 'devis envoyé' }).then(function(){ return c; }); });
     mk.then(function(c){
       var q = blankQuote(c, { lead: { projet: l.projet, budget: l.budget, elements: l.elements } });
       q.f.desc = [l.message, l.budget ? 'Budget indiqué : ' + l.budget : ''].filter(Boolean).join('\n\n');

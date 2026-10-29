@@ -851,7 +851,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       } else {
         status.textContent = 'Thank you ' + who + ', your request has been sent. I will reply within 48 hours.';
       }
-      f.reset(); showPf(); quoteMore.open = false;
+      f.reset(); showProjectDetails(); quoteMore.open = false;
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });
     }).catch(function(){
       status.className = 'full fstatus err';
