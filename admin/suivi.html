@@ -73,10 +73,18 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .invr{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1.4fr 1fr .8fr auto auto;gap:6px;align-items:center}
 .invr+.invr{margin-top:8px}
 .invr .u{grid-column:1/-1}
+.invfile{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .invr.paid{background:#f5fbf7;border-color:#cfe9d8}
 .pd{display:flex;gap:5px;align-items:center;font-size:13px;font-weight:700;margin:0;cursor:pointer}
 .pd input{width:16px;height:16px}
-@media (max-width:640px){.invr{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){
+  .invr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+  .invr>.n{grid-column:1}
+  .invr>.num{grid-column:2/4}
+  .invr>.amt{grid-column:1}
+  .invr>.pd{grid-column:2}
+  .invr>.rm{grid-column:3;justify-self:end}
+}
 .rvq{margin:8px 0;padding:10px 14px;background:#f3f7fb;border-radius:12px;white-space:pre-wrap;font-size:14.5px}
 .rvst{color:#f5a623;font-size:19px;letter-spacing:2px}
 .carer{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:10px;align-items:end}
@@ -172,7 +180,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture dans <b>Revolut Pro</b> (Factures → Nouvelle facture), reprenez ici son numéro (INV-…) et, si Revolut en donne un, son lien de paiement ou de partage. Le client la voit dans son espace avec un bouton « Voir et payer ». Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez aussi le PDF et, si disponible, le lien de paiement : le client retrouvera la facture et les informations de règlement dans son espace. Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <p class="muted" id="iv-account-note" hidden>Pour joindre un PDF privé, le client doit avoir créé son compte avec l’adresse e-mail de sa fiche.</p>
     <div id="invs"></div>
   </section>
 
@@ -260,6 +269,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
     $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = false;
+    $('iv-account-note').hidden = !!(C && C.user_id);
     $('ext').value = Q.ext_link || ''; $('ext-open').hidden = !Q.ext_link; if (Q.ext_link) $('ext-open').href = Q.ext_link;
     $('c-files').hidden = !(C && C.user_id);
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
@@ -461,10 +471,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €">' +
         '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> Payée</label>' +
         '<button class="rm" type="button" title="Retirer">×</button>' +
-        '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien Revolut de la facture (https://…)" inputmode="url"></div>';
+      '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien de paiement Revolut (https://…)" inputmode="url">' +
+      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button><button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') + '</div></div>';
     }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
   }
-  $('invs').oninput = $('invs').onchange = function(e){
+  function updateInvoice(e){
     var row = e.target.closest('.invr'); if (!row) return;
     var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
     if (c === 'paid') { x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
@@ -472,8 +483,55 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     else if (c === 'u') { x.u = e.target.value.trim(); e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : ''; }
     else x[c] = e.target.value;
     later();
+  }
+  $('invs').oninput = function(e){ if (!e.target.classList.contains('pdf')) updateInvoice(e); };
+  $('invs').onchange = function(e){
+    if (!e.target.classList.contains('pdf')) return updateInvoice(e);
+    var row = e.target.closest('.invr'), x = row && Q.invoices[+row.dataset.i], file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file || !x) return;
+    if (!C || !C.user_id) { toast('Le client doit créer son compte avant de joindre un PDF privé.'); return; }
+    if (file.size > 20971520) { toast('La facture dépasse 20 Mo.'); return; }
+    if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) { toast('Choisissez un fichier PDF.'); return; }
+    if (x.file && !confirm('Remplacer le PDF associé à cette facture ? L’ancien fichier sera supprimé du stockage.')) return;
+    var clean = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80);
+    var path = 'u/' + C.user_id + '/factures/' + QID + '/' + Date.now() + '-' + clean;
+    toast('Envoi du PDF…');
+    sb.files.upload(path, file).then(function(){
+      var old = x.file, oldName = x.fileName;
+      x.file = path; x.fileName = file.name;
+      return save({ invoices: Q.invoices }).then(function(ok){
+        if (!ok) { if (old) x.file = old; else delete x.file; if (oldName) x.fileName = oldName; else delete x.fileName; return sb.files.remove(path).catch(function(){}); }
+        var cleanupFailed = false;
+        return (old ? sb.files.remove(old).catch(function(){ cleanupFailed = true; }) : Promise.resolve()).then(function(){
+          renderInv(); toast(cleanupFailed ? 'PDF remplacé. L’ancien fichier est resté dans le stockage Supabase.' : 'PDF ajouté à la facture et visible dans l’espace client.');
+        });
+      });
+    }, fail);
   };
-  $('invs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; if (!confirm('Retirer cette facture de l’espace du client ?')) return; Q.invoices.splice(+e.target.closest('.invr').dataset.i, 1); renderInv(); later(); };
+  $('invs').onclick = function(e){
+    var b = e.target.closest('button[data-a]'), row = e.target.closest('.invr');
+    if (b && row) {
+      var x = Q.invoices[+row.dataset.i];
+      if (b.dataset.a === 'pdf-get') { var w = window.open('about:blank', '_blank'); sb.files.link(x.file, true).then(function(u){ w.location = u; }, function(err){ w.close(); fail(err); }); return; }
+      if (b.dataset.a === 'pdf-unlink') {
+        if (!confirm('Supprimer le PDF de cette facture du portail et du stockage ?')) return;
+        var path = x.file, name = x.fileName; delete x.file; delete x.fileName; renderInv();
+        save({ invoices: Q.invoices }).then(function(ok){
+          if (!ok) { x.file = path; if (name) x.fileName = name; renderInv(); return; }
+          sb.files.remove(path).then(function(){ toast('PDF supprimé.'); }, fail);
+        });
+        return;
+      }
+    }
+    if (!e.target.classList.contains('rm')) return;
+    if (!confirm('Retirer cette facture de l’espace du client ? Son PDF sera aussi supprimé.')) return;
+    var i = +e.target.closest('.invr').dataset.i, removed = Q.invoices.splice(i, 1)[0]; renderInv();
+    save({ invoices: Q.invoices }).then(function(ok){
+      if (!ok) { Q.invoices.splice(i, 0, removed); renderInv(); return; }
+      if (removed.file) sb.files.remove(removed.file).catch(fail);
+    });
+  };
   $('iv-add').onclick = function(){
     Q.invoices = Q.invoices || [];
     var first = !Q.invoices.length, t = +Q.accepted_total || +Q.total || 0;
@@ -613,7 +671,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (!C || !C.user_id) return;
     $('files').innerHTML = '<p class="muted">Chargement…</p>';
     sb.files.list('u/' + C.user_id + '/').then(function(list){
-      list = (list || []).filter(function(f){ return f.id; });
+      list = (list || []).filter(function(f){ return f.id && !/^factures\//i.test(f.name || ''); });
       $('files').innerHTML = list.length ? list.map(function(f){
         return '<div class="doc" data-name="' + esc(f.name) + '"><span>' + esc(f.name.replace(/^\d+-/, '')) + '</span><span class="muted">' + size((f.metadata || {}).size || 0) + ' · ' + new Date(f.created_at).toLocaleDateString('fr-FR') + '</span>' +
           '<span><button class="btn sm line" type="button" data-f="get">Ouvrir</button> <button class="rm" type="button" data-f="rm" title="Supprimer">×</button></span></div>';

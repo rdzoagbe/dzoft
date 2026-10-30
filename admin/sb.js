@@ -128,8 +128,8 @@
           }).then(function (r) { return r.text().then(function (x) { if (!r.ok) { var d = {}; try { d = JSON.parse(x); } catch (e) {} var err = new Error(d.message || d.error || ('Erreur ' + r.status)); err.status = r.status; throw err; } return x; }); });
         });
       },
-      link: function (path) {
-        return token().then(function (t) { return req('/storage/v1/object/sign/client-files/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: t, body: { expiresIn: 600 } }); })
+      link: function (path, download) {
+        return token().then(function (t) { return req('/storage/v1/object/sign/client-files/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: t, body: download ? { expiresIn: 600, download: true } : { expiresIn: 600 } }); })
           .then(function (d) { return URL + '/storage/v1' + (d.signedURL || d.signedUrl); });
       },
       remove: function (path) {

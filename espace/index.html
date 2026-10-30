@@ -281,7 +281,7 @@ footer{max-width:1180px}
   <div class="in">
     <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace client</span></div></a>
     <div class="sp"></div>
-    <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp <span>07 82 88 46 46</span></a>
+    <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp</a>
     <button class="out" id="b-out" type="button" hidden>Déconnexion</button>
   </div>
 </header>
@@ -363,8 +363,13 @@ footer{max-width:1180px}
   var kind = hashErr ? null : sb.fromUrl();
   if (hashErr) history.replaceState(null, '', location.pathname + location.search);
   var UUID = /^#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
-  var m = UUID.exec(location.hash), token = m ? m[1].toLowerCase() : null;
-  try { if (token) localStorage.setItem('rd-espace', token); else if (!sb.session()) token = localStorage.getItem('rd-espace'); } catch(e){}
+  var createAccount = new URLSearchParams(location.search).get('inscription') === '1';
+  var m = UUID.exec(location.hash), token = !createAccount && m ? m[1].toLowerCase() : null;
+  try {
+    if (createAccount) localStorage.removeItem('rd-espace');
+    else if (token) localStorage.setItem('rd-espace', token);
+    else if (!sb.session()) token = localStorage.getItem('rd-espace');
+  } catch(e){}
   if (m) history.replaceState(null, '', location.pathname + '#/accueil');
   var D = null;
 
@@ -435,7 +440,7 @@ footer{max-width:1180px}
         D = d; show('app'); route();
       }, function(){ show('s-err'); });
     }
-    if (!sb.session()) { form('f-login'); return Promise.resolve(); }
+    if (!sb.session()) { form(createAccount ? 'f-signup' : 'f-login'); return Promise.resolve(); }
     return sb.rpc('my_space', {}, true).then(function(d){
       D = d; $('b-out').hidden = false; show('app'); route();
     }, function(err){
@@ -554,16 +559,22 @@ footer{max-width:1180px}
     var inv = invoices(q); if (!inv.length) return '';
     return '<h3 class="subh">Vos factures</h3><ul class="invl">' + inv.map(function(x){
       var url = /^https:\/\//i.test(x.u || '') ? x.u : '';
+      var pdf = x.file ? (token ? '<a class="btn line sm" href="./?inscription=1">Accéder à mon compte pour télécharger le PDF</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="Télécharger ' + esc(x.fileName || x.n || 'la facture') + '">Télécharger le PDF ↓</button>') : '';
       return '<li><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
         '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Payée' : 'À régler') + '</span>' +
-        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + '</li>';
+        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + pdf + '</li>';
     }).join('') + '</ul>';
   }
   function payBlock(q){
     var P = D.payment || {}, a = amounts(q), dep = depositDone(q), bal = balanceDone(q);
     var open = invoices(q).filter(function(x){ return !x.paid; });
-    if (open.length) return '<section class="card pay"><h2>Comment payer</h2><p class="muted">Réglez votre facture en ligne avec le bouton « Voir et payer »' +
-      (P.iban ? ', ou par virement avec les coordonnées ci-dessous.' : '.') + '</p>' + invoiceList(q) + (P.iban ? rib(P, q, true) : '') + '</section>';
+    if (open.length) {
+      var online = open.some(function(x){ return /^https:\/\//i.test(x.u || ''); }) || /^https:\/\//i.test(P.link || '');
+      var how = online ? 'Vous pouvez régler en ligne avec le bouton de paiement.' : 'Téléchargez la facture ci-dessous pour la régler.';
+      if (P.iban) how += ' Vous pouvez aussi faire un virement avec les coordonnées ci-dessous.';
+      else if (!online) how += ' Les coordonnées de paiement apparaîtront ici dès qu’elles seront ajoutées.';
+      return '<section class="card pay"><h2>Comment payer</h2><p class="muted">' + how + '</p>' + invoiceList(q) + (P.iban || P.link ? rib(P, q, true) : '') + '</section>';
+    }
     if (bal) return '<section class="card"><h2>Paiement</h2><p class="muted">Tout est réglé, merci ✓</p>' + invoiceList(q) + '</section>';
     var due = dep ? ['Solde, à régler à la livraison', a.ttc - a.dep] : ['Acompte, pour démarrer le projet', a.dep];
     return '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>' + rib(P, q) + invoiceList(q) + '</section>';
@@ -640,6 +651,8 @@ footer{max-width:1180px}
     return h;
   }
   document.addEventListener('click', function(e){
+    var invoice = e.target.closest('[data-invoice-file]');
+    if (invoice) { e.preventDefault(); var w = window.open('about:blank', '_blank'); sb.files.link(invoice.dataset.invoiceFile, true).then(function(u){ w.location = u; }, function(){ w.close(); }); return; }
     var b = e.target.closest('[data-copy]'); if (!b) return;
     var t = b.dataset.copy, label = b.dataset.label || (b.dataset.label = b.textContent), done = function(){ b.textContent = 'Copié ✓'; setTimeout(function(){ b.textContent = label; }, 1800); };
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function(){ prompt('À copier :', t); }); else prompt('À copier :', t);
@@ -833,7 +846,7 @@ footer{max-width:1180px}
   function fsize(n){ return n > 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko'; }
   function listFiles(){
     myId().then(function(uid){ return sb.files.list('u/' + uid + '/').then(function(list){
-      list = (list || []).filter(function(f){ return f.id; });
+      list = (list || []).filter(function(f){ return f.id && !/^factures\//i.test(f.name || ''); });
       $('flist').innerHTML = list.length ? list.map(function(f){
         return '<li><a href="#" data-path="u/' + uid + '/' + esc(f.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
           esc(f.name.replace(/^\d+-/, '')) + '<span class="muted" style="margin-left:auto;font-weight:400;font-size:13px">' + fsize((f.metadata || {}).size || 0) + ' · ' + day(f.created_at) + '</span></a></li>';
