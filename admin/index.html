@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 20519)
+Total output lines: 1034
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -255,9 +258,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <section id="v-leads" hidden>
       <div class="bar">
         <h2>Demandes reçues</h2>
-        <select id="lead-filter" style="width:auto"><option value="open">À suivre</option><option value="relance">Relance prévue</option><option value="gagnée">Gagnées</option><option value="perdue">Perdues</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
+        <select id="lead-filter" style="width:auto"><option value="open">À suivre</option><option value="relance">Relance prévue</option><option value="gagnée">Gagnées</option><option value="perdue">Perdues</option><option value="retention">À revoir (3 ans+)</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
         <button class="btn sm line" id="b-paste" type="button">Coller une demande</button>
       </div>
+      <p style="font-size:13px;color:var(--mute);margin:-8px 0 14px">Les demandes non converties de 3 ans et plus apparaissent dans « À revoir ». Les archiver les masque de la liste active sans les effacer ; vous pourrez les restaurer. La suppression définitive reste une action manuelle après vérification.</p>
       <div class="list" id="leads"></div>
     </section>
 
@@ -440,198 +444,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
         fromHash(); loadAll(); loadSettings(); renderMfa(u);
-      }, function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
-    }, function(){ $('auth').hidden = false; showForm('f-login'); });
-  }
-
-  /* ---------------- data ---------------- */
-  function loadAll(){
-    return Promise.all([
-      sb.select('leads', 'select=*&order=created_at.desc'),
-      sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
-      sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
-      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; }),
-      sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30').catch(function(){ return []; }),
-      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id&order=created_at.desc&limit=80').catch(function(){ return []; })
-    ]).then(function(r){
-      // deleted requests and quotes stay in the trash until removed for good
-      var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
-      data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
-      data.clients = r[1] || [];
-      data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
-      data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || [];
-      data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
-      render();
-    }, fail);
-  }
-  function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
-  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); }
-
-  /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
-  var VIEWS = ['dash', 'leads', 'clients', 'quotes', 'projects', 'inbox', 'settings', 'trash'];
-  var SLUG = { dash: 'tableau-de-bord', leads: 'demandes', clients: 'clients', quotes: 'devis', projects: 'projets', inbox: 'messages', settings: 'parametres', trash: 'corbeille' };
-  function showView(v){
-    if (VIEWS.indexOf(v) < 0) v = 'dash';
-    [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x.dataset.tab === v); });
-    VIEWS.forEach(function(x){ $('v-' + x).hidden = x !== v; });
-  }
-  function fromHash(){
-    var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
-    Object.keys(SLUG).forEach(function(k){ if (SLUG[k] === h) v = k; });
-    showView(v);
-  }
-  [].forEach.call(document.querySelectorAll('.tab'), function(t){
-    t.onclick = function(){ location.hash = '#/' + SLUG[t.dataset.tab]; };
-  });
-  window.addEventListener('hashchange', function(){ if (!/access_token|error=/.test(location.hash)) fromHash(); });
-
-  /* ---------------- dashboard ---------------- */
-  function steps(q){ return (q.steps || []).length ? q.steps : (window.RDSTEPS || []); }
-  function progress(q){ var s = steps(q), d = s.filter(function(x){ return x.done; }).length; return s.length ? Math.round(d * 100 / s.length) : 0; }
-  function nowStep(q){ var c = steps(q).filter(function(x){ return !x.done; })[0]; return !c ? 'Livré' : c.k === 'deposit' ? 'En attente de l’acompte' : c.ask ? c.t + ' (validation attendue)' : c.t; }
-  function projectsList(){ return data.quotes.filter(function(q){ return q.accepted_at; }); }
-  function waiting(){ return data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && !(q.valid && new Date(q.valid + 'T23:59:59') < new Date()); }); }
-  function renderDash(){
-    $('today').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    var y = new Date().getFullYear(), ps = projectsList();
-    var nNew = data.leads.filter(function(l){ return l.status === 'nouvelle'; }).length;
-    var running = ps.filter(function(q){ return progress(q) < 100; });
-    var cares = ps.filter(function(q){ return q.care && q.care.on; }), careSum = cares.reduce(function(t, q){ return t + (+q.care.price || 0); }, 0);
-    var signed = ps.filter(function(q){ return new Date(q.accepted_at).getFullYear() === y; }).reduce(function(t, q){ return t + (+q.accepted_total || +q.total || 0); }, 0);
-    var K = [['leads', nNew, 'nouvelle' + (nNew > 1 ? 's' : '') + ' demande' + (nNew > 1 ? 's' : ''), nNew],
-             ['inbox', data.unread.length, 'message' + (data.unread.length > 1 ? 's' : '') + ' non lu' + (data.unread.length > 1 ? 's' : ''), data.unread.length],
-             ['quotes', waiting().length, 'devis en attente d’accord', 0],
-             ['projects', running.length, 'projet' + (running.length > 1 ? 's' : '') + ' en cours', 0],
-             ['projects', eur(signed), 'signés en ' + y, 0],
-             ['projects', eur(careSum), cares.length ? 'par mois de suivi (' + cares.length + ' client' + (cares.length > 1 ? 's' : '') + ')' : 'de suivi mensuel', 0]];
-    $('kpis').innerHTML = K.map(function(k){ return '<button class="kpi' + (k[3] ? ' hot' : '') + '" type="button" data-go="' + k[0] + '"><b>' + k[1] + '</b><span>' + k[2] + '</span></button>'; }).join('');
-    var todo = [];
-    data.leads.filter(function(l){ return l.status === 'nouvelle'; }).forEach(function(l){ todo.push(['Nouvelle demande de ' + l.prenom + ' · ' + (l.projet || ''), 'leads', 'Voir']); });
-    data.leads.filter(function(l){ return leadOpen(l) && l.next_at && l.next_at <= iso(new Date()); }).forEach(function(l){ todo.push(['Relancer ' + l.prenom + ' · ' + (l.projet || '') + ' (prévu le ' + day(l.next_at + 'T12:00:00') + ')', 'leads', 'Voir']); });
-    var byClient = {};
-    data.unread.forEach(function(m){ byClient[m.client_id] = (byClient[m.client_id] || 0) + 1; });
-    Object.keys(byClient).forEach(function(id){ todo.push([byClient[id] + ' message' + (byClient[id] > 1 ? 's' : '') + ' de ' + ((client(id) || {}).nom || 'client'), 'thread:' + id, 'Répondre']); });
-    data.quotes.filter(function(q){ return !q.shared && q.status === 'brouillon'; }).forEach(function(q){ todo.push(['Devis ' + q.numero + ' en brouillon pour ' + ((client(q.client_id) || {}).nom || '—') + ' : à finir et envoyer', 'quote:' + q.id, 'Ouvrir']); });
-    waiting().forEach(function(q){
-      var t0 = q.sent_at || q.updated_at, days = Math.floor((Date.now() - new Date(t0)) / 864e5);
-      if (days >= 5) todo.push(['Devis ' + q.numero + ' envoyé le ' + day(t0) + ' à ' + ((client(q.client_id) || {}).nom || '—') + ' : sans réponse depuis ' + days + ' jours, pensez à relancer', 'follow:' + q.id, 'Suivi']);
-    });
-    data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && q.valid && new Date(q.valid + 'T23:59:59') < new Date(); })
-      .forEach(function(q){ todo.push(['Devis ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ') expiré le ' + day(q.valid + 'T12:00:00') + ' : prolongez sa validité ou classez-le', 'follow:' + q.id, 'Suivi']); });
-    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
-    running.forEach(function(q){
-      var s = steps(q), i = -1;
-      s.forEach(function(x, j){ if (x.done) i = j; });
-      var last = s[i], next = s[i + 1];
-      if (last && last.vby && next && !next.done && !next.ask) todo.push([((client(q.client_id) || {}).nom || 'Le client') + ' a validé « ' + last.t + ' » (' + q.numero + ') : à vous de jouer, étape « ' + next.t + ' »', 'follow:' + q.id, 'Suivi']);
-    });
-    (data.reviews || []).filter(function(v){ return v.consent && !v.published; }).forEach(function(v){ todo.push(['Nouvel avis de ' + ((client(v.client_id) || {}).nom || 'client') + ' (' + v.rating + '/5) à relire et publier', 'follow:' + v.quote_id, 'Relire']); });
-    data.emailOutbox.filter(function(m){ return m.status === 'failed'; }).forEach(function(m){ todo.push(['Échec d’e-mail ' + (m.recipient_role === 'owner' ? 'à votre adresse' : 'au client') + (m.last_error ? ' : ' + m.last_error : ''), m.quote_id ? 'follow:' + m.quote_id : 'dash', 'Voir']); });
-    var soon = new Date(); soon.setDate(soon.getDate() + 5);
-    cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
-    $('todo').innerHTML = todo.length ? todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Rien d’urgent 👌</li>';
-    $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
-    renderEmailLog();
-  }
-  function renderEmailLog(){
-    var box = $('email-log'); if (!box) return;
-    if (!data.events.length) { box.innerHTML = '<p style="font-size:14px;color:var(--mute)">Les notifications importantes apparaîtront ici au fil des projets.</p>'; return; }
-    box.innerHTML = data.events.slice(0, 8).map(function(ev){
-      var jobs = data.emailOutbox.filter(function(x){ return x.event_id === ev.id; });
-      var status = jobs.length ? jobs.map(function(job){
-        var to = job.recipient_role === 'owner' ? 'Vous' : 'Client';
-        var label = job.status === 'sent' ? 'envoyé' : job.status === 'queued' ? 'en attente' : job.status === 'processing' ? 'en cours' : 'échec';
-        return '<span style="font-size:12px;color:' + (job.status === 'failed' ? 'var(--err)' : 'var(--mute)') + '">' + esc(to) + ' : ' + esc(label) +
-          (job.status === 'failed' ? ' · ' + esc(job.last_error || '') + ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Réessayer</button>' : '') + '</span>';
-      }).join(' · ') : '<span style="font-size:12px;color:var(--mute)">' + (ev.event_type === 'client_message' || ev.event_type === 'client_file_uploaded' ? 'notification groupée avec une activité récente' : 'journalisé') + '</span>';
-      return '<div style="border-top:1px solid var(--line);padding:9px 0"><b style="font-size:13.5px">' + esc(ev.summary) + '</b><br><span style="font-size:12px;color:var(--mute)">' + new Date(ev.created_at).toLocaleString('fr-FR') + '</span><div>' + status + '</div></div>';
-    }).join('');
-    box.onclick = function(e){
-      var b = e.target.closest('[data-retry-email]'); if (!b) return;
-      b.disabled = true; b.textContent = 'Relance…';
-      sb.fn('process-notification-outbox', { retry_id: b.dataset.retryEmail }).then(function(){ toast('E-mail relancé.'); return loadAll(); }, function(err){ b.disabled = false; b.textContent = 'Réessayer'; toast('Relance impossible : ' + (err.message || 'erreur')); });
-    };
-  }
-  document.addEventListener('click', function(e){
-    var retry = e.target.closest('[data-retry-email]');
-    if (retry && $('app').contains(retry)) return;
-    var b = e.target.closest('[data-go]'); if (!b || !$('app').contains(b)) return;
-    var g = b.dataset.go;
-    if (g.indexOf('thread:') === 0) return openThread(client(g.slice(7)) || { id: g.slice(7) });
-    if (g.indexOf('quote:') === 0) return openQuote(g.slice(6));
-    if (g.indexOf('follow:') === 0) return openFollow(g.slice(7));
-    location.hash = '#/' + SLUG[g];
-  });
-
-  /* ---------------- projects ---------------- */
-  function projectTable(rows){
-    return '<table><thead><tr><th>Projet</th><th>Client</th><th class="hide-m">Étape</th><th>Avancement</th><th></th></tr></thead><tbody>' + rows.map(function(q){
-      var c = client(q.client_id) || {}, p = progress(q);
-      return '<tr><td><b>' + esc(q.numero) + '</b><br><span style="color:var(--mute);font-size:12.5px">accepté le ' + day(q.accepted_at) + '</span></td><td>' + esc(c.nom || '—') + '</td>' +
-        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + p + ' %</span></td>' +
-        '<td class="num"><button class="btn sm main" type="button" data-go="follow:' + q.id + '">Fiche projet</button></td></tr>';
-    }).join('') + '</tbody></table>';
-  }
-  function renderProjects(){
-    var ps = projectsList();
-    $('projects').innerHTML = ps.length ? projectTable(ps) : '<div class="empty">Aucun projet pour l’instant. Un devis accepté par le client devient un projet ici.</div>';
-  }
-
-  /* ---------------- inbox ---------------- */
-  function renderInbox(){
-    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
-    var last = {}, order = [];
-    data.messages.forEach(function(m){ if (!last[m.client_id]) { last[m.client_id] = m; order.push(m.client_id); } });
-    if (!order.length) { $('inbox').innerHTML = '<div class="empty">Aucun message pour l’instant. Les messages de vos clients arrivent ici.</div>'; return; }
-    $('inbox').innerHTML = '<table class="inbox"><tbody>' + order.map(function(id){
-      var m = last[id], c = client(id) || {}, nu = data.unread.filter(function(x){ return x.client_id === id; }).length;
-      return '<tr data-go="thread:' + id + '" class="click"><td><b>' + esc(c.nom || 'Client') + '</b>' + (nu ? ' <span class="chip msg">' + nu + ' non lu' + (nu > 1 ? 's' : '') + '</span>' : '') +
-        '<div class="prev">' + (m.author === 'moi' ? 'Vous : ' : '') + esc(m.body) + '</div></td><td class="num" style="color:var(--mute);font-size:12.5px">' + new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td></tr>';
-    }).join('') + '</tbody></table>';
-  }
-
-  /* ---------------- settings ---------------- */
-  var PAY = ['holder', 'bank', 'iban', 'bic', 'link', 'note'];
-  function loadSettings(){
-    sb.select('settings', 'select=payment&id=eq.1').then(function(r){
-      var p = (r && r[0] && r[0].payment) || {};
-      PAY.forEach(function(k){ $('p-' + k).value = p[k] || ''; });
-    }, function(){});
-  }
-  $('p-save').onclick = function(){
-    var p = {};
-    PAY.forEach(function(k){ var v = $('p-' + k).value.trim(); if (v) p[k] = k === 'iban' || k === 'bic' ? v.toUpperCase() : v; });
-    if (p.link && !/^https:\/\//i.test(p.link)) { $('p-msg').textContent = 'Le lien doit commencer par https://'; return; }
-    if (p.iban && !/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,40}$/.test(p.iban)) { $('p-msg').textContent = 'IBAN incomplet ou mal saisi.'; return; }
-    sb.update('settings', 1, { payment: p, updated_at: new Date().toISOString() }).then(function(){ $('p-msg').textContent = 'Enregistré ✓'; toast('Paramètres de paiement enregistrés.'); }, fail);
-  };
-
-  /* ---------------- two-step sign-in ---------------- */
-  var enrolling = null;
-  function renderMfa(u){
-    var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0], box = $('mfa-box');
-    if (f) {
-      box.innerHTML = '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
-        '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver</button></div>';
-      $('mfa-off').onclick = function(){
-        if (!confirm('Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.')) return;
-        sb.mfa.remove(f.id).then(function(){ toast('Double authentification désactivée.'); sb.me().then(renderMfa); }, fail);
-      };
-      return;
-    }
-    box.innerHTML = '<p style="font-size:14px">Conseillée : en plus du mot de passe, un code à 6 chiffres de votre téléphone est demandé à chaque connexion. Même si votre mot de passe fuitait, personne ne pourrait entrer.</p>' +
-      '<p style="font-size:13.5px;color:var(--mute);margin-top:4px">Il vous faut une application gratuite : Google Authenticator, Microsoft Authenticator ou l’application Mots de passe de l’iPhone.</p>' +
-      '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="mfa-on" type="button">Activer</button></div>';
-    $('mfa-on').onclick = function(){
-      // forget an unfinished attempt, then start a new one
-      Promise.all((u.factors || []).filter(function(x){ return x.status !== 'verified'; }).map(function(x){ return sb.mfa.remove(x.id).catch(function(){}); }))
-        .then(function(){ return sb.mfa.enroll(); }).then(function(r){
-          enrolling = r.id;
-          box.innerHTML = '<ol style="font-size:14px;margin-left:18px;display:grid;gap:6px"><li>Dans votre application, ajoutez un compte en scannant ce QR code :</li></ol>' +
-            '<img id="mfa-qr" alt="QR code à scanner" style="width:180px;height:180px;display:block;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px">' +
-            '<p style="font-size:12.5px;color:var(--mute)">Pas de scanner ? Saisissez cette clé : <code style="user-select:all">' + esc(r.totp.secret) + '</code></p>' +
-            '<ol start="2" style="font-size:14px;margin:10px 0 0 18px"><li>Tapez le code à 6 chiffres affiché :</li></ol>' +
+      }, function(){ $(…4519 tokens truncated…font-size:14px;margin:10px 0 0 18px"><li>Tapez le code à 6 chiffres affiché :</li></ol>' +
             '<div style="display:flex;gap:8px;margin-top:6px;max-width:320px"><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"><button class="btn main sm" id="mfa-ok" type="button">Confirmer</button></div>';
           // the QR code comes as SVG markup (sometimes behind a non-standard data: prefix): rebuild a clean, encoded image
           var qr = String(r.totp.qr_code || ''), at = qr.indexOf('<svg');
@@ -718,20 +531,30 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return '<div class="brief">' + h + '</div>';
   }
   var LEAD_ST = ['nouvelle', 'contactée', 'devis envoyé', 'gagnée', 'perdue', 'archivée'];
+  var LEAD_RESTORE_ST = ['nouvelle', 'contactée', 'devis envoyé', 'gagnée', 'perdue', 'traitée'];
+  function leadRetentionDue(l){
+    if (!l || l.deleted_at || l.client_id || l.user_id || l.status === 'gagnée' || l.status === 'archivée') return false;
+    var cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 3);
+    return new Date(l.created_at).getTime() <= cutoff.getTime();
+  }
   function leadOpen(l){ return ['archivée', 'gagnée', 'perdue'].indexOf(l.status) < 0; }
   $('lead-filter').onchange = renderLeads;
   function renderLeads(){
     var f = $('lead-filter').value, box = $('leads'), today = iso(new Date());
     var nNew = data.leads.filter(function(l){ return l.status === 'nouvelle'; }).length;
+    var nRetention = data.leads.filter(leadRetentionDue).length;
+    $('lead-filter').querySelector('option[value="retention"]').textContent = 'À revoir (3 ans+) · ' + nRetention;
     $('n-new').hidden = !nNew; $('n-new').textContent = nNew;
     var rows = data.leads.filter(function(l){
-      return f === 'all' ? true : f === 'open' ? leadOpen(l) : f === 'relance' ? leadOpen(l) && l.next_at : l.status === f;
+      return f === 'all' ? true : f === 'retention' ? leadRetentionDue(l) : f === 'open' ? leadOpen(l) : f === 'relance' ? leadOpen(l) && l.next_at : l.status === f;
     });
-    if (!rows.length) { box.innerHTML = '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
+    if (!rows.length) { box.innerHTML = f === 'retention' ? '<div class="empty">Aucune demande arrivée à l’échéance de révision.</div>' : '<div class="empty">Aucune demande pour le moment. Les demandes envoyées depuis votre site arrivent ici automatiquement.</div>'; return; }
     box.innerHTML = rows.map(function(l){
       var chips = [l.activite, l.projet, l.budget && l.budget !== 'Je ne sais pas' && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
         l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
+      if (leadRetentionDue(l)) chips += '<span class="chip due">Conservation à revoir · 3 ans+</span>';
+      if (l.status === 'archivée') chips += '<span class="chip">Archivée · données conservées</span>';
       if (l.next_at && leadOpen(l)) chips += '<span class="chip' + (l.next_at <= today ? ' due' : '') + '">' +
         (l.next_at <= today ? 'À relancer (prévu le ' : 'Relance le ') + day(l.next_at + 'T12:00:00') + (l.next_at <= today ? ')' : '') + '</span>';
       var nu = l.client_id ? data.unread.filter(function(m){ return m.client_id === l.client_id; }).length : 0;
@@ -741,12 +564,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
                     : (l.message ? '<div class="txt">' + esc(l.message) + '</div>' : '');
       var more = l.message && (br ? br.rows.length > 2 : l.message.length > 160);
       var opts = LEAD_ST.indexOf(l.status) < 0 ? [l.status].concat(LEAD_ST) : LEAD_ST;
+      var restoreStatus = LEAD_RESTORE_ST.indexOf(l.archive_previous_status) >= 0 ? l.archive_previous_status : '';
       return '<article class="lead" data-id="' + l.id + '"><div class="h"><b>' + esc(l.prenom) + '</b><span class="st ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
         '<span class="d">' + day(l.created_at) + '</span></div><div class="meta">' + chips + '</div>' + body +
         '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
         (l.client_id ? '<button class="btn sm line" data-a="msgs">Messages' + (nu ? ' (' + nu + ')' : '') + '</button>' : '') +
         (more ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
         '<select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' +
+        (leadRetentionDue(l) ? '<button class="btn sm line" data-a="archive">Archiver</button>' : '') +
+        (l.status === 'archivée' && restoreStatus ? '<button class="btn sm line" data-a="restore">Restaurer (' + esc(restoreStatus) + ')</button>' : '') +
+        (l.status === 'archivée' && !restoreStatus ? '<span style="font-size:12px;color:var(--mute)">Choisissez un statut pour restaurer cette ancienne fiche.</span>' : '') +
         '<label class="next-in">relance le <input type="date" data-a="next" value="' + esc(l.next_at || '') + '" aria-label="Date de relance"></label>' +
         '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
     }).join('');
@@ -758,12 +585,27 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (a === 'more') { card.classList.toggle('open'); return; }
     if (a === 'quote') return quoteFromLead(l);
     if (a === 'msgs') return openThread(client(l.client_id) || { id: l.client_id, nom: l.prenom });
+    if (a === 'archive') {
+      if (!leadRetentionDue(l)) return toast('Cette demande n’est plus dans la file de révision.');
+      return sb.update('leads', l.id, { status: 'archivée', archived_at: new Date().toISOString(), archive_previous_status: l.status })
+        .then(function(){ toast('Demande archivée. Vous pourrez la restaurer.'); loadAll(); }, fail);
+    }
+    if (a === 'restore') {
+      if (LEAD_RESTORE_ST.indexOf(l.archive_previous_status) < 0) return toast('Choisissez un statut pour restaurer cette ancienne fiche.');
+      return sb.update('leads', l.id, { status: l.archive_previous_status, archived_at: null, archive_previous_status: null })
+        .then(function(){ toast('Demande restaurée.'); loadAll(); }, fail);
+    }
     if (a === 'del') { if (!confirm('Mettre cette demande à la corbeille ? Vous pourrez la restaurer.')) return; return sb.update('leads', l.id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Demande mise à la corbeille.'); loadAll(); }, fail); }
   };
   $('leads').onchange = function(e){
     var el = e.target.closest('[data-a]'); if (!el) return;
     var card = el.closest('.lead'), l = data.leads.filter(function(x){ return x.id === card.dataset.id; })[0];
-    if (el.dataset.a === 'st') return sb.update('leads', l.id, { status: el.value }).then(function(){ toast('Statut : ' + el.value + '.'); loadAll(); }, fail);
+    if (el.dataset.a === 'st') {
+      var patch = { status: el.value };
+      if (el.value === 'archivée' && l.status !== 'archivée') { patch.archived_at = new Date().toISOString(); patch.archive_previous_status = l.status; }
+      else if (l.status === 'archivée' && el.value !== 'archivée') { patch.archived_at = null; patch.archive_previous_status = null; }
+      return sb.update('leads', l.id, patch).then(function(){ toast('Statut : ' + el.value + '.'); loadAll(); }, fail);
+    }
     if (el.dataset.a === 'next') return sb.update('leads', l.id, { next_at: el.value || null })
       .then(function(){ toast(el.value ? 'Relance notée pour le ' + day(el.value + 'T12:00:00') + '.' : 'Relance retirée.'); loadAll(); }, fail);
   };

@@ -56,6 +56,9 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Suivi des demandes (`leads.status`) : nouvelle → contactée → devis envoyé → gagnée / perdue,
   plus archivée (« traitée » hérité) ; `leads.next_at` = date de relance, rappelée sur le tableau
   de bord. Côté client, « perdue » s'affiche « Close », jamais le statut interne.
+- Conservation des prospects : le filtre « À revoir (3 ans+) » repère les demandes non converties
+  arrivées à échéance ; l'archivage est manuel et réversible (`archived_at`, `archive_previous_status`).
+  Aucune suppression automatique : examen puis suppression définitive manuels si approprié.
 - Modèle des fonctions SQL `SECURITY DEFINER` : `client_*` internes (aucun droit),
   `my_*` pour le client connecté (authenticated), `portal_*` pour le lien secret (anon).
   L'admin est reconnu par son e-mail propriétaire.

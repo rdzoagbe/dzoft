@@ -1,6 +1,9 @@
+Warning: truncated output (original token count: 17090)
+Total output lines: 1354
+
 -- ============================================================================
 -- DZOFT · copie de référence du schéma Supabase (projet rzghbvmszbjlqkdjzpxc)
--- Générée le 2026-10-28, mise à jour le 2026-10-30 (leads : statuts de suivi + next_at, droits RPC et notifications outbox) depuis la base réelle et les migrations associées.
+-- Générée le 2026-10-28, mise à jour le 2026-10-30 (leads : archive de conservation réversible, droits RPC et notifications outbox) depuis la base réelle et les migrations associées.
 --
 -- Ce fichier documente l'état de la base : tables, index, RLS, fonctions,
 -- stockage et droits. Ce n'est PAS un script d'installation à exécuter tel
@@ -42,7 +45,9 @@ create table public.leads (
   email      text not null default '',
   user_id    uuid references auth.users (id) on delete set null,
   next_at    date,            -- date de relance prévue (suivi admin, migration 2026-10-29)
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  archived_at timestamptz,
+  archive_previous_status text
 );
 create index leads_client_id_idx  on public.leads (client_id);
 create index leads_created_at_idx on public.leads (created_at desc);
@@ -165,7 +170,8 @@ create policy "owner manages clients" on public.clients for all to authenticated
 
 -- SECURITY FOLLOW-UP: public intake still needs server-side abuse limiting and a challenge.
 create policy "anyone can submit a new lead" on public.leads for insert to anon, authenticated
-  with check (status = 'nouvelle' and client_id is null and (user_id is null or user_id = (select auth.uid())));
+  with check (status = 'nouvelle' and client_id is null and (user_id is null or user_id = (select auth.uid()))
+    and archived_at is null and archive_previous_status is null);
 create policy "owner reads leads"   on public.leads for select to authenticated using ((select is_owner()));
 create policy "owner updates leads" on public.leads for update to authenticated
   using ((select is_owner())) with check ((select is_owner()));
@@ -616,75 +622,7 @@ GRANT EXECUTE ON FUNCTION public.my_review(uuid, integer, text, text, text, bool
 
 begin;
 
-create extension if not exists pg_cron;
-create extension if not exists pg_net with schema extensions;
-
-create schema if not exists private;
-revoke all on schema private from public, anon, authenticated;
-
-create table if not exists private.notification_settings (
-  singleton boolean primary key default true check (singleton),
-  owner_user_id uuid references auth.users(id) on delete set null,
-  owner_email text,
-  updated_at timestamptz not null default now()
-);
-revoke all on private.notification_settings from public, anon, authenticated, service_role;
-
--- Keep internal invoice-email controls and attachment metadata out of the
--- client-facing JSON returned by the private portal RPCs.
-create or replace function public.portal_data(p_client uuid)
-returns jsonb
-language plpgsql
-stable
-security definer
-set search_path = 'public', 'pg_temp'
-as $function$
-declare c public.clients; has_accepted boolean;
-begin
-  select * into c from public.clients where id = p_client;
-  if not found then return null; end if;
-  select exists(select 1 from public.quotes where client_id = c.id and shared and deleted_at is null and accepted_at is not null) into has_accepted;
-  return jsonb_build_object(
-    'client', jsonb_build_object('nom', c.nom, 'entreprise', c.entreprise, 'phone', case when c.contact ~ '^[+0-9 .()-]{8,}$' then c.contact else '' end),
-    'payment', case when has_accepted then (select payment from public.settings where id = 1) else null end,
-    'quotes', coalesce((select jsonb_agg(jsonb_build_object(
-        'id', q.id, 'numero', q.numero, 'status', q.status, 'sent_at', q.sent_at, 'created_at', q.created_at,
-        'accepted_at', q.accepted_at, 'accepted_name', q.accepted_name, 'accepted_terms', q.accepted_terms,
-        'accepted_early_start', q.accepted_early_start, 'accepted_method', q.accepted_method, 'accepted_target', q.accepted_target,
-        'data', coalesce(q.accepted_data, q.data) - 'lead', 'total', coalesce(q.accepted_total, q.total),
-        'note', q.client_note, 'steps', q.steps, 'docs', q.docs, 'env', q.env,
-        'invoices', coalesce((select jsonb_agg(i.value - array['id','emailAt','attachPdf','fileSize'] order by i.ordinality)
-          from jsonb_array_elements(coalesce(q.invoices, '[]'::jsonb)) with ordinality as i(value, ordinality)), '[]'::jsonb),
-        'ext_link', q.ext_link,
-        'care', case when q.accepted_at is not null then q.care end,
-        'review', (select jsonb_build_object('rating', r.rating, 'body', r.body, 'name', r.name, 'activity', r.activity,
-                     'consent', r.consent, 'published', r.published, 'at', r.updated_at, 'reply', r.reply)
-                   from public.reviews r where r.quote_id = q.id)) order by q.created_at desc)
-      from public.quotes q where q.client_id = c.id and q.shared and q.deleted_at is null), '[]'::jsonb),
-    'requests', coalesce((select jsonb_agg(jsonb_build_object(
-        'id', l.id, 'at', l.created_at, 'projet', l.projet, 'budget', l.budget, 'message', l.message, 'status', l.status) order by l.created_at desc)
-      from public.leads l where l.client_id = c.id and l.status <> 'archivée' and l.deleted_at is null), '[]'::jsonb),
-    'messages', coalesce((select jsonb_agg(jsonb_build_object(
-        'id', m.id, 'at', m.created_at, 'author', m.author, 'body', m.body, 'quote_id', m.quote_id) order by m.created_at)
-      from public.messages m where m.client_id = c.id), '[]'::jsonb));
-end
-$function$;
-revoke all on function public.portal_data(uuid) from public, anon, authenticated, service_role;
-
-create table public.project_events (
-  id uuid primary key default gen_random_uuid(),
-  event_key text not null unique check (char_length(event_key) between 1 and 512),
-  created_at timestamptz not null default now(),
-  event_type text not null check (event_type in (
-    'quote_published', 'quote_accepted', 'client_message', 'owner_message',
-    'step_validation_requested', 'step_progress', 'client_step_validated',
-    'invoice_shared', 'client_file_uploaded', 'review_submitted'
-  )),
-  summary text not null check (char_length(summary) between 1 and 300),
-  client_id uuid references public.clients(id) on delete set null,
-  quote_id uuid references public.quotes(id) on delete set null,
-  message_id uuid references public.messages(id) on delete set null,
-  invoice_id text check (invoice_id is null or char_length(invoice_id) <= 100),
+create extension if not exists pg_c…1090 tokens truncated…(invoice_id is null or char_length(invoice_id) <= 100),
   file_name text check (file_name is null or char_length(file_name) <= 180)
 );
 create index project_events_quote_created_idx on public.project_events (quote_id, created_at desc);
