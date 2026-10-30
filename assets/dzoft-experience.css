@@ -363,7 +363,8 @@ body.dzoft-client { background: radial-gradient(850px 460px at 100% 0%, #e2f5ff 
 
 /* Admin workspace */
 body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0, transparent 67%), #f1f5fa; }
-.dzoft-admin .top { background: linear-gradient(110deg, #080d19, #101a36 72%, #13314b); box-shadow: 0 8px 26px rgba(8, 16, 35, .16); }
+.dzoft-admin header.top { background: linear-gradient(110deg, #080d19, #101a36 72%, #13314b); box-shadow: 0 8px 26px rgba(8, 16, 35, .16); }
+.dzoft-admin .sheet > .top { background: transparent; box-shadow: none; color: var(--ink); }
 .dzoft-admin .shell { padding-top: 24px; gap: 24px; }
 .dzoft-admin .side { border-color: #e1e9f3; border-radius: 18px; box-shadow: 0 12px 32px rgba(15,31,57,.06); }
 .dzoft-admin .tab { transition: background .18s, color .18s, transform .18s; }
