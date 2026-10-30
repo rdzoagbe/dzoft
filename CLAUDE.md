@@ -38,7 +38,9 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.
 - `assets/rd-booking.js` (lien Google Agenda), `assets/rd-reviews.js` (avis publiés),
-  `assets/rd-steps.js`, logos `dzoft-*`, polices Sora auto-hébergées dans `assets/fonts`.
+  `assets/rd-steps.js`, `assets/dzoft-experience.css` (charte partagée des pages publiques,
+  espace client et admin), `assets/dzoft-motion.js` (apparitions au défilement, désactivées
+  si l’utilisateur réduit les animations), logos `dzoft-*`, polices Sora auto-hébergées dans `assets/fonts`.
 - SEO : JSON-LD dans `index.html` et `realisations.html`, `sitemap.xml`, `robots.txt`,
   balise de validation Search Console + `googlefe80f3bfe6ca8091.html`.
 

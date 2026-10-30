@@ -1,0 +1,430 @@
+/* Shared DZOFT visual system: public pages, client portal and admin. */
+:root {
+  --dzoft-ease: cubic-bezier(.2, .75, .25, 1);
+  --dzoft-shadow: 0 18px 48px rgba(15, 31, 57, .09);
+}
+
+/* Public website */
+body.dzoft-public {
+  background: #f8fafd;
+}
+
+:root:has(body.dzoft-public) {
+  scroll-padding-top: 118px;
+}
+
+.dzoft-public header {
+  background: rgba(8, 13, 25, .91);
+  box-shadow: 0 8px 28px rgba(4, 12, 26, .12);
+}
+
+.dzoft-public header nav a {
+  transition: color .2s var(--dzoft-ease), background .2s var(--dzoft-ease), transform .2s var(--dzoft-ease);
+}
+
+.dzoft-public header nav a:hover {
+  transform: translateY(-1px);
+}
+
+.dzoft-public header nav a[aria-current="page"] {
+  color: #fff;
+  background: linear-gradient(115deg, rgba(67, 97, 238, .25), rgba(34, 211, 238, .12));
+  box-shadow: inset 0 0 0 1px rgba(137, 208, 255, .16);
+}
+
+.dzoft-public .hero {
+  isolation: isolate;
+  background:
+    radial-gradient(680px 440px at 83% 2%, rgba(47, 105, 238, .32), transparent 68%),
+    radial-gradient(500px 400px at 94% 100%, rgba(34, 211, 238, .18), transparent 68%),
+    linear-gradient(125deg, #080d19 4%, #0b1730 56%, #111b3a);
+}
+
+.dzoft-public .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(90deg, transparent, #000 58%, #000);
+}
+
+.dzoft-public .hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 340px;
+  height: 340px;
+  right: 13%;
+  top: 8%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(67, 97, 238, .17);
+  filter: blur(58px);
+  animation: dzoft-breathe 8s ease-in-out infinite alternate;
+}
+
+.dzoft-public .hero-grid {
+  position: relative;
+  z-index: 1;
+  grid-template-columns: 1.06fr .94fr;
+  gap: clamp(30px, 5vw, 62px);
+}
+
+.dzoft-public .hero h1 {
+  font-size: clamp(38px, 5.2vw, 62px);
+  letter-spacing: -.045em;
+  line-height: 1.04;
+}
+
+.dzoft-public .hero h1 em {
+  background: linear-gradient(100deg, #fff 4%, #9be6f0 48%, #9cafff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.dzoft-public .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: .13em;
+}
+
+.dzoft-public .eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 15px rgba(34, 211, 238, .88);
+  flex: none;
+}
+
+.dzoft-public .btn {
+  min-height: 46px;
+  transition: transform .22s var(--dzoft-ease), box-shadow .22s var(--dzoft-ease), background .22s var(--dzoft-ease);
+}
+
+.dzoft-public .btn:hover {
+  transform: translateY(-3px);
+}
+
+.dzoft-public .btn-primary {
+  background: linear-gradient(115deg, #4361ee, #2eaedc);
+  box-shadow: 0 14px 32px rgba(67, 97, 238, .34);
+}
+
+.dzoft-public .hero-preview {
+  position: relative;
+  min-width: 0;
+  min-height: 382px;
+  perspective: 1000px;
+}
+
+.dzoft-public .preview-glow {
+  position: absolute;
+  inset: 20% 5% 9%;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgba(67, 97, 238, .68), rgba(34, 211, 238, .48));
+  filter: blur(48px);
+  opacity: .74;
+}
+
+.dzoft-public .preview-browser {
+  position: absolute;
+  top: 34px;
+  right: 2px;
+  width: min(100%, 510px);
+  overflow: hidden;
+  border: 1px solid rgba(219, 232, 255, .28);
+  border-radius: 18px;
+  background: #080c17;
+  box-shadow: 0 32px 82px rgba(0, 0, 0, .48);
+  transform: rotateY(-4deg) rotateX(1deg);
+  animation: dzoft-float 7s ease-in-out infinite;
+}
+
+.dzoft-public .preview-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 13px;
+  background: #111a2b;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+.dzoft-public .preview-chrome i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fb7185;
+}
+
+.dzoft-public .preview-chrome i:nth-child(2) { background: #fbbf24; }
+.dzoft-public .preview-chrome i:nth-child(3) { background: #34d399; }
+
+.dzoft-public .preview-address {
+  min-width: 0;
+  flex: 1;
+  margin-left: 8px;
+  padding: 1px 9px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 6px;
+  background: #0a1221;
+  color: #94a9c0;
+  font-size: 10px;
+}
+
+.dzoft-public .preview-shot {
+  display: block;
+  height: 270px;
+  overflow: hidden;
+  background: #10182a;
+}
+
+.dzoft-public .preview-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: transform .7s var(--dzoft-ease);
+}
+
+.dzoft-public .preview-browser:hover .preview-shot img {
+  transform: scale(1.035);
+}
+
+.dzoft-public .preview-card {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 16px);
+  padding: 11px 14px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 14px;
+  background: rgba(15, 27, 47, .94);
+  box-shadow: 0 16px 38px rgba(0,0,0,.32);
+  color: #fff;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+}
+
+.dzoft-public .preview-card b,
+.dzoft-public .preview-card small { display: block; }
+.dzoft-public .preview-card b { font-size: 12.5px; }
+.dzoft-public .preview-card small { margin-top: 2px; color: #aebed0; font-size: 10.5px; }
+.dzoft-public .preview-card-top { top: 0; left: 0; animation: dzoft-card-float 6s ease-in-out infinite reverse; }
+.dzoft-public .preview-card-top img { width: 38px; height: 38px; border: 2px solid rgba(127,215,245,.7); border-radius: 50%; object-fit: cover; }
+.dzoft-public .preview-card-bottom { right: -5px; bottom: 20px; display: block; animation: dzoft-card-float 6.5s ease-in-out -2s infinite; }
+.dzoft-public .preview-card-bottom:hover { border-color: rgba(127,215,245,.7); }
+.dzoft-public .preview-card-bottom .online { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; color: #a2f2d0; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.dzoft-public .preview-card-bottom .online::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #45dc9b; box-shadow: 0 0 10px #45dc9b; }
+.dzoft-public .preview-card-bottom b { font-size: 13px; }
+.dzoft-public .preview-caption { position: absolute; right: 0; bottom: -4px; color: #9badc2; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+
+.dzoft-public main > section:nth-of-type(2):not(.cta) { background: linear-gradient(180deg, #f1f5fa, #f8fafd); }
+.dzoft-public .soft { background: linear-gradient(180deg, #f1f5fa, #f8fafd); }
+.dzoft-public .head { max-width: 760px; }
+.dzoft-public .head h2 { letter-spacing: -.035em; }
+.dzoft-public .svc,
+.dzoft-public .work,
+.dzoft-public .demo-c {
+  position: relative;
+  border-color: #e2e9f2;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(15, 31, 57, .035);
+  transition: transform .28s var(--dzoft-ease), box-shadow .28s var(--dzoft-ease), border-color .28s var(--dzoft-ease);
+}
+
+.dzoft-public .svc:hover,
+.dzoft-public .work:hover,
+.dzoft-public .demo-c:hover {
+  transform: translateY(-5px);
+  border-color: rgba(67, 97, 238, .28);
+  box-shadow: 0 22px 48px rgba(15, 31, 57, .12);
+}
+
+.dzoft-public .demo-c img { transition: transform .65s var(--dzoft-ease); }
+.dzoft-public .demo-c:hover img { transform: scale(1.035); }
+.dzoft-public .case + .case { border-image: linear-gradient(90deg, transparent, #cbd8e7, transparent) 1; }
+.dzoft-public .frame { border-radius: 16px; box-shadow: 0 24px 56px rgba(11, 27, 46, .14); }
+.dzoft-public .tag { background: #e8f2ff; }
+.dzoft-public .cta {
+  color: #fff;
+  background:
+    radial-gradient(470px 280px at 86% 8%, rgba(34, 211, 238, .2), transparent 72%),
+    linear-gradient(120deg, #080d19 0%, #101d3d 58%, #123552 100%);
+}
+.dzoft-public .cta h2 { color: #fff; }
+.dzoft-public .cta p { color: #c4d2e1; }
+.dzoft-public .cta,
+.dzoft-public .contact { position: relative; overflow: hidden; }
+.dzoft-public .cta::before,
+.dzoft-public .contact::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(90deg, transparent, #000 55%);
+}
+.dzoft-public .cta > .wrap,
+.dzoft-public .contact > .wrap { position: relative; z-index: 1; }
+.dzoft-public form { box-shadow: 0 24px 65px rgba(0,0,0,.2); }
+.dzoft-public input,
+.dzoft-public select,
+.dzoft-public textarea { transition: border-color .2s, box-shadow .2s; }
+.dzoft-public input:focus,
+.dzoft-public select:focus,
+.dzoft-public textarea:focus { border-color: #5574ef; box-shadow: 0 0 0 4px rgba(67,97,238,.13); }
+.dzoft-public details { transition: border-color .2s, box-shadow .2s; }
+.dzoft-public details[open] { border-color: #b7c9ff; box-shadow: 0 9px 25px rgba(22, 44, 94, .06); }
+.dzoft-public footer { border-top: 1px solid rgba(255,255,255,.07); }
+
+@media (max-width: 960px) {
+  .dzoft-public .bar { height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px 10px; padding-top: 8px; }
+  .dzoft-public header nav {
+    display: flex;
+    order: 5;
+    flex: 0 0 calc(100% + 40px);
+    gap: 4px;
+    margin: 0 -20px;
+    padding: 0 20px 9px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .dzoft-public header nav::-webkit-scrollbar { display: none; }
+  .dzoft-public header nav a { flex: none; white-space: nowrap; font-size: 13px; padding: 7px 10px; }
+  .dzoft-public .hero-grid { grid-template-columns: 1fr; gap: 26px; }
+  .dzoft-public .hero-preview { min-height: 360px; }
+  .dzoft-public .preview-browser { left: 7%; right: 0; width: 91%; }
+  .dzoft-public .preview-card-top { left: 0; }
+}
+
+@media (max-width: 620px) {
+  :root:has(body.dzoft-public) { scroll-padding-top: 112px; }
+  .dzoft-public .hero h1 { font-size: clamp(37px, 10vw, 47px); }
+  .dzoft-public .hero-preview { min-height: 295px; }
+  .dzoft-public .preview-browser { top: 24px; left: 6%; width: 92%; border-radius: 14px; }
+  .dzoft-public .preview-chrome { height: 31px; }
+  .dzoft-public .preview-shot { height: 194px; }
+  .dzoft-public .preview-card { padding: 9px 10px; }
+  .dzoft-public .preview-card-top img { width: 32px; height: 32px; }
+  .dzoft-public .preview-card-top small { font-size: 9px; }
+  .dzoft-public .preview-card-bottom { right: -1px; bottom: 0; }
+  .dzoft-public .preview-card-bottom small { font-size: 9px; }
+  .dzoft-public .preview-caption { display: none; }
+}
+
+/* Motion is opt-in from the companion script and never hides content by default. */
+.dzoft-motion-ready .dzoft-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .65s var(--dzoft-ease), transform .65s var(--dzoft-ease);
+}
+.dzoft-motion-ready .dzoft-reveal.dzoft-visible { opacity: 1; transform: none; }
+.dzoft-motion-ready .dzoft-reveal.dzoft-delay-1 { transition-delay: .1s; }
+.dzoft-motion-ready .dzoft-reveal.dzoft-delay-2 { transition-delay: .2s; }
+
+/* Client portal */
+body.dzoft-client { background: radial-gradient(850px 460px at 100% 0%, #e2f5ff 0, transparent 66%), #f0f4fa; }
+.dzoft-client .top { background: linear-gradient(110deg, #080d19, #101a36 72%, #13314b); box-shadow: 0 8px 26px rgba(8, 16, 35, .16); }
+.dzoft-client .top .in { padding-top: 13px; padding-bottom: 13px; }
+.dzoft-client .top .brand img { filter: drop-shadow(0 4px 10px rgba(34, 211, 238, .2)); }
+.dzoft-client .shell { padding-top: 24px; gap: 24px; }
+.dzoft-client .side { border-color: #e1e9f3; border-radius: 18px; box-shadow: 0 12px 32px rgba(15,31,57,.06); }
+.dzoft-client .side a { transition: background .18s, color .18s, transform .18s; }
+.dzoft-client .side a:hover { transform: translateX(2px); }
+.dzoft-client .side a[aria-current] { background: linear-gradient(110deg, #e8efff, #e3f7fb); color: #3448d6; box-shadow: inset 3px 0 #4361ee; }
+.dzoft-client .vhead { padding: 5px 2px 8px; }
+.dzoft-client .vhead h1 { letter-spacing: -.035em; }
+.dzoft-client .card,
+.dzoft-client .item,
+.dzoft-client .stats a { border-color: #e2e9f2; box-shadow: 0 8px 24px rgba(15,31,57,.035); transition: border-color .2s, box-shadow .2s, transform .2s; }
+.dzoft-client .card { border-radius: 17px; padding: 20px; }
+.dzoft-client a.item:hover,
+.dzoft-client .stats a:hover { transform: translateY(-2px); border-color: #bfd0fb; box-shadow: 0 14px 32px rgba(31,61,120,.09); }
+.dzoft-client .btn { transition: transform .18s, box-shadow .18s, background .18s; }
+.dzoft-client .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(67,97,238,.16); }
+.dzoft-client .btn.main { box-shadow: 0 8px 20px rgba(67,97,238,.2); }
+.dzoft-client .pay { border-color: #ccdbfa; background: linear-gradient(145deg, #fff, #f9fbff); }
+.dzoft-client .pay .due { border: 1px solid #e2e9f2; background: #f5f8fd; }
+.dzoft-client .invl li { background: #fff; }
+.dzoft-client :focus-visible { outline-color: #4d68ed; }
+.dzoft-client footer { max-width: 1180px; padding: 0 16px 32px; color: #6d7e92; }
+
+/* Admin workspace */
+body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0, transparent 67%), #f1f5fa; }
+.dzoft-admin .top { background: linear-gradient(110deg, #080d19, #101a36 72%, #13314b); box-shadow: 0 8px 26px rgba(8, 16, 35, .16); }
+.dzoft-admin .shell { padding-top: 24px; gap: 24px; }
+.dzoft-admin .side { border-color: #e1e9f3; border-radius: 18px; box-shadow: 0 12px 32px rgba(15,31,57,.06); }
+.dzoft-admin .tab { transition: background .18s, color .18s, transform .18s; }
+.dzoft-admin .tab:hover { transform: translateX(2px); }
+.dzoft-admin .tab[aria-selected="true"] { background: linear-gradient(110deg, #e8efff, #e3f7fb); color: #3448d6; box-shadow: inset 3px 0 #4361ee; }
+.dzoft-admin .bar h2 { letter-spacing: -.035em; }
+.dzoft-admin .kpi,
+.dzoft-admin .panel,
+.dzoft-admin .card,
+.dzoft-admin .lead,
+.dzoft-admin .empty,
+.dzoft-admin table,
+.dzoft-admin .modal .card { border-color: #e2e9f2; box-shadow: 0 8px 24px rgba(15,31,57,.04); }
+.dzoft-admin .kpi { border-radius: 16px; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.dzoft-admin .kpi:hover { transform: translateY(-2px); border-color: #bfd0fb; box-shadow: 0 14px 32px rgba(31,61,120,.09); }
+.dzoft-admin .kpi b { font-family: Sora, system-ui, sans-serif; letter-spacing: -.04em; }
+.dzoft-admin .panel { border-radius: 16px; padding: 17px 18px; }
+.dzoft-admin .card { border-radius: 16px; }
+.dzoft-admin .panel h3 { font-size: 16px; }
+.dzoft-admin .todo li { background: #fff; transition: border-color .18s, background .18s; }
+.dzoft-admin .todo li:hover { border-color: #bfd0fb; background: #fbfcff; }
+.dzoft-admin .lead { border-radius: 16px; transition: border-color .2s, box-shadow .2s; }
+.dzoft-admin .lead:hover { border-color: #c9d7ef; box-shadow: 0 12px 30px rgba(15,31,57,.075); }
+.dzoft-admin input:focus,
+.dzoft-admin select:focus,
+.dzoft-admin textarea:focus { outline: none; border-color: #5574ef; box-shadow: 0 0 0 4px rgba(67,97,238,.13); }
+.dzoft-admin .btn { transition: transform .18s, box-shadow .18s; }
+.dzoft-admin .btn:hover { transform: translateY(-1px); box-shadow: 0 7px 18px rgba(31,61,120,.12); }
+.dzoft-admin .toast { box-shadow: 0 12px 32px rgba(8,16,35,.25); animation: dzoft-toast-in .24s var(--dzoft-ease) both; }
+.dzoft-admin :focus-visible { outline-color: #4d68ed; }
+
+@media (max-width: 900px) {
+  .dzoft-client .shell,
+  .dzoft-admin .shell { padding-top: 0; }
+  .dzoft-client .side,
+  .dzoft-admin .side { box-shadow: 0 7px 20px rgba(15,31,57,.08); }
+}
+
+@media (max-width: 640px) {
+  .dzoft-client .card { padding: 16px; }
+  .dzoft-admin .panel { padding: 14px; }
+}
+
+@keyframes dzoft-float {
+  0%, 100% { transform: translateY(0) rotateY(-4deg) rotateX(1deg); }
+  50% { transform: translateY(-10px) rotateY(-2deg) rotateX(0); }
+}
+@keyframes dzoft-card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes dzoft-breathe {
+  from { transform: scale(.88); opacity: .6; }
+  to { transform: scale(1.13); opacity: 1; }
+}
+@keyframes dzoft-toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .dzoft-motion-ready .dzoft-reveal { opacity: 1; transform: none; }
+}
