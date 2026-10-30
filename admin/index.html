@@ -258,7 +258,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         <select id="lead-filter" style="width:auto"><option value="open">À suivre</option><option value="relance">Relance prévue</option><option value="gagnée">Gagnées</option><option value="perdue">Perdues</option><option value="retention">À revoir (3 ans+)</option><option value="all">Toutes</option><option value="archivée">Archivées</option></select>
         <button class="btn sm line" id="b-paste" type="button">Coller une demande</button>
       </div>
-      <p style="font-size:13px;color:var(--mute);margin:-8px 0 14px">Les demandes non converties de 3 ans et plus apparaissent dans « À revoir ». Les archiver les masque de la liste active sans les effacer ; vous pourrez les restaurer. La suppression définitive reste une action manuelle après vérification.</p>
+      <p style="font-size:13px;color:var(--mute);margin:-8px 0 14px">Les demandes non converties apparaissent dans « À revoir » trois ans après leur collecte ou après le dernier contact initié par le prospect, si celui-ci est plus récent. Renseignez cette date uniquement quand le prospect vous recontacte : un devis ou une relance envoyé par DZOFT ne repousse pas l’échéance. L’archivage reste réversible ; la suppression définitive est manuelle, après vérification.</p>
       <div class="list" id="leads"></div>
     </section>
 
@@ -723,7 +723,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function leadRetentionDue(l){
     if (!l || l.deleted_at || l.client_id || l.user_id || l.status === 'gagnée' || l.status === 'archivée') return false;
     var cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 3);
-    return new Date(l.created_at).getTime() <= cutoff.getTime();
+    var collected = new Date(l.created_at).getTime();
+    var prospectContact = l.last_prospect_contact_at ? new Date(l.last_prospect_contact_at).getTime() : collected;
+    var reference = isFinite(prospectContact) ? Math.max(collected, prospectContact) : collected;
+    return reference <= cutoff.getTime();
   }
   function leadOpen(l){ return ['archivée', 'gagnée', 'perdue'].indexOf(l.status) < 0; }
   $('lead-filter').onchange = renderLeads;
@@ -741,6 +744,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       var chips = [l.activite, l.projet, l.budget && l.budget !== 'Je ne sais pas' && 'Budget : ' + l.budget, l.contact, l.email && l.email !== l.contact && l.email,
         l.elements && 'À prévoir : ' + l.elements, 'via ' + l.source, (l.user_id || (client(l.client_id) || {}).user_id) ? 'espace client actif' : '']
         .filter(Boolean).map(function(c){ return '<span class="chip">' + esc(c) + '</span>'; }).join('');
+      if (l.last_prospect_contact_at) chips += '<span class="chip">Dernier contact reçu · ' + esc(day(l.last_prospect_contact_at)) + '</span>';
       if (leadRetentionDue(l)) chips += '<span class="chip due">Conservation à revoir · 3 ans+</span>';
       if (l.status === 'archivée') chips += '<span class="chip">Archivée · données conservées</span>';
       if (l.next_at && leadOpen(l)) chips += '<span class="chip' + (l.next_at <= today ? ' due' : '') + '">' +
@@ -762,6 +766,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         (leadRetentionDue(l) ? '<button class="btn sm line" data-a="archive">Archiver</button>' : '') +
         (l.status === 'archivée' && restoreStatus ? '<button class="btn sm line" data-a="restore">Restaurer (' + esc(restoreStatus) + ')</button>' : '') +
         (l.status === 'archivée' && !restoreStatus ? '<span style="font-size:12px;color:var(--mute)">Choisissez un statut pour restaurer cette ancienne fiche.</span>' : '') +
+        '<label class="next-in" title="Ne mettez à jour cette date que si le prospect a initié un nouveau contact.">dernier contact reçu <input type="date" data-a="prospect-contact" max="' + today + '" value="' + esc(l.last_prospect_contact_at ? iso(new Date(l.last_prospect_contact_at)) : '') + '" aria-label="Date du dernier contact initié par le prospect"></label>' +
+        '<button class="btn sm line" data-a="contact-today" title="À utiliser seulement si le prospect vous a recontacté aujourd’hui.">Noter aujourd’hui</button>' +
         '<label class="next-in">relance le <input type="date" data-a="next" value="' + esc(l.next_at || '') + '" aria-label="Date de relance"></label>' +
         '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
     }).join('');
@@ -773,6 +779,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (a === 'more') { card.classList.toggle('open'); return; }
     if (a === 'quote') return quoteFromLead(l);
     if (a === 'msgs') return openThread(client(l.client_id) || { id: l.client_id, nom: l.prenom });
+    if (a === 'contact-today') return sb.update('leads', l.id, { last_prospect_contact_at: dateTimestamp(iso(new Date())) })
+      .then(function(){ toast('Dernier contact reçu enregistré pour aujourd’hui.'); loadAll(); }, fail);
     if (a === 'archive') {
       if (!leadRetentionDue(l)) return toast('Cette demande n’est plus dans la file de révision.');
       return sb.update('leads', l.id, { status: 'archivée', archived_at: new Date().toISOString(), archive_previous_status: l.status })
@@ -796,6 +804,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }
     if (el.dataset.a === 'next') return sb.update('leads', l.id, { next_at: el.value || null })
       .then(function(){ toast(el.value ? 'Relance notée pour le ' + day(el.value + 'T12:00:00') + '.' : 'Relance retirée.'); loadAll(); }, fail);
+    if (el.dataset.a === 'prospect-contact') return sb.update('leads', l.id, { last_prospect_contact_at: dateTimestamp(el.value) })
+      .then(function(){ toast(el.value ? 'Date du dernier contact reçu mise à jour.' : 'Date du dernier contact reçu effacée.'); loadAll(); }, fail);
   };
 
   /* ---------------- quotes ---------------- */
@@ -805,6 +815,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return 'D-' + y + '-' + String(max + 1).padStart(3, '0');
   }
   function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  function dateTimestamp(value){ return value ? new Date(value + 'T12:00:00').toISOString() : null; }
   function blankQuote(c, extra){
     var d = new Date(), v = new Date(); v.setDate(v.getDate() + 30);
     c = c || {};

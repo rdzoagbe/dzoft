@@ -1,6 +1,6 @@
 -- ============================================================================
 -- DZOFT · copie de référence du schéma Supabase (projet rzghbvmszbjlqkdjzpxc)
--- Générée le 2026-10-28, mise à jour le 2026-10-30 (leads : archive de conservation réversible, droits RPC et notifications outbox) depuis la base réelle et les migrations associées.
+-- Générée le 2026-10-28, mise à jour le 2026-10-30 (leads : archive réversible, contact prospect, droits RPC et notifications outbox) depuis la base réelle et les migrations associées.
 --
 -- Ce fichier documente l'état de la base : tables, index, RLS, fonctions,
 -- stockage et droits. Ce n'est PAS un script d'installation à exécuter tel
@@ -42,6 +42,7 @@ create table public.leads (
   email      text not null default '',
   user_id    uuid references auth.users (id) on delete set null,
   next_at    date,            -- date de relance prévue (suivi admin, migration 2026-10-29)
+  last_prospect_contact_at timestamptz, -- dernier contact initié par le prospect (suivi admin)
   deleted_at timestamptz,
   archived_at timestamptz,
   archive_previous_status text
@@ -168,7 +169,7 @@ create policy "owner manages clients" on public.clients for all to authenticated
 -- SECURITY FOLLOW-UP: public intake still needs server-side abuse limiting and a challenge.
 create policy "anyone can submit a new lead" on public.leads for insert to anon, authenticated
   with check (status = 'nouvelle' and client_id is null and (user_id is null or user_id = (select auth.uid()))
-    and archived_at is null and archive_previous_status is null);
+    and archived_at is null and archive_previous_status is null and last_prospect_contact_at is null);
 create policy "owner reads leads"   on public.leads for select to authenticated using ((select is_owner()));
 create policy "owner updates leads" on public.leads for update to authenticated
   using ((select is_owner())) with check ((select is_owner()));
