@@ -150,7 +150,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         <span class="sp" style="flex:1"></span>
         <button class="btn sm ghost" id="b-newlink" type="button" title="L’ancien lien cessera de fonctionner">Changer le lien</button>
       </div>
-      <p class="muted" id="mail-state" style="margin-top:6px">Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».</p>
+      <p class="muted" id="mail-state" style="margin-top:6px">Quand vous rendez le devis visible, un e-mail est envoyé séparément au client et à votre adresse de suivi.</p>
       <label for="ext" style="margin-top:14px">Lien du devis Revolut Pro (facultatif)</label>
       <div class="link"><input id="ext" inputmode="url" placeholder="https://…" aria-describedby="ext-help"><a class="btn sm line" id="ext-open" target="_blank" rel="noopener noreferrer">Ouvrir</a></div>
       <p class="muted" id="ext-help" style="margin-top:4px">Dans Revolut Pro, ouvrez le devis et copiez son lien de partage, puis collez-le ici. Le client verra le bouton « Voir le devis sur Revolut » sur son devis. La signature se fait toujours dans son espace.</p>
@@ -182,7 +182,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez aussi le PDF et, si disponible, le lien de paiement : le client retrouvera la facture et les informations de règlement dans son espace. Cochez « Payée » dès réception, et pensez à cocher l’étape « Acompte reçu ».</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez le PDF pour le conserver dans l’espace client. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception.</p>
     <p class="muted" id="iv-account-note" hidden>Pour joindre un PDF privé, le client doit avoir créé son compte avec l’adresse e-mail de sa fiche.</p>
     <div id="invs"></div>
   </section>
@@ -220,7 +220,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <h2>Messages</h2>
     <div class="thread" id="thread"></div>
     <textarea id="reply" maxlength="2000" placeholder="Votre réponse au client"></textarea>
-    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><label class="muted" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="reply-mail" checked style="width:16px;height:16px"> Prévenir aussi le client par e-mail</label></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm main" id="b-reply" type="button">Envoyer la réponse</button><span class="muted">Un e-mail de notification part automatiquement au client.</span></div>
+  </section>
+
+  <section class="card" id="c-activity" hidden>
+    <h2>Historique et e-mails</h2>
+    <p class="muted">Les changements importants sont enregistrés avec l’état de livraison de chaque e-mail. Les e-mails échoués peuvent être relancés ici.</p>
+    <div id="activity-log"></div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
@@ -235,7 +241,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   if (!sb || !sb.session()) { location.replace('./'); return; }
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
-  var Q = null, C = null, clients = [], msgs = [], sent = [], timer = null, RV = null;
+  var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
@@ -253,9 +259,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         sb.select('clients', 'select=id,nom,entreprise&order=nom.asc'),
         Q.client_id ? sb.select('messages', 'select=*&client_id=eq.' + Q.client_id + '&order=created_at.asc') : Promise.resolve([]),
         sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; }),
-        sb.select('reviews', 'select=*&quote_id=eq.' + encodeURIComponent(QID)).catch(function(){ return []; })
+        sb.select('reviews', 'select=*&quote_id=eq.' + encodeURIComponent(QID)).catch(function(){ return []; }),
+        sb.select('project_events', 'select=id,event_type,summary,created_at,message_id,invoice_id,file_name&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=40').catch(function(){ return []; }),
+        sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,invoice_id,attach_invoice_pdf&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=80').catch(function(){ return []; })
       ]).then(function(x){
         C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || []; RV = (x[4] || [])[0] || null;
+        events = x[5] || []; outbox = x[6] || [];
         if (!(Q.steps || []).length) Q.steps = fresh();
         render(); markRead();
       });
@@ -263,13 +272,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   function fresh(){ return window.RDSTEPS.map(function(s){ return { k: s.k, t: s.t, s: s.s, done: false, d: '', note: '' }; }); }
   // A client with an account signs in; others get their secret link.
-  function url(){ return C ? sb.PORTAL + '#' + C.portal_token : ''; }
+  function url(){ return C ? (C.user_id ? sb.PORTAL : sb.PORTAL + '#' + C.portal_token) : ''; }
   function inviteUrl(){ return C && C.user_id ? sb.PORTAL : url(); }
   function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
 
   function render(){
     $('loading').hidden = true;
-    ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg'].forEach(function(id){ $(id).hidden = false; });
+    ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-docs', 'c-env', 'c-msg', 'c-activity'].forEach(function(id){ $(id).hidden = false; });
     $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = false;
     $('iv-account-note').hidden = !!(C && C.user_id);
     $('ext').value = Q.ext_link || ''; $('ext-open').hidden = !Q.ext_link; if (Q.ext_link) $('ext-open').href = Q.ext_link;
@@ -277,10 +286,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
-    if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : le message l’invite à se connecter ; le lien privé ci-dessous marche aussi)' : ''); $('url').value = url(); $('b-open').href = url(); }
+    if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)' : ''); $('url').value = url(); $('b-open').href = url(); }
     $('shared').checked = !!Q.shared;
-    var qs = sentAt('quote');
-    $('mail-state').textContent = qs ? 'E-mail du devis envoyé le ' + qs + '.' : Q.shared ? 'Devis visible : le client n’a pas encore reçu d’e-mail. Cliquez sur « Envoyer l’e-mail du devis ».' : 'Aucun e-mail ne part sans votre clic : cochez « Visible », puis cliquez sur « Envoyer l’e-mail du devis ».';
+    $('b-mail').textContent = Q.shared ? 'Renvoyer l’e-mail du devis' : 'Envoyer l’e-mail du devis';
+    var quoteMail = events.filter(function(e){ return e.event_type === 'quote_published'; })[0];
+    var quoteJobs = quoteMail ? outbox.filter(function(x){ return x.event_id === quoteMail.id; }) : [];
+    var clientJob = quoteJobs.filter(function(x){ return x.recipient_role === 'client'; })[0];
+    $('mail-state').textContent = !Q.shared ? 'Le devis sera envoyé par e-mail au client et à votre adresse de suivi dès que vous le rendez visible.' :
+      clientJob && clientJob.status === 'sent' ? 'E-mail envoyé au client le ' + when(clientJob.sent_at) + '.' :
+      clientJob && clientJob.status === 'failed' ? 'L’e-mail au client a échoué : corrigez son adresse puis relancez l’envoi dans « Historique et e-mails ».' :
+      clientJob ? 'E-mail au client : ' + (clientJob.status === 'processing' ? 'en cours…' : 'en attente de livraison.') :
+      'Le devis est visible. L’historique d’envoi apparaît ici dès que la notification est créée.';
     $('sh-pill').textContent = Q.shared ? 'visible' : 'non visible'; $('sh-pill').className = 'pill' + (Q.shared ? ' on' : '');
     // acceptance
     $('acc-box').innerHTML = Q.accepted_at ?
@@ -298,31 +314,45 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       save({ accepted_at: null, accepted_name: null, accepted_ip: null, accepted_data: null, accepted_total: null, accepted_terms: null, accepted_early_start: null, accepted_method: null, accepted_target: null, status: 'envoyé' }, true);
     };
     $('note').value = Q.client_note || '';
-    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles();
+    renderSteps(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
   }
 
   function save(row, reload){
     $('sync').textContent = 'enregistrement…';
     return sb.update('quotes', QID, row).then(function(){ $('sync').textContent = 'enregistré ✓'; if (reload) load(); return true; }, function(e){ $('sync').textContent = 'non enregistré'; fail(e); return false; });
   }
-  // e-mails to the client (Brevo, through the notify-client server function): only sent on a click, after confirmation
+  // Private recipient used only to prepare a manual e-mail draft.
   function mailTo(){ return [C && C.email, C && C.contact].map(function(x){ return (x || '').trim(); }).filter(function(x){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); })[0] || ''; }
   function sentAt(kind, step){
+    var type = kind === 'validate' ? 'step_validation_requested' : kind === 'step' ? 'step_progress' : 'quote_published';
+    var ev = events.filter(function(x){ return x.event_type === type && (!step || (x.summary || '').indexOf(step) >= 0); })[0];
+    var job = ev && outbox.filter(function(x){ return x.event_id === ev.id && x.recipient_role === 'client' && x.status === 'sent'; })[0];
+    if (job) return new Date(job.sent_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     var ref = kind + ':' + QID + ':' + String(step || '').slice(0, 80);
     var n = sent.filter(function(x){ return x.ref === ref; })[0];
     return n ? new Date(n.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
   }
-  function notify(kind, extra, label, ask){
-    if (!C) return Promise.resolve();
-    var to = mailTo();
-    if (!to) { toast('Ce client n’a pas d’adresse e-mail : ajoutez-la dans sa fiche.'); return Promise.resolve(); }
-    if (ask !== false && !confirm('Envoyer à ' + to + ' l’e-mail « ' + label + ' » ?')) return Promise.resolve();
-    var body = { kind: kind, quote_id: QID, client_id: C.id };
-    for (var k in extra) body[k] = extra[k];
-    return sb.fn('notify-client', body).then(function(r){
-      toast(r && r.skipped ? 'Déjà envoyé il y a moins de 30 minutes.' : 'E-mail envoyé à ' + (r && r.to || to) + '.');
-      return load();
-    }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
+  function renderActivity(){
+    var box = $('activity-log'); if (!box) return;
+    if (!events.length) { box.innerHTML = '<p class="muted">Les prochains devis envoyés, messages, validations, jalons, factures et avis apparaîtront ici.</p>'; return; }
+    box.innerHTML = events.map(function(ev){
+      var jobs = outbox.filter(function(x){ return x.event_id === ev.id; });
+      var deliveries = jobs.length ? jobs.map(function(job){
+        var who = job.recipient_role === 'owner' ? 'Vous' : (C && C.nom || 'Client');
+        var state = job.status === 'sent' ? 'Envoyé le ' + when(job.sent_at) :
+          job.status === 'processing' ? 'En cours d’envoi…' :
+          job.status === 'queued' ? 'En attente · tentative ' + (job.attempts + 1) :
+          'Échec · ' + (job.last_error || 'raison inconnue');
+        return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:' + (job.status === 'failed' ? 'var(--err)' : 'var(--mute)') + '"><b>' + esc(who) + '</b> · ' + esc(state) +
+          (job.status === 'failed' ? ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Réessayer</button>' : '') + '</div>';
+      }).join('') : '<div class="muted" style="font-size:13px">' + (ev.event_type === 'client_message' || ev.event_type === 'client_file_uploaded' ? 'Notification regroupée avec une activité récente.' : 'Aucun e-mail associé à cet événement.') + '</div>';
+      return '<article style="border-top:1px solid var(--line);padding:10px 0"><b>' + esc(ev.summary) + '</b><span class="muted" style="float:right">' + when(ev.created_at) + '</span>' + deliveries + '</article>';
+    }).join('');
+    box.onclick = function(e){
+      var b = e.target.closest('[data-retry-email]'); if (!b) return;
+      b.disabled = true; b.textContent = 'Relance…';
+      sb.fn('process-notification-outbox', { retry_id: b.dataset.retryEmail }).then(function(){ toast('E-mail relancé.'); return load(); }, function(err){ b.disabled = false; b.textContent = 'Réessayer'; toast('Relance impossible : ' + (err.message || 'erreur')); });
+    };
   }
   function later(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(timer); timer = setTimeout(function(){ save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }); }, 700); }
 
@@ -346,7 +376,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
           return sb.update('leads', leadId, { status: 'devis envoyé' });
         });
       updateLead.then(function(){
-        toast(on ? 'Le devis est visible. Cliquez sur « Envoyer l’e-mail du devis » pour prévenir le client.' : 'Le devis n’est plus visible pour le client.');
+        if (on) sb.fn('process-notification-outbox', {}).then(function(){ toast('Le devis est visible et l’e-mail a été traité.'); return load(); }, function(){ toast('Le devis est visible. L’e-mail est en file et sera relancé automatiquement.'); return load(); });
+        else toast('Le devis n’est plus visible pour le client.');
       }, function(){
         toast('Le devis est visible, mais le statut de la demande n’a pas pu être mis à jour.');
       });
@@ -374,7 +405,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   $('b-mail').onclick = function(){
     if (!guard()) return;
     if (Q.accepted_at) { toast('Ce devis est déjà accepté.'); return; }
-    notify('quote', {}, 'Votre devis ' + Q.numero + ' est disponible');
+    sb.rpc('admin_notify_quote', { p_quote_id: QID }, true).then(function(r){
+      if (r && r.skipped) { toast('Un e-mail du devis a déjà été envoyé ou est en cours de livraison.'); return load(); }
+      return sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail du devis traité. Consultez l’historique pour son statut.'); return load(); }, function(){ toast('E-mail ajouté à la file : il sera relancé automatiquement.'); return load(); });
+    }, fail);
   };
   $('b-mymail').onclick = function(){
     if (!guard()) return;
@@ -434,8 +468,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (m) {
       var st = Q.steps[+m.closest('.st').dataset.i];
       clearTimeout(timer);
-      return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }).then(function(){
-        notify(m.dataset.m, { step: st.t }, m.dataset.m === 'step' ? 'Votre projet avance : ' + st.t + ' ✓' : 'Votre validation est attendue : ' + st.t);
+      if (m.dataset.m === 'validate') st.emailValidateAt = new Date().toISOString();
+      else st.emailProgressAt = new Date().toISOString();
+      return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices || [] }).then(function(ok){
+        if (!ok) return;
+        sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail traité.'); return load(); }, function(){ toast('E-mail ajouté à la file : il sera relancé automatiquement.'); return load(); });
       });
     }
     var b = e.target.closest('button[data-a]'); if (!b) return;
@@ -464,9 +501,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   };
   $('docs').onclick = function(e){ if (!e.target.classList.contains('rm')) return; Q.docs.splice(+e.target.closest('.doc').dataset.i, 1); renderDocs(); later(); };
   /* invoices made in Revolut Pro: label, number, amount, link, paid */
+  function invoiceId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'inv-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10); }
+  function prepareInvoices(){ Q.invoices = Q.invoices || []; Q.invoices.forEach(function(x){ if (!x.id) x.id = invoiceId(); }); }
   function deposit(){ var f = ((Q.accepted_data || Q.data || {}).f) || {}, t = +Q.accepted_total || +Q.total || 0; return Math.round(t * (parseFloat(f.deppct) || 30)) / 100; }
   function renderInv(){
-    Q.invoices = Q.invoices || [];
+    prepareInvoices();
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x, i){
       return '<div class="invr' + (x.paid ? ' paid' : '') + '" data-i="' + i + '"><input class="n" list="iv-kinds" value="' + esc(x.n) + '" placeholder="Libellé">' +
         '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° Revolut (ex. INV-2)">' +
@@ -474,13 +513,16 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> Payée</label>' +
         '<button class="rm" type="button" title="Retirer">×</button>' +
       '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien de paiement Revolut (https://…)" inputmode="url">' +
-      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button><button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') + '</div></div>';
+      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button><button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') +
+        '<label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" class="attach"' + (x.attachPdf ? ' checked' : '') + (!x.file ? ' disabled' : '') + '> Joindre le PDF officiel aux e-mails</label>' +
+        '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button></div></div>';
     }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
   }
   function updateInvoice(e){
     var row = e.target.closest('.invr'); if (!row) return;
     var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
     if (c === 'paid') { x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
+    else if (c === 'attach') x.attachPdf = e.target.checked;
     else if (c === 'amt') x.amt = parseFloat(e.target.value) || 0;
     else if (c === 'u') { x.u = e.target.value.trim(); e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : ''; }
     else x[c] = e.target.value;
@@ -500,10 +542,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var path = 'u/' + C.user_id + '/factures/' + QID + '/' + Date.now() + '-' + clean;
     toast('Envoi du PDF…');
     sb.files.upload(path, file).then(function(){
-      var old = x.file, oldName = x.fileName;
-      x.file = path; x.fileName = file.name;
+      var old = x.file, oldName = x.fileName, oldSize = x.fileSize;
+      x.file = path; x.fileName = file.name; x.fileSize = file.size;
       return save({ invoices: Q.invoices }).then(function(ok){
-        if (!ok) { if (old) x.file = old; else delete x.file; if (oldName) x.fileName = oldName; else delete x.fileName; return sb.files.remove(path).catch(function(){}); }
+        if (!ok) { if (old) x.file = old; else delete x.file; if (oldName) x.fileName = oldName; else delete x.fileName; if (oldSize) x.fileSize = oldSize; else delete x.fileSize; return sb.files.remove(path).catch(function(){}); }
         var cleanupFailed = false;
         return (old ? sb.files.remove(old).catch(function(){ cleanupFailed = true; }) : Promise.resolve()).then(function(){
           renderInv(); toast(cleanupFailed ? 'PDF remplacé. L’ancien fichier est resté dans le stockage Supabase.' : 'PDF ajouté à la facture et visible dans l’espace client.');
@@ -515,12 +557,23 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var b = e.target.closest('button[data-a]'), row = e.target.closest('.invr');
     if (b && row) {
       var x = Q.invoices[+row.dataset.i];
+      if (b.dataset.a === 'invoice-email') {
+        if (!x.num) { toast('Ajoutez d’abord le numéro officiel de la facture.'); return; }
+        if (!C || ![C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); })) { toast('Ajoutez une adresse e-mail valide dans la fiche client.'); return; }
+        if (x.attachPdf && !x.file) { toast('Joignez d’abord le PDF officiel ou décochez « Joindre le PDF ».'); return; }
+        if (x.attachPdf && x.fileSize > 7340032) { toast('Ce PDF dépasse la limite de 7 Mo par e-mail. Décochez « Joindre le PDF » : il restera accessible dans l’espace client.'); return; }
+        x.emailAt = new Date().toISOString(); b.disabled = true; b.textContent = 'Mise en file…'; clearTimeout(timer);
+        return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){
+          if (!ok) { b.disabled = false; b.textContent = 'Envoyer par e-mail'; return; }
+          sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail de facture envoyé aux deux adresses.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); });
+        });
+      }
       if (b.dataset.a === 'pdf-get') { var w = window.open('about:blank', '_blank'); sb.files.link(x.file, true).then(function(u){ w.location = u; }, function(err){ w.close(); fail(err); }); return; }
       if (b.dataset.a === 'pdf-unlink') {
         if (!confirm('Supprimer le PDF de cette facture du portail et du stockage ?')) return;
-        var path = x.file, name = x.fileName; delete x.file; delete x.fileName; renderInv();
+        var path = x.file, name = x.fileName, size = x.fileSize; delete x.file; delete x.fileName; delete x.fileSize; x.attachPdf = false; renderInv();
         save({ invoices: Q.invoices }).then(function(ok){
-          if (!ok) { x.file = path; if (name) x.fileName = name; renderInv(); return; }
+          if (!ok) { x.file = path; if (name) x.fileName = name; if (size) x.fileSize = size; renderInv(); return; }
           sb.files.remove(path).then(function(){ toast('PDF supprimé.'); }, fail);
         });
         return;
@@ -535,10 +588,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     });
   };
   $('iv-add').onclick = function(){
-    Q.invoices = Q.invoices || [];
+    prepareInvoices();
     var first = !Q.invoices.length, t = +Q.accepted_total || +Q.total || 0;
-    Q.invoices.push(first ? { n: 'Facture d’acompte', num: '', amt: deposit(), u: '', paid: false }
-      : { n: 'Facture de solde', num: '', amt: Math.round((t - deposit()) * 100) / 100, u: '', paid: false });
+    Q.invoices.push(first ? { id: invoiceId(), n: 'Facture d’acompte', num: '', amt: deposit(), u: '', paid: false }
+      : { id: invoiceId(), n: 'Facture de solde', num: '', amt: Math.round((t - deposit()) * 100) / 100, u: '', paid: false });
     renderInv(); later(); var r = $('invs').querySelectorAll('input.num'); r[r.length - 1].focus();
   };
 
@@ -660,10 +713,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   $('b-reply').onclick = function(){
     var t = $('reply').value.trim(); if (!t) { $('reply').focus(); return; }
-    var mail = $('reply-mail').checked;
     sb.insert('messages', { client_id: C.id, quote_id: QID, author: 'moi', body: t }).then(function(){
-      $('reply').value = ''; toast('Réponse envoyée.');
-      if (mail) notify('message', { text: t }, '', false); else load();
+      $('reply').value = '';
+      sb.fn('process-notification-outbox', {}).then(function(){ toast('Réponse envoyée et notification e-mail traitée.'); return load(); }, function(){ toast('Réponse envoyée. L’e-mail est en file et sera relancé automatiquement.'); return load(); });
     }, fail);
   };
 
@@ -703,3 +755,4 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 </script>
 </body>
 </html>
+

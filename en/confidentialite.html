@@ -68,7 +68,7 @@ th{color:var(--ink);font-size:13px}
 <main>
 <article class="doc">
   <h1>Privacy policy</h1>
-  <p class="meta">Updated on 28 October 2026</p>
+  <p class="meta">Updated on 30 October 2026</p>
   <div class="box"><b>Translation provided for information only.</b> The French version of this privacy policy (<a href="../confidentialite.html" hreflang="fr">Politique de confidentialité</a>) is the reference version and prevails in the event of any discrepancy.</div>
   <nav class="toc" aria-label="Contents">
     <a href="#p1">1. Who is responsible</a><a href="#p2">2. Data collected</a><a href="#p3">3. Why, and on what basis</a>
@@ -89,7 +89,7 @@ th{color:var(--ink);font-size:13px}
     <li><b>Acceptance of a quote</b>: the name entered, the date and time, the IP address, the email address that received the signature code, the version of the terms and conditions accepted and your choice about starting before the end of the withdrawal period. The six-digit code is never stored in plain text, only in hashed form (with a random salt) from which it cannot be recovered.</li>
     <li><b>Reviews</b>: if you leave a review, the rating, the text, the name and business you choose to display, and whether or not you agree to its publication.</li>
     <li><b>Invoicing</b>: name, company, address, amounts and invoice references.</li>
-    <li><b>Emails sent</b>: a log records the date, the type of email (quote, message, step) and the recipient address.</li>
+    <li><b>Email notifications</b>: an internal log keeps the date, type, recipient and delivery status of important notifications for 24 months (quote sent or accepted, messages, step approval, milestone, invoice, received file or review). The log does not copy message text or file contents, but a notification email may include a message or the name of a received file. An official invoice PDF is attached only when DZOFT selects that option; other documents are never attached automatically.</li>
   </ul>
 
   <h2 id="p3">3. Why, and on what basis</h2>
@@ -101,7 +101,8 @@ th{color:var(--ink);font-size:13px}
       <tr><td>Keeping proof of the quote acceptance and step approvals</td><td>Legitimate interest: being able to prove what was agreed</td></tr>
       <tr><td>Publishing your review on the website</td><td>Your consent, which you can withdraw at any time</td></tr>
       <tr><td>Invoicing and accounting</td><td>Legal obligation</td></tr>
-      <tr><td>Notifying you by email of a quote, a reply or a step</td><td>Performance of the contract (these emails are only sent when I click to send them)</td></tr>
+      <tr><td>Emailing you about important project changes and messages</td><td>Performance of the contract</td></tr>
+      <tr><td>Receiving a separate copy of important changes and client actions</td><td>Legitimate interest: organising, following and keeping a record of the project</td></tr>
     </tbody>
   </table></div>
 
@@ -109,20 +110,22 @@ th{color:var(--ink);font-size:13px}
   <ul>
     <li><b>Request not followed up</b>: three years after our last exchange.</li>
     <li><b>Client</b>: during the project and any support, then three years after our last exchange.</li>
-    <li><b>Invoices, accepted quotes and their proof of signature</b>: ten years, as required by the French Commercial Code for accounting records.</li>
+    <li><b>Invoices and accounting records</b>: ten years from the end of the financial year. <b>Accepted quotes and proof of acceptance</b>: generally five years for commercial contracts; an electronically concluded consumer contract worth €120 or more is kept for ten years from delivery or performance where that rule applies.</li>
+    <li><b>Quote requests that do not become a project/client</b>: the copy in the DZOFT dashboard is kept for up to three years after collection; deletion is currently checked manually as part of retention reviews. The Formspree copy follows the account plan and settings separately; email copies follow the recipient inbox settings.</li>
+    <li><b>Notification log</b>: 24 months after the event. Email copies received by the client or DZOFT follow their inbox settings and Brevo’s settings.</li>
     <li><b>Published reviews</b>: until you ask for them to be removed.</li>
-    <li><b>Signature codes</b>: valid for ten minutes, then unusable.</li>
+    <li><b>Signature codes</b>: usable for ten minutes. The code itself is never stored; its salted hash, masked destination, attempts and timestamps remain linked to the quote until the quote is permanently deleted.</li>
   </ul>
-  <p>You can ask for your client area to be closed at any time. Only the data that the law requires me to keep (invoices and accepted quotes) are then retained.</p>
+  <p>You can ask to close your client area and erase your data. I also check files and copies held by service providers; accounting or contractual records that must be kept remain for the applicable period.</p>
 
   <h2 id="p5">5. Service providers</h2>
   <p>Your data are processed by these providers, solely for the purposes of the service:</p>
   <div class="tw"><table>
     <thead><tr><th>Provider</th><th>Role</th><th>Location</th></tr></thead>
     <tbody>
-      <tr><td>Supabase, Inc.</td><td>Database, client accounts and files</td><td>Servers in Paris (France). US company, covered by the European Commission’s standard contractual clauses.</td></tr>
-      <tr><td>Brevo (Sendinblue SAS)</td><td>Sending emails: account activation, password, signature code, notifications</td><td>France</td></tr>
-      <tr><td>Formspree, Inc.</td><td>Forwards your requests and messages to me by email</td><td>United States, covered by the standard contractual clauses</td></tr>
+      <tr><td>Supabase</td><td>Database, client-account authentication, activation/password-reset emails and files</td><td>The project is hosted in Paris. Supabase says some account, support and technical-log data, and some content served through its CDN, may be processed in other regions; transfers are covered by its DPA and the standard contractual clauses.</td></tr>
+      <tr><td>Brevo (Sendinblue SAS)</td><td>Sending emails: account activation, password, signature codes and project notifications; the only attachment is an invoice PDF explicitly selected for sending</td><td>European Union</td></tr>
+      <tr><td>Formspree, Inc.</td><td>Receiving and storing quote-request form submissions, then forwarding them to DZOFT</td><td>United States, covered by the standard contractual clauses</td></tr>
       <tr><td>GitHub, Inc.</td><td>Website hosting. Its servers log visitors’ IP addresses for security purposes.</td><td>United States, covered by the Data Privacy Framework and the standard contractual clauses</td></tr>
       <tr><td>Google (Calendar)</td><td>Booking a call: first name, last name, email and phone that you enter when booking</td><td>European Union and United States, covered by the Data Privacy Framework and the standard contractual clauses</td></tr>
       <tr><td>Revolut Bank UAB</td><td>Online payment of an invoice, only if you use the payment link</td><td>Lithuania (European Union)</td></tr>
@@ -139,7 +142,7 @@ th{color:var(--ink);font-size:13px}
   </ul>
 
   <h2 id="p7">7. Cookies and local storage</h2>
-  <p>This website sets no cookies and uses no audience measurement or advertising tools. When you sign in to your client area, your browser keeps your session in its local storage, which is essential to stay signed in. Signing out deletes it.</p>
+  <p>This website sets no cookies and uses no audience measurement or advertising tools. When you sign in to your client area, your browser keeps your session in local storage. If you use a private link instead of an account, the browser also stores that link token: anyone who has the link can access the corresponding client area. Keep it confidential. When you create an account, the old private link is revoked and you use your account from then on. Closing the area or signing out clears the session data from that device.</p>
 
   <h2 id="p8">8. Your rights</h2>
   <p>You can ask to access, correct or delete your data, to restrict its use, to object to it, or to receive it in a reusable format. Write to <a href="mailto:rolanddzoagbe@gmail.com">rolanddzoagbe@gmail.com</a>: I reply within one month at most.</p>
@@ -155,3 +158,4 @@ th{color:var(--ink);font-size:13px}
 </script>
 </body>
 </html>
+

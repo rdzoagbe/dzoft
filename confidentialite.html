@@ -68,7 +68,7 @@ th{color:var(--ink);font-size:13px}
 <main>
 <article class="doc">
   <h1>Politique de confidentialité</h1>
-  <p class="meta">Mise à jour le 28 octobre 2026</p>
+  <p class="meta">Mise à jour le 30 octobre 2026</p>
   <nav class="toc" aria-label="Sommaire">
     <a href="#p1">1. Qui est responsable</a><a href="#p2">2. Données collectées</a><a href="#p3">3. Pourquoi et sur quelle base</a>
     <a href="#p4">4. Durées de conservation</a><a href="#p5">5. Prestataires</a><a href="#p6">6. Sécurité</a>
@@ -88,7 +88,7 @@ th{color:var(--ink);font-size:13px}
     <li><b>Acceptation d’un devis</b> : le nom saisi, la date et l’heure, l’adresse IP, l’adresse e-mail qui a reçu le code de signature, la version des conditions générales acceptée et votre choix sur le démarrage avant la fin du délai de rétractation. Le code à six chiffres n’est jamais conservé en clair, seulement sous une forme hachée (empreinte avec un sel aléatoire) qui ne permet pas de le retrouver.</li>
     <li><b>Avis</b> : si vous laissez un avis, la note, le texte, le nom et l’activité que vous choisissez d’afficher, et votre accord ou non pour sa publication.</li>
     <li><b>Facturation</b> : nom, entreprise, adresse, montants et références des factures.</li>
-    <li><b>E-mails envoyés</b> : un journal indique la date, le type d’e-mail (devis, message, étape) et l’adresse destinataire.</li>
+    <li><b>Notifications par e-mail</b> : un journal interne conserve pendant 24 mois la date, le type, le destinataire et l’état de livraison des notifications importantes (devis envoyé ou accepté, messages, validation d’étape, jalon, facture, fichier reçu, avis). Le journal ne copie pas le texte des messages ni le contenu des fichiers, mais l’e-mail de notification peut contenir le texte d’un message et le nom d’un fichier reçu. Un PDF officiel de facture est joint aux e-mails uniquement si DZOFT coche cette option ; les autres documents ne sont jamais joints automatiquement.</li>
   </ul>
 
   <h2 id="p3">3. Pourquoi et sur quelle base</h2>
@@ -100,7 +100,8 @@ th{color:var(--ink);font-size:13px}
       <tr><td>Garder la preuve de l’acceptation du devis et des validations d’étapes</td><td>Intérêt légitime : pouvoir prouver ce qui a été convenu</td></tr>
       <tr><td>Publier votre avis sur le site</td><td>Votre consentement, que vous pouvez retirer à tout moment</td></tr>
       <tr><td>Facturation et comptabilité</td><td>Obligation légale</td></tr>
-      <tr><td>Vous prévenir par e-mail d’un devis, d’une réponse ou d’une étape</td><td>Exécution du contrat (ces e-mails partent seulement quand je clique pour les envoyer)</td></tr>
+      <tr><td>Vous prévenir par e-mail des changements importants du projet et des messages</td><td>Exécution du contrat</td></tr>
+      <tr><td>Recevoir une copie séparée des changements importants et des actions du client</td><td>Intérêt légitime : organiser, suivre et conserver une trace du projet</td></tr>
     </tbody>
   </table></div>
 
@@ -108,20 +109,22 @@ th{color:var(--ink);font-size:13px}
   <ul>
     <li><b>Demande sans suite</b> : trois ans après notre dernier échange.</li>
     <li><b>Client</b> : pendant le projet et le suivi éventuel, puis trois ans après notre dernier échange.</li>
-    <li><b>Factures, devis acceptés et leur preuve de signature</b> : dix ans, comme l’exige le Code de commerce pour les pièces comptables.</li>
+    <li><b>Factures et pièces comptables</b> : dix ans à compter de la clôture de l’exercice. <b>Devis acceptés et preuve d’acceptation</b> : cinq ans pour les contrats commerciaux en règle générale ; un contrat conclu électroniquement avec un consommateur pour 120 € ou plus est conservé dix ans à compter de la livraison ou de l’exécution, lorsque cette règle s’applique.</li>
+    <li><b>Demandes de devis non devenues un projet/client</b> : la copie du tableau de bord DZOFT est conservée au maximum trois ans après sa collecte ; sa suppression est actuellement vérifiée manuellement lors du suivi de conservation. La copie Formspree suit séparément l’offre et les réglages du compte ; les e-mails reçus suivent aussi les réglages de la boîte de réception.</li>
+    <li><b>Journal des notifications</b> : 24 mois après l’événement. Les copies des e-mails reçues par le client ou DZOFT suivent les réglages de leurs boîtes de réception et ceux de Brevo.</li>
     <li><b>Avis publiés</b> : tant que vous ne demandez pas leur retrait.</li>
-    <li><b>Codes de signature</b> : valables dix minutes, puis inutilisables.</li>
+    <li><b>Codes de signature</b> : utilisables dix minutes. Le code en clair n’est jamais stocké ; son empreinte salée, le destinataire masqué, les tentatives et les dates restent liés au devis jusqu’à sa suppression définitive.</li>
   </ul>
-  <p>Vous pouvez demander la fermeture de votre espace client à tout moment. Seules les données que la loi m’oblige à garder (factures et devis acceptés) sont alors conservées.</p>
+  <p>Vous pouvez demander la fermeture de votre espace client et l’effacement de vos données. Je vérifie aussi les fichiers et les copies conservées chez les prestataires ; les pièces comptables ou contractuelles nécessaires restent conservées pendant leur durée applicable.</p>
 
   <h2 id="p5">5. Prestataires</h2>
   <p>Vos données sont traitées par ces prestataires, uniquement pour les besoins du service :</p>
   <div class="tw"><table>
     <thead><tr><th>Prestataire</th><th>Rôle</th><th>Lieu</th></tr></thead>
     <tbody>
-      <tr><td>Supabase, Inc.</td><td>Base de données, comptes clients et fichiers</td><td>Serveurs à Paris (France). Société américaine, encadrée par les clauses contractuelles types de la Commission européenne.</td></tr>
-      <tr><td>Brevo (Sendinblue SAS)</td><td>Envoi des e-mails : activation du compte, mot de passe, code de signature, notifications</td><td>France</td></tr>
-      <tr><td>Formspree, Inc.</td><td>Me transmet par e-mail vos demandes et vos messages</td><td>États-Unis, encadré par les clauses contractuelles types</td></tr>
+      <tr><td>Supabase</td><td>Base de données, authentification des comptes clients, e-mails d’activation/réinitialisation et fichiers</td><td>Le projet est hébergé à Paris. Supabase indique que certaines données de compte, de support, journaux techniques et certains contenus servis par CDN peuvent être traités dans d’autres régions ; les transferts sont encadrés par son DPA et les clauses contractuelles types.</td></tr>
+      <tr><td>Brevo (Sendinblue SAS)</td><td>Envoi des e-mails : activation du compte, mot de passe, code de signature et notifications de projet ; pièce jointe limitée au PDF de facture explicitement sélectionné</td><td>Union européenne</td></tr>
+      <tr><td>Formspree, Inc.</td><td>Réception et stockage des demandes envoyées par le formulaire de devis, puis transfert à DZOFT</td><td>États-Unis, encadré par les clauses contractuelles types</td></tr>
       <tr><td>GitHub, Inc.</td><td>Hébergement du site. Ses serveurs enregistrent l’adresse IP des visiteurs pour la sécurité.</td><td>États-Unis, encadré par le Data Privacy Framework et les clauses contractuelles types</td></tr>
       <tr><td>Google (Agenda)</td><td>Prise de rendez-vous pour un appel : prénom, nom, e-mail et téléphone que vous indiquez en réservant</td><td>Union européenne et États-Unis, encadré par le Data Privacy Framework et les clauses contractuelles types</td></tr>
       <tr><td>Revolut Bank UAB</td><td>Paiement en ligne d’une facture, seulement si vous utilisez le lien de paiement</td><td>Lituanie (Union européenne)</td></tr>
@@ -138,7 +141,7 @@ th{color:var(--ink);font-size:13px}
   </ul>
 
   <h2 id="p7">7. Cookies et stockage local</h2>
-  <p>Ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience ni de publicité. Quand vous vous connectez à votre espace client, votre navigateur garde votre session dans son stockage local, ce qui est indispensable pour rester connecté. La déconnexion l’efface.</p>
+  <p>Ce site ne dépose aucun cookie et n’utilise aucun outil de mesure d’audience ni de publicité. Quand vous vous connectez à votre espace client, votre navigateur garde votre session dans son stockage local. Si vous utilisez un lien privé plutôt qu’un compte, le navigateur y conserve aussi le jeton du lien : toute personne qui possède ce lien peut accéder à l’espace correspondant. Gardez-le confidentiel. Quand vous créez un compte, l’ancien lien privé est révoqué et vous utilisez ensuite votre compte. Le bouton de fermeture de l’espace ou la déconnexion efface les données de session de cet appareil.</p>
 
   <h2 id="p8">8. Vos droits</h2>
   <p>Vous pouvez demander à consulter, corriger ou supprimer vos données, à en limiter l’utilisation, à vous y opposer, ou à les recevoir dans un format réutilisable. Écrivez à <a href="mailto:rolanddzoagbe@gmail.com">rolanddzoagbe@gmail.com</a> : je réponds dans un délai d’un mois au plus.</p>
@@ -154,3 +157,4 @@ th{color:var(--ink);font-size:13px}
 </script>
 </body>
 </html>
+

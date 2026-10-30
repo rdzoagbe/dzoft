@@ -1,7 +1,6 @@
 // Sends a project e-mail to a client through Brevo. Only the owner of the private space can call it.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const OWNER = "roland.dzoagbe@hotmail.com";
 const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +41,7 @@ Deno.serve(async (req) => {
   const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: who } = await db.auth.getUser(token);
   const me = who?.user;
-  if (!me || (me.email || "").toLowerCase() !== OWNER) return json({ error: "non autorisé" }, 403);
+  if (!me || me.app_metadata?.dzoft_owner !== true) return json({ error: "non autorisé" }, 403);
   // with two-step sign-in turned on, the call must come from a session that passed it
   const verified = (me.factors || []).some((f: { status: string }) => f.status === "verified");
   if (verified && claims(token).aal !== "aal2") return json({ error: "double authentification requise" }, 403);
@@ -107,7 +106,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       sender: { name: "DZOFT", email: sender },
       to: [{ email: to, name: c.nom || undefined }],
-      replyTo: { email: OWNER, name: "Roland Dzoagbe" },
+      replyTo: { email: sender, name: "Roland Dzoagbe" },
       subject, htmlContent: html,
     }),
   });
@@ -119,3 +118,4 @@ Deno.serve(async (req) => {
   await log(true);
   return json({ ok: true, to });
 });
+

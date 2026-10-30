@@ -249,6 +249,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
       <div class="kpis" id="kpis"></div>
       <div class="panel"><h3>À faire</h3><ul class="todo" id="todo"></ul></div>
+      <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
       <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
     </section>
     <section id="v-leads" hidden>
@@ -358,7 +359,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <p style="font-size:13.5px;color:var(--mute)" id="mt-sub"></p>
     <div class="thread" id="mt-list"></div>
     <textarea id="mt-reply" maxlength="2000" placeholder="Votre réponse : le client la voit dans son espace"></textarea>
-    <label style="display:flex;gap:8px;align-items:center;font-weight:600;font-size:13.5px;margin-top:8px"><input type="checkbox" id="mt-mail" checked style="width:auto"> Prévenir le client par e-mail</label>
+    <p style="font-size:13px;color:var(--mute);margin-top:8px">Le client reçoit automatiquement un e-mail de notification. Les détails restent dans son espace.</p>
     <div class="acts"><button class="btn main" id="mt-send" type="button">Envoyer</button><span class="sp"></span><button class="btn ghost" id="mt-close" type="button">Fermer</button></div>
   </div>
 </div>
@@ -381,7 +382,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [] }, editing = null;
+  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [] }, editing = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
@@ -393,7 +394,6 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var mfaFactor = null;
   function showForm(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); amsg(msg || '', ok); }
   function amsg(t, ok){ var m = $('a-msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
-  ['l-email', 's-email', 'r-email'].forEach(function(id){ $(id).value = sb.OWNER; });
   $('go-forgot').onclick = function(){ showForm('f-forgot'); };
   $('go-first').onclick = function(){ showForm('f-first'); };
   [].forEach.call(document.querySelectorAll('.go-login'), function(a){ a.onclick = function(){ showForm('f-login'); }; });
@@ -432,12 +432,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function start(){
     sb.me().then(function(u){
       if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
-      if ((u.email || '').toLowerCase() !== sb.OWNER) { sb.signOut(); $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); return; }
       // two-step sign-in turned on: the code is asked before anything is shown
       var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0];
       if (f && sb.aal() !== 'aal2') { mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa'); $('m-code').value = ''; $('m-code').focus(); return; }
-      $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
-      fromHash(); loadAll(); loadSettings(); renderMfa(u);
+      sb.rpc('is_owner', {}, true).then(function(isOwner){
+        if (!isOwner) { return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); }); }
+        $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
+        sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
+        fromHash(); loadAll(); loadSettings(); renderMfa(u);
+      }, function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
     }, function(){ $('auth').hidden = false; showForm('f-login'); });
   }
 
@@ -448,14 +451,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.select('clients', 'select=*&order=created_at.desc'),
       sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
-      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; })
+      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; }),
+      sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30').catch(function(){ return []; }),
+      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id&order=created_at.desc&limit=80').catch(function(){ return []; })
     ]).then(function(r){
       // deleted requests and quotes stay in the trash until removed for good
       var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
       data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
       data.clients = r[1] || [];
       data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
-      data.messages = r[3] || []; data.reviews = r[4] || [];
+      data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || [];
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
     }, fail);
@@ -522,12 +527,35 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if (last && last.vby && next && !next.done && !next.ask) todo.push([((client(q.client_id) || {}).nom || 'Le client') + ' a validé « ' + last.t + ' » (' + q.numero + ') : à vous de jouer, étape « ' + next.t + ' »', 'follow:' + q.id, 'Suivi']);
     });
     (data.reviews || []).filter(function(v){ return v.consent && !v.published; }).forEach(function(v){ todo.push(['Nouvel avis de ' + ((client(v.client_id) || {}).nom || 'client') + ' (' + v.rating + '/5) à relire et publier', 'follow:' + v.quote_id, 'Relire']); });
+    data.emailOutbox.filter(function(m){ return m.status === 'failed'; }).forEach(function(m){ todo.push(['Échec d’e-mail ' + (m.recipient_role === 'owner' ? 'à votre adresse' : 'au client') + (m.last_error ? ' : ' + m.last_error : ''), m.quote_id ? 'follow:' + m.quote_id : 'dash', 'Voir']); });
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
     $('todo').innerHTML = todo.length ? todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Rien d’urgent 👌</li>';
     $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
+    renderEmailLog();
+  }
+  function renderEmailLog(){
+    var box = $('email-log'); if (!box) return;
+    if (!data.events.length) { box.innerHTML = '<p style="font-size:14px;color:var(--mute)">Les notifications importantes apparaîtront ici au fil des projets.</p>'; return; }
+    box.innerHTML = data.events.slice(0, 8).map(function(ev){
+      var jobs = data.emailOutbox.filter(function(x){ return x.event_id === ev.id; });
+      var status = jobs.length ? jobs.map(function(job){
+        var to = job.recipient_role === 'owner' ? 'Vous' : 'Client';
+        var label = job.status === 'sent' ? 'envoyé' : job.status === 'queued' ? 'en attente' : job.status === 'processing' ? 'en cours' : 'échec';
+        return '<span style="font-size:12px;color:' + (job.status === 'failed' ? 'var(--err)' : 'var(--mute)') + '">' + esc(to) + ' : ' + esc(label) +
+          (job.status === 'failed' ? ' · ' + esc(job.last_error || '') + ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Réessayer</button>' : '') + '</span>';
+      }).join(' · ') : '<span style="font-size:12px;color:var(--mute)">' + (ev.event_type === 'client_message' || ev.event_type === 'client_file_uploaded' ? 'notification groupée avec une activité récente' : 'journalisé') + '</span>';
+      return '<div style="border-top:1px solid var(--line);padding:9px 0"><b style="font-size:13.5px">' + esc(ev.summary) + '</b><br><span style="font-size:12px;color:var(--mute)">' + new Date(ev.created_at).toLocaleString('fr-FR') + '</span><div>' + status + '</div></div>';
+    }).join('');
+    box.onclick = function(e){
+      var b = e.target.closest('[data-retry-email]'); if (!b) return;
+      b.disabled = true; b.textContent = 'Relance…';
+      sb.fn('process-notification-outbox', { retry_id: b.dataset.retryEmail }).then(function(){ toast('E-mail relancé.'); return loadAll(); }, function(err){ b.disabled = false; b.textContent = 'Réessayer'; toast('Relance impossible : ' + (err.message || 'erreur')); });
+    };
   }
   document.addEventListener('click', function(e){
+    var retry = e.target.closest('[data-retry-email]');
+    if (retry && $('app').contains(retry)) return;
     var b = e.target.closest('[data-go]'); if (!b || !$('app').contains(b)) return;
     var g = b.dataset.go;
     if (g.indexOf('thread:') === 0) return openThread(client(g.slice(7)) || { id: g.slice(7) });
@@ -843,8 +871,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('mc-close').onclick = function(){ $('m-client').hidden = true; };
   $('mc-msgs').onclick = function(){ $('m-client').hidden = true; openThread(editing); };
   $('mc-portal').onclick = function(){
-    var u = sb.PORTAL + '#' + editing.portal_token;
-    (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast('Lien de l’espace client copié. Rendez un devis visible depuis « Suivi client ».'); }, function(){ prompt('Lien de l’espace client :', u); });
+    var u = editing.user_id ? sb.PORTAL : sb.PORTAL + '#' + editing.portal_token;
+    var msg = editing.user_id ? 'Lien de connexion copié. Le client doit se connecter avec son compte.' : 'Lien privé copié. Rendez un devis visible depuis « Suivi client ». ';
+    (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast(msg); }, function(){ prompt('Lien de l’espace client :', u); });
   };
   $('mc-save').onclick = function(){
     var p = editing ? sb.update('clients', editing.id, clientRow()) : sb.insert('clients', clientRow());
@@ -893,8 +922,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var q = data.quotes.filter(function(x){ return x.client_id === talking.id && x.shared; })[0];
     sb.insert('messages', { client_id: talking.id, quote_id: q ? q.id : null, author: 'moi', body: t }).then(function(){
       $('mt-reply').value = ''; toast('Réponse envoyée.'); loadThread();
-      if ($('mt-mail').checked) sb.fn('notify-client', { kind: 'message', client_id: talking.id, quote_id: q ? q.id : null, text: t })
-        .then(function(r){ if (r && r.to) toast('Réponse envoyée, et e-mail envoyé à ' + r.to + '.'); }, function(e){ toast('E-mail non envoyé : ' + (e.message || 'erreur')); });
+      sb.fn('process-notification-outbox', {}).then(function(){ toast('Réponse envoyée et notification e-mail traitée.'); loadAll(); }, function(){ toast('Réponse envoyée. L’e-mail est en file et sera relancé automatiquement.'); });
     }, fail);
   };
 
@@ -973,3 +1001,4 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 </script>
 </body>
 </html>
+

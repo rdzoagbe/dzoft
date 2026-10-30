@@ -1,15 +1,15 @@
 /* Minimal Supabase client (auth + REST) for the private back-office.
    The key below is the public "anon" key: it is meant to be in the browser.
-   Data stays private through row level security: only the owner e-mail can read it. */
+   Data stays private through row level security: only the owner role can read it. */
 (function (global) {
   var URL = 'https://rzghbvmszbjlqkdjzpxc.supabase.co';
   var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z2hidm1zemJqbHFrZGp6cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDQ0MTEsImV4cCI6MjEwODU4MDQxMX0.LtN4aeyRY8Xf7s6vmoLU1QfRl_aCXOdtyAGSYdgHkZM';
-  var OWNER = 'roland.dzoagbe@hotmail.com';
   // The client space and the request form keep their own session, apart from the private space.
   var STORE = global.RD_STORE || 'rd-admin-session';
   var ADMIN = 'https://rdzoagbe.github.io/dzoft/admin/';
   var PORTAL = 'https://rdzoagbe.github.io/dzoft/espace/';
 
+  // SECURITY: this admin and other GitHub Pages projects share one origin, so keep third-party scripts off it and move the admin to a dedicated origin before considering session storage hardened.
   function getSession() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
   function setSession(s) {
     try {
@@ -49,7 +49,7 @@
   }
 
   var sb = {
-    OWNER: OWNER, ADMIN: ADMIN, PORTAL: PORTAL,
+    ADMIN: ADMIN, PORTAL: PORTAL,
     session: getSession,
     signIn: function (email, password) {
       return req('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: email, password: password } }).then(keep);
@@ -144,3 +144,4 @@
   };
   global.RDsb = sb;
 })(window);
+

@@ -350,7 +350,6 @@ footer{max-width:1180px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var FORMSPREE_ID = 'xrpppprj';
   var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
   var GOOGLE_REVIEW = 'https://g.page/r/CYguS5Uj8gxpECE/review';
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -381,12 +380,6 @@ footer{max-width:1180px}
     if (token) { var a = { p_token: token }; for (var k in args) a[k] = args[k]; return sb.rpc('portal_' + fn, a); }
     return sb.rpc('my_' + fn, args, true);
   }
-  function notify(subject, text){
-    if (!FORMSPREE_ID) return;
-    fetch('https://formspree.io/f/' + FORMSPREE_ID, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ _subject: subject, message: text + '\n\nVoir dans l’espace privé : ' + sb.ADMIN }) }).catch(function(){});
-  }
-
   /* ---------- account forms ---------- */
   var forms = ['f-login', 'f-signup', 'f-forgot', 'f-newpass'];
   function form(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); au(msg || '', ok); show('s-auth'); }
@@ -635,7 +628,6 @@ footer{max-width:1180px}
       this.disabled = true; m.className = 'msgline ok'; m.textContent = 'Enregistrement…';
       var btn = this;
       call('review', { p_quote: q.id, p_rating: rating, p_body: body, p_name: name, p_activity: act, p_consent: ok }).then(function(){
-        notify('Nouvel avis de ' + (D.client.nom || name) + ' (' + rating + '/5)', 'Avis sur ' + title(q) + ' (' + q.numero + ') : ' + rating + '/5\n\n' + body + '\n\nPublication ' + (ok ? 'autorisée : à relire et publier depuis la fiche projet.' : 'non autorisée.'));
         RV_EDIT[q.id] = false; return load();
       }, function(e){ btn.disabled = false; m.className = 'msgline err'; m.textContent = 'L’avis n’a pas été enregistré' + (e && e.message ? ' : ' + e.message : '') + '. Réessayez.'; });
     };
@@ -770,8 +762,6 @@ footer{max-width:1180px}
       var early = $('a-early').checked;
       call('accept_signed', { p_quote: q.id, p_name: nm.value.trim(), p_terms: TERMS, p_early: early, p_code: code.value.trim() }).then(function(r){
         if (r && r.ok === false) { amsg(r.error.charAt(0).toUpperCase() + r.error.slice(1) + '.'); upd(); return; }
-        notify('Devis ' + q.numero + ' accepté par ' + nm.value.trim(), 'Le devis ' + q.numero + ' (' + eur(q.total) + ') vient d’être accepté en ligne par ' + nm.value.trim() + '.\n' +
-          (early ? 'Démarrage immédiat demandé (avant la fin du délai de rétractation).' : 'Pas de démarrage anticipé : commencer après le ' + day(withdrawEnd(new Date())) + ' (fin du délai de rétractation de 14 jours), si le client est concerné.'));
         return load();
       }, function(e){
         amsg(/expir/.test(e.message) ? 'Ce devis a expiré : écrivez-moi pour en recevoir un à jour.' : /déjà/.test(e.message) ? 'Ce devis est déjà accepté.' : 'La signature n’a pas abouti. Réessayez dans un instant.');
@@ -798,7 +788,6 @@ footer{max-width:1180px}
         b.disabled = true; msg.className = 'msgline ok'; msg.textContent = 'Enregistrement…';
         var t = (steps(q).filter(function(s){ return s.k === st; })[0] || {}).t || st;
         call('validate', { p_quote: q.id, p_step: st, p_name: D.client.nom || 'Client' }).then(function(){
-          notify(D.client.nom + ' a validé « ' + t + ' » (' + q.numero + ')', 'Étape validée en ligne : ' + t + '\nProjet : ' + title(q) + ' (' + q.numero + ')');
           return load();
         }, function(){ b.disabled = false; msg.className = 'msgline err'; msg.textContent = 'La validation n’a pas abouti. Réessayez.'; });
       };
@@ -872,16 +861,16 @@ footer{max-width:1180px}
           return p.then(function(){
             if (f.size > 20971520) throw new Error(f.name + ' dépasse 20 Mo.');
             var clean = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80);
-            return sb.files.upload('u/' + uid + '/' + Date.now() + '-' + clean, f).then(function(){ sent.push(f.name); });
+            var path = 'u/' + uid + '/' + Date.now() + '-' + clean;
+            return sb.files.upload(path, f).then(function(){ return sb.rpc('log_client_upload', { p_path: path }, true); }).then(function(){ sent.push(f.name); });
           });
         }, Promise.resolve());
       }).then(function(){
         m.textContent = sent.length + ' fichier' + (sent.length > 1 ? 's envoyés' : ' envoyé') + ' ✓';
-        notify('Nouveau fichier de ' + D.client.nom, 'Fichier(s) déposé(s) dans l’espace client : ' + sent.join(', '));
         listFiles();
       }, function(err){
         m.className = 'msgline err';
-        m.textContent = (sent.length ? sent.length + ' envoyé(s). ' : '') + (/mime|type/i.test(err.message) ? 'Ce type de fichier n’est pas accepté.' : /size|large|dépasse/i.test(err.message) ? 'Fichier trop lourd (20 Mo maximum).' : 'L’envoi n’a pas abouti : ' + err.message);
+        m.textContent = (sent.length ? sent.length + ' fichier(s) envoyé(s). ' : '') + (/mime|type/i.test(err.message) ? 'Ce type de fichier n’est pas accepté.' : /size|large|dépasse/i.test(err.message) ? 'Fichier trop lourd (20 Mo maximum).' : sent.length ? 'Le fichier est dans votre espace, mais la notification e-mail n’a pas pu être mise en file. Prévenez Roland depuis Messages.' : 'L’envoi n’a pas abouti : ' + err.message);
         listFiles();
       });
     };
@@ -906,8 +895,6 @@ footer{max-width:1180px}
       var qid = $('m-q') ? $('m-q').value : (quotes()[0] && quotes()[0].id) || '';
       b.disabled = true; e.className = 'msgline ok'; e.textContent = 'Envoi…';
       call('message', { p_quote: qid || null, p_body: body }).then(function(){
-        var q = qid && byId(qid);
-        notify('Nouveau message de ' + D.client.nom, (q ? 'Devis ' + q.numero + '\n\n' : '') + body);
         return load();
       }, function(err){
         b.disabled = false; e.className = 'msgline err'; e.textContent = /trop de messages/.test(err.message) ? 'Trop de messages d’un coup : réessayez dans un moment.' : 'L’envoi n’a pas abouti. Réessayez.';
@@ -1013,3 +1000,4 @@ footer{max-width:1180px}
 </script>
 </body>
 </html>
+

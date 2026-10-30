@@ -59,11 +59,23 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Modèle des fonctions SQL `SECURITY DEFINER` : `client_*` internes (aucun droit),
   `my_*` pour le client connecté (authenticated), `portal_*` pour le lien secret (anon).
   L'admin est reconnu par son e-mail propriétaire.
-- Fonctions edge (source dans `supabase/functions`, `verify_jwt: true`) : `notify-client`
-  (e-mails projet) et `sign-code` (code de signature). Envoi par l'API Brevo, expéditeur « DZOFT ».
-  Secrets : `BREVO_API_KEY`, `SENDER_EMAIL`. Redéployer après chaque modification du code.
+- Fonctions Edge (`supabase/functions`) : `notify-client` (compatibilité historique), `sign-code`
+  (code de signature) et `process-notification-outbox` (notifications importantes planifiées).
+  Envoi par l'API Brevo ; secrets `BREVO_API_KEY`, `SENDER_EMAIL`, URL + clé de projet côté Vault.
+  Le worker d'e-mails est déclenché chaque minute par pg_cron, possède son secret dans Vault et
+  valide le rôle propriétaire depuis `app_metadata`. Redéployer une fonction après modification.
+- Notifications projet : migration `20261030131831_project_email_outbox.sql`. Les actions
+  importantes créent un événement et un e-mail dans la même transaction ; le contenu complet
+  reste dans le portail. Les messages reçus sont regroupés pour éviter le bruit. Le journal est
+  conservé 24 mois. Seul un PDF de facture choisi explicitement peut être joint.
+- Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
+  n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
+  sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.
+- L'administrateur doit porter le marqueur Auth `app_metadata.dzoft_owner=true` (jamais
+  `user_metadata`). L'interface et les fonctions vérifient ce rôle et le MFA ; aucun e-mail
+  Auth privé ne doit apparaître dans les fichiers publics.
 - `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
-  stockage, droits), générée le 2026-10-28 ; à régénérer après toute modification de la base.
+  stockage, droits), mise à jour le 2026-10-30 ; à resynchroniser après toute migration.
 - Sauvegardes : le schéma est dans Git, pas les données. Conserver les exports JSON chiffrés
   hors du dépôt public et les mettre à jour après chaque signature ou changement important.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
@@ -94,3 +106,4 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 - Le dépôt GitHub est public : ne jamais y inscrire de nom de client, contenu de devis,
   export de données, adresse de compte privé ou identifiant secret. Garder les notes commerciales
   et les sauvegardes hors Git.
+
