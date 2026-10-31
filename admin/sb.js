@@ -47,6 +47,21 @@
     if (s.expires_at - 60 > Date.now() / 1000) return Promise.resolve(s.access_token);
     return refresh(s).then(function (n) { return n.access_token; }, function () { setSession(null); return null; });
   }
+  function claims() {
+    var s = getSession(); if (!s || !s.access_token) return {};
+    try {
+      var p = s.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4)));
+    } catch (e) { return {}; }
+  }
+  function mfaFresh(maxAgeSeconds) {
+    var p = claims(), now = Date.now() / 1000;
+    if (p.aal !== 'aal2' || !Array.isArray(p.amr)) return false;
+    return p.amr.some(function (entry) {
+      var at = Number(entry && entry.timestamp);
+      return entry && entry.method === 'totp' && Number.isFinite(at) && at <= now + 120 && now - at <= maxAgeSeconds;
+    });
+  }
 
   var sb = {
     ADMIN: ADMIN, PORTAL: PORTAL,
@@ -103,9 +118,9 @@
     },
     /* Two-step sign-in (TOTP code from an authenticator app). */
     aal: function () {
-      var s = getSession(); if (!s) return '';
-      try { var p = s.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4))).aal || ''; } catch (e) { return ''; }
+      return claims().aal || '';
     },
+    mfaFresh: mfaFresh,
     mfa: {
       enroll: function () { return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'DZOFT ' + Date.now() } }); }); },
       challenge: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },

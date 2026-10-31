@@ -23,6 +23,13 @@ function claims(token: string) {
     return JSON.parse(atob(p + "=".repeat((4 - p.length % 4) % 4)));
   } catch { return {}; }
 }
+function hasRecentTotp(payload: any) {
+  const now = Math.floor(Date.now() / 1000);
+  return Array.isArray(payload?.amr) && payload.amr.some((entry: any) => {
+    const at = Number(entry?.timestamp);
+    return entry?.method === "totp" && Number.isFinite(at) && at <= now + 120 && now - at <= 8 * 60 * 60;
+  });
+}
 function mail(title: string, paras: string[], button: string, link: string) {
   return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020">
   <h2 style="color:#0B1020">${esc(title)}</h2>
@@ -44,11 +51,14 @@ Deno.serve(async (req) => {
   if (!me || me.app_metadata?.dzoft_owner !== true) return json({ error: "non autorisé" }, 403);
   // with two-step sign-in turned on, the call must come from a session that passed it
   const verified = (me.factors || []).some((f: { status: string }) => f.status === "verified");
-  if (verified && claims(token).aal !== "aal2") return json({ error: "double authentification requise" }, 403);
+  const authClaims = claims(token);
+  if (verified && (authClaims.aal !== "aal2" || !hasRecentTotp(authClaims))) {
+    return json({ error: "double authentification requise : reconnectez-vous avec un nouveau code" }, 403);
+  }
 
   const key = Deno.env.get("BREVO_API_KEY");
   if (!key) return json({ error: "clé Brevo absente : ajoutez le secret BREVO_API_KEY" }, 500);
-  const sender = Deno.env.get("SENDER_EMAIL") || "rolanddzoagbe@gmail.com";
+  const sender = Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com";
 
   const b = await req.json().catch(() => ({}));
   const kind = String(b.kind || "");

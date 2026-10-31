@@ -239,6 +239,16 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   if (!sb || !sb.session()) { location.replace('./'); return; }
+  var MFA_WINDOW = 8 * 60 * 60;
+  function checkMfaExpiry(){
+    if (sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return false;
+    var back = location.pathname.split('/').pop() + location.search + location.hash;
+    location.replace('./?return=' + encodeURIComponent(back));
+    return true;
+  }
+  if (checkMfaExpiry()) return;
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkMfaExpiry(); });
+  setInterval(checkMfaExpiry, 60000);
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
@@ -273,7 +283,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function fresh(){ return window.RDSTEPS.map(function(s){ return { k: s.k, t: s.t, s: s.s, done: false, d: '', note: '' }; }); }
   // A client with an account signs in; others get their secret link.
   function url(){ return C ? (C.user_id ? sb.PORTAL : sb.PORTAL + '#' + C.portal_token) : ''; }
-  function inviteUrl(){ return C && C.user_id ? sb.PORTAL : url(); }
+  function inviteUrl(){
+    if (!C || !QID) return url();
+    var route = Q.accepted_at ? 'projet' : 'devis', params = new URLSearchParams();
+    params.set(route, QID);
+    if (!C.user_id) params.set('inscription', '1');
+    return sb.PORTAL + '?' + params.toString();
+  }
   function first(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
 
   function render(){
@@ -388,8 +404,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(function(){ toast('Lien copié.'); }, function(){ document.execCommand('copy'); toast('Lien copié.'); });
   };
   function invite(){
-    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client DZOFT' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : '') + ' :\n' + inviteUrl() +
-      '\n\nVous pouvez le consulter, me poser vos questions et l’accepter en ligne. Vous y suivrez ensuite chaque étape de votre projet.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
+    return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client DZOFT' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : ' (créez votre espace avec la même adresse e-mail que celle de ce devis)') + ' :\n' + inviteUrl() +
+      '\n\nVous pouvez consulter le devis, me poser vos questions et l’accepter en ligne. Une fois accepté, vous suivrez chaque étape du projet et retrouverez les factures dans cet espace.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
   }
   function guard(){
     if (!Q.shared) { toast('Cochez d’abord « Visible dans l’espace client ».'); return false; }

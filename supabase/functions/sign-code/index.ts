@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
   try { r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST", headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({
-      sender: { name: "DZOFT", email: Deno.env.get("SENDER_EMAIL") || "rolanddzoagbe@gmail.com" },
+      sender: { name: "DZOFT", email: Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com" },
       to: [{ email: target }], subject: "Votre code de signature : " + code,
       htmlContent: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020"><h2 style="color:#0B1020">Signature de votre devis</h2><p>Votre code pour signer le devis n° <b>${q.numero}</b> :</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;text-align:center;margin:24px 0">${code}</p><p>Il est valable 10 minutes. Ne le communiquez à personne : il vaut signature.</p><p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p></div>`,
     }),

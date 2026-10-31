@@ -5,7 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const ADMIN = "https://rdzoagbe.github.io/dzoft/admin/";
-const SENDER_FALLBACK = "rolanddzoagbe@gmail.com";
+const SENDER_FALLBACK = "roland.dzoagbe@hotmail.com";
 const MAX_ATTACHMENT_BYTES = 7 * 1024 * 1024;
 const allowedOrigins = new Set([
   "https://rdzoagbe.github.io",
@@ -188,6 +188,16 @@ Deno.serve(async (req) => {
       const firstName = String(client?.nom || "").trim().split(/\s+/)[0] || "";
       let link = isOwner ? ADMIN : PORTAL;
       if (isOwner && quote?.id) link = `${ADMIN}suivi.html?q=${encodeURIComponent(quote.id)}`;
+      else if (!isOwner && quote?.id && event.event_type === "quote_published") {
+        const query = new URLSearchParams({ devis: String(quote.id) });
+        if (!client?.user_id) query.set("inscription", "1");
+        link = `${PORTAL}?${query.toString()}`;
+      } else if (!isOwner && quote?.id && event.event_type === "invoice_shared") {
+        const query = new URLSearchParams({ projet: String(quote.id) });
+        if (event.invoice_id) query.set("facture", String(event.invoice_id));
+        if (!client?.user_id) query.set("inscription", "1");
+        link = `${PORTAL}?${query.toString()}`;
+      }
       else if (!isOwner && client?.user_id) link = PORTAL + (event.event_type.includes("message") ? "#/messages" : quote?.id ? (event.event_type === "quote_published" ? `#/devis/${quote.id}` : `#/projets/${quote.id}`) : "#/messages");
       else if (!isOwner && client?.portal_token) link = PORTAL + "#" + client.portal_token;
       const hello = isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + esc(firstName) : ""},`;
@@ -219,16 +229,27 @@ Deno.serve(async (req) => {
         }];
       }
 
+      const needsAccount = !isOwner && !client?.user_id && (event.event_type === "quote_published" || event.event_type === "invoice_shared");
       const portalLine = isOwner
         ? `Client : ${client?.nom || "fiche projet"}. Ouvrez la fiche pour voir l’historique et l’état des envois.`
+        : needsAccount && event.event_type === "quote_published"
+        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis. Après confirmation, le devis s’ouvrira automatiquement ; vous pourrez le consulter et l’accepter en ligne."
+        : needsAccount && event.event_type === "invoice_shared"
+        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis pour ouvrir la facture. Une facture sert au règlement ; l’acceptation et la signature en ligne concernent le devis."
         : event.event_type === "invoice_shared" && !attachment.length
         ? "Votre facture est également accessible dans votre espace client."
         : "Retrouvez les informations et l’historique de votre projet dans votre espace DZOFT.";
+      const ctaLabel = isOwner ? "Ouvrir la fiche projet"
+        : needsAccount && event.event_type === "quote_published" ? "Créer mon espace et accepter le devis"
+        : needsAccount && event.event_type === "invoice_shared" ? "Créer mon espace et voir la facture"
+        : event.event_type === "quote_published" ? "Voir et accepter mon devis"
+        : event.event_type === "invoice_shared" ? "Ouvrir ma facture"
+        : "Ouvrir mon espace client";
       const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#0B1020;line-height:1.6">
         <h2 style="color:#0B1020">${heading}</h2><p>${hello}</p>
         <p>${esc(copy.intro)}</p>${isOwner ? `<p><b>Client :</b> ${esc(client?.nom || "—")}</p>` : ""}${copy.body}
         <p>${esc(portalLine)}</p>
-        <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${isOwner ? "Ouvrir la fiche projet" : "Ouvrir mon espace client"}</a></p>
+        <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${ctaLabel}</a></p>
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
       </div>`;

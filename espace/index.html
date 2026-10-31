@@ -241,6 +241,8 @@ a.item:hover{border-color:#b9cbe0;box-shadow:0 2px 10px rgba(8,22,38,.06)}
 .subh{font-size:14.5px;margin:14px 0 8px}
 .invl{list-style:none;display:grid;gap:8px}
 .invl li{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.invl li.invoice-target{outline:2px solid var(--blue);outline-offset:2px;animation:invoice-target 1.8s ease-out 1}
+@keyframes invoice-target{0%,35%{background:#eaf0ff}100%{background:#fff}}
 .invl li>div{flex:1;min-width:180px}
 .invl .amt{display:block;font-size:13.5px;color:var(--ink2)}
 .withdraw{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:12px}
@@ -364,12 +366,22 @@ footer{max-width:1180px}
   var kind = hashErr ? null : sb.fromUrl();
   if (hashErr) history.replaceState(null, '', location.pathname + location.search);
   var UUID = /^#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
-  var createAccount = new URLSearchParams(location.search).get('inscription') === '1';
+  var requestParams = new URLSearchParams(location.search);
+  var ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var requestedQuote = ID_RE.test(requestParams.get('devis') || '') ? requestParams.get('devis').toLowerCase() : '';
+  var requestedProject = ID_RE.test(requestParams.get('projet') || '') ? requestParams.get('projet').toLowerCase() : '';
+  var requestedInvoice = /^[a-z0-9_-]{1,80}$/i.test(requestParams.get('facture') || '') ? requestParams.get('facture') : '';
+  var requestedRoute = requestedQuote ? '#/devis/' + requestedQuote : requestedProject ? '#/projets/' + requestedProject : '';
+  var createAccount = requestParams.get('inscription') === '1';
+  function authReturnUrl(){ var back = new URL(sb.PORTAL); back.search = location.search; return back.toString(); }
+  function restoreRequestedRoute(){
+    if (requestedRoute && !/^#\/(devis|projets)\//.test(location.hash)) location.hash = requestedRoute;
+  }
   var m = UUID.exec(location.hash), token = !createAccount && m ? m[1].toLowerCase() : null;
   try {
     if (createAccount) localStorage.removeItem('rd-espace');
     else if (token) localStorage.setItem('rd-espace', token);
-    else if (!sb.session()) token = localStorage.getItem('rd-espace');
+    else if (!sb.session() && !requestedRoute) token = localStorage.getItem('rd-espace');
   } catch(e){}
   if (m) history.replaceState(null, '', location.pathname + '#/accueil');
   var D = null;
@@ -397,7 +409,7 @@ footer{max-width:1180px}
     e.preventDefault();
     if ($('s-pass').value.length < 8) { au('Choisissez un mot de passe de 8 caractères minimum.'); return; }
     au('Création…', true);
-    sb.signUp($('s-email').value.trim(), $('s-pass').value, sb.PORTAL).then(function(u){
+    sb.signUp($('s-email').value.trim(), $('s-pass').value, authReturnUrl()).then(function(u){
       $('s-pass').value = '';
       form('f-login', u && u.identities && !u.identities.length ? 'Un espace existe déjà avec cette adresse : connectez-vous, ou utilisez « Mot de passe oublié ».' :
         'Presque fini : ouvrez l’e-mail envoyé à ' + $('s-email').value.trim() + ' et cliquez sur le lien pour activer votre espace.', true);
@@ -405,7 +417,7 @@ footer{max-width:1180px}
   };
   $('f-forgot').onsubmit = function(e){
     e.preventDefault();
-    sb.recover($('r-email').value.trim(), sb.PORTAL).then(function(){ form('f-login', 'Si un espace existe avec cette adresse, un e-mail vient de vous être envoyé.', true); },
+    sb.recover($('r-email').value.trim(), authReturnUrl()).then(function(){ form('f-login', 'Si un espace existe avec cette adresse, un e-mail vient de vous être envoyé.', true); },
       function(){ au('L’envoi n’a pas abouti. Réessayez dans un instant.'); });
   };
   $('f-newpass').onsubmit = function(e){
@@ -437,7 +449,7 @@ footer{max-width:1180px}
     }
     if (!sb.session()) { form(createAccount ? 'f-signup' : 'f-login'); return Promise.resolve(); }
     return sb.rpc('my_space', {}, true).then(function(d){
-      D = d; $('b-out').hidden = false; show('app'); route();
+      D = d; $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
     }, function(err){
       if (/administrateur/.test(err.message)) { sb.signOut(); form('f-login', 'Ce compte est celui de l’espace privé : utilisez la page admin.'); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
@@ -508,6 +520,11 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
     (WIRE[page] || function(){})(id);
+    if (requestedInvoice && requestedProject && page === 'projets' && id === requestedProject) {
+      var invoiceRows = document.querySelectorAll('[data-invoice-id]'), invoiceRow = null;
+      [].some.call(invoiceRows, function(row){ if (row.dataset.invoiceId === requestedInvoice) { invoiceRow = row; return true; } return false; });
+      if (invoiceRow) { invoiceRow.classList.add('invoice-target'); invoiceRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
     document.title = (NAV.filter(function(n){ return n[0] === page; })[0] || NAV[0])[1] + ' · Espace client DZOFT';
     var cur = $('nav').querySelector('[aria-current]'); if (cur && cur.scrollIntoView && window.innerWidth < 900) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
     window.scrollTo(0, 0);
@@ -554,8 +571,9 @@ footer{max-width:1180px}
     var inv = invoices(q); if (!inv.length) return '';
     return '<h3 class="subh">Vos factures</h3><ul class="invl">' + inv.map(function(x){
       var url = /^https:\/\//i.test(x.u || '') ? x.u : '';
-      var pdf = x.file ? (token ? '<a class="btn line sm" href="./?inscription=1">Accéder à mon compte pour télécharger le PDF</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="Télécharger ' + esc(x.fileName || x.n || 'la facture') + '">Télécharger le PDF ↓</button>') : '';
-      return '<li><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
+      var accountUrl = './?inscription=1&projet=' + encodeURIComponent(q.id) + (x.id ? '&facture=' + encodeURIComponent(x.id) : '');
+      var pdf = x.file ? (token ? '<a class="btn line sm" href="' + accountUrl + '">Créer mon espace pour télécharger le PDF</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="Télécharger ' + esc(x.fileName || x.n || 'la facture') + '">Télécharger le PDF ↓</button>') : '';
+      return '<li' + (x.id ? ' data-invoice-id="' + esc(x.id) + '"' : '') + '><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
         '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Payée' : 'À régler') + '</span>' +
         (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + pdf + '</li>';
     }).join('') + '</ul>';

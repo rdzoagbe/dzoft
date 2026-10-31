@@ -113,10 +113,10 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   td input.pu{width:70px}
 }
 @media print{
-  @page{size:A4;margin:12mm}
-  body{background:#fff}
+  @page{size:A4;margin:9mm}
+  body,body.dzoft-admin{background:#fff!important;color:#0B1020!important}
   .noprint,.tools,.importbox,.adders,.hostadd,.rm,tr.blank{display:none!important}
-  .sheet{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
+  .sheet{background:#fff!important;box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
   input.f,.ed{border:0!important;background:transparent!important;padding:0}
   .ed:empty:before{content:""}
   input.f::placeholder{color:transparent}
@@ -254,7 +254,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 
   <div class="sign">
     <div class="box"><b>Le prestataire</b>Roland Dzoagbe<div class="hint">Date et signature</div></div>
-    <div class="box" id="client-sign"><b>Le client</b><div class="hint">Date, signature et mention manuscrite « Bon pour accord »</div></div>
+    <div class="box" id="client-sign"><b>Le client</b><div class="hint">À compléter : acceptez ce devis dans votre espace client DZOFT, ou datez et signez cette page avec la mention « Bon pour accord ».</div></div>
   </div>
 
   <div class="foot">DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.<br>L’acceptation du devis vaut acceptation des conditions générales de vente : rdzoagbe.github.io/dzoft/cgv.html</div>
@@ -266,7 +266,17 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   // Private page: only the signed-in owner can use it.
   var sb = window.RDsb;
   if (!sb || !sb.session()) { location.replace('./'); return; }
-  var QID = new URLSearchParams(location.search).get('q'), remoteTimer = null, lastTotal = 0;
+  var MFA_WINDOW = 8 * 60 * 60;
+  function checkMfaExpiry(){
+    if (sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return false;
+    var back = location.pathname.split('/').pop() + location.search + location.hash;
+    location.replace('./?return=' + encodeURIComponent(back));
+    return true;
+  }
+  if (checkMfaExpiry()) return;
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkMfaExpiry(); });
+  setInterval(checkMfaExpiry, 60000);
+  var QID = new URLSearchParams(location.search).get('q'), QSHARED = false, remoteTimer = null, lastTotal = 0;
   var PRESETS = [
     {l:'Page de présentation', s:'Une page : activité, horaires, tarifs, contacts ; adaptée au téléphone.', parts:[
       ['Conception de la page', 'Structure, textes et mise en forme', 60],
@@ -521,9 +531,14 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   }
   function summary(){
     var who = ($('c-name').value || '').trim();
+    var access = QID && QSHARED
+      ? '\n\nConsulter et accepter le devis en ligne :\n' + sb.PORTAL + '?inscription=1&devis=' + encodeURIComponent(QID) + '\nCréez votre espace avec la même adresse e-mail que celle indiquée sur ce devis. Après confirmation, le devis s’ouvrira automatiquement et vous pourrez l’accepter en ligne.'
+      : QID
+        ? '\n\nAvant d’envoyer ce lien au client, rendez le devis visible depuis sa fiche projet dans l’espace privé DZOFT. Il pourra ensuite créer son espace avec la même adresse e-mail et accepter le devis en ligne.'
+        : '\n\nPour accepter le devis en ligne et suivre le projet, créez votre espace client avec la même adresse e-mail que celle indiquée sur ce devis.';
     return 'Bonjour' + (who ? ' ' + who : '') + ',\n\nVeuillez trouver ci-joint le devis ' + $('num').value + ' pour votre projet, d’un montant de ' +
       $('t-ttc').textContent + '. Il est valable jusqu’au ' + new Date($('valid').value).toLocaleDateString('fr-FR') +
-      '.\n\nPour l’accepter, il suffit de me le renvoyer daté et signé avec la mention « Bon pour accord ». Je reste à votre disposition pour toute question.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
+      '.' + access + '\n\nPour accepter le devis, utilisez l’espace client (ou datez et signez le PDF avec la mention « Bon pour accord »). La facture sera disponible ensuite dans l’espace client pour le règlement. Je reste à votre disposition pour toute question.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
   }
 
   // init
@@ -546,10 +561,13 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   if (QID) {
     // a quote stored in the private space: the owner's address stays in this browser only
     var myaddr = (function(){ try { return (JSON.parse(localStorage.getItem(KEY) || '{}').f || {}).myaddr || ''; } catch(e){ return ''; } })();
+    $('b-print').disabled = $('b-mail').disabled = $('b-wa').disabled = true;
     $('sync').textContent = 'chargement…';
     sb.select('quotes', 'select=*&id=eq.' + encodeURIComponent(QID)).then(function(rows){
       var q = rows && rows[0];
       if (!q) { $('sync').textContent = 'devis introuvable'; return; }
+      QSHARED = !!q.shared;
+      $('b-print').disabled = $('b-mail').disabled = $('b-wa').disabled = false;
       var d = q.data || {};
       apply(d);
       $('b-follow').hidden = false; $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
@@ -581,6 +599,22 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   $('providers').innerHTML = Object.keys(PROVIDERS).map(function(k){ return '<option value="' + esc(k) + '">'; }).join('');
   $('b-host').onclick = suggestHost;
   $('b-hostline').onclick = function(){ state.host.push({l: '', w: '', c: ''}); renderHost(); var ins = $('hostlist').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); };
+  var originalTitle = document.title;
+  function pdfTitle(){
+    var parts = ['Devis', ($('num').value || '').trim(), ($('c-name').value || '').trim()];
+    return parts.filter(Boolean).join(' - ').replace(/[\\/:*?"<>|]+/g, '-');
+  }
+  window.addEventListener('beforeprint', function(){
+    document.title = pdfTitle();
+    var sheet = $('sheet');
+    // Keep a short quote on one page when it fits without shrinking the text too far.
+    sheet.style.zoom = '1';
+    var naturalHeight = sheet.getBoundingClientRect().height;
+    var fit = (279 * 96 / 25.4) / naturalHeight;
+    if (fit >= .82 && fit < .88) sheet.style.zoom = fit.toFixed(3);
+    else sheet.style.removeProperty('zoom');
+  });
+  window.addEventListener('afterprint', function(){ document.title = originalTitle; $('sheet').style.removeProperty('zoom'); });
   $('b-print').onclick = function(){ save(); window.print(); };
   $('b-new').onclick = function(){
     if (QID) { location.href = './'; return; }

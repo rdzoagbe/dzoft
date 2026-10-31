@@ -204,7 +204,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-mfa" hidden>
       <h1>Code de vérification</h1>
-      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ».</p>
+      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.</p>
       <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
       <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
       <div class="row"><a id="mfa-out">Se déconnecter</a></div>
@@ -392,7 +392,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- auth ---------------- */
   var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
+  var MFA_WINDOW = 8 * 60 * 60;
   var mfaFactor = null;
+  var startPending = false;
+  function safeReturnTarget(){
+    var target = new URLSearchParams(location.search).get('return') || '';
+    return /^(?:devis|suivi)\.html(?:\?[a-zA-Z0-9_.~%=&;,+-]*)?(?:#[a-zA-Z0-9_.~%=&;,+\/-]*)?$/.test(target) ? target : '';
+  }
+  function returnAfterAuth(){
+    var target = safeReturnTarget();
+    if (!target) return false;
+    location.replace('./' + target);
+    return true;
+  }
   function showForm(id, msg, ok){ forms.forEach(function(f){ $(f).hidden = f !== id; }); amsg(msg || '', ok); }
   function amsg(t, ok){ var m = $('a-msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
   $('go-forgot').onclick = function(){ showForm('f-forgot'); };
@@ -431,19 +443,37 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('b-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
 
   function start(){
+    if (startPending) return;
+    startPending = true;
     sb.me().then(function(u){
-      if (!u) { $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
-      // two-step sign-in turned on: the code is asked before anything is shown
+      if (!u) { startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
+      // A verified factor must be recent before any admin data is shown.
       var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0];
-      if (f && sb.aal() !== 'aal2') { mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa'); $('m-code').value = ''; $('m-code').focus(); return; }
+      if (f && !sb.mfaFresh(MFA_WINDOW)) { startPending = false; mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa'); $('m-code').value = ''; $('m-code').focus(); return; }
       sb.rpc('is_owner', {}, true).then(function(isOwner){
-        if (!isOwner) { return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); }); }
+        startPending = false;
+        if (!isOwner) {
+          // The server is authoritative; if its clock rejects a borderline-old MFA claim,
+          // ask for a fresh code instead of discarding the password session.
+          if (u.app_metadata && u.app_metadata.dzoft_owner === true && f) {
+            mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false;
+            showForm('f-mfa', 'Saisissez un nouveau code pour continuer.'); $('m-code').value = ''; $('m-code').focus(); return;
+          }
+          return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); });
+        }
+        if (returnAfterAuth()) return;
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
         fromHash(); loadAll(); loadSettings(); renderMfa(u);
-      }, function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
-    }, function(){ $('auth').hidden = false; showForm('f-login'); });
+      }, function(){ startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
+    }, function(){ startPending = false; $('auth').hidden = false; showForm('f-login'); });
   }
+  function checkMfaExpiry(){
+    if (document.hidden || $('auth').hidden === false || $('app').hidden || sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return;
+    start();
+  }
+  document.addEventListener('visibilitychange', checkMfaExpiry);
+  setInterval(checkMfaExpiry, 60000);
 
   /* ---------------- data ---------------- */
   function loadAll(){
