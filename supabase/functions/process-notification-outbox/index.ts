@@ -233,9 +233,9 @@ Deno.serve(async (req) => {
       const portalLine = isOwner
         ? `Client : ${client?.nom || "fiche projet"}. Ouvrez la fiche pour voir l’historique et l’état des envois.`
         : needsAccount && event.event_type === "quote_published"
-        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis. Après confirmation, le devis s’ouvrira automatiquement ; vous pourrez le consulter et l’accepter en ligne."
+        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis. Après confirmation, le devis s’ouvrira automatiquement ; si vous confirmez sur un autre appareil, revenez à ce lien pour le consulter et l’accepter en ligne."
         : needsAccount && event.event_type === "invoice_shared"
-        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis pour ouvrir la facture. Une facture sert au règlement ; l’acceptation et la signature en ligne concernent le devis."
+        ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis pour ouvrir la facture. Si vous confirmez sur un autre appareil, revenez à ce lien après connexion. Une facture sert au règlement ; l’acceptation et la signature en ligne concernent le devis."
         : event.event_type === "invoice_shared" && !attachment.length
         ? "Votre facture est également accessible dans votre espace client."
         : "Retrouvez les informations et l’historique de votre projet dans votre espace DZOFT.";

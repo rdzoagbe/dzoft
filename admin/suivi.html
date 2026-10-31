@@ -405,7 +405,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   };
   function invite(){
     return 'Bonjour ' + first(C.nom) + ',\n\nVotre devis ' + Q.numero + ' est disponible dans votre espace client DZOFT' + (C.user_id ? ' (connectez-vous avec votre e-mail)' : ' (créez votre espace avec la même adresse e-mail que celle de ce devis)') + ' :\n' + inviteUrl() +
-      '\n\nVous pouvez consulter le devis, me poser vos questions et l’accepter en ligne. Une fois accepté, vous suivrez chaque étape du projet et retrouverez les factures dans cet espace.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
+      '\n\nVous pouvez consulter le devis, me poser vos questions et l’accepter en ligne. Une fois accepté, vous suivrez chaque étape du projet et retrouverez les factures dans cet espace. Si vous confirmez votre compte sur un autre appareil, rouvrez ce lien après connexion.\n\nBien cordialement,\nRoland Dzoagbe\n07 82 88 46 46';
   }
   function guard(){
     if (!Q.shared) { toast('Cochez d’abord « Visible dans l’espace client ».'); return false; }

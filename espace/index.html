@@ -285,7 +285,6 @@ footer{max-width:1180px}
   <div class="in">
     <a class="brand" href="../" target="_blank" rel="noopener"><img src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace client</span></div></a>
     <div class="sp"></div>
-    <a class="wa" href="https://wa.me/33782884646" target="_blank" rel="noopener">WhatsApp</a>
     <button class="out" id="b-out" type="button" hidden>Déconnexion</button>
   </div>
 </header>
@@ -344,7 +343,7 @@ footer{max-width:1180px}
   <nav class="side" id="nav" aria-label="Menu de l’espace client"></nav>
   <main class="content" id="view" tabindex="-1"></main>
 </div>
-<footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · roland.dzoagbe@hotmail.com · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
+<footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
 <script src="../admin/sb.js"></script>
@@ -372,10 +371,33 @@ footer{max-width:1180px}
   var requestedProject = ID_RE.test(requestParams.get('projet') || '') ? requestParams.get('projet').toLowerCase() : '';
   var requestedInvoice = /^[a-z0-9_-]{1,80}$/i.test(requestParams.get('facture') || '') ? requestParams.get('facture') : '';
   var requestedRoute = requestedQuote ? '#/devis/' + requestedQuote : requestedProject ? '#/projets/' + requestedProject : '';
+  var intentKey = 'rd-espace-pending-intent';
+  try {
+    if (requestedRoute) localStorage.setItem(intentKey, JSON.stringify({ devis: requestedQuote, projet: requestedProject, facture: requestedInvoice, at: Date.now() }));
+    else {
+      var pendingIntent = JSON.parse(localStorage.getItem(intentKey) || 'null');
+      if (pendingIntent && Date.now() - Number(pendingIntent.at) < 72 * 60 * 60 * 1000) {
+        requestedQuote = ID_RE.test(pendingIntent.devis || '') ? pendingIntent.devis.toLowerCase() : '';
+        requestedProject = ID_RE.test(pendingIntent.projet || '') ? pendingIntent.projet.toLowerCase() : '';
+        requestedInvoice = /^[a-z0-9_-]{1,80}$/i.test(pendingIntent.facture || '') ? pendingIntent.facture : '';
+        requestedRoute = requestedQuote ? '#/devis/' + requestedQuote : requestedProject ? '#/projets/' + requestedProject : '';
+      } else if (pendingIntent) localStorage.removeItem(intentKey);
+    }
+  } catch(e){}
   var createAccount = requestParams.get('inscription') === '1';
-  function authReturnUrl(){ var back = new URL(sb.PORTAL); back.search = location.search; return back.toString(); }
+  var focusProject = requestedProject, focusInvoice = requestedInvoice;
+  function authReturnUrl(){ return sb.PORTAL; }
   function restoreRequestedRoute(){
-    if (requestedRoute && !/^#\/(devis|projets)\//.test(location.hash)) location.hash = requestedRoute;
+    if (!requestedRoute) return;
+    var params = new URLSearchParams(location.search);
+    params.delete('inscription');
+    params.delete('devis'); params.delete('projet'); params.delete('facture');
+    var query = params.toString();
+    var currentHash = location.hash;
+    var targetHash = requestedQuote && currentHash.indexOf('#/devis/' + requestedQuote) === 0 || requestedProject && currentHash.indexOf('#/projets/' + requestedProject) === 0 ? currentHash : requestedRoute;
+    history.replaceState(null, '', location.pathname + (query ? '?' + query : '') + targetHash);
+    try { localStorage.removeItem(intentKey); } catch(e){}
+    requestedRoute = requestedQuote = requestedProject = requestedInvoice = '';
   }
   var m = UUID.exec(location.hash), token = !createAccount && m ? m[1].toLowerCase() : null;
   try {
@@ -520,9 +542,9 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
     (WIRE[page] || function(){})(id);
-    if (requestedInvoice && requestedProject && page === 'projets' && id === requestedProject) {
+    if (focusInvoice && focusProject && page === 'projets' && id === focusProject) {
       var invoiceRows = document.querySelectorAll('[data-invoice-id]'), invoiceRow = null;
-      [].some.call(invoiceRows, function(row){ if (row.dataset.invoiceId === requestedInvoice) { invoiceRow = row; return true; } return false; });
+      [].some.call(invoiceRows, function(row){ if (row.dataset.invoiceId === focusInvoice) { invoiceRow = row; return true; } return false; });
       if (invoiceRow) { invoiceRow.classList.add('invoice-target'); invoiceRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
     document.title = (NAV.filter(function(n){ return n[0] === page; })[0] || NAV[0])[1] + ' · Espace client DZOFT';
@@ -841,7 +863,7 @@ footer{max-width:1180px}
   VIEWS.documents = function(){
     var qs = quotes().filter(function(q){ return okDocs(q).length; }), h = head('Documents', 'Maquettes, factures, fiche de remise et autres fichiers partagés.');
     h += '<section class="card" id="myfiles"><h2>Mes fichiers</h2>' + (token ?
-      '<p class="muted">Pour m’envoyer vos fichiers (logo, photos, textes) depuis cet espace, connectez-vous avec un compte. En attendant, envoyez-les par e-mail ou WhatsApp.</p>' :
+      '<p class="muted">Pour m’envoyer vos fichiers (logo, photos, textes), connectez-vous à votre compte. En attendant, écrivez-moi depuis Messages.</p>' :
       '<p class="muted">Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).</p>' +
       '<div class="qacts"><label class="btn main" style="cursor:pointer">Envoyer des fichiers<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
       '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">Chargement…</li></ul>') + '</section>';
@@ -894,7 +916,7 @@ footer{max-width:1180px}
     };
   };
   VIEWS.messages = function(){
-    var ms = D.messages || [], qs = quotes(), h = head('Messages', 'Je vous réponds sous 48 h. Pour une urgence : WhatsApp au 07 82 88 46 46.');
+    var ms = D.messages || [], qs = quotes(), h = head('Messages', 'Je vous réponds sous 48 h. Écrivez-moi ici pour toute question sur votre projet.');
     h += '<section class="card"><div class="thread" id="thread">' + (ms.length ? ms.map(function(x){
       var q = x.quote_id && byId(x.quote_id);
       return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + esc(x.body) + '<small>' + (x.author === 'client' ? 'Vous' : 'Roland') + ' · ' + time(x.at) + (q ? ' · ' + esc(q.numero) : '') + '</small></div>';
@@ -957,7 +979,7 @@ footer{max-width:1180px}
       '<div class="qmeta"><h3>DEVIS</h3><div><span>N°</span>' + esc(f.num || q.numero) + '</div>' + (f.date ? '<div><span>Date</span>' + day(isoDay(f.date)) + '</div>' : '') +
       (f.valid ? '<div><span>Valable jusqu’au</span>' + day(isoDay(f.valid)) + '</div>' : '') + '</div></div>';
     h += '<div class="parties"><div class="party"><h4>Prestataire</h4><b>Roland Dzoagbe</b>, entrepreneur individuel<br>SIRET 104 838 727 00014' + (f.myaddr ? '<br>' + esc(f.myaddr) : '') +
-      '<br>07 82 88 46 46 · roland.dzoagbe@hotmail.com</div><div class="party"><h4>Client</h4><b>' + esc(f.cname) + '</b>' + (f.corg ? '<br>' + esc(f.corg) : '') +
+      '</div><div class="party"><h4>Client</h4><b>' + esc(f.cname) + '</b>' + (f.corg ? '<br>' + esc(f.corg) : '') +
       (f.caddr ? '<br>' + esc(f.caddr) : '') + (f.ccontact ? '<br>' + esc(f.ccontact) : '') + '</div></div>';
     if (f.desc) h += '<h4>Le projet</h4><div class="desc">' + esc(f.desc) + '</div>';
     h += '<h4>Prestations</h4><table><thead><tr><th>Désignation</th><th class="r hide-m">Qté</th><th class="r hide-m">Prix unitaire</th><th class="r">Total</th></tr></thead><tbody>' +

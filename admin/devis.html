@@ -532,7 +532,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   function summary(){
     var who = ($('c-name').value || '').trim();
     var access = QID && QSHARED
-      ? '\n\nConsulter et accepter le devis en ligne :\n' + sb.PORTAL + '?inscription=1&devis=' + encodeURIComponent(QID) + '\nCréez votre espace avec la même adresse e-mail que celle indiquée sur ce devis. Après confirmation, le devis s’ouvrira automatiquement et vous pourrez l’accepter en ligne.'
+      ? '\n\nConsulter et accepter le devis en ligne :\n' + sb.PORTAL + '?inscription=1&devis=' + encodeURIComponent(QID) + '\nCréez votre espace avec la même adresse e-mail que celle indiquée sur ce devis. Après confirmation, le devis s’ouvrira automatiquement ; si vous confirmez sur un autre appareil, rouvrez ce lien après connexion.'
       : QID
         ? '\n\nAvant d’envoyer ce lien au client, rendez le devis visible depuis sa fiche projet dans l’espace privé DZOFT. Il pourra ensuite créer son espace avec la même adresse e-mail et accepter le devis en ligne.'
         : '\n\nPour accepter le devis en ligne et suivre le projet, créez votre espace client avec la même adresse e-mail que celle indiquée sur ce devis.';
