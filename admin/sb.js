@@ -95,6 +95,20 @@
     me: function () {
       return token().then(function (t) { return t ? req('/auth/v1/user', { token: t }) : null; });
     },
+    // Navigation only: the admin page and RLS still enforce owner access and MFA.
+    routeOwner: function () {
+      return sb.me().then(function (user) {
+        if (!user || !user.app_metadata || user.app_metadata.dzoft_owner !== true) return false;
+        var current = getSession();
+        if (!current || !current.access_token || !current.refresh_token) return false;
+        // Write before removing the client copy. Never put credentials in the URL.
+        localStorage.setItem('rd-admin-session', JSON.stringify(current));
+        if (STORE !== 'rd-admin-session') localStorage.removeItem(STORE);
+        localStorage.removeItem('rd-espace');
+        global.location.replace(new global.URL('../admin/', global.location.href).href);
+        return true;
+      });
+    },
     /* Table access through PostgREST. q is the query string after the table name. */
     select: function (table, q) {
       return token().then(function (t) { return req('/rest/v1/' + table + (q ? '?' + q : ''), { token: t }); });

@@ -279,7 +279,7 @@ footer{max-width:1180px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css">
-<script src="../assets/dzoft-language.js?v=20261101d" defer></script>
+<script src="../assets/dzoft-language.js?v=20261101-login" defer></script>
 </head>
 <body class="dzoft-client">
 <header class="top">
@@ -296,8 +296,8 @@ footer{max-width:1180px}
 <div class="auth" id="s-auth" hidden>
   <div class="card">
     <form id="f-login">
-      <h1>Votre espace client</h1>
-      <p class="intro">Consultez votre devis, validez les étapes et retrouvez vos factures, fichiers et messages au même endroit.</p>
+      <h1>Connexion à votre espace</h1>
+      <p class="intro">Connectez-vous pour retrouver votre tableau de bord. Votre compte vous dirige automatiquement vers votre espace client ou administrateur.</p>
       <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="email" required>
       <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
       <button class="btn main" type="submit">Se connecter</button>
@@ -348,7 +348,7 @@ footer{max-width:1180px}
 <footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · <a href="mailto:roland.dzoagbe@hotmail.com">roland.dzoagbe@hotmail.com</a> · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
-<script src="../admin/sb.js"></script>
+<script src="../admin/sb.js?v=20261101-login"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
@@ -425,7 +425,7 @@ footer{max-width:1180px}
   });
   $('f-login').onsubmit = function(e){
     e.preventDefault(); au('Connexion…', true);
-    sb.signIn($('l-email').value.trim(), $('l-pass').value).then(function(){ $('l-pass').value = ''; show('s-load'); load(); }, function(err){
+    sb.signIn($('l-email').value.trim(), $('l-pass').value).then(function(){ $('l-pass').value = ''; token = null; show('s-load'); load(); }, function(err){
       au(/confirm/i.test(err.message) ? 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail (pensez aux indésirables).' : 'E-mail ou mot de passe incorrect.');
     });
   };
@@ -472,12 +472,18 @@ footer{max-width:1180px}
       }, function(){ show('s-err'); });
     }
     if (!sb.session()) { form(createAccount ? 'f-signup' : 'f-login'); return Promise.resolve(); }
-    return sb.rpc('my_space', {}, true).then(function(d){
+    return sb.routeOwner().then(function(owner){
+      if (owner) return;
+      return sb.rpc('my_space', {}, true).then(function(d){
       D = d; $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
     }, function(err){
-      if (/administrateur/.test(err.message)) { sb.signOut(); form('f-login', 'Ce compte est celui de l’espace privé : utilisez la page admin.'); return; }
+      if (/administrateur/.test(err.message)) { form('f-login', 'Impossible de vérifier votre accès administrateur. Réessayez.'); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
       if (err.status === 401 || /JWT|non connecté/i.test(err.message)) { sb.signOut(); form('f-login', 'Votre session a expiré : reconnectez-vous.'); return; }
+      show('s-err');
+      });
+    }).catch(function(err){
+      if (err.status === 401 || !sb.session()) { sb.signOut(); form('f-login', 'Votre session a expiré : reconnectez-vous.'); return; }
       show('s-err');
     });
   }
