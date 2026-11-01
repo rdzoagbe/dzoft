@@ -794,9 +794,9 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     return ok;
   }
   // Every request also lands in the private space (once per content), whatever the button.
-  var lastLead = '';
+  var lastLead = '', lastLeadPromise = null;
   function pushLead(source){
-    if (!window.RDsb) return;
+    if (!window.RDsb) return Promise.resolve(false);
     var d = new FormData(f), row = {
       prenom: (d.get('prenom') || '').trim().slice(0, 100), activite: (d.get('activite') || '').trim().slice(0, 200),
       projet: projet(d).slice(0, 100), budget: (d.get('budget') || '').slice(0, 100),
@@ -805,11 +805,12 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       email: accEmail().toLowerCase().slice(0, 200)
     };
     if (me) row.user_id = me.id;
-    if (d.get('_gotcha')) return;
+    if (d.get('_gotcha')) return Promise.resolve(false);
     var sig = JSON.stringify([row.prenom, row.projet, row.contact, row.elements, row.message, row.email]);
-    if (sig === lastLead) return;
+    if (sig === lastLead) return lastLeadPromise || Promise.resolve(true);
     lastLead = sig;
-    window.RDsb.submitLead(row, !!me).catch(function(){ lastLead = ''; });
+    lastLeadPromise = window.RDsb.submitLead(row, !!me).then(function(){ return true; }, function(){ if (lastLead === sig) lastLead = ''; return false; });
+    return lastLeadPromise;
   }
   function sendWa(){
     if (!valid()) return;
@@ -828,7 +829,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
   function sendDirect(){
     status.textContent = '';
     if (sending || !valid(true)) return;
-    pushLead('formulaire');
+    var savedLead = pushLead('formulaire');
     var d = new FormData(f), contact = (d.get('contact') || '').trim(), btns = document.querySelectorAll('#send-direct');
     var data = {
       _subject: 'Demande de devis (site en anglais) - ' + (d.get('prenom') || '').trim(), langue: 'anglais',
@@ -843,16 +844,17 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
     if (accEmail()) data.email = accEmail();
     sending = true; status.className = 'full fstatus'; status.textContent = 'Sending…';
     [].forEach.call(btns, function(b){ b.disabled = true; });
-    fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+    var emailed = fetch('https://formspree.io/f/' + FORMSPREE_ID, {
       method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-    }).then(function(r){
-      if (!r.ok) throw new Error(r.status);
+    }).then(function(r){ return r.ok; }, function(){ return false; });
+    Promise.all([savedLead, emailed]).then(function(results){
+      if (!results[0] && !results[1]) throw new Error('Request not received');
       var who = data.prenom;
       status.className = 'full fstatus ok';
-      if (me) {
+      if (me && results[0]) {
         status.innerHTML = 'Thank you ' + esc(who) + ', your request has been sent and added to your client area. I will reply within 48 hours. <a href="../espace/">Open my client area</a>';
       } else {
-        status.textContent = 'Thank you ' + who + ', your request has been sent. I will reply within 48 hours.';
+        status.textContent = 'Thank you ' + who + ', your request has been received. I will reply within 48 hours.' + (me && !results[0] ? ' It was sent by email but could not be added to your client area.' : '');
       }
       f.reset(); showProjectDetails(); quoteMore.open = false;
       [].forEach.call(document.querySelectorAll('.ho-item'), function(b){ b.setAttribute('aria-pressed', 'false'); });

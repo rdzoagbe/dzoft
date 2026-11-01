@@ -182,7 +182,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez le PDF pour le conserver dans l’espace client. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception.</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez le PDF pour le conserver dans l’espace client. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception. Pour un acompte, cochez aussi l’étape « Acompte reçu » dans le suivi du projet : le statut de la facture et l’avancement sont deux confirmations distinctes.</p>
     <p class="muted" id="iv-account-note" hidden>Pour joindre un PDF privé, le client doit avoir créé son compte avec l’adresse e-mail de sa fiche.</p>
     <div id="invs"></div>
   </section>
@@ -581,7 +581,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         x.emailAt = new Date().toISOString(); b.disabled = true; b.textContent = 'Mise en file…'; clearTimeout(timer);
         return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){
           if (!ok) { b.disabled = false; b.textContent = 'Envoyer par e-mail'; return; }
-          sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail de facture envoyé aux deux adresses.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); });
+          sb.fn('process-notification-outbox', {}).then(function(){ toast('Envoi de facture traité. Vérifiez le statut de chaque destinataire dans l’historique.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); });
         });
       }
       if (b.dataset.a === 'pdf-get') { var w = window.open('about:blank', '_blank'); sb.files.link(x.file, true).then(function(u){ w.location = u; }, function(err){ w.close(); fail(err); }); return; }
