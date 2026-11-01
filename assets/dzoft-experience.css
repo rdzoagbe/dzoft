@@ -439,3 +439,19 @@ body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
   .dzoft-motion-ready .dzoft-reveal { opacity: 1; transform: none; }
 }
+
+/* Compact project introduction and consistent portal controls. */
+.dzoft-public .hero{padding-top:44px;padding-bottom:52px}
+.dzoft-public .hero .lead{max-width:34em;font-size:18px;line-height:1.6}
+.dzoft-public .hero .ctas{margin-top:22px}
+.dzoft-public .hero .trust{margin-top:20px}
+.lang-switch-app button{min-width:40px;min-height:36px;font-size:12px}
+.lang-switch-app button[aria-pressed="true"]{background:#fff;color:#17243c;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.dzoft-admin .auth .auth-language{position:fixed;top:18px;right:24px;margin:0;background:#17243c;border-color:#61728b;z-index:10}
+.dzoft-admin .auth .auth-language button{color:#d9e3f0}
+.dzoft-admin .auth .auth-language button[aria-pressed="true"]{color:#17243c}
+.dzoft-client footer{font-size:14px;line-height:1.7;color:#46566c}
+.dzoft-admin #todo{gap:12px}
+.dzoft-admin #todo li{padding:14px 16px;border-left:3px solid #4361ee}
+@media(min-width:800px) and (max-width:1000px){.dzoft-public .hero-grid{grid-template-columns:1.1fr .9fr;gap:24px}.dzoft-public .hero h1{font-size:40px}.dzoft-public .hero-preview{min-height:300px}}
+@media(max-width:620px){.dzoft-public .hero{padding:30px 0 36px}.dzoft-public .hero h1{font-size:36px}.dzoft-public .hero .lead{font-size:16px}.dzoft-public .hero .trust{gap:8px;font-size:13px}.dzoft-admin .auth .auth-language{right:16px;top:14px}}
