@@ -455,3 +455,18 @@ body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0
 .dzoft-admin #todo li{padding:14px 16px;border-left:3px solid #4361ee}
 @media(min-width:800px) and (max-width:1000px){.dzoft-public .hero-grid{grid-template-columns:1.1fr .9fr;gap:24px}.dzoft-public .hero h1{font-size:40px}.dzoft-public .hero-preview{min-height:300px}}
 @media(max-width:620px){.dzoft-public .hero{padding:30px 0 36px}.dzoft-public .hero h1{font-size:36px}.dzoft-public .hero .lead{font-size:16px}.dzoft-public .hero .trust{gap:8px;font-size:13px}.dzoft-admin .auth .auth-language{right:16px;top:14px}}
+
+/* Signed-in dashboards: one clear next step before the detailed work queue. */
+.dashboard-focus{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:26px 28px;margin:0 0 20px;border-radius:20px;border:1px solid #b9ccef;background:linear-gradient(120deg,#e8efff,#f0fbff);color:#14233e;box-shadow:0 10px 30px rgba(30,60,115,.06)}
+.dashboard-focus>div{min-width:0;max-width:760px}
+.dashboard-eyebrow{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:800;color:#354bb8;margin-bottom:10px}
+.dashboard-focus h2,.dashboard-focus h3{font-size:clamp(19px,2.1vw,25px);line-height:1.4;letter-spacing:-.025em;margin:0 0 8px;overflow-wrap:anywhere}
+.dashboard-focus p{font-size:14px;color:#435572;margin:0;line-height:1.6}
+.dashboard-focus>.btn{flex:none}
+.dashboard-shortcuts{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.dzoft-admin #v-dash>.panel{margin-top:20px}
+.dzoft-client .todo .btn{background:#fff;color:#3448d6;box-shadow:none;border:1px solid #bfcef0}
+.dzoft-client .todo li{padding:14px 16px;line-height:1.55}
+.dzoft-client .item .bar{margin-top:14px}
+@media(max-width:700px){.dashboard-focus{padding:20px;align-items:stretch;flex-direction:column;gap:16px}.dashboard-focus>.btn{text-align:center;white-space:normal}.dashboard-shortcuts .btn{flex:1;text-align:center}.dzoft-client .todo .btn{width:100%;text-align:center}}
+.dzoft-client .top .out{color:#e0e8f6;border-color:#60738b;background:rgba(255,255,255,.05)}

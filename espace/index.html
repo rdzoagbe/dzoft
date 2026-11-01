@@ -278,8 +278,8 @@ footer{max-width:1180px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css">
-<script src="../assets/dzoft-language.js?v=20261101-login" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261101-dashboard">
+<script src="../assets/dzoft-language.js?v=20261101-dashboard" defer></script>
 </head>
 <body class="dzoft-client">
 <header class="top">
@@ -717,25 +717,29 @@ footer{max-width:1180px}
   var VIEWS = {}, WIRE = {};
   VIEWS.accueil = function(){
     var todo = [], qs = quotes(), un = unseen();
-    qs.filter(pending).forEach(function(q){ todo.push(['Votre devis ' + q.numero + ' (' + eur(q.total) + ') attend votre accord', '#/devis/' + q.id, 'Voir le devis']); });
+    qs.filter(pending).forEach(function(q){ todo.push(['Votre devis ' + q.numero + ' (' + eur(q.total) + ') attend votre accord', '#/devis/' + q.id, 'Voir le devis', 1]); });
     projects().forEach(function(q){
       var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
-      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer']);
+      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer', 3]);
     });
     // Right after acceptance, the client can already send their content: asked until the design step is done.
     projects().forEach(function(q){
-      var started = steps(q).some(function(s){ return (s.k === 'design' || s.k === 'build') && s.done; });
-      if (!started) todo.push(['Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', '#/documents', 'Envoyer']);
+      var started = steps(q).some(function(s){ return (s.k === 'design' || s.k === 'build') && (s.done || s.ask); });
+      if (!started) todo.push(['Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', '#/documents', 'Envoyer', 4]);
     });
-    projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider']); }); });
-    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer']); }); });
-    projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis']); });
-    if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire']);
-    if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande']);
+    projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider', 0]); }); });
+    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer', 3]); }); });
+    projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis', 5]); });
+    if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire', 2]);
+    if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande', 6]);
+    todo.sort(function(a,b){ return (a[3] || 0) - (b[3] || 0); });
     var note = qs.filter(function(q){ return q.note; })[0], h = head('Bonjour ' + esc(first(D.client.nom)) + ' 👋', 'Voici où en sont vos projets avec DZOFT.');
+    var firstAction = todo[0];
+    h += '<section class="dashboard-focus"><div><span class="dashboard-eyebrow">Votre prochaine action</span><h2>' + (firstAction ? esc(firstAction[0]) : 'Tout est à jour') + '</h2><p>' + (firstAction ? 'Un point de départ pour faire avancer votre projet.' : 'Je vous préviens dès qu’une étape demande votre avis.') + '</p></div>' +
+      '<a class="btn main" href="' + (firstAction ? firstAction[1] : '#/messages') + '">' + '<span>' + (firstAction ? esc(firstAction[2]) : 'Poser une question') + '</span> →</a></section>';
     if (note) h += '<div class="note"><b>Le mot de Roland · ' + esc(title(note)) + '</b>' + esc(note.note) + '</div>';
-    h += '<section class="card"><h2>À faire</h2>' + (todo.length ? '<ul class="todo">' + todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><a class="btn main sm" href="' + t[1] + '">' + t[2] + '</a></li>'; }).join('') + '</ul>' :
-      '<p class="muted">Rien à faire pour le moment 👌 Je vous préviens dès qu’il y a du nouveau.</p>') + '</section>';
+    h += '<section class="card"><h2>Autres actions à suivre</h2>' + (todo.length > 1 ? '<ul class="todo">' + todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><a class="btn main sm" href="' + t[1] + '">' + t[2] + '</a></li>'; }).join('') + '</ul>' :
+      '<p class="muted">Aucune autre action en attente. Vous pouvez consulter vos documents ou m’écrire à tout moment.</p>') + '</section>';
     var ps = projects();
     if (ps.length) h += '<section class="card"><h2>Vos projets</h2><div class="items">' + ps.map(quoteCard).join('') + '</div></section>';
     h += '<div class="stats"><a href="#/demandes"><b>' + (D.requests || []).length + '</b>demande' + ((D.requests || []).length > 1 ? 's' : '') + '</a><a href="#/devis"><b>' + qs.length + '</b>devis</a><a href="#/projets"><b>' + ps.length + '</b>projet' + (ps.length > 1 ? 's' : '') + '</a><a href="#/messages"><b>' + (D.messages || []).length + '</b>message' + ((D.messages || []).length > 1 ? 's' : '') + '</a></div>';

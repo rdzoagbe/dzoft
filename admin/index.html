@@ -167,8 +167,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css">
-<script src="../assets/dzoft-language.js?v=20261101d" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261101-dashboard">
+<script src="../assets/dzoft-language.js?v=20261101-dashboard" defer></script>
 </head>
 <body class="dzoft-admin">
 
@@ -250,10 +250,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   <main>
     <section id="v-dash">
       <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
+      <div class="dashboard-focus" id="dash-focus"></div>
+      <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
       <div class="kpis" id="kpis"></div>
-      <div class="panel"><h3>À faire</h3><ul class="todo" id="todo"></ul></div>
-      <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
+      <div class="panel"><h3>Autres actions à suivre</h3><ul class="todo" id="todo"></ul></div>
       <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
+      <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
     </section>
     <section id="v-leads" hidden>
       <div class="bar">
@@ -483,7 +485,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Promise.all([
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,deleted_at,data->f->>valid&order=created_at.desc'),
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,invoices,deleted_at,data->f->>valid&order=created_at.desc'),
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
       sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; }),
       sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30').catch(function(){ return []; }),
@@ -564,7 +566,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     data.emailOutbox.filter(function(m){ return m.status === 'failed'; }).forEach(function(m){ todo.push(['Échec d’e-mail ' + (m.recipient_role === 'owner' ? 'à votre adresse' : 'au client') + (m.last_error ? ' : ' + m.last_error : ''), m.quote_id ? 'follow:' + m.quote_id : 'dash', 'Voir']); });
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
-    $('todo').innerHTML = todo.length ? todo.map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Rien d’urgent 👌</li>';
+    ps.forEach(function(q){ (q.invoices || []).filter(function(x){ return !x.paid && (x.n || x.num); }).forEach(function(x){
+      todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'follow:' + q.id, 'Suivi']);
+    }); });
+    // Put conversations and scheduled follow-ups before routine administration.
+    todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[1].indexOf('thread:') === 0 ? 0 : t[1] === 'leads' ? 1 : t[0].indexOf('Échec') === 0 ? 2 : 3 }; })
+      .sort(function(a,b){ return a.rank - b.rank || a.order - b.order; }).map(function(x){ return x.task; });
+    var firstAction = todo[0];
+    $('dash-focus').innerHTML = '<div><span class="dashboard-eyebrow">Votre prochaine action</span><h3>' + (firstAction ? esc(firstAction[0]) : 'Tout est à jour') + '</h3><p>' + (todo.length ? '<b>' + todo.length + '</b> <span>actions à suivre</span>' : 'Aucune action en attente. Retrouvez vos projets et vos échanges ci-dessous.') + '</p></div>' +
+      (firstAction ? '<button class="btn main" type="button" data-go="' + esc(firstAction[1]) + '">' + '<span>' + esc(firstAction[2]) + '</span> →</button>' : '<button class="btn main" type="button" data-go="projects">Voir les projets →</button>');
+    $('todo').innerHTML = todo.length > 1 ? todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Aucune autre action en attente.</li>';
     $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
     renderEmailLog();
   }
