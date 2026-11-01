@@ -335,6 +335,16 @@ body.dzoft-public {
 .dzoft-motion-ready .dzoft-reveal.dzoft-delay-2 { transition-delay: .2s; }
 
 /* Client portal */
+.lang-switch-app{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid rgba(255,255,255,.24);border-radius:10px;background:rgba(255,255,255,.08);white-space:nowrap}
+.lang-switch-app button{border:0;border-radius:7px;background:transparent;color:#c9d5e4;padding:5px 8px;font:700 11px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
+.lang-switch-app button.active{color:#17243c;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.lang-switch-app button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.auth-language{margin:0 0 14px auto;width:max-content;border-color:#dbe4ee;background:#f5f7fb}
+.auth-language button{color:#53637b}.auth-language button.active{color:#fff;background:#4361ee}
+.dzoft-admin .top .lang-switch-app{margin-left:4px}
+.dzoft-client .top .lang-switch-app{margin-left:auto}
+@media(max-width:620px){.dzoft-client .top .in{gap:8px}.dzoft-client .top .brand{max-width:calc(100% - 110px)}.dzoft-client .top .sp{display:none}.dzoft-client .top .lang-switch-app{margin-left:auto}.dzoft-admin .top .lang-switch-app{order:5;margin-left:auto}}
+
 body.dzoft-client { background: radial-gradient(850px 460px at 100% 0%, #e2f5ff 0, transparent 66%), #f0f4fa; }
 .dzoft-client .top { background: linear-gradient(110deg, #080d19, #101a36 72%, #13314b); box-shadow: 0 8px 26px rgba(8, 16, 35, .16); }
 .dzoft-client .top .in { padding-top: 13px; padding-bottom: 13px; }

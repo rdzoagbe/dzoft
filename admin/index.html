@@ -168,12 +168,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css">
+<script src="../assets/dzoft-language.js?v=20261101b" defer></script>
 </head>
 <body class="dzoft-admin">
 
 <!-- ============ sign in ============ -->
 <section class="auth" id="auth" hidden>
   <div class="card">
+    <div class="lang-switch-app auth-language" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
     <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · espace privé</b><span>Clients, demandes et devis</span></div></div>
 
     <form id="f-login">
@@ -226,6 +228,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <a class="brand" href="#/tableau-de-bord" aria-label="DZOFT · revenir au tableau de bord"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace privé</span></div></a>
       <div class="sp"></div>
       <span class="who hide-m" id="who"></span>
+      <div class="lang-switch-app" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
       <a class="btn sm line" href="../" target="_blank" rel="noopener">Voir le site</a>
       <button class="btn sm ghost" style="color:#c4d2e1" id="b-out" type="button">Déconnexion</button>
     </div>
