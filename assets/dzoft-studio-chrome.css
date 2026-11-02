@@ -1,0 +1,21 @@
+/* Shared public navigation. Kept separate from authenticated workspace styles. */
+header.studio-header{position:sticky;top:0;z-index:50;background:#0b1020;color:#fff;border-bottom:1px solid #293247;padding:0;backdrop-filter:none}
+.studio-header .studio-nav{width:min(1240px,calc(100% - 48px));min-height:82px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.studio-header .studio-brand{flex:none}.studio-brand img{display:block;width:137px;height:30px}
+.studio-header nav{display:flex;align-items:center;gap:28px;margin-left:auto;flex-wrap:nowrap}
+.studio-header a{font-family:Sora,system-ui,sans-serif;text-decoration:none;white-space:nowrap}
+.studio-header nav a{font-size:12px;color:#c5cad5;padding:12px 0;border:0;border-radius:0;background:none}
+.studio-header nav a:hover,.studio-header nav a[aria-current]{color:#fff;text-decoration:underline;text-decoration-color:#69ddf0;text-underline-offset:8px}
+.studio-actions{display:flex;align-items:center;gap:22px}.studio-header .studio-login{font-size:12px;color:#e1e7f3}.studio-languages{display:flex;gap:7px;font-size:11px;color:#8995af}.studio-languages a{color:#a8b3ca}.studio-languages a[aria-current]{color:#fff;font-weight:700}
+.studio-header .studio-quote{background:#4361ee;color:#fff;padding:12px 17px;font-size:11px;font-weight:600;border-radius:5px}.studio-header .studio-quote:hover{background:#304ee2}
+#studio-menu{display:none;background:transparent;border:0;padding:12px;color:white;cursor:pointer}#studio-menu span{display:block;width:20px;height:2px;background:#fff;margin:5px 0}
+.studio-header a:focus-visible,#studio-menu:focus-visible{outline:3px solid #69ddf0;outline-offset:4px}.studio-header nav .studio-mobile-quote{display:none}
+.studio-footer{background:#080d17;color:#c5cad5;padding:32px max(24px,calc((100% - 1180px)/2));font:11px/1.7 Sora,system-ui,sans-serif}.studio-footer>div,.studio-footer nav{display:flex;align-items:center;gap:24px;flex-wrap:wrap}.studio-footer nav{margin-top:24px}.studio-footer a{color:#d9e1ef;text-decoration:none}.studio-footer a:hover{text-decoration:underline}.studio-footer img{display:block}
+body.dzoft-public{background:#f5f3ee}.dzoft-public main{background:transparent}
+@media(max-width:1050px){.studio-header .studio-nav{gap:18px}.studio-header nav{gap:18px}.studio-actions{gap:14px}.studio-header .studio-quote{display:none}}
+@media(max-width:760px){.studio-header .studio-nav{width:calc(100% - 32px);min-height:72px;gap:10px}.studio-brand img{width:108px;height:auto}.studio-header nav{display:none;position:absolute;top:72px;left:0;right:0;margin:0;padding:20px;background:#0b1020;border-bottom:1px solid #46516a;flex-direction:column;align-items:stretch;gap:6px}.studio-header nav.open{display:flex}.studio-header nav a{font-size:15px;padding:10px}.studio-header nav .studio-mobile-quote{display:block}#studio-menu{display:block}.studio-actions{gap:11px}.studio-header .studio-login{font-size:11px}.studio-languages{gap:5px}.studio-footer{padding:30px 20px}}
+@media(prefers-reduced-motion:reduce){.studio-header *{transition:none!important}}
+/* Override the previous public header's horizontal mobile navigation. */
+body.dzoft-public header.studio-header nav{order:initial;width:auto;flex-basis:auto;overflow:visible;margin:0 0 0 auto}
+@media(max-width:760px){body.dzoft-public header.studio-header nav{display:none;width:auto;margin:0;overflow:visible}body.dzoft-public header.studio-header nav.open{display:flex}}
+@media print{.studio-header,.studio-footer{display:none!important}}
