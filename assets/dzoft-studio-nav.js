@@ -1,5 +1,18 @@
 (() => {
   'use strict';
+  // Navigation hint only: the dashboard still enforces its own authentication.
+  try {
+    const requested = new URLSearchParams(location.search).get('workspace');
+    if (requested === 'admin') sessionStorage.setItem('dzoft-return-workspace', 'admin');
+    if (sessionStorage.getItem('dzoft-return-workspace') === 'admin') {
+      const link = document.querySelector('.studio-login');
+      if (link) {
+        const english = document.documentElement.lang === 'en';
+        link.href = new URL(english ? '../admin/' : 'admin/', new URL(document.querySelector('.studio-brand').getAttribute('href'), location.href).href).href;
+        link.textContent = english ? 'Back to dashboard' : 'Retour au tableau de bord';
+      }
+    }
+  } catch (_) { /* Navigation remains usable if browser storage is unavailable. */ }
   const menu = document.getElementById('studio-menu');
   const nav = document.getElementById('studio-navigation');
   if (menu && nav) {
