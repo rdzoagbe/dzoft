@@ -8,6 +8,9 @@
       const open = nav.classList.toggle('open');
       menu.setAttribute('aria-expanded', String(open));
     });
+    nav.addEventListener('click', event => { if (event.target.closest('a')) close(); });
+    document.addEventListener('focusin', event => { if (!event.target.closest('.studio-header')) close(); });
+    window.matchMedia('(max-width: 760px)').addEventListener('change', close);
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && nav.classList.contains('open')) { close(); menu.focus(); }
     });

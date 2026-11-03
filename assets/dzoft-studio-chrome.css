@@ -19,3 +19,11 @@ body.dzoft-public{background:#f5f3ee}.dzoft-public main{background:transparent}
 body.dzoft-public header.studio-header nav{order:initial;width:auto;flex-basis:auto;overflow:visible;margin:0 0 0 auto}
 @media(max-width:760px){body.dzoft-public header.studio-header nav{display:none;width:auto;margin:0;overflow:visible}body.dzoft-public header.studio-header nav.open{display:flex}}
 @media print{.studio-header,.studio-footer{display:none!important}}
+
+/* Comfortable shared navigation targets and readable footer text. */
+.studio-languages a,.studio-login{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
+.studio-languages a{min-width:28px}
+.studio-footer{font-size:12px}.studio-footer nav{gap:8px 24px}
+.studio-footer nav a{display:inline-flex;align-items:center;min-height:44px}
+@media(min-width:761px) and (max-width:1050px){.studio-header nav .studio-mobile-quote{display:block}}
+.studio-languages{align-items:center}
