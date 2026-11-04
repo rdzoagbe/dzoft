@@ -27,3 +27,5 @@ body.dzoft-public header.studio-header nav{order:initial;width:auto;flex-basis:a
 .studio-footer nav a{display:inline-flex;align-items:center;min-height:44px}
 @media(min-width:761px) and (max-width:1050px){.studio-header nav .studio-mobile-quote{display:block}}
 .studio-languages{align-items:center}
+
+@media(min-width:761px){.studio-header nav a,.studio-header .studio-login{font-size:13px}}

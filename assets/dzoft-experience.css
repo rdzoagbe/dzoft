@@ -470,3 +470,12 @@ body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0
 .dzoft-client .item .bar{margin-top:14px}
 @media(max-width:700px){.dashboard-focus{padding:20px;align-items:stretch;flex-direction:column;gap:16px}.dashboard-focus>.btn{text-align:center;white-space:normal}.dashboard-shortcuts .btn{flex:1;text-align:center}.dzoft-client .todo .btn{width:100%;text-align:center}}
 .dzoft-client .top .out{color:#e0e8f6;border-color:#60738b;background:rgba(255,255,255,.05)}
+
+/* Keep content readable before observers run; motion is decorative only. */
+.dzoft-motion-ready .dzoft-reveal{opacity:1;transform:none;transition:none}
+@media screen{
+ .dzoft-admin .muted,.dzoft-client .muted{color:#526176;line-height:1.65}
+ .dzoft-admin .kpi small,.dzoft-client .card small,.dzoft-admin .brief .gh{font-size:13px}
+ .dzoft-admin .btn.sm,.dzoft-client .btn.sm,.lang-switch-app button{min-height:40px}
+ .dashboard-eyebrow{font-size:12px}
+}
