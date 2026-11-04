@@ -278,8 +278,8 @@ footer{max-width:1180px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-polish">
-<script src="../assets/dzoft-language.js?v=20261101-dashboard" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
+<script src="../assets/dzoft-language.js?v=20261104-portal" defer></script>
 </head>
 <body class="dzoft-client">
 <header class="top">
@@ -570,7 +570,7 @@ footer{max-width:1180px}
     var st = state(q);
     return '<a class="item" href="#/' + (q.accepted_at ? 'projets' : 'devis') + '/' + q.id + '"><div class="ih"><b>' + esc(title(q)) + '</b><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span></div>' +
       '<div class="im">Devis ' + esc(q.numero) + ' · ' + eur(q.total) + (q.accepted_at ? ' · accepté le ' + day(q.accepted_at) : (q.data.f || {}).valid ? ' · valable jusqu’au ' + day(isoDay(q.data.f.valid)) : '') + '</div>' +
-      (q.accepted_at ? bar(progress(q)) : '') + '</a>';
+      (q.accepted_at ? bar(progress(q)) + '<p class="muted">' + completedStages(q) + '</p>' : '') + '</a>';
   }
   function envTable(items){
     var ST = { 'actif': ['Actif', 'ok'], 'en cours': ['En cours', ''], 'à créer': ['À créer', 'warn'], 'prévu': ['Prévu', 'off'] };
@@ -595,7 +595,7 @@ footer{max-width:1180px}
     return open ? '<div class="infobox">Délai de rétractation : jusqu’au <b>' + day(end) + '</b>. Si vous êtes concerné (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>), je commence le travail après cette date. Vous voulez démarrer plus tôt ? <a href="#/messages">Écrivez-le-moi</a>.</div>' : '';
   }
   function depositDone(q){ return steps(q).some(function(s){ return s.k === 'deposit' && s.done; }); }
-  function balanceDone(q){ return steps(q).some(function(s){ return s.k === 'handover' && s.done; }); }
+  function completedStages(q){ return steps(q).filter(function(s){ return s.done; }).length + ' / ' + steps(q).length + ' étapes terminées'; }
   function invoices(q){ return (q.invoices || []).filter(function(x){ return x.n || x.num; }); }
   function invoiceList(q){
     var inv = invoices(q); if (!inv.length) return '';
@@ -609,7 +609,7 @@ footer{max-width:1180px}
     }).join('') + '</ul>';
   }
   function payBlock(q){
-    var P = D.payment || {}, a = amounts(q), dep = depositDone(q), bal = balanceDone(q);
+    var P = D.payment || {}, a = amounts(q), dep = depositDone(q);
     var open = invoices(q).filter(function(x){ return !x.paid; });
     if (open.length) {
       var online = open.some(function(x){ return /^https:\/\//i.test(x.u || ''); }) || /^https:\/\//i.test(P.link || '');
@@ -618,7 +618,7 @@ footer{max-width:1180px}
       else if (!online) how += ' Les coordonnées de paiement apparaîtront ici dès qu’elles seront ajoutées.';
       return '<section class="card pay"><h2>Comment payer</h2><p class="muted">' + how + '</p>' + invoiceList(q) + (P.iban || P.link ? rib(P, q, true) : '') + '</section>';
     }
-    if (bal) return '<section class="card"><h2>Paiement</h2><p class="muted">Tout est réglé, merci ✓</p>' + invoiceList(q) + '</section>';
+    if (invoices(q).length) return '<section class="card"><h2>Paiement</h2><p class="muted">Toutes les factures disponibles sont marquées payées. Une éventuelle facture de solde sera ajoutée ici.</p>' + invoiceList(q) + '</section>';
     var due = dep ? ['Solde, à régler à la livraison', a.ttc - a.dep] : ['Acompte, pour démarrer le projet', a.dep];
     return '<section class="card pay"><h2>Comment payer</h2><div class="due"><span>' + due[0] + '</span><b>' + eur(due[1]) + '</b></div>' + rib(P, q) + invoiceList(q) + '</section>';
   }
@@ -720,7 +720,7 @@ footer{max-width:1180px}
     qs.filter(pending).forEach(function(q){ todo.push(['Votre devis ' + q.numero + ' (' + eur(q.total) + ') attend votre accord', '#/devis/' + q.id, 'Voir le devis', 1]); });
     projects().forEach(function(q){
       var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0];
-      if (dep) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer', 3]);
+      if (dep && !invoices(q).length) todo.push(['Acompte à régler pour démarrer « ' + title(q) + ' » :' + depositText(q).replace(' Montant :', ''), '#/projets/' + q.id, 'Comment payer', 3]);
     });
     // Right after acceptance, the client can already send their content: asked until the design step is done.
     projects().forEach(function(q){
@@ -783,7 +783,7 @@ footer{max-width:1180px}
       '<p class="msgline" id="a-msg" role="status" aria-live="polite"></p>' +
       '<p class="legal">Saisir le code vaut signature électronique du devis (« bon pour accord ») et acceptation des conditions générales de vente (version ' + TERMS.slice(1) + '). Votre nom, la date, l’heure, l’adresse de connexion, le moyen de réception du code et votre choix sur le délai de rétractation sont enregistrés comme preuve de votre accord.</p></section>';
     h += '<section class="card quote">' + quoteView(q) + '<div class="qacts"><button class="btn line" id="q-print" type="button">Imprimer ou enregistrer en PDF</button>' +
-      (/^https:\/\//i.test(q.ext_link || '') ? '<a class="btn line" href="' + esc(q.ext_link) + '" target="_blank" rel="noopener noreferrer">Voir le devis sur Revolut ↗</a>' : '') + '</div></section>';
+      (/^https:\/\//i.test(q.ext_link || '') ? '<a class="btn line" href="' + esc(q.ext_link) + '" target="_blank" rel="noopener noreferrer">Ouvrir le lien externe ↗</a>' : '') + '</div></section>';
     return h;
   }
   WIRE.devis = function(id){
@@ -858,7 +858,7 @@ footer{max-width:1180px}
         '<div class="row"><button class="btn main" type="button" data-v="ok">Je valide « ' + esc(s.t) + ' »</button><a class="btn line" href="#/messages">Demander des changements</a></div>' +
         '<p class="msgline" role="status" aria-live="polite"></p><p class="legal">Votre validation est enregistrée avec votre nom, la date et l’heure.</p></section>';
     });
-    h += '<section class="card"><h2>Avancement <span class="pc">' + p + ' %</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
+    h += '<section class="card"><h2>Avancement <span class="pc">' + completedStages(q) + '</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
     h += reviewBlock(q);
     h += payBlock(q) + careBlock(q);
     h += '<section class="card"><h2>Environnement</h2>' + (env.length ? envTable(env) : '<p class="muted">Les accès de votre projet apparaîtront ici dès qu’ils seront créés.</p>') + '</section>';

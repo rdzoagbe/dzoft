@@ -167,8 +167,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-polish">
-<script src="../assets/dzoft-language.js?v=20261101-dashboard" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
+<script src="../assets/dzoft-language.js?v=20261104-portal" defer></script>
 </head>
 <body class="dzoft-admin">
 
@@ -555,7 +555,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     });
     data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && q.valid && new Date(q.valid + 'T23:59:59') < new Date(); })
       .forEach(function(q){ todo.push(['Devis ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ') expiré le ' + day(q.valid + 'T12:00:00') + ' : prolongez sa validité ou classez-le', 'follow:' + q.id, 'Suivi']); });
-    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
+    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep && !(q.invoices || []).some(function(x){return x.n || x.num;})) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
     running.forEach(function(q){
       var s = steps(q), i = -1;
       s.forEach(function(x, j){ if (x.done) i = j; });
@@ -573,7 +573,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[1].indexOf('thread:') === 0 ? 0 : t[1] === 'leads' ? 1 : t[0].indexOf('Échec') === 0 ? 2 : 3 }; })
       .sort(function(a,b){ return a.rank - b.rank || a.order - b.order; }).map(function(x){ return x.task; });
     var firstAction = todo[0];
-    $('dash-focus').innerHTML = '<div><span class="dashboard-eyebrow">Votre prochaine action</span><h3>' + (firstAction ? esc(firstAction[0]) : 'Tout est à jour') + '</h3><p>' + (todo.length ? '<b>' + todo.length + '</b> <span>actions à suivre</span>' : 'Aucune action en attente. Retrouvez vos projets et vos échanges ci-dessous.') + '</p></div>' +
+    $('dash-focus').innerHTML = '<div><span class="dashboard-eyebrow">Votre prochaine action</span><h3>' + (firstAction ? esc(firstAction[0]) : 'Tout est à jour') + '</h3><p>' + (todo.length ? '<b>' + todo.length + '</b> <span>' + (todo.length === 1 ? 'action à suivre' : 'actions à suivre') + '</span>' : 'Aucune action en attente. Retrouvez vos projets et vos échanges ci-dessous.') + '</p></div>' +
       (firstAction ? '<button class="btn main" type="button" data-go="' + esc(firstAction[1]) + '">' + '<span>' + esc(firstAction[2]) + '</span> →</button>' : '<button class="btn main" type="button" data-go="projects">Voir les projets →</button>');
     $('todo').innerHTML = todo.length > 1 ? todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Aucune autre action en attente.</li>';
     $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
@@ -614,7 +614,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return '<table><thead><tr><th>Projet</th><th>Client</th><th class="hide-m">Étape</th><th>Avancement</th><th></th></tr></thead><tbody>' + rows.map(function(q){
       var c = client(q.client_id) || {}, p = progress(q);
       return '<tr><td><b>' + esc(q.numero) + '</b><br><span style="color:var(--mute);font-size:12.5px">accepté le ' + day(q.accepted_at) + '</span></td><td>' + esc(c.nom || '—') + '</td>' +
-        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + p + ' %</span></td>' +
+        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + steps(q).filter(function(s){ return s.done; }).length + ' / ' + steps(q).length + ' étapes terminées</span><span class="mobile-stage">' + esc(nowStep(q)) + '</span></td>' +
         '<td class="num"><button class="btn sm main" type="button" data-go="follow:' + q.id + '">Fiche projet</button></td></tr>';
     }).join('') + '</tbody></table>';
   }

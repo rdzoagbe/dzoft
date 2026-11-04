@@ -88,7 +88,8 @@ function invoiceCases() {
   assert.match(output,/inscription=1&projet=sample-project&facture=sample-invoice/);
   assert.doesNotMatch(output,/data-invoice-file=/,'secret links do not expose authenticated PDF controls');
   context.token=null;quote.invoices[0].paid=true;
-  assert.match(context.payBlock(quote),/Tout est réglé/);
+  assert.match(context.payBlock(quote),/factures disponibles sont marquées payées/);
+  assert.doesNotMatch(context.payBlock({id:'no-invoices',invoices:[]}),/Tout est réglé|marquées payées/,'handover alone is not proof of payment');
 }
 
 (async()=>{

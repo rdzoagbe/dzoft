@@ -113,14 +113,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css">
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261104-portal" defer></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
   <div class="in">
     <a class="back" href="./">← Espace privé</a>
     <b id="ttl">Fiche projet</b>
-    <span id="sync"></span>
+    <span id="sync"></span><div class="lang-switch-app" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
     <span class="sp"></span>
     <a class="btn sm line" id="to-devis" href="#">Modifier le devis</a>
   </div>
@@ -151,9 +151,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         <button class="btn sm ghost" id="b-newlink" type="button" title="L’ancien lien cessera de fonctionner">Changer le lien</button>
       </div>
       <p class="muted" id="mail-state" style="margin-top:6px">Quand vous rendez le devis visible, un e-mail est envoyé séparément au client et à votre adresse de suivi.</p>
-      <label for="ext" style="margin-top:14px">Lien du devis Revolut Pro (facultatif)</label>
+      <label for="ext" style="margin-top:14px">Lien externe du devis (facultatif)</label>
       <div class="link"><input id="ext" inputmode="url" placeholder="https://…" aria-describedby="ext-help"><a class="btn sm line" id="ext-open" target="_blank" rel="noopener noreferrer">Ouvrir</a></div>
-      <p class="muted" id="ext-help" style="margin-top:4px">Dans Revolut Pro, ouvrez le devis et copiez son lien de partage, puis collez-le ici. Le client verra le bouton « Voir le devis sur Revolut » sur son devis. La signature se fait toujours dans son espace.</p>
+      <p class="muted" id="ext-help" style="margin-top:4px">Réservez ce champ au document du devis. Configurez votre lien de paiement dans Paramètres → Paiement. La signature reste dans l’espace client. Les liens existants sont conservés.</p>
     </div>
   </section>
 

@@ -479,3 +479,5 @@ body.dzoft-admin { background: radial-gradient(980px 500px at 100% 0%, #e4f3fb 0
  .dzoft-admin .btn.sm,.dzoft-client .btn.sm,.lang-switch-app button{min-height:40px}
  .dashboard-eyebrow{font-size:12px}
 }
+
+.mobile-stage{display:none}@media(max-width:700px){.mobile-stage{display:block;color:#435572;font-size:13px;margin-top:6px}}
