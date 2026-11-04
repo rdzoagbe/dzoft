@@ -567,7 +567,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
     ps.forEach(function(q){ (q.invoices || []).filter(function(x){ return !x.paid && (x.n || x.num); }).forEach(function(x){
-      todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'follow:' + q.id, 'Suivi']);
+      todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
     }); });
     // Put conversations and scheduled follow-ups before routine administration.
     todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[1].indexOf('thread:') === 0 ? 0 : t[1] === 'leads' ? 1 : t[0].indexOf('Échec') === 0 ? 2 : 3 }; })
@@ -601,8 +601,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   document.addEventListener('click', function(e){
     var retry = e.target.closest('[data-retry-email]');
     if (retry && $('app').contains(retry)) return;
-    var b = e.target.closest('[data-go]'); if (!b || !$('app').contains(b)) return;
+    var b = e.target.closest('[data-go]'); if (!b || (!$('app').contains(b) && !$('m-client').contains(b))) return;
     var g = b.dataset.go;
+    if (g.indexOf('remind:') === 0) { var parts = g.split(':'); return window.DzoftReminder.open(parts[1], parts[2]); }
     if (g.indexOf('thread:') === 0) return openThread(client(g.slice(7)) || { id: g.slice(7) });
     if (g.indexOf('quote:') === 0) return openQuote(g.slice(6));
     if (g.indexOf('follow:') === 0) return openFollow(g.slice(7));
@@ -949,7 +950,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c; $('mc-msgs').hidden = !c;
     if (c) { var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length; $('mc-msgs').textContent = 'Messages' + (cu ? ' (' + cu + ')' : ''); }
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
-    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="suivi.html?q=' + q.id + '">suivi</a></span></li>'; }).join('');
+    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="suivi.html?q=' + q.id + '">suivi</a>' + (q.accepted_at ? ' · <button type="button" class="btn sm line" data-go="remind:' + q.id + '">Relancer le paiement</button>' : '') + '</span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
   function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), email: $('mc-email').value.trim().toLowerCase(), notes: $('mc-notes').value }; }
@@ -1084,6 +1085,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }, true);
 })();
 </script>
+<script src="../assets/payment-reminder.js?v=20261104-1"></script>
 </body>
 </html>
 

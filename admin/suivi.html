@@ -531,7 +531,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien de paiement Revolut (https://…)" inputmode="url">' +
       '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button><button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') +
         '<label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" class="attach"' + (x.attachPdf ? ' checked' : '') + (!x.file ? ' disabled' : '') + '> Joindre le PDF officiel aux e-mails</label>' +
-        '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button></div></div>';
+        '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button>' + (!x.paid && Q.accepted_at ? '<button class="btn sm main" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '') + '</div></div>';
     }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
   }
   function updateInvoice(e){
@@ -573,6 +573,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var b = e.target.closest('button[data-a]'), row = e.target.closest('.invr');
     if (b && row) {
       var x = Q.invoices[+row.dataset.i];
+      if (b.dataset.a === 'payment-reminder') {
+        clearTimeout(timer); b.disabled = true;
+        return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){ b.disabled = false; if(ok) window.DzoftReminder.open(QID, x.id); });
+      }
       if (b.dataset.a === 'invoice-email') {
         if (!x.num) { toast('Ajoutez d’abord le numéro officiel de la facture.'); return; }
         if (!C || ![C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); })) { toast('Ajoutez une adresse e-mail valide dans la fiche client.'); return; }
@@ -769,6 +773,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   load();
 })();
 </script>
+<script src="../assets/payment-reminder.js?v=20261104-1"></script>
 </body>
 </html>
 
