@@ -30,7 +30,7 @@
     async function load(){
       try {
         var p=await call('preview'); invoiceId=p.invoice_id;
-        box.innerHTML='<p><b>'+escape(p.client)+'</b> · '+escape(p.amount)+'</p><label>'+t('Facture','Invoice')+'<select data-invoice style="width:100%">'+p.invoices.map(function(i){return '<option value="'+escape(i.id)+'"'+(i.id===invoiceId?' selected':'')+'>'+escape(i.label)+'</option>';}).join('')+'</select></label>'+
+        box.innerHTML='<p><b>'+escape(p.client)+'</b> · '+escape(p.amount)+'</p><label>'+(p.deposit_only?t('Acompte prévu au devis accepté','Deposit from the accepted quote'):t('Facture','Invoice'))+'<select data-invoice style="width:100%">'+p.invoices.map(function(i){return '<option value="'+escape(i.id)+'"'+(i.id===invoiceId?' selected':'')+'>'+escape(i.label)+'</option>';}).join('')+'</select></label>'+
           '<p><label><input type="checkbox" data-email '+(p.email?'checked':'disabled')+'> E-mail · '+escape(p.email||t('Adresse manquante dans la fiche client','Add an email to the client record'))+'</label></p>'+
           '<p><label><input type="checkbox" data-wa> WhatsApp</label></p><label>'+t('Numéro WhatsApp du client (+33…)','Client WhatsApp number (+33…)')+'<input data-phone type="tel" value="'+escape(p.phone?('+'+p.phone):'')+'" style="width:100%;box-sizing:border-box"></label>'+
           '<p style="font-size:13px">'+t('WhatsApp utilise le compte connecté sur cet appareil. Vérifiez qu’il s’agit de votre numéro professionnel, puis appuyez sur Envoyer dans WhatsApp.','WhatsApp uses the account signed in on this device. Check that it is your business number, then tap Send in WhatsApp.')+'</p>'+

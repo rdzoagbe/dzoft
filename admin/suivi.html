@@ -304,11 +304,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
     if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)' : ''); $('url').value = url(); $('b-open').href = url(); }
     $('shared').checked = !!Q.shared;
-    $('b-mail').textContent = Q.shared ? 'Renvoyer l’e-mail du devis' : 'Envoyer l’e-mail du devis';
+    $('b-mail').textContent = Q.accepted_at ? 'Demander le paiement de l’acompte' : Q.shared ? 'Renvoyer l’e-mail du devis' : 'Envoyer l’e-mail du devis';
     var quoteMail = events.filter(function(e){ return e.event_type === 'quote_published'; })[0];
     var quoteJobs = quoteMail ? outbox.filter(function(x){ return x.event_id === quoteMail.id; }) : [];
     var clientJob = quoteJobs.filter(function(x){ return x.recipient_role === 'client'; })[0];
-    $('mail-state').textContent = !Q.shared ? 'Le devis sera envoyé par e-mail au client et à votre adresse de suivi dès que vous le rendez visible.' :
+    $('mail-state').textContent = Q.accepted_at ? 'Le devis est accepté. Envoyez un rappel de paiement pour démarrer le projet, sans renvoyer le devis.' : !Q.shared ? 'Le devis sera envoyé par e-mail au client et à votre adresse de suivi dès que vous le rendez visible.' :
       clientJob && clientJob.status === 'sent' ? 'E-mail envoyé au client le ' + when(clientJob.sent_at) + '.' :
       clientJob && clientJob.status === 'failed' ? 'L’e-mail au client a échoué : corrigez son adresse puis relancez l’envoi dans « Historique et e-mails ».' :
       clientJob ? 'E-mail au client : ' + (clientJob.status === 'processing' ? 'en cours…' : 'en attente de livraison.') :
@@ -412,6 +412,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     return true;
   }
   $('b-wa').onclick = function(){
+    if (Q.accepted_at) return window.DzoftReminder.open(QID);
     if (!guard()) return;
     var c = (C.contact || '').replace(/[^\d+]/g, '');
     if (c.indexOf('0') === 0 && c.length === 10) c = '33' + c.slice(1);
@@ -420,13 +421,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   };
   $('b-mail').onclick = function(){
     if (!guard()) return;
-    if (Q.accepted_at) { toast('Ce devis est déjà accepté.'); return; }
+    if (Q.accepted_at) return window.DzoftReminder.open(QID);
     sb.rpc('admin_notify_quote', { p_quote_id: QID }, true).then(function(r){
       if (r && r.skipped) { toast('Un e-mail du devis a déjà été envoyé ou est en cours de livraison.'); return load(); }
       return sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail du devis traité. Consultez l’historique pour son statut.'); return load(); }, function(){ toast('E-mail ajouté à la file : il sera relancé automatiquement.'); return load(); });
     }, fail);
   };
   $('b-mymail').onclick = function(){
+    if (Q.accepted_at) return window.DzoftReminder.open(QID);
     if (!guard()) return;
     var c = mailTo();
     location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + Q.numero + ' · DZOFT') + '&body=' + encodeURIComponent(invite());

@@ -555,7 +555,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     });
     data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && q.valid && new Date(q.valid + 'T23:59:59') < new Date(); })
       .forEach(function(q){ todo.push(['Devis ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ') expiré le ' + day(q.valid + 'T12:00:00') + ' : prolongez sa validité ou classez-le', 'follow:' + q.id, 'Suivi']); });
-    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep && !(q.invoices || []).some(function(x){return x.n || x.num;})) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'follow:' + q.id, 'Suivi']); });
+    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep && !(q.invoices || []).some(function(x){return x.n || x.num;})) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'remind:' + q.id, 'Demander l’acompte']); });
     running.forEach(function(q){
       var s = steps(q), i = -1;
       s.forEach(function(x, j){ if (x.done) i = j; });
