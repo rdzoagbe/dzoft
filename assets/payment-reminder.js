@@ -52,13 +52,40 @@
           // Reserve a window during the user gesture; asynchronous requests otherwise trigger popup blockers.
           var popup=wa?window.open('about:blank','_blank'):null;
           if(popup)popup.opener=null;
-          busy=true; var controls=Array.from(dialog.querySelectorAll('button,input,textarea,select'));controls.forEach(function(el){el.disabled=true;});
-          status.textContent=t('Traitement…','Processing…');var results=[];
+          busy=true;
+          var outcomes=[];
+          box.innerHTML='<div data-outcome tabindex="-1" role="status" aria-live="polite" style="padding:18px;border-radius:12px;background:#eef3ff;color:#172033"><h3>'+t('Envoi en cours…','Sending…')+'</h3><p>'+t('Veuillez patienter. Ne renvoyez pas la demande.','Please wait. Do not send the request again.')+'</p></div>';
+          dialog.querySelector('[data-close]').disabled=true;
+          function draw(done) {
+            var failed=outcomes.some(function(x){return x.kind==='error';});
+            var pending=outcomes.some(function(x){return x.kind==='pending';});
+            box.innerHTML='<div data-outcome tabindex="-1" role="'+(failed?'alert':'status')+'" aria-live="polite" style="padding:18px;border-radius:12px;background:'+(failed?'#fff0ee':pending?'#fff8df':'#edf9f0')+';color:#172033"><h3>'+escape(!done?t('Envoi en cours…','Sending…'):failed?t('La relance nécessite votre attention','Reminder needs your attention'):pending?t('WhatsApp : envoi à terminer','WhatsApp: finish sending'):t('Envoi terminé','Sending completed'))+'</h3>'+outcomes.map(function(x){return '<p><strong>'+escape(x.title)+'</strong><br>'+escape(x.message)+(x.url?'<br><a href="'+escape(x.url)+'" target="_blank" rel="noopener">'+t('Ouvrir WhatsApp et envoyer','Open WhatsApp and send')+'</a>':'')+'</p>';}).join('')+'</div>';
+            dialog.scrollTop=0;box.querySelector('[data-outcome]').focus();
+          }
+          async function deliver(action, values) {
+            var timer;
+            try { return await Promise.race([call(action,values),new Promise(function(_,reject){timer=setTimeout(function(){reject(new Error('delivery-unknown'));},45000);})]); }
+            finally {clearTimeout(timer);}
+          }
+          function failure(e) {return e.message==='delivery-unknown'?t('Délai dépassé : le résultat de l’envoi est inconnu. Vérifiez l’historique avant toute nouvelle tentative.','Timed out: the sending result is unknown. Check the reminder history before trying again.'):errorText(e.message);}
           try {
-            if(email){try{var sent=await call('email',{message:message,attach_pdf:attach});results.push(sent.warning||t('E-mail accepté par le service d’envoi.','Email accepted by the sending service.'));}catch(e){results.push('E-mail : '+errorText(e.message));}}
-            if(wa){try{var prepared=await call('whatsapp',{message:message,phone:number});if(popup){popup.location.href=prepared.url;results.push(t('WhatsApp ouvert : appuyez sur Envoyer pour terminer.','WhatsApp opened: tap Send to finish.'));}else{var a=document.createElement('a');a.href=prepared.url;a.target='_blank';a.rel='noopener';a.textContent=t('Ouvrir WhatsApp et envoyer','Open WhatsApp and send');status.after(a);results.push(t('Utilisez le lien WhatsApp ci-dessous.','Use the WhatsApp link below.'));}}catch(e){if(popup)popup.close();results.push('WhatsApp : '+errorText(e.message));}}
-          } finally {busy=false;status.textContent=results.join('\n');dialog.querySelector('[data-close]').disabled=false;}
-          // Reopen to re-check invoice state and history; never silently resend a successful channel.
+            if(email){try {
+              var sent=await deliver('email',{message:message,attach_pdf:attach});
+              if(!sent || sent.ok!==true)throw new Error('unconfirmed');
+              outcomes.push({kind:sent.warning?'error':'success',title:t('✓ E-mail envoyé au service de messagerie','✓ Email submitted successfully'),message:t('Destinataire : ','Recipient: ')+p.email+' · '+new Date().toLocaleString(en()?'en-GB':'fr-FR')+'\n'+t('L’envoi a été accepté par Brevo. La réception dans la boîte du client n’est pas encore confirmée.','Brevo accepted the email. Delivery to the client’s inbox is not yet confirmed.')+(sent.warning?'\n'+t('Le journal n’a pas pu être mis à jour. Ne renvoyez pas cet e-mail.','The activity log could not be updated. Do not resend this email.'):'')});
+            }catch(e){outcomes.push({kind:'error',title:t('E-mail : envoi non confirmé','Email: sending not confirmed'),message:failure(e)});}draw(false);}
+            if(wa){try {
+              var prepared=await deliver('whatsapp',{message:message,phone:number});
+              if(!prepared || !prepared.ok || !/^https:\/\/wa\.me\//.test(prepared.url||''))throw new Error('unconfirmed');
+              if(popup&&!popup.closed)popup.location.href=prepared.url;
+              outcomes.push({kind:'pending',title:t('WhatsApp : votre validation est nécessaire','WhatsApp: your confirmation is needed'),message:t('Le message est préparé. Appuyez sur Envoyer dans WhatsApp. Le site ne peut pas confirmer son envoi ou sa réception.','The message is prepared. Tap Send in WhatsApp. This site cannot confirm sending or delivery.'),url:prepared.url});
+            }catch(e){if(popup&&!popup.closed)popup.close();outcomes.push({kind:'error',title:t('WhatsApp : préparation non confirmée','WhatsApp: preparation not confirmed'),message:failure(e)});}}
+          } finally {
+            busy=false;draw(true);dialog.querySelector('[data-close]').disabled=false;
+            dialog.querySelector('[data-close]').textContent=t('Terminer','Done');
+          }
+          // Keep the result visible until dismissed; never retry a successful channel automatically.
+
         };
       } catch(e){box.textContent=errorText(e.message);var link=document.createElement('a');link.href='suivi.html?q='+encodeURIComponent(quoteId);link.textContent=t('Ouvrir la fiche projet et les factures','Open project and invoices');box.appendChild(document.createElement('br'));box.appendChild(link);}
     }
