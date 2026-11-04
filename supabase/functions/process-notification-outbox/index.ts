@@ -57,9 +57,9 @@ function jwtClaims(token: string) {
 }
 function eventCopy(type: string, summary: string, quote: any, message: string, isOwner: boolean) {
   if (['payment_reported', 'payment_received', 'payment_reopened'].includes(type)) return {
-    subject: (type === 'payment_reported' ? 'Paiement déclaré envoyé — à vérifier' : type === 'payment_received' ? 'Paiement reçu et confirmé' : 'Confirmation de paiement corrigée') + ' · DZOFT',
+    subject: (type === 'payment_reported' ? 'Paiement déclaré / Payment reported' : type === 'payment_received' ? 'Paiement reçu / Payment received' : 'Confirmation corrigée / Confirmation corrected') + ' · DZOFT',
     intro: summary + (type === 'payment_reported' ? '. Le client déclare avoir effectué le virement. Vérifiez votre compte bancaire avant de confirmer sa réception.' : type === 'payment_received' ? '. La réception sur le compte a été confirmée par Roland.' : '. Le statut est de nouveau en cours de vérification. Contactez Roland pour toute question.'),
-    body: ''
+    body: `<hr><p lang="en">${type === 'payment_reported' ? 'The client has reported sending the payment. Please check your bank account before confirming receipt.' : type === 'payment_received' ? 'Roland has confirmed that the payment has reached his bank account.' : 'The payment confirmation has been corrected. Its status is being checked again. Please contact Roland if you have any questions.'}</p><p lang="en">Quote: ${esc(quote?.numero || '')}. See your workspace for the invoice and payment status.</p>`
   };
   const number = quote?.numero ? ` · devis ${quote.numero}` : "";
   const detail = summary.split(" · ").slice(1).join(" · ");
@@ -191,6 +191,7 @@ Deno.serve(async (req) => {
         message = String(data?.body || "").slice(0, 2000);
       }
       const isOwner = job.recipient_role === "owner";
+      const paymentEvent = event.event_type.startsWith("payment_");
       const copy = eventCopy(event.event_type, event.summary, quote, message, isOwner);
       const firstName = String(client?.nom || "").trim().split(/\s+/)[0] || "";
       let link = isOwner ? ADMIN : PORTAL;
@@ -253,14 +254,14 @@ Deno.serve(async (req) => {
         : event.event_type === "invoice_shared" ? "Ouvrir ma facture"
         : "Ouvrir mon espace client";
       const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#0B1020;line-height:1.6">
-        <h2 style="color:#0B1020">${heading}</h2><p>${hello}</p>
+        <h2 style="color:#0B1020">${paymentEvent ? "Paiement / Payment update" : heading}</h2><p>${hello}</p>
         <p>${esc(copy.intro)}</p>${isOwner ? `<p><b>Client :</b> ${esc(client?.nom || "—")}</p>` : ""}${copy.body}
         <p>${esc(portalLine)}</p>
-        <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${ctaLabel}</a></p>
+        <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${paymentEvent ? "Ouvrir mon espace / Open workspace" : ctaLabel}</a></p>
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent ? copy.body.replace(/<[^>]*>/g, " ") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },

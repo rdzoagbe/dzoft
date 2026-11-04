@@ -696,9 +696,9 @@ footer{max-width:1180px}
     var report = e.target.closest('[data-report-payment]');
     if (report) {
       e.preventDefault();
-      if (!confirm('Confirmer que vous avez effectué le virement ? Roland sera averti et vérifiera la réception sur son compte.')) return;
+      if (!confirm(document.documentElement.lang === 'en' ? 'Have you sent the transfer? Roland will be notified and will check that it has reached his account.' : 'Confirmer que vous avez effectué le virement ? Roland sera averti et vérifiera la réception sur son compte.')) return;
       report.disabled = true; report.textContent = 'Enregistrement…';
-      sb.rpc('my_report_payment', { p_quote: report.dataset.paymentQuote, p_invoice: report.dataset.reportPayment }, true).then(function(){ return load(); }).catch(function(err){ report.disabled = false; report.textContent = 'Réessayer'; alert(err.message || 'Impossible d’enregistrer votre confirmation. Réessayez.'); });
+      sb.rpc('my_report_payment', { p_quote: report.dataset.paymentQuote, p_invoice: report.dataset.reportPayment }, true).then(function(){ return load(); }).catch(function(err){ report.disabled = false; report.textContent = 'Réessayer'; alert(document.documentElement.lang === 'en' ? 'Unable to record your payment confirmation. Please refresh your workspace and try again.' : 'Impossible d’enregistrer votre confirmation. Actualisez votre espace et réessayez.'); });
       return;
     }
     var invoice = e.target.closest('[data-invoice-file]');

@@ -11,6 +11,7 @@ async function call(action,extra={}){const r=await handler(new Request('https://
  approved=false;assert.equal((await call('email')).status,409);approved=true;
  paid=true;assert.equal((await call('email')).status,409);paid=false;
  const preview=await call('preview');assert.equal(preview.status,200);assert.match(preview.body.message,/450,00/);assert.equal(sent,0);
+ const english=await call('preview',{lang:'en'});assert.match(english.body.message,/Hello Test/);assert.match(english.body.message,/450.00/);
  const email=await call('email');assert.equal(email.status,200);assert.equal(sent,1);assert.equal(records[0].ok,true);
  assert.equal((await call('email')).status,409);assert.equal(sent,1);
  records=[];const wa=await call('whatsapp');assert.equal(wa.status,200);assert.match(wa.body.url,/^https:\/\/wa.me\/33612345678\?text=/);assert.equal(wa.body.status,'prepared');assert.equal(sent,1);

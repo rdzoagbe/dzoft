@@ -26,6 +26,7 @@ Deno.serve(async req => {
     const raw = await req.text();
     if (raw.length > 8000) return reply({error:"Requête trop longue"},413);
     const b = JSON.parse(raw);
+    const english = b.lang === "en";
     if (!["preview","email","whatsapp"].includes(b.action)) return reply({error:"Action inconnue"},400);
     const {data:q,error:qe} = await db.from("quotes").select("id,numero,client_id,shared,accepted_at,deleted_at,invoices").eq("id",b.quote_id).maybeSingle();
     if (qe || !q || !q.shared || !q.accepted_at || q.deleted_at) return reply({error:"Le devis doit être accepté et visible dans l’espace client."},409);
@@ -36,8 +37,8 @@ Deno.serve(async req => {
     if (!inv) return reply({error:"Ajoutez d’abord une facture impayée avec son numéro officiel et son montant dans la fiche projet."},409);
     const to = [c.email,c.contact].map(x=>String(x||"").trim()).find(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)) || "";
     const link = "https://rdzoagbe.github.io/dzoft/espace/?projet=" + encodeURIComponent(q.id) + "&facture=" + encodeURIComponent(inv.id);
-    const amount = Number(inv.amt).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
-    const message = `Bonjour ${c.nom || ""}, petit rappel concernant ${inv.n || "la facture"} n° ${inv.num}, d’un montant de ${amount}, pour le devis ${q.numero} que vous avez accepté. Vous pouvez consulter la facture et les informations de paiement ici : ${link}\nSi vous avez déjà effectué le règlement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`;
+    const amount = Number(inv.amt).toLocaleString(english ? "en-GB" : "fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
+    const message = english ? `Hello ${c.nom || ""}, a friendly reminder about invoice ${inv.num}, for ${amount}, relating to your accepted quote ${q.numero}. You can view the invoice and payment instructions here: ${link}\nIf you have already sent the payment, please let me know.\nBest wishes, Roland — DZOFT` : `Bonjour ${c.nom || ""}, petit rappel concernant ${inv.n || "la facture"} n° ${inv.num}, d’un montant de ${amount}, pour le devis ${q.numero} que vous avez accepté. Vous pouvez consulter la facture et les informations de paiement ici : ${link}\nSi vous avez déjà effectué le règlement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`;
     const ref = `payment:${q.id}:${inv.id}:${b.action}`;
     if (b.action === "preview") {
       const {data:history,error} = await db.from("notifications").select("kind,created_at,ok,error").eq("quote_id",q.id).like("ref",`payment:${q.id}:${inv.id}:%`).order("created_at",{ascending:false}).limit(8);
@@ -78,7 +79,7 @@ Deno.serve(async req => {
         attachment.push({name:String(inv.fileName||"facture.pdf").replace(/[\\/:*?"<>|\r\n]/g,"_").slice(0,120),content:btoa(binary)});
       }
       const sender=Deno.env.get("SENDER_EMAIL")||"roland.dzoagbe@hotmail.com";
-      const response=await fetch("https://api.brevo.com/v3/smtp/email",{method:"POST",headers:{"api-key":key,"Content-Type":"application/json"},body:JSON.stringify({sender:{name:"Roland · DZOFT",email:sender},replyTo:{name:"Roland Dzoagbe",email:sender},to:[{email:to,name:c.nom}],subject:`Rappel de paiement · ${inv.num} · DZOFT`,textContent:text+"\n"+link,htmlContent:`<div style="font-family:Arial;max-width:560px;margin:auto"><h2>Rappel de paiement</h2><p style="white-space:pre-wrap">${esc(text)}</p><p><a href="${esc(link)}" style="display:inline-block;background:#4361ee;color:white;padding:14px 20px;border-radius:10px">Consulter la facture et payer</a></p></div>`,...(attachment.length?{attachment}:{})})});
+      const response=await fetch("https://api.brevo.com/v3/smtp/email",{method:"POST",headers:{"api-key":key,"Content-Type":"application/json"},body:JSON.stringify({sender:{name:"Roland · DZOFT",email:sender},replyTo:{name:"Roland Dzoagbe",email:sender},to:[{email:to,name:c.nom}],subject:`${english ? "Payment reminder" : "Rappel de paiement"} · ${inv.num} · DZOFT`,textContent:text+"\n"+link,htmlContent:`<div style="font-family:Arial;max-width:560px;margin:auto"><h2>${english ? "Payment reminder" : "Rappel de paiement"}</h2><p style="white-space:pre-wrap">${esc(text)}</p><p><a href="${esc(link)}" style="display:inline-block;background:#4361ee;color:white;padding:14px 20px;border-radius:10px">${english ? "View invoice and pay" : "Consulter la facture et payer"}</a></p></div>`,...(attachment.length?{attachment}:{})})});
       if(!response.ok) throw new Error(`Envoi refusé par Brevo (${response.status})`);
       const {error:logged}=await db.from("notifications").update({ok:true,error:null}).eq("id",id);
       return reply({ok:true,status:"accepted",warning:logged?"E-mail accepté par Brevo, mais journal non mis à jour.":null});
