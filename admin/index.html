@@ -567,6 +567,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
     ps.forEach(function(q){ (q.invoices || []).filter(function(x){ return !x.paid && (x.n || x.num); }).forEach(function(x){
+      if (x.payment_reported_at) { todo.push(['Paiement déclaré envoyé · ' + (x.num || x.n) + ' · ' + ((client(q.client_id) || {}).nom || 'Client'), 'follow:' + q.id, 'Confirmer la réception']); return; }
       todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
     }); });
     // Put conversations and scheduled follow-ups before routine administration.

@@ -604,8 +604,8 @@ footer{max-width:1180px}
       var accountUrl = './?inscription=1&projet=' + encodeURIComponent(q.id) + (x.id ? '&facture=' + encodeURIComponent(x.id) : '');
       var pdf = x.file ? (token ? '<a class="btn line sm" href="' + accountUrl + '">Créer mon espace pour télécharger le PDF</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="Télécharger ' + esc(x.fileName || x.n || 'la facture') + '">Télécharger le PDF ↓</button>') : '';
       return '<li' + (x.id ? ' data-invoice-id="' + esc(x.id) + '"' : '') + '><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
-        '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Payée' : 'À régler') + '</span>' +
-        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + pdf + '</li>';
+        '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Paiement reçu et confirmé' : x.payment_reported_at ? 'Paiement envoyé — en attente de confirmation' : 'À régler') + '</span>' +
+        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + pdf + (x.payment_confirmed_at ? '<p class="muted">Confirmé par Roland le ' + esc(day(x.payment_confirmed_at)) + '</p>' : x.payment_reported_at ? '<p class="muted">Merci ! Votre déclaration du ' + esc(day(x.payment_reported_at)) + ' a été transmise. Roland confirmera la réception après vérification.</p>' : !token && q.accepted_at && !x.paid && x.id && x.num && +x.amt > 0 ? '<button class="btn line sm" type="button" data-report-payment="' + esc(x.id) + '" data-payment-quote="' + esc(q.id) + '">' + (/acompte/i.test(x.n || '') ? 'J’ai envoyé l’acompte' : 'J’ai effectué le paiement') + '</button>' : '') + '</li>';
     }).join('') + '</ul>';
   }
   function payBlock(q){
@@ -693,6 +693,14 @@ footer{max-width:1180px}
     return h;
   }
   document.addEventListener('click', function(e){
+    var report = e.target.closest('[data-report-payment]');
+    if (report) {
+      e.preventDefault();
+      if (!confirm('Confirmer que vous avez effectué le virement ? Roland sera averti et vérifiera la réception sur son compte.')) return;
+      report.disabled = true; report.textContent = 'Enregistrement…';
+      sb.rpc('my_report_payment', { p_quote: report.dataset.paymentQuote, p_invoice: report.dataset.reportPayment }, true).then(function(){ return load(); }).catch(function(err){ report.disabled = false; report.textContent = 'Réessayer'; alert(err.message || 'Impossible d’enregistrer votre confirmation. Réessayez.'); });
+      return;
+    }
     var invoice = e.target.closest('[data-invoice-file]');
     if (invoice) { e.preventDefault(); var w = window.open('about:blank', '_blank'); sb.files.link(invoice.dataset.invoiceFile, true).then(function(u){ w.location = u; }, function(){ w.close(); }); return; }
     var b = e.target.closest('[data-copy]'); if (!b) return;
@@ -728,7 +736,7 @@ footer{max-width:1180px}
       if (!started) todo.push(['Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', '#/documents', 'Envoyer', 4]);
     });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push(['Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', '#/projets/' + q.id, 'Voir et valider', 0]); }); });
-    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer', 3]); }); });
+    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid && !x.payment_reported_at; }).forEach(function(x){ todo.push(['Facture à régler : ' + (x.n || 'facture') + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id, 'Voir et payer', 3]); }); });
     projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push(['« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '#/projets/' + q.id + '/avis', 'Donner mon avis', 5]); });
     if (un) todo.push([un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', '#/messages', 'Lire', 2]);
     if (!qs.length && (D.requests || []).length) todo.push(['Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', '#/demandes', 'Voir ma demande', 6]);

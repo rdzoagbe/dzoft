@@ -1,0 +1,30 @@
+begin;
+do $test$
+declare cid uuid; uid uuid; qid uuid:=gen_random_uuid(); inv jsonb:='[{"id":"payment-test","num":"TEST-ONLY","n":"Acompte","amt":10,"paid":false}]'; r jsonb; n int;
+begin
+ select id,user_id into cid,uid from public.clients where user_id is not null limit 1;
+ if uid is null then raise exception 'Test requires an existing linked client'; end if;
+ insert into public.quotes(id,client_id,numero,shared,accepted_at,invoices) values(qid,cid,'TEST-'||qid,true,now(),inv);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',uid,'role','authenticated','app_metadata','{}'::jsonb)::text,true);
+ r:=public.my_report_payment(qid,'payment-test');
+ if r->>'status'<>'reported' then raise exception 'report failed'; end if;
+ perform public.my_report_payment(qid,'payment-test');
+ select count(*) into n from public.project_events where quote_id=qid and event_type='payment_reported';
+ if n<>1 then raise exception 'duplicate event'; end if;
+ if (select invoices->0->>'paid' from public.quotes where id=qid)<>'false' then raise exception 'report marked paid'; end if;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',gen_random_uuid(),'role','authenticated','app_metadata','{}'::jsonb)::text,true);
+ begin perform public.my_report_payment(qid,'payment-test'); raise exception 'unauthorized allowed'; exception when others then if sqlerrm='unauthorized allowed' then raise; end if; end;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',gen_random_uuid(),'role','authenticated','app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
+ update public.quotes set invoices=inv where id=qid;
+ if (select invoices->0->>'payment_reported_at' from public.quotes where id=qid) is null then raise exception 'stale write erased report'; end if;
+ update public.quotes set invoices=jsonb_set(invoices,'{0,paid}','true') where id=qid;
+ if (select invoices->0->>'payment_confirmed_at' from public.quotes where id=qid) is null then raise exception 'receipt missing'; end if;
+ select count(*) into n from public.email_outbox o join public.project_events e on e.id=o.event_id where e.quote_id=qid and e.event_type='payment_received';
+ if n<>2 then raise exception 'expected both receipt notifications, got %',n; end if;
+ update public.quotes set invoices=invoices where id=qid;
+ select count(*) into n from public.project_events where quote_id=qid and event_type='payment_received';
+ if n<>1 then raise exception 'duplicate receipt'; end if;
+ if has_function_privilege('anon','public.my_report_payment(uuid,text)','execute') then raise exception 'anonymous grant'; end if;
+end $test$;
+rollback;
+select 'PASS: report, idempotency, ownership denial, stale admin save, receipt timestamps, both email jobs, no duplicate receipt, anonymous denial. All fixtures and email jobs rolled back.' as result;

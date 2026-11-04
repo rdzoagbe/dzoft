@@ -56,6 +56,11 @@ function jwtClaims(token: string) {
   }
 }
 function eventCopy(type: string, summary: string, quote: any, message: string, isOwner: boolean) {
+  if (['payment_reported', 'payment_received', 'payment_reopened'].includes(type)) return {
+    subject: (type === 'payment_reported' ? 'Paiement déclaré envoyé — à vérifier' : type === 'payment_received' ? 'Paiement reçu et confirmé' : 'Confirmation de paiement corrigée') + ' · DZOFT',
+    intro: summary + (type === 'payment_reported' ? '. Le client déclare avoir effectué le virement. Vérifiez votre compte bancaire avant de confirmer sa réception.' : type === 'payment_received' ? '. La réception sur le compte a été confirmée par Roland.' : '. Le statut est de nouveau en cours de vérification. Contactez Roland pour toute question.'),
+    body: ''
+  };
   const number = quote?.numero ? ` · devis ${quote.numero}` : "";
   const detail = summary.split(" · ").slice(1).join(" · ");
   const subjectByType: Record<string, string> = {

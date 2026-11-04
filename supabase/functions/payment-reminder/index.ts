@@ -4,7 +4,7 @@ const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!));
 export function eligible(q: any, inv: any) {
-  return !!(q && q.shared && q.accepted_at && !q.deleted_at && inv?.id && inv.num && !inv.paid && Number.isFinite(Number(inv.amt)) && Number(inv.amt) > 0);
+  return !!(q && q.shared && q.accepted_at && !q.deleted_at && inv?.id && inv.num && !inv.paid && !inv.payment_reported_at && Number.isFinite(Number(inv.amt)) && Number(inv.amt) > 0);
 }
 export function phone(value: unknown) {
   let p = String(value || "").replace(/[\s().-]/g, "");
