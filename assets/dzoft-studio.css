@@ -66,3 +66,39 @@ h1,h2{text-wrap:balance}
 @media(max-width:760px){.workspace-grid{grid-template-columns:1fr;gap:26px}.workspace-example-body{padding:22px}.support-work .tile-image img{height:230px}.workspace-details{grid-template-columns:1fr}.visual-caption{font-size:10px}}
 
 .support-work .family-screens{gap:14px;justify-content:center}.support-work .family-screens img{width:calc(50% - 7px);background:#f8f6f1;object-fit:contain}
+/* Price band on the homepage. */
+.price-band{padding-top:0}
+.price-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.price-list li+li{border-left:1px solid var(--line)}
+.price-list a{display:flex;flex-direction:column;gap:6px;height:100%;padding:26px 24px;transition:background .2s}
+.price-list li:first-child a{padding-left:0}
+.price-list a:hover{background:#ebe7de}
+.price-list span{font-size:14px;color:#4a5361}
+.price-list b{font-size:28px;line-height:1.2;letter-spacing:-.03em;color:var(--ink)}
+.price-list small{font-size:13px;font-weight:600;color:#304bc7}
+.price-note{margin-top:16px;font-size:14px;color:#4a5361}
+/* Concrete commitments in the developer block. */
+.commitments{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:26px 0 0;padding:22px 0 0;border-top:1px solid #cdcec8}
+.commitments li{display:flex;flex-direction:column;gap:4px}
+.commitments b{font-size:20px;letter-spacing:-.025em;color:var(--ink)}
+.commitments span{font-size:13px;line-height:1.5;color:#4a5361}
+/* Readability: small grey text a little larger and darker. */
+.eyebrow{color:#485466}
+.demo-note{color:#4a5361;font-size:14px}
+.featured-copy p,.tile-copy p{color:#4a5361}
+.featured-copy p{font-size:14px}
+.hero-copy .small{color:#c7cede;font-size:13px}
+.visual-caption{color:#c9d1e2}
+@media(max-width:1050px){.price-list{grid-template-columns:repeat(2,minmax(0,1fr))}.price-list li:nth-child(3){border-left:0}.price-list li:nth-child(3) a{padding-left:0}.price-list li:nth-child(n+3){border-top:1px solid var(--line)}}
+@media(max-width:760px){
+ .hero .eyebrow{white-space:nowrap;font-size:11px;letter-spacing:.12em}
+ .hero-actions{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+ .hero-actions .button{width:100%;min-height:52px;font-size:15px}
+ .hero-quote-link{justify-content:center}
+ .hero-tags{flex-direction:column;gap:8px}
+ .price-list{grid-template-columns:1fr}
+ .price-list li+li{border-left:0;border-top:1px solid var(--line)}
+ .price-list a,.price-list li:nth-child(3) a{padding:20px 0}
+ .price-list b{font-size:24px}
+ .commitments{grid-template-columns:1fr;gap:14px}
+}
