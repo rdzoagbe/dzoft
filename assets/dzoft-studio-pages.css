@@ -1,0 +1,138 @@
+/* Studio look for the older public pages (services, méthode, FAQ, devis and their English versions).
+   Loaded last on those pages only; body.studio-pages. The shared dzoft-experience.css stays untouched
+   for the client portal and the admin. */
+@font-face{font-family:Sora;src:url("fonts/sora-latin-400-normal.woff2") format("woff2");font-weight:400;font-display:swap}
+
+body.studio-pages{
+  --paper:#f5f3ee; --ink:#121b2c; --ink2:#3d4757; --mute:#59616c; --line:#deddd8;
+  --blue:#4361ee; --blue2:#304bc7; --sand:#ebe3d5; --cyan:#69ddf0;
+  background:var(--paper);color:var(--ink);font:15px/1.65 Sora,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
+}
+.studio-pages h1,.studio-pages h2,.studio-pages h3{font-family:Sora,system-ui,sans-serif;color:var(--ink)}
+.studio-pages p{color:var(--mute)}
+.studio-pages .wrap{max-width:1260px;padding:0 40px}
+.studio-pages section{padding:64px 0;background:transparent}
+.studio-pages .soft{background:transparent}
+.studio-pages a:focus-visible,.studio-pages button:focus-visible,.studio-pages summary:focus-visible{outline:3px solid #218ba8;outline-offset:4px;border-radius:2px}
+
+/* Header: keep the studio navigation clean (no legacy pill on the current page). */
+.studio-pages .studio-header nav a,.studio-pages .studio-header nav a:hover,.studio-pages .studio-header nav a[aria-current]{background:none;border-radius:0}
+.studio-pages .studio-header{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* Page introduction, as on Réalisations. */
+.studio-pages .hero.phero,.studio-pages .contact{background:transparent;color:var(--ink)}
+.studio-pages .phero{padding:60px 0 40px}
+.studio-pages .eyebrow,.studio-pages .kicker{display:block;font-size:12px;font-weight:600;letter-spacing:.17em;text-transform:uppercase;color:#536071;margin-bottom:14px}
+.studio-pages .phero h1,.studio-pages .contact .head h1{font-size:clamp(40px,6.3vw,76px);line-height:1.06;letter-spacing:-.045em;font-weight:700;margin:0;max-width:980px;color:var(--ink)}
+.studio-pages .phero h1 em{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink);font-style:normal}
+.studio-pages .lead,.studio-pages .contact .head p{font-size:16px;line-height:1.7;color:var(--mute);max-width:650px;margin-top:22px}
+.studio-pages .head{max-width:760px;margin-bottom:34px}
+
+/* Buttons. */
+.studio-pages .btn{border-radius:5px;font:600 14px/1.2 Sora,system-ui,sans-serif;padding:15px 22px;min-height:48px;box-shadow:none;transition:background .2s,transform .2s}
+.studio-pages .btn:hover{transform:translateY(-2px)}
+.studio-pages .btn-primary{background:var(--blue);color:#fff;box-shadow:none}
+.studio-pages .btn-primary:hover{background:#304ee2}
+.studio-pages .btn-ghost{background:transparent;color:#fff;border:1px solid #5a6680}
+.studio-pages .btn-ghost:hover{background:#ffffff14}
+.studio-pages .btn-line{background:transparent;color:var(--ink);border:1px solid #b8bec9}
+.studio-pages .btn-line:hover{background:#e9e8e3}
+.studio-pages .btn-wa{background:#1b8a47}
+.studio-pages .btn-wa:hover{background:#177a3e}
+
+/* Services: one row per offer, as in the studio service list. */
+.studio-pages .grid4{display:block;border-top:1px solid var(--line)}
+.studio-pages .svc{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1.35fr) 220px;gap:8px 32px;align-items:start;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:34px 0;box-shadow:none;transform:none}
+.studio-pages .svc:hover{box-shadow:none;transform:none}
+.studio-pages .ic{width:40px;height:40px;border-radius:6px;background:var(--sand);color:var(--ink);margin:0}
+.studio-pages .svc h3{font-size:24px;line-height:1.2;letter-spacing:-.035em;font-weight:600;margin:4px 0 0}
+.studio-pages .svc p{font-size:15px;line-height:1.7;color:var(--mute);margin:4px 0 0}
+.studio-pages .price{margin:0;padding:0;border:0;text-align:right;font-size:13px;color:var(--mute)}
+.studio-pages .price b{font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-top:2px}
+.studio-pages .price .delai{font-size:13px;font-weight:600;color:var(--blue2);margin-bottom:10px}
+.studio-pages .care{margin-top:32px;background:var(--sand);border:0;border-radius:8px;padding:28px 32px;gap:16px 40px}
+.studio-pages .care b{font-size:20px;letter-spacing:-.025em;font-family:Sora,system-ui,sans-serif}
+.studio-pages .care span{display:block;margin-top:8px;font-size:15px;line-height:1.7;color:#4a5361}
+.studio-pages .care .p{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.studio-pages .fine{margin-top:24px;max-width:860px;font-size:14px;line-height:1.7;color:#4a5361}
+
+/* Méthode: numbered steps without cards. */
+.studio-pages .steps{gap:40px}
+.studio-pages .steps li{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:24px 0 0}
+.studio-pages .steps li:before{content:"0" counter(s);display:block;width:auto;height:auto;border-radius:0;background:none;color:var(--blue2);font-size:13px;font-weight:600;margin:0 0 14px}
+.studio-pages .steps b{font-size:21px;line-height:1.25;letter-spacing:-.03em;font-family:Sora,system-ui,sans-serif}
+.studio-pages .steps span{font-size:14px;line-height:1.7;color:var(--mute);margin-top:10px}
+.studio-pages .pay{margin-top:28px;font-size:14px;line-height:1.7;color:#4a5361}
+.studio-pages .steps span a,.studio-pages .pay a,.studio-pages details p a{color:var(--blue2);font-weight:600;text-underline-offset:3px}
+
+/* FAQ: plain list with rules. */
+.studio-pages .faq{max-width:860px;border-top:1px solid var(--line)}
+.studio-pages .faq details{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;margin:0}
+.studio-pages .faq summary{padding:22px 48px 22px 0;font:600 17px/1.45 Sora,system-ui,sans-serif;letter-spacing:-.015em;color:var(--ink)}
+.studio-pages .faq summary:after{right:4px;color:var(--blue2)}
+.studio-pages .faq details p{padding:0 0 22px;font-size:15px;line-height:1.75;color:#4a5361}
+
+/* Call to action band, as on the homepage. */
+.studio-pages .cta{background:#0b1020;color:#fff;text-align:left;padding:58px 0}
+.studio-pages .cta .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 40px;align-items:center}
+.studio-pages .cta h2{grid-column:1;color:#fff;font-size:clamp(28px,3.1vw,42px);letter-spacing:-.045em;margin:0}
+.studio-pages .cta p{grid-column:1;margin:0;max-width:none;color:#c7cede;font-size:15px}
+.studio-pages .cta .ctas{grid-column:2;grid-row:1/span 2;justify-content:flex-end;margin:0}
+
+/* Devis: form on paper. */
+.studio-pages .contact{padding:60px 0 72px}
+.studio-pages .contact .head{max-width:900px;margin-bottom:40px}
+.studio-pages .cgrid{gap:40px}
+.studio-pages form{background:#fff;border:1px solid var(--line);border-radius:8px;padding:30px}
+.studio-pages label,.studio-pages legend{font-size:14px;font-weight:600;color:var(--ink)}
+.studio-pages input,.studio-pages select,.studio-pages textarea{border:1px solid #c7c9cd;border-radius:5px;background:#fffdf9;color:var(--ink);font-family:Sora,system-ui,sans-serif;font-size:15px}
+.studio-pages input:focus,.studio-pages select:focus,.studio-pages textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(67,97,238,.16)}
+.studio-pages .fhelp,.studio-pages .privacy,.studio-pages .needs-note{color:#4a5361}
+.studio-pages .privacy a,.studio-pages .needs-note a{color:var(--blue2)}
+.studio-pages .quote-more{border-radius:6px;background:var(--paper);border-color:var(--line)}
+.studio-pages .quote-more summary,.studio-pages .quote-more summary:after{color:var(--blue2)}
+.studio-pages .choice{border-radius:5px}
+.studio-pages .choice:has(input:checked){background:#eef1ff}
+.studio-pages .direct>a{background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink)}
+.studio-pages .direct>a:hover{background:#fffdf9;border-color:#b8bec9}
+.studio-pages .direct svg{color:var(--blue2)}
+.studio-pages .direct small{color:var(--mute)}
+.studio-pages .direct b{font-size:16px;font-family:Sora,system-ui,sans-serif;letter-spacing:-.01em}
+.studio-pages .bcard-inner img{box-shadow:0 14px 34px rgba(18,27,44,.18)}
+.studio-pages .bcard figcaption{color:var(--mute)}
+.studio-pages .bcard figcaption a{color:var(--blue2)}
+
+/* Footer: studio footer with the legal notice kept. */
+.studio-pages .studio-footer nav{display:flex;margin:24px 0 0;gap:8px 24px;flex-wrap:wrap}
+.studio-pages .studio-footer nav a{padding:0;border-radius:0;font-size:12px;color:#d9e1ef;background:none}
+.studio-pages .studio-footer>div span{font-size:12px}
+.studio-pages .studio-footer details{margin:24px 0 0;background:transparent;border:1px solid #ffffff1f;border-radius:5px}
+.studio-pages .studio-footer summary{padding:12px 44px 12px 16px;font:600 12px/1.5 Sora,system-ui,sans-serif;color:#d9e1ef}
+.studio-pages .studio-footer summary:after{right:16px;color:var(--cyan)}
+.studio-pages .studio-footer details p{padding:0 16px 14px;font-size:12px;line-height:1.7;color:#b6bfd1}
+.studio-pages .studio-footer details a{color:#d9e1ef}
+
+@media (max-width:960px){
+  .studio-pages .svc{grid-template-columns:40px minmax(0,1fr) 170px}
+  .studio-pages .svc p{grid-column:2/span 2}
+  .studio-pages .svc .price{grid-column:3;grid-row:1}
+}
+@media (max-width:760px){
+  .studio-pages .wrap{padding:0 20px}
+  .studio-pages section{padding:48px 0}
+  .studio-pages .phero{padding:36px 0 24px}
+  .studio-pages .phero h1,.studio-pages .contact .head h1{font-size:clamp(36px,10.5vw,46px)}
+  .studio-pages .svc{grid-template-columns:36px minmax(0,1fr);gap:8px 16px;padding:26px 0}
+  .studio-pages .svc p,.studio-pages .svc .price{grid-column:2;grid-row:auto;text-align:left}
+  .studio-pages .ic{width:36px;height:36px}
+  .studio-pages .svc h3{font-size:21px}
+  .studio-pages .price b{font-size:24px}
+  .studio-pages .price .delai{margin:6px 0 4px}
+  .studio-pages .care{padding:22px}
+  .studio-pages .steps{gap:28px}
+  .studio-pages .cta{padding:42px 0}
+  .studio-pages .cta .wrap{grid-template-columns:1fr}
+  .studio-pages .cta .ctas{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:14px}
+  .studio-pages form{padding:20px}
+}
+.studio-pages .quote-more summary{padding:4px 30px 4px 0;font-family:Sora,system-ui,sans-serif}
