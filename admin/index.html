@@ -221,6 +221,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-newpass" hidden>
       <h1>Nouveau mot de passe</h1>
+      <input type="text" id="n-user" autocomplete="username" hidden aria-hidden="true" tabindex="-1">
       <label for="n-pass">Mot de passe (10 caractères minimum)</label><input id="n-pass" type="password" minlength="10" autocomplete="new-password" required>
       <button class="btn main" style="width:100%;margin-top:14px" type="submit">Enregistrer</button>
     </form>
@@ -390,7 +391,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js"></script>
+<script src="sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
@@ -408,7 +409,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var mfaFactor = null, mfaKey = null;
   function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
   function askSecondFactor(u, msg){
-    var t = factorOf(u, 'totp'), k = sb.mfa.passkey.supported() ? factorOf(u, 'webauthn') : null;
+    var t = factorOf(u, 'totp'), k = sb.mfa.passkey && sb.mfa.passkey.supported() ? factorOf(u, 'webauthn') : null;
     mfaFactor = t ? t.id : null; mfaKey = k ? k.id : null;
     $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa', msg);
     $('m-key').hidden = !mfaKey; $('m-totp').hidden = !mfaFactor;
@@ -696,7 +697,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         (keys.length ? '<ul style="list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px">' + keys.map(function(k){
           return '<li style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px"><span>' + esc(k.friendly_name || 'Clé d’accès') + ' <small style="color:var(--mute)">· ajoutée le ' + day(k.created_at) + '</small></span><button class="btn danger sm" type="button" data-key-off="' + esc(k.id) + '">Retirer</button></li>';
         }).join('') + '</ul>' : '') +
-        (sb.mfa.passkey.supported() ? '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="key-on" type="button">Ajouter une clé d’accès sur cet appareil</button></div>'
+        (sb.mfa.passkey && sb.mfa.passkey.supported() ? '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="key-on" type="button">Ajouter une clé d’accès sur cet appareil</button></div>'
           : '<p style="font-size:13.5px;color:var(--mute);margin-top:8px">Ce navigateur ne gère pas les clés d’accès.</p>');
       if ($('mfa-off')) $('mfa-off').onclick = function(){
         var msg = keys.length ? 'Désactiver le code ? Il ne restera que vos clés d’accès : si vous perdez vos appareils, vous ne pourrez plus entrer.' : 'Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.';
