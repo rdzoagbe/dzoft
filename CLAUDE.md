@@ -6,8 +6,8 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
 ## L'entreprise
 - **DZOFT** est le nom commercial de **Roland Dzoagbe, entrepreneur individuel** (micro-entreprise),
   93140 Bondy. SIREN 104 838 727, SIRET 104 838 727 00014. TVA non applicable, art. 293 B du CGI.
-- Contact public : rolanddzoagbe@gmail.com · 07 82 88 46 46 (WhatsApp).
-  L’adresse du compte propriétaire (admin, Supabase) reste dans Supabase Auth et hors de ce dépôt public.
+- Contact public : roland.dzoagbe@hotmail.com · 07 82 88 46 46 (WhatsApp). Choix de Roland (9 nov. 2026) :
+  la même adresse partout (site, mentions, PDF). C’est aussi l’identifiant admin : le second facteur est indispensable.
 - Offres : page de présentation dès 200 €, site vitrine dès 400 €, PWA dès 700 €,
   application mobile dès 1 500 €, suivi mensuel dès 15 €/mois.
 - Ancien nom : RD Créations (abandonné en octobre 2026, ne plus l'utiliser).
@@ -75,10 +75,12 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.
 - L'administrateur doit porter le marqueur Auth `app_metadata.dzoft_owner=true` (jamais
-  `user_metadata`). L'interface et les fonctions vérifient ce rôle et le MFA ; aucun e-mail
-  Auth privé ne doit apparaître dans les fichiers publics.
+  `user_metadata`). L'interface et les fonctions vérifient ce rôle et le MFA (code TOTP ou clé d’accès
+  WebAuthn, au choix, redemandé toutes les 8 h : `is_owner()`, `admin/sb.js` `mfaFresh`, `notify-client`).
+  Clés d’accès : facteur MFA `webauthn` (Supabase → Authentication → Passkeys, RP ID `rdzoagbe.github.io`,
+  origine `https://rdzoagbe.github.io`) ; à réenregistrer si le site change de domaine (dzoft.fr).
 - `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
-  stockage, droits), mise à jour le 2026-10-30 ; à resynchroniser après toute migration.
+  stockage, droits), mise à jour le 2026-11-09 ; à resynchroniser après toute migration.
 - Sauvegardes : le schéma est dans Git, pas les données. Conserver les exports JSON chiffrés
   hors du dépôt public et les mettre à jour après chaque signature ou changement important.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans

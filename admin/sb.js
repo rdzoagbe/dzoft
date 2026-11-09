@@ -54,13 +54,57 @@
       return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4)));
     } catch (e) { return {}; }
   }
+  // Second factors accepted for the 8-hour check: authenticator-app code or a passkey (WebAuthn).
+  var SECOND_FACTORS = ['totp', 'mfa/totp', 'mfa/webauthn', 'webauthn'];
   function mfaFresh(maxAgeSeconds) {
     var p = claims(), now = Date.now() / 1000;
     if (p.aal !== 'aal2' || !Array.isArray(p.amr)) return false;
     return p.amr.some(function (entry) {
       var at = Number(entry && entry.timestamp);
-      return entry && entry.method === 'totp' && Number.isFinite(at) && at <= now + 120 && now - at <= maxAgeSeconds;
+      return entry && SECOND_FACTORS.indexOf(entry.method) >= 0 && Number.isFinite(at) && at <= now + 120 && now - at <= maxAgeSeconds;
     });
+  }
+
+  /* WebAuthn helpers: Supabase sends and expects binary fields as base64url text. */
+  function fromB64url(v) {
+    var b = String(v || '').replace(/-/g, '+').replace(/_/g, '/'); b += '==='.slice((b.length + 3) % 4);
+    var bin = atob(b), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out.buffer;
+  }
+  function toB64url(buf) {
+    var bytes = new Uint8Array(buf), bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function creationOptions(pk) {
+    var o = JSON.parse(JSON.stringify(pk));
+    o.user = o.user || {};
+    // A name is required by the browser: show the account e-mail if the server left it blank.
+    if (!o.user.name) o.user.name = (claims().email || 'DZOFT');
+    if (!o.user.displayName) o.user.displayName = o.user.name;
+    // Built-in authenticators first (Face ID, fingerprint, Windows Hello), with the user verified.
+    o.authenticatorSelection = Object.assign({}, o.authenticatorSelection || {}, { userVerification: 'required', residentKey: 'preferred', requireResidentKey: false });
+    if (global.PublicKeyCredential && typeof PublicKeyCredential.parseCreationOptionsFromJSON === 'function') return PublicKeyCredential.parseCreationOptionsFromJSON(o);
+    o.challenge = fromB64url(o.challenge); o.user.id = fromB64url(o.user.id);
+    (o.excludeCredentials || []).forEach(function (c) { c.id = fromB64url(c.id); });
+    return o;
+  }
+  function requestOptions(pk) {
+    var o = JSON.parse(JSON.stringify(pk));
+    o.userVerification = 'required';
+    if (global.PublicKeyCredential && typeof PublicKeyCredential.parseRequestOptionsFromJSON === 'function') return PublicKeyCredential.parseRequestOptionsFromJSON(o);
+    o.challenge = fromB64url(o.challenge);
+    (o.allowCredentials || []).forEach(function (c) { c.id = fromB64url(c.id); });
+    return o;
+  }
+  function credentialJSON(cred, create) {
+    if (typeof cred.toJSON === 'function') return cred.toJSON();
+    var r = cred.response, out = { id: cred.id, rawId: cred.id, type: 'public-key', clientExtensionResults: cred.getClientExtensionResults ? cred.getClientExtensionResults() : {}, authenticatorAttachment: cred.authenticatorAttachment || undefined };
+    out.response = create
+      ? { attestationObject: toB64url(r.attestationObject), clientDataJSON: toB64url(r.clientDataJSON) }
+      : { authenticatorData: toB64url(r.authenticatorData), clientDataJSON: toB64url(r.clientDataJSON), signature: toB64url(r.signature), userHandle: r.userHandle ? toB64url(r.userHandle) : undefined };
+    return out;
   }
 
   var sb = {
@@ -139,7 +183,39 @@
       enroll: function () { return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'DZOFT ' + Date.now() } }); }); },
       challenge: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },
       verify: function (fid, cid, code) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: { challenge_id: cid, code: code } }); }).then(keep); },
-      remove: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid, { method: 'DELETE', token: t }); }); }
+      remove: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid, { method: 'DELETE', token: t }); }); },
+      /* Passkey as second factor (WebAuthn): Face ID, fingerprint, Windows Hello or a security key.
+         Same Supabase endpoints as the code, with a browser ceremony between challenge and verify. */
+      passkey: {
+        supported: function () {
+          return !!(global.PublicKeyCredential && global.navigator && navigator.credentials && navigator.credentials.create && global.isSecureContext);
+        },
+        enroll: function (name) {
+          return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'webauthn', friendly_name: name } }); });
+        },
+        /* Runs challenge, browser prompt and verify for one WebAuthn factor; keeps the aal2 session. */
+        use: function (fid) {
+          var rp = { rpId: global.location.hostname, rpOrigins: [global.location.origin] };
+          return token().then(function (t) {
+            return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: { webauthn: rp } });
+          }).then(function (c) {
+            var w = c && c.webauthn, pk = w && w.credential_options && w.credential_options.publicKey;
+            if (!pk) throw new Error('Clé d’accès non disponible pour ce compte.');
+            var create = w.type === 'create';
+            var options = create ? creationOptions(pk) : requestOptions(pk);
+            var run = create ? navigator.credentials.create({ publicKey: options }) : navigator.credentials.get({ publicKey: options });
+            return run.then(function (cred) {
+              if (!cred) throw new Error('Aucune clé d’accès reçue.');
+              return token().then(function (t) {
+                return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: {
+                  challenge_id: c.id,
+                  webauthn: { type: w.type, rpId: rp.rpId, rpOrigins: rp.rpOrigins, credential_response: credentialJSON(cred, create) }
+                } });
+              });
+            });
+          }).then(keep);
+        }
+      }
     },
     /* Server function (e-mails to clients), called with the signed-in session. */
     fn: function (name, body) {

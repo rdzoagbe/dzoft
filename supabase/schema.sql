@@ -1,6 +1,6 @@
 -- ============================================================================
 -- DZOFT · copie de référence du schéma Supabase (projet rzghbvmszbjlqkdjzpxc)
--- Générée le 2026-10-28, mise à jour le 2026-10-30 (leads : archive réversible, contact prospect, droits RPC et notifications outbox) depuis la base réelle et les migrations associées.
+-- Générée le 2026-10-28, mise à jour le 2026-11-09 (leads : archive réversible, contact prospect, droits RPC, notifications outbox ; is_owner : second facteur code ou clé d’accès de moins de 8 h) depuis la base réelle et les migrations associées.
 --
 -- Ce fichier documente l'état de la base : tables, index, RLS, fonctions,
 -- stockage et droits. Ce n'est PAS un script d'installation à exécuter tel
@@ -238,9 +238,26 @@ CREATE OR REPLACE FUNCTION public.is_owner()
  STABLE SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
+  -- Owner role, and a second factor (TOTP code or passkey) verified on this session within 8 hours.
   select coalesce((select auth.jwt() -> 'app_metadata' ->> 'dzoft_owner'), '') = 'true'
-    and (coalesce((select auth.jwt() ->> 'aal'), 'aal1') = 'aal2'
-         or not exists (select 1 from auth.mfa_factors f where f.user_id = (select auth.uid()) and f.status = 'verified'))
+    and (
+      not exists (select 1 from auth.mfa_factors f where f.user_id = (select auth.uid()) and f.status = 'verified')
+      or (
+        coalesce((select auth.jwt() ->> 'aal'), 'aal1') = 'aal2'
+        and exists (
+          select 1
+          from jsonb_array_elements(
+            case when jsonb_typeof(auth.jwt() -> 'amr') = 'array'
+              then auth.jwt() -> 'amr' else '[]'::jsonb end
+          ) as amr(entry)
+          where amr.entry ->> 'method' in ('totp', 'mfa/totp', 'mfa/webauthn', 'webauthn')
+            and case when amr.entry ->> 'timestamp' ~ '^[0-9]{10}$' then
+              to_timestamp((amr.entry ->> 'timestamp')::double precision)
+                between now() - interval '8 hours' and now() + interval '2 minutes'
+            else false end
+        )
+      )
+    )
 $function$;
 
 CREATE OR REPLACE FUNCTION public.my_client()
@@ -1186,9 +1203,26 @@ stable
 security definer
 set search_path = 'public', 'pg_temp'
 as $function$
+  -- Owner role, and a second factor (TOTP code or passkey) verified on this session within 8 hours.
   select coalesce((select auth.jwt() -> 'app_metadata' ->> 'dzoft_owner'), '') = 'true'
-    and (coalesce((select auth.jwt() ->> 'aal'), 'aal1') = 'aal2'
-         or not exists (select 1 from auth.mfa_factors f where f.user_id = (select auth.uid()) and f.status = 'verified'))
+    and (
+      not exists (select 1 from auth.mfa_factors f where f.user_id = (select auth.uid()) and f.status = 'verified')
+      or (
+        coalesce((select auth.jwt() ->> 'aal'), 'aal1') = 'aal2'
+        and exists (
+          select 1
+          from jsonb_array_elements(
+            case when jsonb_typeof(auth.jwt() -> 'amr') = 'array'
+              then auth.jwt() -> 'amr' else '[]'::jsonb end
+          ) as amr(entry)
+          where amr.entry ->> 'method' in ('totp', 'mfa/totp', 'mfa/webauthn', 'webauthn')
+            and case when amr.entry ->> 'timestamp' ~ '^[0-9]{10}$' then
+              to_timestamp((amr.entry ->> 'timestamp')::double precision)
+                between now() - interval '8 hours' and now() + interval '2 minutes'
+            else false end
+        )
+      )
+    )
 $function$;
 revoke all on function public.is_owner() from public, anon, authenticated, service_role;
 grant execute on function public.is_owner() to authenticated;

@@ -206,9 +206,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-mfa" hidden>
       <h1>Code de vérification</h1>
-      <p class="intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.</p>
-      <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
-      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
+      <p class="intro" id="m-intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.</p>
+      <div id="m-key" hidden>
+        <button class="btn main" style="width:100%" type="button" id="m-key-go">Utiliser ma clé d’accès</button>
+        <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 8 heures.</p>
+        <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
+      </div>
+      <div id="m-totp">
+        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6">
+        <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
+      </div>
       <div class="row"><a id="mfa-out">Se déconnecter</a></div>
     </form>
 
@@ -398,7 +405,21 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- auth ---------------- */
   var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
   var MFA_WINDOW = 8 * 60 * 60;
-  var mfaFactor = null;
+  var mfaFactor = null, mfaKey = null;
+  function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
+  function askSecondFactor(u, msg){
+    var t = factorOf(u, 'totp'), k = sb.mfa.passkey.supported() ? factorOf(u, 'webauthn') : null;
+    mfaFactor = t ? t.id : null; mfaKey = k ? k.id : null;
+    $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa', msg);
+    $('m-key').hidden = !mfaKey; $('m-totp').hidden = !mfaFactor;
+    $('m-or').hidden = !(mfaKey && mfaFactor);
+    $('m-intro').textContent = mfaKey && mfaFactor ? 'Confirmez avec votre clé d’accès, ou saisissez le code à 6 chiffres de votre application d’authentification.'
+      : mfaKey ? 'Confirmez votre identité avec votre clé d’accès.'
+      : 'Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.';
+    $('m-code').value = '';
+    if (!mfaKey && !mfaFactor) amsg('Ce navigateur ne gère pas les clés d’accès. Ouvrez l’espace avec Safari, Chrome, Edge ou Firefox à jour.');
+    if (mfaKey) $('m-key-go').focus(); else $('m-code').focus();
+  }
   var startPending = false;
   function safeReturnTarget(){
     var target = new URLSearchParams(location.search).get('return') || '';
@@ -438,11 +459,20 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   };
   $('f-mfa').onsubmit = function(e){
     e.preventDefault();
+    if (!mfaFactor) return;
     var code = $('m-code').value.replace(/\D/g, '');
     if (code.length !== 6) { amsg('Le code fait 6 chiffres.'); return; }
     amsg('Vérification…', true);
     sb.mfa.challenge(mfaFactor).then(function(c){ return sb.mfa.verify(mfaFactor, c.id, code); })
       .then(function(){ amsg(''); start(); }, function(){ amsg('Code incorrect ou expiré : réessayez avec le code affiché maintenant.'); $('m-code').select(); });
+  };
+  $('m-key-go').onclick = function(){
+    if (!mfaKey) return;
+    var b = $('m-key-go'); b.disabled = true; amsg('Validez sur votre appareil…', true);
+    sb.mfa.passkey.use(mfaKey).then(function(){ b.disabled = false; amsg(''); start(); }, function(e){
+      b.disabled = false;
+      amsg(e && e.name === 'NotAllowedError' ? 'Opération annulée ou délai dépassé. Réessayez' + (mfaFactor ? ', ou utilisez le code.' : '.') : 'Clé d’accès refusée' + (e && e.message ? ' : ' + e.message : '') + (mfaFactor ? '. Utilisez le code en attendant.' : '.'));
+    });
   };
   $('mfa-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
   $('b-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
@@ -453,16 +483,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     sb.me().then(function(u){
       if (!u) { startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
       // A verified factor must be recent before any admin data is shown.
-      var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0];
-      if (f && !sb.mfaFresh(MFA_WINDOW)) { startPending = false; mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa'); $('m-code').value = ''; $('m-code').focus(); return; }
+      var f = factorOf(u, 'totp') || factorOf(u, 'webauthn');
+      if (f && !sb.mfaFresh(MFA_WINDOW)) { startPending = false; askSecondFactor(u); return; }
       sb.rpc('is_owner', {}, true).then(function(isOwner){
         startPending = false;
         if (!isOwner) {
           // The server is authoritative; if its clock rejects a borderline-old MFA claim,
           // ask for a fresh code instead of discarding the password session.
           if (u.app_metadata && u.app_metadata.dzoft_owner === true && f) {
-            mfaFactor = f.id; $('app').hidden = true; $('auth').hidden = false;
-            showForm('f-mfa', 'Saisissez un nouveau code pour continuer.'); $('m-code').value = ''; $('m-code').focus(); return;
+            askSecondFactor(u, 'Confirmez à nouveau pour continuer.'); return;
           }
           return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); });
         }
@@ -657,13 +686,43 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- two-step sign-in ---------------- */
   var enrolling = null;
   function renderMfa(u){
-    var f = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'totp'; })[0], box = $('mfa-box');
-    if (f) {
-      box.innerHTML = '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
-        '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver</button></div>';
-      $('mfa-off').onclick = function(){
-        if (!confirm('Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.')) return;
-        sb.mfa.remove(f.id).then(function(){ toast('Double authentification désactivée.'); sb.me().then(renderMfa); }, fail);
+    var f = factorOf(u, 'totp'), box = $('mfa-box');
+    var keys = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'webauthn'; });
+    if (f || keys.length) {
+      box.innerHTML = (f ? '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
+          '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver le code</button></div>' : '') +
+        '<h4 style="margin-top:18px;font-size:15px">Clés d’accès</h4>' +
+        '<p style="font-size:13.5px;color:var(--mute);margin-top:4px">Validez avec votre empreinte, Face ID ou Windows Hello au lieu de taper le code. Le code reste disponible en secours. Ajoutez une clé sur chaque appareil que vous utilisez.</p>' +
+        (keys.length ? '<ul style="list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px">' + keys.map(function(k){
+          return '<li style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px"><span>' + esc(k.friendly_name || 'Clé d’accès') + ' <small style="color:var(--mute)">· ajoutée le ' + day(k.created_at) + '</small></span><button class="btn danger sm" type="button" data-key-off="' + esc(k.id) + '">Retirer</button></li>';
+        }).join('') + '</ul>' : '') +
+        (sb.mfa.passkey.supported() ? '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="key-on" type="button">Ajouter une clé d’accès sur cet appareil</button></div>'
+          : '<p style="font-size:13.5px;color:var(--mute);margin-top:8px">Ce navigateur ne gère pas les clés d’accès.</p>');
+      if ($('mfa-off')) $('mfa-off').onclick = function(){
+        var msg = keys.length ? 'Désactiver le code ? Il ne restera que vos clés d’accès : si vous perdez vos appareils, vous ne pourrez plus entrer.' : 'Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.';
+        if (!confirm(msg)) return;
+        sb.mfa.remove(f.id).then(function(){ toast('Code désactivé.'); sb.me().then(renderMfa); }, fail);
+      };
+      [].forEach.call(box.querySelectorAll('[data-key-off]'), function(b){
+        b.onclick = function(){
+          if (!f && keys.length === 1 && !confirm('C’est votre dernière protection : votre espace ne sera plus protégé que par le mot de passe. Continuer ?')) return;
+          if ((f || keys.length > 1) && !confirm('Retirer cette clé d’accès ? Elle ne pourra plus servir à entrer.')) return;
+          sb.mfa.remove(b.dataset.keyOff).then(function(){ toast('Clé d’accès retirée.'); sb.me().then(renderMfa); }, fail);
+        };
+      });
+      if ($('key-on')) $('key-on').onclick = function(){
+        var b = $('key-on'); b.disabled = true;
+        var name = 'Clé d’accès · ' + new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        // forget an unfinished passkey attempt, then register a new one on this device
+        Promise.all((u.factors || []).filter(function(x){ return x.status !== 'verified' && x.factor_type === 'webauthn'; }).map(function(x){ return sb.mfa.remove(x.id).catch(function(){}); }))
+          .then(function(){ return sb.mfa.passkey.enroll(name); })
+          .then(function(r){ return sb.mfa.passkey.use(r.id); })
+          .then(function(){ toast('Clé d’accès ajoutée ✓ Elle vous sera proposée à la prochaine vérification.'); sb.me().then(renderMfa); }, function(e){
+            b.disabled = false;
+            var m = e && e.name === 'NotAllowedError' ? 'opération annulée ou délai dépassé.' : e && e.name === 'InvalidStateError' ? 'une clé existe déjà sur cet appareil.' : (e && e.message) || 'erreur';
+            toast('Ajout impossible : ' + m);
+            sb.me().then(function(v){ (v.factors || []).filter(function(x){ return x.status !== 'verified' && x.factor_type === 'webauthn'; }).forEach(function(x){ sb.mfa.remove(x.id).catch(function(){}); }); });
+          });
       };
       return;
     }

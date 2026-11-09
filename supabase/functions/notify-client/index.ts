@@ -23,11 +23,13 @@ function claims(token: string) {
     return JSON.parse(atob(p + "=".repeat((4 - p.length % 4) % 4)));
   } catch { return {}; }
 }
+// Recent second factor: authenticator-app code (TOTP) or a passkey registered as an MFA factor.
+const SECOND_FACTORS = ["totp", "mfa/totp", "mfa/webauthn", "webauthn"];
 function hasRecentTotp(payload: any) {
   const now = Math.floor(Date.now() / 1000);
   return Array.isArray(payload?.amr) && payload.amr.some((entry: any) => {
     const at = Number(entry?.timestamp);
-    return entry?.method === "totp" && Number.isFinite(at) && at <= now + 120 && now - at <= 8 * 60 * 60;
+    return SECOND_FACTORS.includes(entry?.method) && Number.isFinite(at) && at <= now + 120 && now - at <= 8 * 60 * 60;
   });
 }
 function mail(title: string, paras: string[], button: string, link: string) {
@@ -53,7 +55,7 @@ Deno.serve(async (req) => {
   const verified = (me.factors || []).some((f: { status: string }) => f.status === "verified");
   const authClaims = claims(token);
   if (verified && (authClaims.aal !== "aal2" || !hasRecentTotp(authClaims))) {
-    return json({ error: "double authentification requise : reconnectez-vous avec un nouveau code" }, 403);
+    return json({ error: "double authentification requise : reconnectez-vous avec votre code ou votre clé d’accès" }, 403);
   }
 
   const key = Deno.env.get("BREVO_API_KEY");
