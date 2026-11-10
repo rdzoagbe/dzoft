@@ -34,6 +34,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
+  Admin installable sur téléphone (PWA, 10 nov. 2026) : `admin/manifest.webmanifest`, `admin/icons/`,
+  `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
+  bouton « Installer l’app » affiché quand le navigateur le propose.
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.

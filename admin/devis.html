@@ -6,6 +6,13 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Devis · DZOFT</title>
 <link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B1020">
+<link rel="apple-touch-icon" href="icons/admin-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DZOFT Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 @font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
 @font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
@@ -645,6 +652,10 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     window.open('https://wa.me/' + (c.length >= 10 && c.indexOf('@') < 0 ? c : '') + '?text=' + encodeURIComponent(summary()), '_blank', 'noopener');
   };
 })();
+</script>
+<script>
+/* Installable admin app: registers the background script (no private data is cached). */
+if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
 </body>
 </html>

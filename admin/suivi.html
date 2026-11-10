@@ -7,6 +7,13 @@
 <meta name="referrer" content="no-referrer">
 <title>Fiche projet · DZOFT</title>
 <link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B1020">
+<link rel="apple-touch-icon" href="icons/admin-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DZOFT Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 @font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
 @font-face{font-family:Sora;src:url("../assets/fonts/sora-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
@@ -113,7 +120,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261104-portal" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -776,6 +783,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 })();
 </script>
 <script src="../assets/payment-reminder.js?v=20261104-2"></script>
+<script>
+/* Installable admin app: registers the background script (no private data is cached). */
+if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+</script>
 </body>
 </html>
 
