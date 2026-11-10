@@ -206,14 +206,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-mfa" hidden>
       <h1>Code de vérification</h1>
-      <p class="intro" id="m-intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 12 heures.</p>
+      <p class="intro" id="m-intro">Ouvrez votre application d’authentification et touchez le code de « DZOFT » pour le copier, puis revenez ici et appuyez sur « Coller le code copié ». Vous pouvez aussi le taper. Ce code vous sera redemandé toutes les 12 heures.</p>
       <div id="m-key" hidden>
         <button class="btn main" style="width:100%" type="button" id="m-key-go">Utiliser ma clé d’accès</button>
         <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 12 heures.</p>
         <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
       </div>
       <div id="m-totp">
-        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="123 456" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
+        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="______" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
+        <button class="btn" id="m-paste" type="button" hidden style="width:100%;margin-top:10px">Coller le code copié</button>
         <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
       </div>
       <div class="row"><a id="mfa-out">Se déconnecter</a></div>
@@ -419,7 +420,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('m-or').hidden = !(mfaKey && mfaFactor);
     $('m-intro').textContent = mfaKey && mfaFactor ? 'Confirmez avec votre clé d’accès, ou saisissez le code à 6 chiffres de votre application d’authentification.'
       : mfaKey ? 'Confirmez votre identité avec votre clé d’accès.'
-      : 'Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 12 heures.';
+      : 'Ouvrez votre application d’authentification et touchez le code de « DZOFT » pour le copier, puis revenez ici et appuyez sur « Coller le code copié ». Vous pouvez aussi le taper. Ce code vous sera redemandé toutes les 12 heures.';
     $('m-code').value = '';
     if (!mfaKey && !mfaFactor) amsg('Ce navigateur ne gère pas les clés d’accès. Ouvrez l’espace avec Safari, Chrome, Edge ou Firefox à jour.');
     if (mfaKey) $('m-key-go').focus(); else $('m-code').focus();
@@ -470,6 +471,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     mfaBusy = true; amsg('Vérification…', true);
     sb.mfa.challenge(mfaFactor).then(function(c){ return sb.mfa.verify(mfaFactor, c.id, code); })
       .then(function(){ mfaBusy = false; amsg(''); start(); }, function(){ mfaBusy = false; amsg('Code incorrect ou expiré : réessayez avec le code affiché maintenant.'); $('m-code').select(); });
+  };
+  // One-tap entry: copy the code in the authenticator app (tap on it), come back, tap this button.
+  if (navigator.clipboard && navigator.clipboard.readText) $('m-paste').hidden = false;
+  $('m-paste').onclick = function(){
+    navigator.clipboard.readText().then(function(t){
+      var d = String(t || '').replace(/\D/g, '');
+      if (d.length !== 6) { amsg('Aucun code à 6 chiffres copié. Touchez le code dans votre application d’authentification, puis revenez ici.'); return; }
+      $('m-code').value = d; $('m-code').dispatchEvent(new Event('input'));
+    }, function(){ amsg('Collage refusé par le navigateur : appuyez longuement dans la case pour coller.'); $('m-code').focus(); });
   };
   // Faster entry: spaces and pasted text are cleaned, and the code is sent as soon as 6 digits are typed.
   $('m-code').addEventListener('input', function(){
