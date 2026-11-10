@@ -406,6 +406,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- auth ---------------- */
   var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
   var MFA_WINDOW = 8 * 60 * 60;
+  // Passkey as second factor: ready in the code, but Supabase hosted projects do not allow it yet
+  // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
+  var PASSKEY_MFA = false;
   var mfaFactor = null, mfaKey = null;
   function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
   function askSecondFactor(u, msg){
@@ -692,13 +695,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (f || keys.length) {
       box.innerHTML = (f ? '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
           '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver le code</button></div>' : '') +
-        '<h4 style="margin-top:18px;font-size:15px">Clés d’accès</h4>' +
+        (PASSKEY_MFA || keys.length ? '<h4 style="margin-top:18px;font-size:15px">Clés d’accès</h4>' +
         '<p style="font-size:13.5px;color:var(--mute);margin-top:4px">Validez avec votre empreinte, Face ID ou Windows Hello au lieu de taper le code. Le code reste disponible en secours. Ajoutez une clé sur chaque appareil que vous utilisez.</p>' +
         (keys.length ? '<ul style="list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px">' + keys.map(function(k){
           return '<li style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px"><span>' + esc(k.friendly_name || 'Clé d’accès') + ' <small style="color:var(--mute)">· ajoutée le ' + day(k.created_at) + '</small></span><button class="btn danger sm" type="button" data-key-off="' + esc(k.id) + '">Retirer</button></li>';
         }).join('') + '</ul>' : '') +
-        (sb.mfa.passkey && sb.mfa.passkey.supported() ? '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="key-on" type="button">Ajouter une clé d’accès sur cet appareil</button></div>'
-          : '<p style="font-size:13.5px;color:var(--mute);margin-top:8px">Ce navigateur ne gère pas les clés d’accès.</p>');
+        (PASSKEY_MFA && sb.mfa.passkey && sb.mfa.passkey.supported() ? '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn main sm" id="key-on" type="button">Ajouter une clé d’accès sur cet appareil</button></div>'
+          : '<p style="font-size:13.5px;color:var(--mute);margin-top:8px">Ce navigateur ne gère pas les clés d’accès.</p>') : '');
       if ($('mfa-off')) $('mfa-off').onclick = function(){
         var msg = keys.length ? 'Désactiver le code ? Il ne restera que vos clés d’accès : si vous perdez vos appareils, vous ne pourrez plus entrer.' : 'Désactiver la double authentification ? Votre espace ne sera plus protégé que par le mot de passe.';
         if (!confirm(msg)) return;
