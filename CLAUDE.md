@@ -1,6 +1,6 @@
 # DZOFT : site, espace client et outil de gestion
 
-Roland Dzoagbe parle français : réponds en français, simplement, sans jargon. Il valide ce qui touche
+Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sans jargon ; le site et l’admin restent en français. Il valide ce qui touche
 à ses comptes (Google, Supabase, Revolut, OVH…) ; toi, tu fais le code et tu le guides pas à pas.
 
 ## L'entreprise
@@ -76,7 +76,7 @@ Roland Dzoagbe parle français : réponds en français, simplement, sans jargon.
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.
 - L'administrateur doit porter le marqueur Auth `app_metadata.dzoft_owner=true` (jamais
   `user_metadata`). L'interface et les fonctions vérifient ce rôle et le MFA (code TOTP ou clé d’accès
-  WebAuthn, au choix, redemandé toutes les 8 h : `is_owner()`, `admin/sb.js` `mfaFresh`, `notify-client`).
+  WebAuthn, au choix, redemandé toutes les 12 h, choix de Roland du 10 nov. 2026 : `is_owner()`, `admin/sb.js` `mfaFresh`, `notify-client`).
   Clés d’accès en second facteur : code prêt mais masqué (`PASSKEY_MFA = false` dans `admin/index.html`),
   car Supabase hébergé ne permet pas encore le facteur MFA `webauthn` (nov. 2026 : Multi-Factor = TOTP et SMS
   seulement). Passer à `true` quand Supabase l’ouvrira ; RP ID `rdzoagbe.github.io`, à refaire si le domaine change.

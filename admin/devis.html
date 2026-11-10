@@ -266,7 +266,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   // Private page: only the signed-in owner can use it.
   var sb = window.RDsb;
   if (!sb || !sb.session()) { location.replace('./'); return; }
-  var MFA_WINDOW = 8 * 60 * 60;
+  var MFA_WINDOW = 12 * 60 * 60;
   function checkMfaExpiry(){
     if (sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return false;
     var back = location.pathname.split('/').pop() + location.search + location.hash;

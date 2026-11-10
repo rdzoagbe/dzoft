@@ -206,10 +206,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <form id="f-mfa" hidden>
       <h1>Code de vérification</h1>
-      <p class="intro" id="m-intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.</p>
+      <p class="intro" id="m-intro">Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 12 heures.</p>
       <div id="m-key" hidden>
         <button class="btn main" style="width:100%" type="button" id="m-key-go">Utiliser ma clé d’accès</button>
-        <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 8 heures.</p>
+        <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 12 heures.</p>
         <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
       </div>
       <div id="m-totp">
@@ -405,7 +405,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- auth ---------------- */
   var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
-  var MFA_WINDOW = 8 * 60 * 60;
+  var MFA_WINDOW = 12 * 60 * 60;
   // Passkey as second factor: ready in the code, but Supabase hosted projects do not allow it yet
   // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
   var PASSKEY_MFA = false;
@@ -419,7 +419,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('m-or').hidden = !(mfaKey && mfaFactor);
     $('m-intro').textContent = mfaKey && mfaFactor ? 'Confirmez avec votre clé d’accès, ou saisissez le code à 6 chiffres de votre application d’authentification.'
       : mfaKey ? 'Confirmez votre identité avec votre clé d’accès.'
-      : 'Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 8 heures.';
+      : 'Ouvrez votre application d’authentification (Google Authenticator, Microsoft Authenticator…) et saisissez le code à 6 chiffres de « DZOFT ». Ce code vous sera redemandé toutes les 12 heures.';
     $('m-code').value = '';
     if (!mfaKey && !mfaFactor) amsg('Ce navigateur ne gère pas les clés d’accès. Ouvrez l’espace avec Safari, Chrome, Edge ou Firefox à jour.');
     if (mfaKey) $('m-key-go').focus(); else $('m-code').focus();
