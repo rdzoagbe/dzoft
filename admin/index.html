@@ -213,7 +213,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
       </div>
       <div id="m-totp">
-        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6">
+        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="123 456" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
         <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
       </div>
       <div class="row"><a id="mfa-out">Se déconnecter</a></div>
@@ -461,15 +461,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     e.preventDefault();
     sb.setPassword($('n-pass').value).then(function(){ toast('Mot de passe enregistré.'); start(); }, function(err){ amsg(err.message); });
   };
+  var mfaBusy = false;
   $('f-mfa').onsubmit = function(e){
     e.preventDefault();
-    if (!mfaFactor) return;
+    if (!mfaFactor || mfaBusy) return;
     var code = $('m-code').value.replace(/\D/g, '');
     if (code.length !== 6) { amsg('Le code fait 6 chiffres.'); return; }
-    amsg('Vérification…', true);
+    mfaBusy = true; amsg('Vérification…', true);
     sb.mfa.challenge(mfaFactor).then(function(c){ return sb.mfa.verify(mfaFactor, c.id, code); })
-      .then(function(){ amsg(''); start(); }, function(){ amsg('Code incorrect ou expiré : réessayez avec le code affiché maintenant.'); $('m-code').select(); });
+      .then(function(){ mfaBusy = false; amsg(''); start(); }, function(){ mfaBusy = false; amsg('Code incorrect ou expiré : réessayez avec le code affiché maintenant.'); $('m-code').select(); });
   };
+  // Faster entry: spaces and pasted text are cleaned, and the code is sent as soon as 6 digits are typed.
+  $('m-code').addEventListener('input', function(){
+    var d = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value !== d) this.value = d;
+    if (d.length === 6 && !mfaBusy) $('f-mfa').requestSubmit ? $('f-mfa').requestSubmit() : $('f-mfa').onsubmit(new Event('submit'));
+  });
   $('m-key-go').onclick = function(){
     if (!mfaKey) return;
     var b = $('m-key-go'); b.disabled = true; amsg('Validez sur votre appareil…', true);
