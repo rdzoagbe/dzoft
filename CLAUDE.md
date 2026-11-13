@@ -34,6 +34,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
+  Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
+  décision, en attente) dans `quotes.journal`, collage de plusieurs lignes « date | type | texte », jamais renvoyée au client
+  (test `tests/project-journal.test.cjs`). Ne jamais y mettre de journal dans le dépôt : il vit dans la base.
   Admin installable sur téléphone (PWA, 10 nov. 2026) : `admin/manifest.webmanifest`, `admin/icons/`,
   `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
   bouton « Installer l’app » affiché quand le navigateur le propose.
