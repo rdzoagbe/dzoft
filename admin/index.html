@@ -598,9 +598,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       box.innerHTML=summary+warning+'<div class="finance-list">'+rows.map(function(item){
         var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
         var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}).length:0;
-        return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span></div>'+
+        return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span>'+(pending?'<small class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</small>':'')+'</div>'+
          (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
-         (pending?'<p class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</p>':'')+
          '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Open & record payment':'Ouvrir et enregistrer')+'</button></article>';
       }).join('')+'</div>';
     }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
