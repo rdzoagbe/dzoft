@@ -1,0 +1,8 @@
+# Private local data: never push backups or credentials to this public repo.
+*.dzoftbak
+DZOFT-Backups/
+secure-backups/
+backup-exports/
+.env
+.env.*
+!.env.example
