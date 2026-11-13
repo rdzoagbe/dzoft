@@ -589,18 +589,23 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       var signed=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.total)||0)*100);},0)/100;
       var received=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.received)||0)*100);},0)/100;
       var rest=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.remaining)||0)*100);},0)/100;
+      var pendingTotal=valid.reduce(function(n,r){return n+(r.summary.payment_statuses||[]).filter(function(c){return c.status==='pending'||c.status==='sent_by_client';}).reduce(function(sum,c){return sum+Math.round((Number(c.amount)||0)*100);},0);},0)/100;
       var en=document.documentElement.lang==='en';
       var summary='<div class="finance-kpis">'+
        '<div><span>'+(en?'Agreed total':'Total convenu')+'</span><b>'+eur(signed)+'</b></div>'+
        '<div><span>'+(en?'Received and confirmed':'Reçu et confirmé')+'</span><b>'+eur(received)+'</b></div>'+
-       '<div><span>'+(en?'Remaining balance':'Reste à recevoir')+'</span><b>'+eur(rest)+'</b></div></div>';
+       '<div><span>'+(en?'Remaining balance':'Reste à recevoir')+'</span><b>'+eur(rest)+'</b></div>'+
+       '<div><span>'+(en?'Reported / pending (not received)':'Annoncé / en attente (non reçu)')+'</span><b>'+eur(pendingTotal)+'</b></div></div>'+
+       '<p class="finance-note">'+(en?'Pending transfers are included in the remaining balance until received.':'Les virements annoncés restent dans le solde à recevoir tant que leur réception n’est pas confirmée.')+'</p>';
       var warning=valid.length===rows.length?'':'<div class="panel finance-warning">'+(en?'Some project balances are unavailable; totals include only accessible projects.':'Certains soldes sont indisponibles : les totaux comprennent uniquement les projets accessibles.')+'</div>';
       box.innerHTML=summary+warning+'<div class="finance-list">'+rows.map(function(item){
         var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
         var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}).length:0;
-        return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span>'+(pending?'<small class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</small>':'')+'</div>'+
+        var awaiting=d?(d.payment_statuses||[]).filter(function(p){return p.status==='pending'||p.status==='sent_by_client';}):[];
+        var awaitingAmount=awaiting.reduce(function(n,p){return n+Math.round((Number(p.amount)||0)*100);},0)/100;
+        return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span>'+(pending?'<small class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</small>':'')+(awaiting.length?'<small class="finance-awaiting">'+(en?'Awaiting verification: ':'À confirmer : ')+eur(awaitingAmount)+'</small>':'')+'</div>'+
          (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
-         '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Open & record payment':'Ouvrir et enregistrer')+'</button></article>';
+         '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Manage payments':'Gérer les paiements')+'</button></article>';
       }).join('')+'</div>';
     }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
   }
