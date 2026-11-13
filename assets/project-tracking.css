@@ -13,3 +13,35 @@
 .tracking-link fieldset{margin-top:8px}
 .tracking-link button[type=submit]{margin:3px 0 9px}
 .tracking-history .tracking-invoice-status{margin-top:8px}
+
+
+/* Payment lifecycle — pending and client-reported funds are NOT receipts. */
+.tracking-claims{margin:20px 0;padding:17px 17px 11px;border:1px solid #dfe0ee;border-radius:16px;background:#fafaff}
+.tracking-claims-title{display:flex;align-items:center;flex-wrap:wrap;gap:9px;justify-content:space-between;margin-bottom:12px}
+.tracking-claims-title h3{font-size:15px;color:#181b30;line-height:1.4;margin:0}
+.tracking-status-pill{display:inline-flex;align-items:center;font-weight:800;font-size:11px;line-height:1.4;border-radius:30px;padding:5px 9px;white-space:normal}
+.tracking-status-pill.pending{background:#fff2d9;color:#895600}
+.tracking-status-pill.received{background:#e4f8ee;color:#176141}
+.tracking-claim{padding:14px 15px;margin:11px 0;border:1px solid #e3e5f0;background:#fff;border-radius:12px}
+.tracking-claim-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+.tracking-claim .tracking-help{margin:8px 0 0}
+.tracking-claim-actions{margin-top:12px;display:grid;gap:12px}
+.tracking-claim-actions form{margin:0}
+.tracking-claim-actions form[data-status-id]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end}
+.tracking-claim-actions form[data-status-id] label{min-width:0;margin:0}
+.tracking-claim-actions form[data-status-id] button{justify-self:start}
+.tracking-claim-actions form[data-status-id] .tracking-message{align-self:center}
+.tracking-confirm{background:#f5fbf7;border:1px solid #cbe9d7;border-radius:10px;padding:11px 13px}
+.tracking-confirm>summary{font-size:13px;color:#146e4a;cursor:pointer}
+.tracking-confirm form{margin:12px 0 0}
+.tracking-confirm .tracking-check{margin:12px 0}
+.tracking-report-editor{margin-top:16px;background:#f7f5ff;border-color:#d9d0ff}
+.tracking-report-editor summary{color:#4932e8}
+.tracking-report-editor .tracking-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tracking-report-editor .tracking-fields label{min-width:0}
+@media(max-width:640px){
+ .tracking-claims{padding:13px 11px}
+ .tracking-claim-actions form[data-status-id]{grid-template-columns:1fr}
+ .tracking-report-editor .tracking-fields{grid-template-columns:1fr}
+ .tracking-claim{padding:12px}
+}
