@@ -45,3 +45,6 @@
  .tracking-report-editor .tracking-fields{grid-template-columns:1fr}
  .tracking-claim{padding:12px}
 }
+
+.tracking-confirm-preview{border:1px solid #b9dec8;background:#eaf8ee;border-radius:9px;color:#145c39;font-weight:800;font-size:12px;padding:11px 13px;margin:9px 0}
+.tracking-status-pill.cancelled{background:#f0f1f5;color:#667085}
