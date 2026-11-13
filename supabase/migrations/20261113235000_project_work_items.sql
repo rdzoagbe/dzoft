@@ -116,7 +116,7 @@ $fn$;
 create or replace function private.publish_project_work_item(
  p_quote uuid,p_id uuid,p_batch uuid,p_category text,p_summary text,p_tested boolean
 ) returns jsonb language plpgsql security definer set search_path='' as $fn$
-declare q public.quotes; item public.project_work_items; clean text:=btrim(coalesce(p_summary,''));
+declare q public.quotes; item public.project_work_items; clean text:=btrim(coalesce(p_summary,'')); email_state text;
 begin
  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
  if p_batch is null or p_category is null or
@@ -148,8 +148,14 @@ begin
    'summary',clean)));
  update public.project_work_items set published_at=now(),published_batch=p_batch,
    updated_at=now() where id=item.id and quote_id=p_quote;
+ select coalesce((
+  select o.status from public.project_events e
+  join public.email_outbox o on o.event_id=e.id and o.recipient_role='client'
+  where e.event_key='digest:'||p_batch::text
+  order by o.created_at desc limit 1
+ ),'not_queued') into email_state;
  return jsonb_build_object('published',true,'already_published',false,'id',item.id,
-  'email_queued',true);
+  'client_email_status',email_state);
 end $fn$;
 
 create or replace function public.publish_project_work_item(
