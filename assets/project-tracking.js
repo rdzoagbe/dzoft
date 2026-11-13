@@ -68,10 +68,13 @@
      field(t('N° de la facture (Revolut)','Invoice number (Revolut)'),'<input name="num" maxlength="40" autocomplete="off" placeholder="INV-1">')+
      field(t('Montant de la facture (€)','Invoice amount (€)'),'<input name="amt" type="number" min="0.01" step="0.01" value="'+(suggest||'')+'">')+
     '</div></fieldset>'+
-    '<div class="tracking-fields">'+field(t('Montant reçu (€)','Amount received (€)'),'<input name="amount" type="number" min="0.01" step="0.01" required>')+field(t('Date de réception','Receipt date'),'<input name="date" type="date" required value="'+today+'" max="'+today+'">')+field(t('Mode de paiement','Payment method'),'<select name="method">'+options(methods)+'</select>')+field(t('Référence (facultatif)','Reference (optional)'),'<input name="reference" maxlength="100">')+'</div>'+
+    '<div class="tracking-fields">'+field(t('Montant reçu (€)','Amount received (€)'),'<input name="amount" type="number" min="0.01" step="0.01" required>')+field(t('Date de réception','Receipt date'),'<input name="date" type="date" required value="'+today+'" max="'+today+'">')+field(t('Mode de paiement','Payment method'),'<select name="method" required><option value="">'+t('Sélectionner le mode réellement reçu','Select actual payment method')+'</option>'+options(methods)+'</select>')+field(t('Référence (facultatif)','Reference (optional)'),'<input name="reference" maxlength="100">')+'</div>'+
     '<label class="tracking-check"><input type="checkbox" name="notify" checked> '+t('Prévenir le client par e-mail','Email the client')+'</label>'+
     '<p class="tracking-help">'+t('Confirmez uniquement l’argent réellement reçu (espèces remises, virement crédité ou carte encaissée). Pour un paiement ancien déjà annoncé, décochez l’e-mail.','Confirm only money actually received (cash in hand, transfer credited or card settled). For a previously reported payment, untick the email.')+'</p><button class="btn main" type="submit">'+t('Confirmer la réception','Confirm receipt')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
-   var fm=box.querySelector('form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=box.querySelector('.tracking-new');
+   // Invoice-link forms render BEFORE the new-payment form as soon as one receipt exists.
+   // Always scope controls to the payment editor: otherwise the wrong form throws
+   // and the entire payment panel appears unavailable even though the receipt saved.
+   var fm=box.querySelector('details.tracking-editor > form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=fm.querySelector('.tracking-new');
    function sync(){var isNew=el.invoice.value==='new',noInvoice=el.invoice.value==='unbilled';news.hidden=!isNew;el.num.required=isNew;el.amt.required=isNew;
     var tip=box.querySelector('.tracking-unbilled-tip');if(tip)tip.hidden=!noInvoice;
     var opt=el.invoice.selectedOptions[0];el.amount.value=noInvoice?'':isNew?(el.amt.value||''):(opt&&opt.dataset.rest||'');
@@ -94,7 +97,7 @@
        }).catch(function(err){btn.disabled=false;status(note,friendly(err),true);});
      };
    });
-   fm.onsubmit=function(e){e.preventDefault();var b=fm.querySelector('button[type=submit]'),msg=box.querySelector('[role=status]');var isNew=el.invoice.value==='new';
+   fm.onsubmit=function(e){e.preventDefault();var b=fm.querySelector('button[type=submit]'),msg=box.querySelector(':scope > [role="status"]');var isNew=el.invoice.value==='new';
     var unbilled=el.invoice.value==='unbilled';
     var payload={p_quote:q.id,p_id:key,p_amount:Number(el.amount.value),p_date:el.date.value,p_method:el.method.value,p_reference:el.reference.value.trim(),p_notify:el.notify.checked};
     if(!unbilled){payload.p_invoice=isNew?newKey:el.invoice.value;payload.p_new_invoice=isNew?{n:kinds[+el.kind.value][0],num:el.num.value.trim(),amt:Number(el.amt.value)}:null;}
@@ -114,7 +117,7 @@
     sb.rpc('publish_project_updates',{p_quote:q.id,p_batch:pk,p_items:items},true).then(function(){rows.innerHTML='';addRow();pk=crypto.randomUUID();b.disabled=false;status(msg,items.length>1?t('Publié : '+items.length+' groupes dans une seule mise à jour. Un e-mail mis en file d’envoi.','Published: '+items.length+' groups in one update. One email queued.'):t('Publié. Notifications mises en file d’envoi.','Published. Notifications queued.'));notify(sb);setTimeout(reload,1200);}).catch(function(err){b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);});};
    // Existing invoice toggles cannot overwrite receipt-backed statuses.
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
-  }).catch(function(){box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements est indisponible. Rechargez la page ; aucun montant n’a été modifié.','Payment tracking is unavailable. Reload the page; no amounts were changed.')+'</p>';});
+  }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
  }
  function notify(sb){sb.fn('process-notification-outbox',{}).catch(function(){/* Durable queue retries; never report delivery without provider confirmation. */});}
  function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true).then(function(d){if(box.isConnected)box.innerHTML='<h2>'+t('Paiements & avancement','Payments & progress')+'</h2>'+stats(d)+receipts(d)+'<h3>'+t('Dernières avancées','Latest progress')+'</h3>'+updates(d);invoiceNotes(d);}).catch(function(){box.innerHTML='<p class="tracking-help">'+t('Connectez-vous ou rechargez la page pour consulter le suivi actualisé.','Sign in or reload to see the latest tracking information.')+'</p>';});});}
