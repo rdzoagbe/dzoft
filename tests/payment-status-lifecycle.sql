@@ -12,6 +12,7 @@ declare
  state jsonb;
  n integer;
 begin
+ insert into auth.users(id,aud,role) values(client_user,'authenticated','authenticated');
  insert into public.clients(id,nom,email,user_id)
  values(customer,'Payment status test','payment-test@example.invalid',client_user);
  perform set_config('request.jwt.claims',jsonb_build_object(
