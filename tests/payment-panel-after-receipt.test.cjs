@@ -9,7 +9,7 @@ const read=(p)=>fs.readFileSync(path.join(root,p),'utf8');
 test('the invoice link and payment-entry forms cannot be confused after one receipt',()=>{
  const code=read('assets/project-tracking.js');
  assert.match(code,/function invoiceLinkForms\(d,q,paidOn\)/);
- assert.match(code,/var fm=box\.querySelector\('details\.tracking-editor > form'\)/,
+ assert.match(code,/var fm=box\.querySelector\('details\.tracking-editor:not\(\.tracking-report-editor\) > form'\)/,
   'payment form must be explicitly scoped because invoice-link forms appear first');
  assert.match(code,/news=fm\.querySelector\('\.tracking-new'\)/,
   'invoice detail fields belong to the selected payment form');
@@ -27,6 +27,6 @@ test('cash deposit remains ledger-based and nothing is automatically re-entered'
  assert.match(code,/Previously saved payments are preserved/);
  assert.match(code,/setTimeout\(reload,1200\)/);
  for(const p of ['admin/suivi.html','espace/index.html']){
-  assert.match(read(p),/project-tracking\.js\?v=20261113-cash-panel-fix/);
+  assert.match(read(p),/project-tracking\.js\?v=20261113-statuses/);
  }
 });
