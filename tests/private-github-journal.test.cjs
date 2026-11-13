@@ -65,3 +65,26 @@ test('journal quick add and legacy notes remain local and private',()=>{
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
  for(const m of scripts)if(m[1].trim())new vm.Script(m[1]);
 });
+
+
+test('automatic viewer passes only synthetic safe activity groups into the owner-controlled sync',async()=>{
+ const date=new Date().toISOString().slice(0,10);
+ const commitData=[
+  commit('d'.repeat(40),date+'T12:00:00Z',
+   'QR code printable poster\\n\\nCo-Authored-By: Claude <private@example.com>\\nClaude-Session: https://claude.ai/code/secret'),
+  commit('e'.repeat(40),date+'T12:30:00Z','Mobile layout update')
+ ];
+ const {ctx,root,calls}=contextFor('?q=c8a50cee-3856-4539-98a3-f5df201dbff0',commitData);
+ let received=null;
+ ctx.window.DzoftWorkItems={syncFromGithub(groups){
+  received=groups;return Promise.resolve({added:2,checked:2});
+ }};
+ vm.runInNewContext(read('admin/github-journal.js'),ctx);
+ for(let i=0;i<6;i++)await new Promise(setImmediate);
+ assert.equal(calls.length,1);
+ assert.ok(Array.isArray(received));
+ assert.ok(received.length>=1);
+ assert.match(root.textContent,/ajoutées? automatiquement/);
+ assert.doesNotMatch(JSON.stringify(received),/Claude|Co.Authored|claude.ai|private@example|session|QR code printable|Mobile layout update|[de]{40}/i);
+ assert.equal(received.reduce((n,r)=>n+Object.keys(r.groups).length,0)>=2,true);
+});
