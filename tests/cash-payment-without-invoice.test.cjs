@@ -46,6 +46,6 @@ test('production data remains intact; migration only relaxes the link, adds guar
  assert.match(sql,/create or replace function public\.record_project_payment_unbilled/);
  assert.match(sql,/create or replace function public\.link_project_receipt_invoice/);
  const admin=at('admin/suivi.html'),client=at('espace/index.html');
- assert.match(admin,/project-tracking\.js\?v=20261113-cash/);
- assert.match(client,/project-tracking\.js\?v=20261113-cash/);
+ assert.match(admin,/project-tracking\.js\?v=20261113-statuses/);
+ assert.match(client,/project-tracking\.js\?v=20261113-statuses/);
 });

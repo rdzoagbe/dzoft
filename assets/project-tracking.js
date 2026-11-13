@@ -32,6 +32,98 @@
   }).join('');
   return '<div class="tracking-unbilled"><p class="tracking-warning">'+t('Factures à établir : ','Invoices to issue: ')+pending.length+'</p>'+rows+'</div>';
  }
+ function paymentStatusLabel(s){return s==='sent_by_client'?t('Envoyé selon le client · à vérifier','Client says sent · awaiting verification'):s==='pending'?t('En attente','Pending'):s==='received'?t('Reçu et confirmé','Received and confirmed'):t('Annulé','Cancelled');}
+ function paymentStatuses(d,admin){
+  var claims=(d.payment_statuses||[]).filter(function(c){return admin||c.status!=='cancelled';});
+  var outstanding=claims.filter(function(c){return c.status==='pending'||c.status==='sent_by_client';});
+  var totalPending=outstanding.reduce(function(n,c){return n+cents(c.amount);},0)/100;
+  var text='<section class="tracking-claims"><div class="tracking-claims-title"><h3>'+t('Suivi des versements','Payment status tracking')+'</h3>'+
+    '<span class="tracking-status-pill pending">'+t('En cours de vérification : ','Awaiting verification: ')+money(totalPending)+'</span></div>'+
+    '<p class="tracking-help">'+t('Un paiement signalé ou en attente ne réduit pas le solde. Il est ajouté aux sommes reçues uniquement après confirmation de l’encaissement.','A reported or pending payment does not reduce the balance. It counts as received only after you confirm the funds arrived.')+'</p>'+
+    '<div class="tracking-claims-list">';
+  if(!claims.length)text+='<p class="tracking-help">'+t('Aucun virement en attente déclaré.','No pending transfers reported.')+'</p>';
+  claims.forEach(function(c){
+    var active=c.status==='pending'||c.status==='sent_by_client';
+    text+='<article class="tracking-claim"><div class="tracking-claim-head"><b>'+money(c.amount)+' · '+esc(label(methods,c.method))+'</b>'+
+      '<span class="tracking-status-pill '+(active?'pending':(c.status==='received'?'received':'cancelled'))+'">'+paymentStatusLabel(c.status)+'</span></div>'+
+      (c.reported_on?'<p class="tracking-help">'+t('Date signalée : ','Reported date: ')+day(c.reported_on)+'</p>':'')+
+      (c.reference?'<p class="tracking-help">'+t('Référence : ','Reference: ')+esc(c.reference)+'</p>':'')+
+      (admin&&active?'<div class="tracking-claim-actions">'+
+         '<form data-status-id="'+esc(c.id)+'">'+
+          field(t('Avancement du paiement','Payment status'),'<select name="status"><option value="pending"'+(c.status==='pending'?' selected':'')+'>'+t('En attente','Pending')+'</option><option value="sent_by_client"'+(c.status==='sent_by_client'?' selected':'')+'>'+t('Confirmé envoyé par le client','Client confirmed sent')+'</option><option value="cancelled">'+t('Annuler cette attente','Cancel pending payment')+'</option></select>')+
+          field(t('Date annoncée par le client','Date reported by client'),'<input name="reportedOn" type="date" value="'+esc(c.reported_on||'')+'">')+
+          '<button type="submit" class="btn line">'+t('Mettre à jour le statut','Update status')+'</button><span role="status" class="tracking-message" aria-live="polite"></span>'+
+         '</form>'+
+         '<details class="tracking-confirm"><summary>'+t('✓ Confirmer la réception réelle','✓ Confirm funds received')+'</summary><form data-confirm-id="'+esc(c.id)+'">'+
+           field(t('Date d’encaissement réel','Actual date received'),'<input name="receivedOn" type="date" required>')+
+           '<label class="tracking-check"><input type="checkbox" name="notify" checked> '+t('Informer le client du paiement reçu et du solde','Email the client: payment received and balance')+'</label>'+
+           '<p class="tracking-confirm-preview">'+t('Après confirmation : reçu ','After confirmation: received ')+money(Number(d.received)+Number(c.amount))+' · '+t('reste ','remaining ')+money(Math.max(0,Number(d.remaining)-Number(c.amount)))+'</p>'+
+           '<p class="tracking-help">'+t('À utiliser seulement après vérification du crédit bancaire ou de la remise des espèces. L’envoi au client est facultatif.','Only confirm after checking cleared funds or cash in hand. Notifying the client is optional.')+'</p>'+
+           '<button type="submit" class="btn main">'+t('Confirmer et enregistrer le paiement','Confirm and record payment')+'</button><span role="status" class="tracking-message" aria-live="polite"></span>'+
+         '</form></details></div>':'')+
+      '</article>';
+  });
+  text+='</div>';
+  if(admin)text+='<details class="tracking-editor tracking-report-editor"><summary>'+t('＋ Ajouter un paiement en attente / annoncé','＋ Add pending / client-reported payment')+'</summary>'+
+     '<form data-status-create>'+
+      '<div class="tracking-fields">'+
+       field(t('Montant (€)','Amount (€)'),'<input name="amount" type="number" min="0.01" step="0.01" required>')+
+       field(t('Mode de paiement','Payment method'),'<select name="method" required><option value="">'+t('Choisir…','Choose…')+'</option>'+options(methods)+'</select>')+
+       field(t('État du paiement','Payment state'),'<select name="status"><option value="pending">'+t('En attente','Pending')+'</option><option value="sent_by_client">'+t('Le client confirme l’envoi','Client confirms sent')+'</option></select>')+
+       field(t('Date annoncée (si envoyé)','Date reported (if sent)'),'<input name="reportedOn" type="date">')+
+       field(t('Référence (facultatif)','Reference (optional)'),'<input name="reference" maxlength="100">')+
+      '</div>'+
+      '<p class="tracking-help">'+t('Facture Revolut facultative : aucun numéro de facture nécessaire à cette étape. Vous pouvez émettre et joindre la facture officielle plus tard.','Revolut invoice optional: no invoice number is required at this stage. You can issue and attach the official invoice later.')+'</p>'+
+      '<button type="submit" class="btn main">'+t('Enregistrer le statut (sans confirmer la réception)','Save status (do not confirm receipt)')+'</button><span role="status" aria-live="polite" class="tracking-message"></span>'+
+     '</form></details>';
+  return text+'</section>';
+ }
+ function wirePaymentStatuses(box,q,sb,reload){
+  var create=box.querySelector('form[data-status-create]');
+  if(create){
+   var state=create.elements.status,reported=create.elements.reportedOn;
+   function sync(){reported.required=state.value==='sent_by_client';}
+   state.onchange=sync;sync();
+   var key=crypto.randomUUID();
+   create.onsubmit=function(e){
+    e.preventDefault();var b=create.querySelector('button[type=submit]'),msg=create.querySelector('[role=status]');
+    var data={p_quote:q.id,p_id:key,p_amount:Number(create.elements.amount.value),p_method:create.elements.method.value,
+      p_status:state.value,p_reported_on:reported.value||null,p_reference:create.elements.reference.value.trim()};
+    b.disabled=true;status(msg,t('Enregistrement…','Saving…'));
+    sb.rpc('create_project_payment_status',data,true).then(function(){
+     key=crypto.randomUUID();status(msg,t('Statut enregistré. Aucun paiement reçu ajouté.','Status saved. No received payment recorded.'));setTimeout(reload,650);
+    }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});
+   };
+  }
+  box.querySelectorAll('form[data-status-id]').forEach(function(form){
+    var select=form.elements.status,reported=form.elements.reportedOn,key=form.dataset.statusId;
+    function sync(){reported.required=select.value==='sent_by_client';}
+    select.onchange=sync;sync();
+    form.onsubmit=function(e){
+     e.preventDefault();var b=form.querySelector('button[type=submit]'),msg=form.querySelector('[role=status]');
+     if(select.value==='cancelled'&&!confirm(t('Annuler ce paiement en attente ? Aucun paiement reçu ne sera supprimé.','Cancel this pending payment? No confirmed receipt will be deleted.')))return;
+     b.disabled=true;status(msg,t('Mise à jour…','Updating…'));
+     sb.rpc('update_project_payment_status',{p_quote:q.id,p_id:key,p_status:select.value,p_reported_on:reported.value||null},true).then(function(){
+       status(msg,t('Statut actualisé. Encaissement non confirmé.','Status updated. Receipt not confirmed.'));setTimeout(reload,650);
+     }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});
+    };
+  });
+  box.querySelectorAll('form[data-confirm-id]').forEach(function(form){
+    var id=form.dataset.confirmId,date=form.elements.receivedOn;
+    date.value=new Date().toLocaleDateString('en-CA');
+    date.max=new Date().toLocaleDateString('en-CA');
+    form.onsubmit=function(e){
+      e.preventDefault();var b=form.querySelector('button[type=submit]'),msg=form.querySelector('[role=status]');
+      if(!form.reportValidity())return;
+      b.disabled=true;status(msg,t('Confirmation de la réception…','Confirming funds received…'));
+      var shouldNotify=form.elements.notify.checked;
+      sb.rpc('confirm_project_payment_status',{p_quote:q.id,p_id:id,p_received_on:date.value,p_notify:shouldNotify},true).then(function(){
+        status(msg,shouldNotify?t('Paiement reçu et enregistré. Notification mise en file.','Payment confirmed. Notification queued.'):t('Paiement reçu et enregistré, sans e-mail.','Payment confirmed, no email.'));
+        if(shouldNotify)notify(sb);setTimeout(reload,850);
+      }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});
+    };
+  });
+ }
  function updates(d){var seen={};var recent=d.updates.filter(function(u){if(seen[u.category])return false;seen[u.category]=true;return true;});return '<div class="tracking-updates">'+(recent.length?recent.map(function(u){return '<article><div><b>'+esc(label(categories,u.category))+'</b><span class="tracking-status">'+esc(label(statuses,u.status))+'</span></div><p>'+esc(u.summary)+'</p><small>'+day(u.created_at)+'</small></article>';}).join(''):'<p class="tracking-help">'+t('Les prochains résumés publiés apparaîtront ici.','Published progress summaries will appear here.')+'</p>')+'</div>'+(d.updates.length>recent.length?'<details><summary>'+t('Historique des publications','Publication history')+'</summary>'+d.updates.map(function(u){return '<p><b>'+esc(label(categories,u.category))+'</b> · '+esc(label(statuses,u.status))+' · '+day(u.created_at)+'<br>'+esc(u.summary)+'</p>';}).join('')+'</details>':'');}
  function field(text,html,cls){return '<label'+(cls?' class="'+cls+'"':'')+'>'+text+html+'</label>';}
  function status(box,text,error){box.textContent=text;box.className='tracking-message'+(error?' error':'');}
@@ -42,6 +134,10 @@
   if(/Invalid invoice/.test(m))return t('Vérifiez le numéro, le libellé et le montant de la facture.','Check the invoice number, label and amount.');
   if(/Invalid payment/.test(m))return t('Vérifiez le montant et la date (pas dans le futur).','Check the amount and the date (not in the future).');
   if(/Amount exceeds invoice balance/.test(m))return t('Le paiement dépasse le solde de cette facture.','Payment exceeds the invoice balance.');
+  if(/Pending payments exceed remaining/.test(m))return t('Les paiements en attente dépasseraient le solde restant.','Pending payments would exceed the remaining balance.');
+  if(/Invalid payment status/.test(m))return t('Vérifiez le statut et la date annoncée.','Check payment status and reported date.');
+  if(/finalized payment status/.test(m))return t('Ce statut finalisé ne peut pas être modifié.','This finalized status cannot be changed.');
+  if(/Cancelled payments cannot be confirmed/.test(m))return t('Un paiement annulé ne peut pas être encaissé.','A cancelled payment cannot be confirmed.');
   if(/Receipt already linked/.test(m))return t('Ce paiement est déjà associé à une facture. Rechargez le projet.','This payment has already been linked. Reload the project.');
   return t('Non enregistré. Réessayez. ','Not saved. Please retry. ')+m;}
  var last=null;
@@ -60,12 +156,12 @@
    var total=Number(d.total)||0,f=((q.accepted_data||q.data||{}).f)||{},pct=parseFloat(f.deppct)||30;
    var suggest=invoiced?Math.max(0,Math.round((total-invoiced)*100)/100):Math.round(total*pct)/100;
    var today=new Date().toLocaleDateString('en-CA');
-   box.innerHTML='<h2>'+t('Paiements du projet','Project payments')+'</h2>'+stats(d)+receipts(d)+invoiceLinkForms(d,q,paidOn)+
+   box.innerHTML='<h2>'+t('Paiements du projet','Project payments')+'</h2>'+stats(d)+paymentStatuses(d,true)+receipts(d)+invoiceLinkForms(d,q,paidOn)+
     '<details class="tracking-editor"'+(d.receipts.length||d.legacy>0?'':' open')+'><summary>'+t('＋ Enregistrer un paiement reçu','＋ Record a received payment')+'</summary><form>'+
-    field(t('Facture concernée','Invoice'),'<select name="invoice"><option value="unbilled">'+t('Sans numéro de facture — à établir','No invoice number — to be issued')+'</option>'+open.map(function(i){var rest=Math.round((Number(i.amt)-paidOn(i.id))*100)/100;return '<option value="'+esc(i.id)+'" data-rest="'+rest+'">'+esc(i.num+' · '+(i.n||''))+' · '+t('reste ','remaining ')+money(rest)+'</option>';}).join('')+'<option value="new">'+t('＋ Nouvelle facture','＋ New invoice')+'</option></select>')+
+    field(t('Facture concernée (facultative)','Invoice (optional)'),'<select name="invoice"><option value="unbilled">'+t('Sans numéro de facture — à établir','No invoice number — to be issued')+'</option>'+open.map(function(i){var rest=Math.round((Number(i.amt)-paidOn(i.id))*100)/100;return '<option value="'+esc(i.id)+'" data-rest="'+rest+'">'+esc(i.num+' · '+(i.n||''))+' · '+t('reste ','remaining ')+money(rest)+'</option>';}).join('')+'<option value="new">'+t('＋ Nouvelle facture','＋ New invoice')+'</option></select>')+
     '<p class="tracking-help tracking-unbilled-tip">'+t('Vous pouvez confirmer l’encaissement maintenant et associer le numéro officiel de facture plus tard, sans compter le paiement deux fois.','Confirm the received money now and attach the official invoice number later, without counting the payment twice.')+'</p>'+'<fieldset class="tracking-new"><legend>'+t('Nouvelle facture','New invoice')+'</legend><div class="tracking-fields">'+
      field(t('Type','Type'),'<select name="kind">'+kinds.map(function(k,i){return '<option value="'+i+'">'+esc(en()?k[1]:k[0])+'</option>';}).join('')+'</select>')+
-     field(t('N° de la facture (Revolut)','Invoice number (Revolut)'),'<input name="num" maxlength="40" autocomplete="off" placeholder="INV-1">')+
+     field(t('N° officiel (Revolut ou autre)','Official invoice number (Revolut or other)'),'<input name="num" maxlength="40" autocomplete="off" placeholder="INV-1">')+
      field(t('Montant de la facture (€)','Invoice amount (€)'),'<input name="amt" type="number" min="0.01" step="0.01" value="'+(suggest||'')+'">')+
     '</div></fieldset>'+
     '<div class="tracking-fields">'+field(t('Montant reçu (€)','Amount received (€)'),'<input name="amount" type="number" min="0.01" step="0.01" required>')+field(t('Date de réception','Receipt date'),'<input name="date" type="date" required value="'+today+'" max="'+today+'">')+field(t('Mode de paiement','Payment method'),'<select name="method" required><option value="">'+t('Sélectionner le mode réellement reçu','Select actual payment method')+'</option>'+options(methods)+'</select>')+field(t('Référence (facultatif)','Reference (optional)'),'<input name="reference" maxlength="100">')+'</div>'+
@@ -74,7 +170,8 @@
    // Invoice-link forms render BEFORE the new-payment form as soon as one receipt exists.
    // Always scope controls to the payment editor: otherwise the wrong form throws
    // and the entire payment panel appears unavailable even though the receipt saved.
-   var fm=box.querySelector('details.tracking-editor > form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=fm.querySelector('.tracking-new');
+   wirePaymentStatuses(box,q,sb,reload);
+   var fm=box.querySelector('details.tracking-editor:not(.tracking-report-editor) > form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=fm.querySelector('.tracking-new');
    function sync(){var isNew=el.invoice.value==='new',noInvoice=el.invoice.value==='unbilled';news.hidden=!isNew;el.num.required=isNew;el.amt.required=isNew;
     var tip=box.querySelector('.tracking-unbilled-tip');if(tip)tip.hidden=!noInvoice;
     var opt=el.invoice.selectedOptions[0];el.amount.value=noInvoice?'':isNew?(el.amt.value||''):(opt&&opt.dataset.rest||'');
@@ -120,7 +217,7 @@
   }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
  }
  function notify(sb){sb.fn('process-notification-outbox',{}).catch(function(){/* Durable queue retries; never report delivery without provider confirmation. */});}
- function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true).then(function(d){if(box.isConnected)box.innerHTML='<h2>'+t('Paiements & avancement','Payments & progress')+'</h2>'+stats(d)+receipts(d)+'<h3>'+t('Dernières avancées','Latest progress')+'</h3>'+updates(d);invoiceNotes(d);}).catch(function(){box.innerHTML='<p class="tracking-help">'+t('Connectez-vous ou rechargez la page pour consulter le suivi actualisé.','Sign in or reload to see the latest tracking information.')+'</p>';});});}
+ function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true).then(function(d){if(box.isConnected)box.innerHTML='<h2>'+t('Paiements & avancement','Payments & progress')+'</h2>'+stats(d)+paymentStatuses(d,false)+receipts(d)+'<h3>'+t('Dernières avancées','Latest progress')+'</h3>'+updates(d);invoiceNotes(d);}).catch(function(){box.innerHTML='<p class="tracking-help">'+t('Connectez-vous ou rechargez la page pour consulter le suivi actualisé.','Sign in or reload to see the latest tracking information.')+'</p>';});});}
  function invoiceNotes(d){document.querySelectorAll('[data-invoice-id][data-invoice-total]').forEach(function(row){var amount=d.receipts.filter(function(r){return r.invoice_id===row.dataset.invoiceId;}).reduce(function(n,r){return n+cents(r.amount);},0)/100;if(!amount)return;var rest=Math.max(0,Number(row.dataset.invoiceTotal)-amount);var note=row.querySelector('.tracking-invoice-note');if(!note){note=document.createElement('p');note.className='tracking-invoice-note muted';note.setAttribute('data-no-translate','');row.appendChild(note);}note.textContent=t('Reçu et confirmé','Received and confirmed')+' '+money(amount)+' · '+t('Reste à régler sur cette facture','Remaining on this invoice')+' '+money(rest);var pill=row.querySelector('.pill');if(pill)pill.textContent=rest?t('Partiellement réglé','Partially paid'):t('Paiement reçu et confirmé','Payment received and confirmed');if(!rest){var report=row.querySelector('[data-report-payment]');if(report)report.hidden=true;}});}
  function lockInvoices(q){(q.invoices||[]).forEach(function(i,index){if((q._receiptInvoiceIds||[]).indexOf(i.id)<0)return;var row=document.querySelectorAll('#invs .invr')[index];if(row)row.querySelectorAll('.paid,.amt,.num,.rm').forEach(function(el){el.disabled=true;el.title=t('Calculé depuis les paiements reçus','Calculated from recorded receipts');});});}
  function refreshClient(){if(document.visibilityState==='hidden')return;document.querySelectorAll('[data-project-tracking]').forEach(function(box){delete box.dataset.loading;});if(global.RDsb)client(global.RDsb);}
