@@ -46,8 +46,10 @@ See [the DZOFT backup guide](backup-recovery.md) for a Windows walkthrough. No p
 
 - [x] Rollback-only tests of input sanitization, duplicate protection and no mail.
 - [x] Node tests for owner weekly review and no raw GitHub information crossing the boundary.
-- [ ] Deploy Edge Function with purpose-specific token verification; check rejected request.
-- [ ] Install database Vault token, RPCs and cron schedule.
-- [ ] Verify a successful server run and actual private task counts.
-- [ ] Confirm last successful run in admin and that no client-facing publication/email was generated.
+- [x] Edge Function deployed with a purpose-specific token; first run uncovered and resolved a narrowly scoped service-role schema permission issue.
+- [x] Vault token, service-only RPCs and twice-hourly Cron schedule installed; scheduler `dzoft_rodney_background_git` active.
+- [x] Live Edge worker successfully imported **40** private date/category groups, all **To verify**; no raw commit text/AI metadata in stored titles.
+- [x] Private sync status shows the successful run; **0** newly published client updates or emails and unchanged client/quote/payment/email fingerprints.
+- [x] Verify functional security on the live database with rollback-only test fixtures; keep actual first run as a separate smoke check.
+- [ ] Independently confirm the next scheduled invocation completes (the tested successful run was manually triggered).
 - [ ] Create a real encrypted off-site backup and test recovery independently.
