@@ -64,13 +64,13 @@ function response(status: number, data: Record<string, string | boolean | number
 }
 async function supabaseRpc(name: string, body: Record<string, unknown>): Promise<unknown> {
   const key = adminKey();
-  if (!PROJECT_URL || !key) throw new Error("Worker credentials are unavailable");
+  if (!PROJECT_URL || !key) throw new Error("missing_runtime_credentials");
   const headers: Record<string,string> = {"apikey":key,"content-type":"application/json"};
   if (key.startsWith("eyJ")) headers.Authorization = "Bearer " + key;
   const result = await fetch(PROJECT_URL + "/rest/v1/rpc/" + name, {
     method:"POST", headers, body:JSON.stringify(body), redirect:"error",
   });
-  if (!result.ok) throw new Error("Database RPC unavailable");
+  if (!result.ok) throw new Error("rpc_http_"+result.status);
   return await result.json();
 }
 Deno.serve(async (req: Request) => {
@@ -104,7 +104,10 @@ Deno.serve(async (req: Request) => {
       ok:true,checked:Number(added.checked)||0,added:Number(added.added)||0,
       client_notified:false
     });
-  } catch (_error) {
-    return response(503,{ok:false,error:"Private synchronization unavailable",phase});
+  } catch (error) {
+    var status = error instanceof Error ? error.message : "";
+    var diagnostic = /^rpc_http_(400|401|403|404|406|422|500|502|503)$/.test(status)
+      || status==="missing_runtime_credentials" ? status : "unavailable";
+    return response(503,{ok:false,error:"Private synchronization unavailable",phase,diagnostic});
   }
 });
