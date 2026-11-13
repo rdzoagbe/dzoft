@@ -1,6 +1,7 @@
 -- Rollback-only integration suite. Absolutely no actual customer updates/emails persist.
 begin;
 do $test$
+<<fixture>>
 declare
  owner_id uuid:=gen_random_uuid(); outsider uuid:=gen_random_uuid();
  client_id uuid:=gen_random_uuid(); quote_id uuid:=gen_random_uuid();
@@ -35,16 +36,16 @@ begin
   quote_id,task_id,batch_id,'safety','Mobile access errors corrected and verified',false);
  if ret->>'published'<>'true' or ret->>'email_queued'<>'true' then
   raise exception 'Publication did not succeed'; end if;
- if not exists(select 1 from public.project_updates where quote_id=quote_id
+ if not exists(select 1 from public.project_updates where quote_id=fixture.quote_id
     and batch_id=batch_id and summary='Mobile access errors corrected and verified'
     and status='built') then
   raise exception 'Client-safe progress update missing'; end if;
- if (select count(*) from public.email_outbox where quote_id=quote_id and recipient_role='client')<>1 then
+ if (select count(*) from public.email_outbox where quote_id=fixture.quote_id and recipient_role='client')<>1 then
   raise exception 'Must queue exactly one optional client notification'; end if;
  ret:=public.publish_project_work_item(
   quote_id,task_id,batch_id,'safety','Mobile access errors corrected and verified',false);
  if ret->>'already_published'<>'true' then raise exception 'Retry not idempotent'; end if;
- if (select count(*) from public.email_outbox where quote_id=quote_id and recipient_role='client')<>1 then
+ if (select count(*) from public.email_outbox where quote_id=fixture.quote_id and recipient_role='client')<>1 then
   raise exception 'Duplicate email on retry'; end if;
  if (select journal from public.quotes where id=quote_id) is distinct from journal_before then
   raise exception 'Manual project journal changed'; end if;
