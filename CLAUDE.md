@@ -109,6 +109,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   des données fictives (session dans localStorage : `rd-client-session` / `rd-admin-session`).
 - Toujours regarder le rendu (ordinateur et téléphone 390 px) avant de pousser.
 
+## Prévu
+- Fil d’activité de la fiche projet (événements, journal, changements GitHub, mises en ligne, avancement par fonction,
+  résumé relu avant envoi au client) : plan dans `docs/activity-feed-plan.md`, à commencer après le test pilote du 14 novembre 2026.
+
 ## En attente côté Roland
 - Nom de domaine `dzoft.fr` + `dzoft.com` (libres, chez OVHcloud) : plus tard, quand le premier
   client aura payé. Ensuite : fichier `CNAME`, DNS, remplacer l'adresse partout, e-mail
