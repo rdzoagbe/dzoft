@@ -53,5 +53,5 @@ test('revised assets load on both admin and client pages; core routing remains a
   assert.match(read(p),/project-tracking\.css\?v=20261113-payment-audit/);
  }
  assert.match(read('admin/project-workspace.js'),/Manage payments/);
- assert.match(read('admin/index.html'),/simplified-ui\.css\?v=20261113-finance-clarity/);
+ assert.match(read('admin/index.html'),/simplified-ui\.css\?v=20261113-today/);
 });
