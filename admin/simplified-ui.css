@@ -116,3 +116,54 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 #app .finance-awaiting{display:inline-block;margin-top:6px;padding:4px 9px;font-size:11.5px;font-weight:800;color:#875b00;background:#fff3d8;border-radius:20px}
 @media(max-width:1100px){#app .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#app .finance-kpis>div:last-child{grid-column:auto}}
+
+
+/* DZOFT Aujourd'hui — an action-first financial and client inbox view. */
+#app .today-action-center{background:#fff;border:1px solid #e9e8f4;border-radius:19px;padding:22px;margin:18px 0;box-shadow:0 7px 25px rgba(25,24,54,.045)}
+#app .today-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+#app .today-title h3{font:700 clamp(19px,2.5vw,24px)/1.3 Sora,system-ui,sans-serif;letter-spacing:-.035em;margin:4px 0 6px}
+#app .today-title p:not(.simplified-eyebrow){font-size:13px;color:#67718a;line-height:1.5}
+#app .today-count{font-weight:800;color:#4732cb;background:#ede9ff;border-radius:40px;padding:7px 12px;font-size:12px;white-space:nowrap}
+#app .today-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+#app .today-stat{border:1px solid #e9eaf3;border-radius:13px;padding:15px 13px;min-width:0;background:#fafaff}
+#app .today-stat span{font-size:11.8px;color:#626983;display:block;line-height:1.5;min-height:33px}
+#app .today-stat b{font-size:clamp(17px,1.8vw,23px);font-weight:800;line-height:1.35;display:block;overflow-wrap:anywhere;white-space:normal}
+#app .today-stat.pending{background:#fff7e8;border-color:#f5e3be}
+#app .today-stat.received{background:#f0f9f4;border-color:#d1ecdc}
+#app .today-data-note{font-size:12.5px;padding:10px 12px;border:1px solid #efdfbc;background:#fffaf0;color:#725000;border-radius:10px;margin-bottom:13px}
+#app .today-tasks{display:grid;gap:8px}
+#app .today-task{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e8e9f3;border-radius:13px;padding:12px 13px;min-width:0}
+#app .today-task-icon{width:10px;height:10px;background:#6a51ea;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 4px #eeeaff}
+#app .today-task-icon.reported{background:#d99330;box-shadow:0 0 0 4px #fff3da}
+#app .today-task-icon.invoice{background:#8e80d6;box-shadow:0 0 0 4px #f1eeff}
+#app .today-task-icon.message{background:#3f89d7;box-shadow:0 0 0 4px #ebf4ff}
+#app .today-task-icon.pending{background:#b79c69;box-shadow:0 0 0 4px #f6f0e6}
+#app .today-task-copy{flex:1 1 auto;min-width:0}
+#app .today-task-copy strong,#app .today-task-copy span{display:block;overflow-wrap:anywhere}
+#app .today-task-copy strong{font-size:13px}
+#app .today-task-copy span{font-size:12px;color:#687088;margin-top:3px}
+#app .today-task .btn{flex:0 0 auto}
+#app .today-no-tasks{font-size:13px;color:#667188;padding:14px 3px}
+#app .today-task-more,#app .today-safety-note{font-size:11.5px;color:#667188;margin:11px 0 0;line-height:1.6}
+#app .today-advanced{margin:14px 0;background:#fff;border:1px solid #ececf4;border-radius:15px;overflow:hidden}
+#app .today-advanced>summary{padding:15px 18px;font-size:13px;font-weight:800;color:#3e4260;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#app .today-advanced>summary::-webkit-details-marker{display:none}
+#app .today-advanced>summary::after{content:'+';font-size:20px;color:#553aea}
+#app .today-advanced[open]>summary::after{content:'−'}
+#app .today-advanced>.kpis{margin:0;padding:0 14px 14px}
+#app .today-advanced>.panel{border:0;box-shadow:none;margin:0;padding:0 12px 12px}
+#app .today-advanced .todo{margin:0}
+@media(max-width:1050px){#app .today-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+ #app .today-action-center{padding:14px 12px;margin:13px 0;border-radius:16px}
+ #app .today-title{gap:6px}
+ #app .today-title h3{font-size:19px}
+ #app .today-count{font-size:10px;padding:6px 8px}
+ #app .today-stat{padding:12px 10px}
+ #app .today-stat span{font-size:11px;min-height:34px}
+ #app .today-stat b{font-size:19px}
+ #app .today-task{gap:10px;padding:11px 9px}
+ #app .today-task .btn{padding:9px 10px;font-size:11px}
+ #app .today-task-copy strong{font-size:12px}
+ #app .today-task-copy span{font-size:11px}
+}
