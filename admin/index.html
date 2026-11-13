@@ -176,6 +176,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
 <script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
+<link rel="stylesheet" href="simplified-ui.css?v=20261113">
 </head>
 <body class="dzoft-admin">
 
@@ -561,15 +562,55 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
-  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); }
+  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); }
+  var financeGeneration = 0;
+  function renderFinance(){
+    var box=$('finance-content'); if(!box)return;
+    var qs=projectsList(), current=++financeGeneration;
+    if(!qs.length){box.innerHTML='<div class="empty">Aucun projet accepté pour le moment.</div>';return;}
+    box.innerHTML='<div class="panel">'+(document.documentElement.lang==='en'?'Loading confirmed payments…':'Chargement des paiements confirmés…')+'</div>';
+    Promise.all(qs.map(function(q){
+      return sb.rpc('project_tracking',{p_quote:q.id},true).then(function(row){return {q:q,summary:row};},function(){return {q:q,summary:null};});
+    })).then(function(rows){
+      if(current!==financeGeneration)return;
+      var valid=rows.filter(function(r){return !!r.summary;});
+      var signed=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.total)||0)*100);},0)/100;
+      var received=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.received)||0)*100);},0)/100;
+      var rest=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.remaining)||0)*100);},0)/100;
+      var en=document.documentElement.lang==='en';
+      var summary='<div class="finance-kpis">'+
+       '<div><span>'+(en?'Agreed total':'Total convenu')+'</span><b>'+eur(signed)+'</b></div>'+
+       '<div><span>'+(en?'Received and confirmed':'Reçu et confirmé')+'</span><b>'+eur(received)+'</b></div>'+
+       '<div><span>'+(en?'Remaining balance':'Reste à recevoir')+'</span><b>'+eur(rest)+'</b></div></div>';
+      var warning=valid.length===rows.length?'':'<div class="panel finance-warning">'+(en?'Some project balances are unavailable; totals include only accessible projects.':'Certains soldes sont indisponibles : les totaux comprennent uniquement les projets accessibles.')+'</div>';
+      box.innerHTML=summary+warning+'<div class="finance-list">'+rows.map(function(item){
+        var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
+        return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span></div>'+
+         (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
+         '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Open & record payment':'Ouvrir et enregistrer')+'</button></article>';
+      }).join('')+'</div>';
+    }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
+  }
 
   /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
-  var VIEWS = ['dash', 'leads', 'clients', 'quotes', 'projects', 'inbox', 'settings', 'trash'];
-  var SLUG = { dash: 'tableau-de-bord', leads: 'demandes', clients: 'clients', quotes: 'devis', projects: 'projets', inbox: 'messages', settings: 'parametres', trash: 'corbeille' };
+  var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash'];
+  var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille'};
   function showView(v){
-    if (VIEWS.indexOf(v) < 0) v = 'dash';
-    [].forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-selected', x.dataset.tab === v); });
-    VIEWS.forEach(function(x){ $('v-' + x).hidden = x !== v; });
+    if(VIEWS.indexOf(v)<0)v='dash';
+    var grouped=['dossiers','leads','clients','quotes','projects'].indexOf(v)!==-1;
+    var activeGroup=v==='dossiers'?'clients':v;
+    [].forEach.call(document.querySelectorAll('.side .tab'),function(node){
+      node.setAttribute('aria-selected',String(node.dataset.tab===(grouped?'dossiers':v)));
+    });
+    ['dash','dossiers','inbox','finance','settings','trash'].forEach(function(k){
+      var node=$('v-'+k);if(node)node.hidden=grouped?k!=='dossiers':k!==v;
+    });
+    ['leads','clients','quotes','projects'].forEach(function(k){
+      var node=$('v-'+k);if(node)node.hidden=!grouped||k!==activeGroup;
+    });
+    [].forEach.call(document.querySelectorAll('.dossier-pill'),function(node){
+      node.setAttribute('aria-pressed',String(grouped&&node.dataset.dossier===activeGroup));
+    });
   }
   function fromHash(){
     var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
@@ -1192,6 +1233,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
   }; });
 })();
 </script>
+<script src="simplified-ui.js?v=20261113"></script>
 </body>
 </html>
 
