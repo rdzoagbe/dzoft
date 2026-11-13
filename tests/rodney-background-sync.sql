@@ -3,6 +3,7 @@ begin;
 do $test$
 declare
   q uuid := 'c8a50cee-3856-4539-98a3-f5df201dbff0'::uuid;
+  test_day date := current_date-interval '20 days';
   before_tasks int;before_outbox int;before_updates int;
   result jsonb;
   token text;
@@ -21,15 +22,15 @@ begin
   end if;
 
   result:=private.background_import_rodney_groups(jsonb_build_array(
-    jsonb_build_object('date',current_date::text,'group','qr'),
-    jsonb_build_object('date',current_date::text,'group','securite')
+    jsonb_build_object('date',test_day::text,'group','qr'),
+    jsonb_build_object('date',test_day::text,'group','securite')
   ));
   if (result->>'added')::int<>2 or result->>'client_notified'<>'false' then
     raise exception 'Background import failed or attempted a client notification';
   end if;
   result:=private.background_import_rodney_groups(jsonb_build_array(
-    jsonb_build_object('date',current_date::text,'group','qr'),
-    jsonb_build_object('date',current_date::text,'group','securite')
+    jsonb_build_object('date',test_day::text,'group','qr'),
+    jsonb_build_object('date',test_day::text,'group','securite')
   ));
   if (result->>'added')::int<>0 then raise exception 'Duplicate background groups'; end if;
   if (select count(*) from public.project_work_items where quote_id=q)<>before_tasks+2 then
@@ -38,14 +39,14 @@ begin
 
   begin
     perform private.background_import_rodney_groups(jsonb_build_array(
-      jsonb_build_object('date',current_date::text,'group','qr',
+      jsonb_build_object('date',test_day::text,'group','qr',
         'author','AI assistant','session','private-link')));
     raise exception 'UNSAFE: raw author/session accepted';
   exception when others then if sqlerrm like 'UNSAFE:%' then raise; end if;
   end;
   begin
     perform private.background_import_rodney_groups(jsonb_build_array(
-      jsonb_build_object('date',current_date::text,'group','openai_prompt')));
+      jsonb_build_object('date',test_day::text,'group','openai_prompt')));
     raise exception 'UNSAFE: unapproved category accepted';
   exception when others then if sqlerrm like 'UNSAFE:%' then raise; end if;
   end;
