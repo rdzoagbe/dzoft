@@ -187,8 +187,9 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
 #c-journal .jr-work-tested input{width:17px;height:17px;flex:0 0 17px}
 #c-journal .jr-task-publish label{margin:0}
 #c-journal .jr-task-publish textarea{margin-top:6px}
-#c-journal .jr-github-follow{background:#fff;border:1px solid #d9d6ed;color:#5942b9;font-size:11px;cursor:pointer;padding:5px 8px;font-weight:800;border-radius:20px}
-#c-journal .jr-github-follow:disabled{color:#607a6e;background:#e9f5ed;border-color:#d3e9dc;cursor:default}
+#c-journal .jr-github-sync{background:#edf9f2;color:#246647;border:1px solid #d8eee2;border-radius:9px;padding:9px 11px;font-weight:700;font-size:11.5px;margin-top:10px}
+#c-journal .jr-tasks-more{width:100%;min-height:39px;margin-top:10px}
+#c-journal .jr-task-card.jr-task-published{border-color:#d7eadd;background:#f4faf5}
 @media(max-width:650px){
  #c-journal .jr-work-items{padding:12px}
  #c-journal .jr-task-top{flex-direction:column}
