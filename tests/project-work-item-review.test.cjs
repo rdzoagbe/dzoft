@@ -17,28 +17,36 @@ function boot(quote){
  return {ui:ctx.window.DzoftWorkItems,calls};
 }
 
-test('only generic fixed GitHub categories and date can be saved, with no raw commit or AI metadata',async()=>{
+test('automatic intake sends only fixed date/category values and removes duplicate groups',async()=>{
  const {ui,calls}=boot('c8a50cee-3856-4539-98a3-f5df201dbff0');
- await ui.addFromGithub('2026-11-13','qr');
+ const date=new Date().toISOString().slice(0,10);
+ await ui.syncFromGithub([
+  {date,groups:{qr:3,securite:2,'Claude-Session':8}},
+  {date,groups:{qr:5}},
+  {date:'2020-01-01',groups:{qr:20}},
+  {date,groups:{'__unexpected__':1}}
+ ]);
  assert.equal(calls.length,1);
- assert.equal(calls[0].name,'save_project_work_item');
+ assert.equal(calls[0].name,'sync_project_github_groups');
  const p=calls[0].payload;
- assert.equal(p.p_title,'GitHub · QR codes et accès aux lieux (à examiner)');
- assert.equal(p.p_source_date,'2026-11-13');
- assert.equal(p.p_source_group,'qr');
- assert.equal(p.p_status,'todo');
  assert.equal(p.p_quote,'c8a50cee-3856-4539-98a3-f5df201dbff0');
- assert.equal('p_commit' in p,false);
- assert.equal('p_author' in p,false);
- assert.doesNotMatch(JSON.stringify(p),/session|co.authored|claude|anthropic|chatgpt|commit.sha|github.com\/commit/i);
- await assert.rejects(()=>ui.addFromGithub('2026-11-13','malicious-metadata'));
- await assert.rejects(()=>ui.addFromGithub('not-a-date','qr'));
- assert.equal(calls.length,1);
+ assert.equal(p.p_items.length,2);
+ assert.deepEqual([...p.p_items.map(x=>x.group)].sort(),['qr','securite']);
+ for(const x of p.p_items){
+  assert.deepEqual(Object.keys(x).sort(),['date','group']);
+  assert.equal(x.date,date);
+ }
+ assert.doesNotMatch(JSON.stringify(p),/session|co.authored|claude|anthropic|chatgpt|commit.sha|source.code|github.com\/commit/i);
 });
-test('GitHub import cannot accidentally link to another client project',async()=>{
+test('automatic GitHub intake rejects foreign quote and unsafe categories',async()=>{
+ const date=new Date().toISOString().slice(0,10);
  const {ui,calls}=boot('a36fe804-d77e-40f1-988a-fake00000000');
- await assert.rejects(()=>ui.addFromGithub('2026-11-13','qr'));
+ await assert.rejects(()=>ui.syncFromGithub([{date,groups:{qr:2}}]));
  assert.equal(calls.length,0);
+ const valid=boot('c8a50cee-3856-4539-98a3-f5df201dbff0');
+ const result=await valid.ui.syncFromGithub([{date,groups:{'Claude-session':7}}]);
+ assert.equal(result.checked,0);
+ assert.equal(valid.calls.length,0);
 });
 test('client sharing requires completion plus a separate owner confirmation; source import never publishes',()=>{
  const js=read('admin/work-items.js');
@@ -47,7 +55,7 @@ test('client sharing requires completion plus a separate owner confirmation; sou
  assert.match(js,/publish_project_work_item/);
  assert.match(js,/client_email_status/);
  assert.doesNotMatch(js,/service_role|GITHUB_TOKEN|ANTHROPIC|OPENAI_API_KEY/);
- assert.match(read('admin/github-journal.js'),/DzoftWorkItems\.addFromGithub\(dateKey,groupKey\)/);
+ assert.match(read('admin/github-journal.js'),/DzoftWorkItems\.syncFromGithub\(summary\)/);
  const html=read('admin/suivi.html');
  assert.match(html,/id="jr-tasks-slot"/);
  assert.match(html,/work-items\.js\?v=/);
