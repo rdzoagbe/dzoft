@@ -75,7 +75,7 @@ function translate(){
  document.getElementById('workspace-progress-label').textContent=tr('Avancement','Progress');
  document.getElementById('workspace-next-label').textContent=tr('Prochaine étape','Next step');
  document.getElementById('workspace-access-label').textContent=tr('Espace client','Client access');
- intro.querySelector('[data-workspace-action=payment]').textContent=tr('＋ Enregistrer un paiement','＋ Record payment');
+ intro.querySelector('[data-workspace-action=payment]').textContent=tr('＋ Gérer les paiements','＋ Manage payments');
  intro.querySelector('[data-workspace-action=progress]').textContent=tr('↗ Publier une avancée','↗ Publish progress');
  intro.querySelector('[data-workspace-action=message]').textContent=tr('✉ Écrire au client','✉ Message client');
  extras.querySelector('summary').textContent=tr('Accès, accord, environnement et historique','Access, agreement, environment & history');
