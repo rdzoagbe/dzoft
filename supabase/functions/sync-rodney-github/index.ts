@@ -77,10 +77,12 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return response(405,{error:"Method not allowed"});
   const token = req.headers.get("X-DZOFT-Cron-Secret") ?? "";
   if (!/^[0-9a-f]{64}$/.test(token)) return response(401,{error:"Unauthorized"});
+  let phase = "auth";
   try {
     const verified = await supabaseRpc("verify_rodney_sync_token",{p_token:token});
     if (verified !== true) return response(401,{error:"Unauthorized"});
 
+    phase = "github";
     const source = await fetch(GITHUB_API, {
       headers:{
         "accept":"application/vnd.github+json",
@@ -92,6 +94,7 @@ Deno.serve(async (req: Request) => {
     if (!source.ok) throw new Error("GitHub unavailable");
     const safe = safeSummary(await source.json());
 
+    phase = "database";
     const added = await supabaseRpc("background_import_rodney_groups",{p_items:safe}) as
       {added?:number;checked?:number;client_notified?:boolean};
     if (added?.client_notified !== false) throw new Error("Unexpected write response");
@@ -102,6 +105,6 @@ Deno.serve(async (req: Request) => {
       client_notified:false
     });
   } catch (_error) {
-    return response(503,{ok:false,error:"Private synchronization unavailable"});
+    return response(503,{ok:false,error:"Private synchronization unavailable",phase});
   }
 });
