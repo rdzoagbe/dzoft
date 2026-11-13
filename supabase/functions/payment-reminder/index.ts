@@ -32,7 +32,12 @@ Deno.serve(async req => {
     if (qe || !q || !q.shared || !q.accepted_at || q.deleted_at) return reply({error:"Le devis doit être accepté et visible dans l’espace client."},409);
     const {data:c,error:ce} = await db.from("clients").select("id,nom,email,contact,user_id").eq("id",q.client_id).maybeSingle();
     if (ce || !c) return reply({error:"Client introuvable"},404);
-    const invoices = (q.invoices || []).filter((x:any) => eligible(q,x));
+    const {data:receipts,error:receiptError} = await db.from("project_receipts").select("invoice_id,amount").eq("quote_id",q.id);
+    if (receiptError) throw receiptError;
+    const invoices = (q.invoices || []).map((x:any) => {
+      const received = (receipts || []).filter((r:any)=>r.invoice_id===x.id).reduce((n:number,r:any)=>n+Math.round(Number(r.amount)*100),0);
+      return {...x,amt:Math.max(0,Math.round(Number(x.amt)*100)-received)/100};
+    }).filter((x:any) => eligible(q,x));
     let depositOnly = false;
     if (!(q.invoices || []).length && (!b.invoice_id || b.invoice_id === 'deposit')) {
       const percent = Number(q.accepted_data?.f?.deppct), total = Number(q.accepted_total);
@@ -47,7 +52,7 @@ Deno.serve(async req => {
     const to = [c.email,c.contact].map(x=>String(x||"").trim()).find(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)) || "";
     const link = "https://rdzoagbe.github.io/dzoft/espace/?projet=" + encodeURIComponent(q.id) + (depositOnly ? "" : "&facture=" + encodeURIComponent(inv.id));
     const amount = Number(inv.amt).toLocaleString(english ? "en-GB" : "fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
-    const message = depositOnly ? (english ? `Hello ${c.nom || ""}, thank you for accepting quote ${q.numero}. The deposit of ${amount} is now due so I can start your project. You can find the payment instructions here: ${link}\nIf you have already sent the transfer, please let me know.\nBest wishes, Roland — DZOFT` : `Bonjour ${c.nom || ""}, merci d’avoir accepté le devis ${q.numero}. L’acompte de ${amount} est maintenant à régler pour que je puisse démarrer votre projet. Vous trouverez les informations de paiement ici : ${link}\nSi vous avez déjà effectué le virement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`) : english ? `Hello ${c.nom || ""}, a friendly reminder about invoice ${inv.num}, for ${amount}, relating to your accepted quote ${q.numero}. You can view the invoice and payment instructions here: ${link}\nIf you have already sent the payment, please let me know.\nBest wishes, Roland — DZOFT` : `Bonjour ${c.nom || ""}, petit rappel concernant ${inv.n || "la facture"} n° ${inv.num}, d’un montant de ${amount}, pour le devis ${q.numero} que vous avez accepté. Vous pouvez consulter la facture et les informations de paiement ici : ${link}\nSi vous avez déjà effectué le règlement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`;
+    const message = depositOnly ? (english ? `Hello ${c.nom || ""}, thank you for accepting quote ${q.numero}. The deposit of ${amount} is now due so I can start your project. You can find the payment instructions here: ${link}\nIf you have already sent the transfer, please let me know.\nBest wishes, Roland — DZOFT` : `Bonjour ${c.nom || ""}, merci d’avoir accepté le devis ${q.numero}. L’acompte de ${amount} est maintenant à régler pour que je puisse démarrer votre projet. Vous trouverez les informations de paiement ici : ${link}\nSi vous avez déjà effectué le virement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`) : english ? `Hello ${c.nom || ""}, a friendly reminder about invoice ${inv.num}, with ${amount} remaining, relating to your accepted quote ${q.numero}. You can view the invoice and payment instructions here: ${link}\nIf you have already sent the payment, please let me know.\nBest wishes, Roland — DZOFT` : `Bonjour ${c.nom || ""}, petit rappel concernant ${inv.n || "la facture"} n° ${inv.num}, avec un reste à régler de ${amount}, pour le devis ${q.numero} que vous avez accepté. Vous pouvez consulter la facture et les informations de paiement ici : ${link}\nSi vous avez déjà effectué le règlement, merci de me le signaler.\nÀ bientôt, Roland — DZOFT`;
     const ref = `payment:${q.id}:${inv.id}:${b.action}`;
     if (b.action === "preview") {
       const {data:history,error} = await db.from("notifications").select("kind,created_at,ok,error").eq("quote_id",q.id).like("ref",`payment:${q.id}:${inv.id}:%`).order("created_at",{ascending:false}).limit(8);

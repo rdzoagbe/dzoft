@@ -279,7 +279,7 @@ footer{max-width:1180px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
-<script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
+<script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
 </head>
 <body class="dzoft-client">
 <header class="top">
@@ -351,7 +351,7 @@ footer{max-width:1180px}
 <script src="../admin/sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=1">
-<script src="../assets/project-tracking.js?v=1"></script>
+<script src="../assets/project-tracking.js?v=2"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -606,7 +606,7 @@ footer{max-width:1180px}
       var url = /^https:\/\//i.test(x.u || '') ? x.u : '';
       var accountUrl = './?inscription=1&projet=' + encodeURIComponent(q.id) + (x.id ? '&facture=' + encodeURIComponent(x.id) : '');
       var pdf = x.file ? (token ? '<a class="btn line sm" href="' + accountUrl + '">Créer mon espace pour télécharger le PDF</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="Télécharger ' + esc(x.fileName || x.n || 'la facture') + '">Télécharger le PDF ↓</button>') : '';
-      return '<li' + (x.id ? ' data-invoice-id="' + esc(x.id) + '"' : '') + '><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
+      return '<li' + (x.id ? ' data-invoice-id="' + esc(x.id) + '" data-invoice-total="' + esc(x.amt) + '"' : '') + '><div><b>' + esc(x.n || 'Facture') + '</b>' + (x.num ? ' <span class="muted">n° ' + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
         '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? 'Paiement reçu et confirmé' : x.payment_reported_at ? 'Paiement envoyé — en attente de confirmation' : 'À régler') + '</span>' +
         (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? 'Voir la facture' : 'Voir et payer') + ' ↗</a>' : '') + pdf + (x.payment_confirmed_at ? '<p class="muted">Confirmé par Roland le ' + esc(day(x.payment_confirmed_at)) + '</p>' : x.payment_reported_at ? '<p class="muted">Merci ! Votre déclaration du ' + esc(day(x.payment_reported_at)) + ' a été transmise. Roland confirmera la réception après vérification.</p>' : !token && q.accepted_at && !x.paid && x.id && x.num && +x.amt > 0 ? '<button class="btn line sm" type="button" data-report-payment="' + esc(x.id) + '" data-payment-quote="' + esc(q.id) + '">' + (/acompte/i.test(x.n || '') ? 'J’ai envoyé l’acompte' : 'J’ai effectué le paiement') + '</button>' : '') + '</li>';
     }).join('') + '</ul>';
