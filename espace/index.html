@@ -350,6 +350,8 @@ footer{max-width:1180px}
 <script>window.RD_STORE = 'rd-client-session';</script>
 <script src="../admin/sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
+<link rel="stylesheet" href="../assets/project-tracking.css?v=1">
+<script src="../assets/project-tracking.js?v=1"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -550,6 +552,7 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
     (WIRE[page] || function(){})(id);
+    DzoftTracking.client(sb);
     if (focusInvoice && focusProject && page === 'projets' && id === focusProject) {
       var invoiceRows = document.querySelectorAll('[data-invoice-id]'), invoiceRow = null;
       [].some.call(invoiceRows, function(row){ if (row.dataset.invoiceId === focusInvoice) { invoiceRow = row; return true; } return false; });
@@ -859,6 +862,7 @@ footer{max-width:1180px}
     h += '<div class="phead"><h1>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num"><a href="#/devis/' + q.id + '">Devis ' + esc(q.numero) + '</a></span></div>';
     if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
     h += withdrawText(q);
+    h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '"></section>';
     steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){
       h += '<section class="card accept valid" data-step="' + esc(s.k) + '"><h2>Votre validation est attendue : ' + esc(s.t) + '</h2>' +
         (s.note ? '<p class="note2">' + esc(s.note) + '</p>' : '') +

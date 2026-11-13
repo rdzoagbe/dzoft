@@ -140,6 +140,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
 <link rel="stylesheet" href="project-workspace.css?v=20261113-2">
+<link rel="stylesheet" href="../assets/project-tracking.css?v=1">
+<script src="../assets/project-tracking.js?v=1"></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -369,6 +371,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     };
     $('note').value = Q.client_note || '';
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
+    DzoftTracking.admin(Q, sb, load);
   }
 
   function save(row, reload){
@@ -642,6 +645,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" class="attach"' + (x.attachPdf ? ' checked' : '') + (!x.file ? ' disabled' : '') + '> Joindre le PDF officiel aux e-mails</label>' +
         '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button>' + (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm main" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '') + '</div></div>';
     }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
+    DzoftTracking.lockInvoices(Q);
   }
   function updateInvoice(e){
     var row = e.target.closest('.invr'); if (!row) return;
