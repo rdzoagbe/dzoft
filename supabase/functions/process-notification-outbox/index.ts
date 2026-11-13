@@ -55,7 +55,23 @@ function jwtClaims(token: string) {
     return {};
   }
 }
-function eventCopy(type: string, summary: string, quote: any, message: string, isOwner: boolean) {
+const DIGEST_GROUPS: Record<string, string> = { design: "Design", accounts: "Comptes", venue: "Lieux", chat: "Conversations", safety: "Sécurité", other: "Autres travaux" };
+const DIGEST_STATUS: Record<string, string> = { planned: "Prévu", working: "En cours", built: "Construit", tested: "Testé" };
+type DigestItem = { category: string; status: string; summary: string };
+function digestHtml(items: DigestItem[]) {
+  return `<ul style="padding-left:18px;margin:16px 0">${items.map((u) =>
+    `<li style="margin:0 0 12px"><b>${esc(DIGEST_GROUPS[u.category] || "Autres travaux")}</b> · ${esc(DIGEST_STATUS[u.status] || "")}<br>${esc(u.summary)}</li>`).join("")}</ul>`;
+}
+function eventCopy(type: string, summary: string, quote: any, message: string, isOwner: boolean, digest: DigestItem[] = []) {
+  // Grouped progress: one email listing every summary of the same publication.
+  if (type === "progress_digest") {
+    const ref = quote?.numero ? ` · devis ${quote.numero}` : "";
+    return {
+      subject: isOwner ? `Avancement publié au client${ref} · DZOFT` : `Votre projet avance${ref} · DZOFT`,
+      intro: isOwner ? "Ce résumé vient d’être publié dans l’espace client :" : "Voici les dernières avancées de votre projet :",
+      body: digestHtml(digest) + (isOwner ? "" : "<p style=\"font-size:13px;color:#5d6f83\">« Testé » signifie vérifié de notre côté. Votre avis et vos validations se donnent dans votre espace client.</p>"),
+    };
+  }
   if (['payment_reported', 'payment_received', 'payment_reopened'].includes(type)) return {
     subject: (type === 'payment_reported' ? 'Paiement déclaré / Payment reported' : type === 'payment_received' ? 'Paiement reçu / Payment received' : 'Confirmation corrigée / Confirmation corrected') + ' · DZOFT',
     intro: summary + (type === 'payment_reported' ? '. Le client déclare avoir effectué le virement. Vérifiez votre compte bancaire avant de confirmer sa réception.' : type === 'payment_received' ? '. La réception sur le compte a été confirmée par Roland.' : '. Le statut est de nouveau en cours de vérification. Contactez Roland pour toute question.'),
@@ -167,7 +183,7 @@ Deno.serve(async (req) => {
     let retryable = true;
     try {
       const [{ data: event }, { data: client }] = await Promise.all([
-        db.from("project_events").select("event_type,summary,message_id,quote_id,invoice_id,file_name").eq("id", job.event_id).maybeSingle(),
+        db.from("project_events").select("event_key,event_type,summary,message_id,quote_id,invoice_id,file_name").eq("id", job.event_id).maybeSingle(),
         job.client_id
           ? db.from("clients").select("id,nom,email,contact,user_id,portal_token").eq("id", job.client_id).maybeSingle()
           : Promise.resolve({ data: null }),
@@ -190,9 +206,18 @@ Deno.serve(async (req) => {
         const { data } = await db.from("messages").select("body").eq("id", event.message_id).maybeSingle();
         message = String(data?.body || "").slice(0, 2000);
       }
+      let digest: DigestItem[] = [];
+      if (event.event_type === "progress_digest") {
+        const batch = String(event.event_key || "").replace(/^digest:/, "");
+        const { data, error } = await db.from("project_updates").select("category,status,summary,created_at")
+          .eq("batch_id", batch).eq("quote_id", event.quote_id).order("created_at", { ascending: true });
+        if (error) throw Object.assign(new Error("progress summaries could not be read"), { retryable: true });
+        digest = data || [];
+        if (!digest.length) throw Object.assign(new Error("progress summaries are missing"), { retryable: false });
+      }
       const isOwner = job.recipient_role === "owner";
       const paymentEvent = event.event_type.startsWith("payment_");
-      const copy = eventCopy(event.event_type, event.summary, quote, message, isOwner);
+      const copy = eventCopy(event.event_type, event.summary, quote, message, isOwner, digest);
       const firstName = String(client?.nom || "").trim().split(/\s+/)[0] || "";
       let link = isOwner ? ADMIN : PORTAL;
       if (isOwner && quote?.id) link = `${ADMIN}suivi.html?q=${encodeURIComponent(quote.id)}`;
@@ -261,7 +286,7 @@ Deno.serve(async (req) => {
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent ? copy.body.replace(/<[^>]*>/g, " ") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent ? copy.body.replace(/<[^>]*>/g, " ") : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },

@@ -1,7 +1,7 @@
 -- Run after the migration, inside BEGIN/ROLLBACK. No fixture or email survives.
 do $test$
 declare owner_id uuid:=gen_random_uuid(); client_user uuid:=gen_random_uuid(); stranger uuid:=gen_random_uuid();
- c uuid:=gen_random_uuid(); q uuid:=gen_random_uuid(); receipt uuid:=gen_random_uuid(); update_id uuid:=gen_random_uuid(); state jsonb; n integer;
+ c uuid:=gen_random_uuid(); q uuid:=gen_random_uuid(); receipt uuid:=gen_random_uuid(); update_id uuid:=gen_random_uuid(); batch uuid:=gen_random_uuid(); items jsonb; state jsonb; n integer;
 begin
  insert into auth.users(id,aud,role) values(client_user,'authenticated','authenticated');
  insert into public.clients(id,nom,user_id,email) values(c,'Tracking test',client_user,'tracking@example.invalid');
@@ -33,9 +33,31 @@ begin
  perform public.publish_project_update(q,update_id,'design','tested','Reviewed screens');
  select count(*) into n from public.project_updates where quote_id=q;
  if n<>1 then raise exception 'Duplicate publication'; end if;
+ -- Grouped publication: three summaries, one event, one client email and one owner copy, no duplicate on retry.
+ items:='[{"category":"design","status":"tested","summary":"Logo, couleurs et profils mis à jour."},{"category":"accounts","status":"built","summary":"Comptes et accès au lieu."},{"category":"safety","status":"built","summary":"Consentement, signalement et blocage."}]';
+ perform public.publish_project_updates(q,batch,items);
+ perform public.publish_project_updates(q,batch,items);
+ select count(*) into n from public.project_updates where batch_id=batch;
+ if n<>3 then raise exception 'Grouped publication count %',n; end if;
+ select count(*) into n from public.project_events where event_key='digest:'||batch;
+ if n<>1 then raise exception 'Grouped publication must create one event'; end if;
+ select count(*) into n from public.email_outbox o join public.project_events e on e.id=o.event_id where e.event_key='digest:'||batch;
+ if n<>2 then raise exception 'Grouped publication must queue one client email and one owner copy, got %',n; end if;
+ begin
+  perform public.publish_project_updates(q,gen_random_uuid(),'[{"category":"hacking","status":"built","summary":"x"}]');
+  raise exception 'FAIL: unknown group accepted';
+ exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+ begin
+  perform public.publish_project_updates(q,gen_random_uuid(),(select jsonb_agg(items->0) from generate_series(1,7)));
+  raise exception 'FAIL: more than six summaries accepted';
+ exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
  perform set_config('request.jwt.claims',jsonb_build_object('sub',client_user,'role','authenticated')::text,true);
  state:=public.project_tracking(q);
  if (state->>'received')::numeric<>1500 then raise exception 'Client balance differs'; end if;
+ begin
+  perform public.publish_project_updates(q,gen_random_uuid(),items);
+  raise exception 'FAIL: client published grouped update';
+ exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
  begin
   perform public.publish_project_update(q,gen_random_uuid(),'design','tested','Unauthorized');
   raise exception 'FAIL: client published update';

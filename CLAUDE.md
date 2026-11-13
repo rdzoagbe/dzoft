@@ -61,7 +61,7 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
 
 ## Supabase (projet `rzghbvmszbjlqkdjzpxc`, Paris)
 - Tables : leads, clients, quotes (steps, docs, env, invoices, care, ext_link…), messages,
-  notifications, sign_codes, settings, reviews. RLS partout.
+  notifications, sign_codes, settings, reviews, project_receipts, project_updates. RLS partout.
 - Suivi des demandes (`leads.status`) : nouvelle → contactée → devis envoyé → gagnée / perdue,
   plus archivée (« traitée » hérité) ; `leads.next_at` = date de relance, rappelée sur le tableau
   de bord. Côté client, « perdue » s'affiche « Close », jamais le statut interne.
@@ -80,6 +80,13 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   importantes créent un événement et un e-mail dans la même transaction ; le contenu complet
   reste dans le portail. Les messages reçus sont regroupés pour éviter le bruit. Le journal est
   conservé 24 mois. Seul un PDF de facture choisi explicitement peut être joint.
+- Paiements reçus et avancement (13 nov. 2026, `assets/project-tracking.js`, fiche projet + espace client) :
+  `record_project_receipt` enregistre un paiement vérifié sur le compte (paiements partiels, pas de doublon,
+  pas de dépassement ; la facture passe « réglée » au solde) ; `project_tracking` donne total, reçu, reste.
+  Avancement : la fiche publie 1 à 6 groupes (Design, Comptes, Lieux, Conversations, Sécurité, Autres travaux ;
+  état Prévu / En cours / Construit / Testé) d’un coup via `publish_project_updates` (`batch_id`) :
+  une seule mise à jour dans le portail et UN seul e-mail (`progress_digest`), pour ne pas noyer le client.
+  « Testé » = vérifié par DZOFT, jamais « validé par le client ». Test : `tests/project-tracking.sql`.
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.
