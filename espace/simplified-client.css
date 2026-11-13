@@ -1,0 +1,51 @@
+/* Simplified DZOFT client portal — original routes and server data stay intact. */
+body.dzoft-client{background:#f8f8fc;color:#171729}
+body.dzoft-client .top{background:#171622}
+body.dzoft-client .top .in{max-width:1350px;padding:14px 23px}
+body.dzoft-client .shell{max-width:1350px;grid-template-columns:220px minmax(0,1fr);gap:23px;padding:23px 18px 75px}
+body.dzoft-client .side{background:#1b1b29;border:0;border-radius:18px;padding:16px 12px;box-shadow:0 10px 32px rgba(18,17,38,.1)}
+body.dzoft-client .side .who{border-color:#404052;color:#fff;padding:12px 10px 18px}
+body.dzoft-client .side .who span{color:#bdbdd1}
+body.dzoft-client .side a{color:#dcdae9;font-size:13.5px;padding:12px 13px}
+body.dzoft-client .side a:hover{background:#34334b;color:#fff}
+body.dzoft-client .side a[aria-current]{background:#5137f0;color:#fff}
+body.dzoft-client .side a svg{width:19px;height:19px}
+body.dzoft-client .client-more{border-top:1px solid #444356;margin-top:12px;padding-top:12px}
+body.dzoft-client .client-more>summary{list-style:none;cursor:pointer;padding:12px 13px;color:#ccc9e0;font-size:13px;font-weight:800;border-radius:10px}
+body.dzoft-client .client-more>summary:hover{background:#34334b}
+body.dzoft-client .client-more>summary::-webkit-details-marker{display:none}
+body.dzoft-client .client-more>div{display:grid;gap:3px;margin-top:4px}
+body.dzoft-client .content{min-width:0}
+body.dzoft-client .card,body.dzoft-client .item{border:1px solid #e8e8f1;border-radius:18px;box-shadow:0 5px 22px rgba(24,24,52,.035);background:#fff;padding:20px}
+body.dzoft-client .card>h2{font-size:18px}
+body.dzoft-client .vhead h1,body.dzoft-client .phead h1{font-size:clamp(23px,3vw,32px);letter-spacing:-.035em}
+body.dzoft-client .btn.main{background:#5137ef;color:#fff}
+body.dzoft-client .btn.line{border-color:#e5e5ef}
+body.dzoft-client .dashboard-focus{border-radius:18px}
+body.dzoft-client .stats a{border:1px solid #e9e9f2;border-radius:16px;padding:15px}
+body.dzoft-client .stats b{color:#241e57;font-size:25px}
+body.dzoft-client .picker button[aria-pressed=true]{background:#5137ef;border-color:#5137ef}
+body.dzoft-client .bar span{background:linear-gradient(90deg,#5137ef,#2bc4ca)}
+body.dzoft-client .item:hover{border-color:#c2b9ff}
+body.dzoft-client .tracking-stats>div:last-child{background:#efedff;border-color:#ddd7ff}
+body.dzoft-client .content :focus-visible{outline:3px solid #a096ff;outline-offset:2px}
+@media(max-width:950px){
+ body.dzoft-client .shell{grid-template-columns:1fr;padding:6px 14px 102px}
+ body.dzoft-client .side{position:fixed;inset:auto 9px 9px 9px;z-index:15;display:flex;flex-direction:row;justify-content:space-around;align-items:stretch;overflow:visible;border-radius:18px;padding:6px}
+ body.dzoft-client .side .who{display:none}
+ body.dzoft-client .side>a{flex:1 1 0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:0;font-size:11px;text-align:center;white-space:normal;padding:8px 4px}
+ body.dzoft-client .side>a svg{width:21px;height:21px}
+ body.dzoft-client .client-more{border:0;margin:0;padding:0;position:relative;flex:1 1 0;min-width:0;align-content:center}
+ body.dzoft-client .client-more>summary{padding:11px 4px;text-align:center;font-size:11px}
+ body.dzoft-client .client-more>div{position:absolute;bottom:55px;right:0;background:#1b1b29;border-radius:12px;min-width:190px;padding:8px;box-shadow:0 8px 25px #15152755}
+ body.dzoft-client .client-more>div a{white-space:nowrap}
+ body.dzoft-client .card,body.dzoft-client .item{padding:15px}
+ body.dzoft-client footer{padding-bottom:90px}
+}
+@media(max-width:620px){
+ body.dzoft-client .top .in{padding:10px 12px}
+ body.dzoft-client .side>a{font-size:10px}
+ body.dzoft-client .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.dzoft-client .shell{padding-left:10px;padding-right:10px}
+}
+@media print{body.dzoft-client .client-more{display:none!important}}
