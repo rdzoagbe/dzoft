@@ -6,7 +6,7 @@ create table if not exists public.project_payment_statuses (
  quote_id uuid not null references public.quotes(id),
  amount numeric(12,2) not null check(amount>0),
  method text not null check(method in ('transfer','cash','card','other')),
- status text not null check(status in ('pending','sent_by_client','received')),
+ status text not null check(status in ('pending','sent_by_client','received','cancelled')),
  reported_on date,
  reference text not null default '' check(length(reference)<=100),
  receipt_id uuid unique references public.project_receipts(id),
@@ -76,8 +76,8 @@ begin
  then raise exception 'An accepted shared project is required'; end if;
  select * into x from public.project_payment_statuses where id=p_id and quote_id=p_quote for update;
  if not found then raise exception 'Payment status not found'; end if;
- if x.status='received' then raise exception 'A confirmed payment cannot return to pending'; end if;
- if p_status not in ('pending','sent_by_client') or p_status is null
+ if x.status in ('received','cancelled') then raise exception 'A finalized payment status cannot be changed'; end if;
+ if p_status not in ('pending','sent_by_client','cancelled') or p_status is null
   or p_reported_on>current_date or p_reported_on<date '2000-01-01'
   or (p_status='sent_by_client' and p_reported_on is null)
  then raise exception 'Invalid payment status'; end if;
@@ -105,6 +105,7 @@ begin
  select * into x from public.project_payment_statuses where id=p_id and quote_id=p_quote for update;
  if not found then raise exception 'Payment status not found'; end if;
  if x.status='received' then return private.project_tracking(p_quote); end if;
+ if x.status='cancelled' then raise exception 'Cancelled payments cannot be confirmed'; end if;
  if p_received_on is null or p_received_on>current_date or p_received_on<date '2000-01-01'
   or p_notify is null then raise exception 'Invalid confirmation date'; end if;
  -- Reuse the existing validated owner-only receipt path. The operation is atomic:
