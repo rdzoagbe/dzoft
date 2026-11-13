@@ -81,8 +81,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   reste dans le portail. Les messages reçus sont regroupés pour éviter le bruit. Le journal est
   conservé 24 mois. Seul un PDF de facture choisi explicitement peut être joint.
 - Paiements reçus et avancement (13 nov. 2026, `assets/project-tracking.js`, fiche projet + espace client) :
-  `record_project_receipt` enregistre un paiement vérifié sur le compte (paiements partiels, pas de doublon,
-  pas de dépassement ; la facture passe « réglée » au solde) ; `project_tracking` donne total, reçu, reste.
+  `record_project_payment` enregistre un paiement vérifié sur le compte, en créant si besoin sa facture dans le même geste
+  (paiements partiels, pas de doublon, pas de dépassement ; la facture passe « réglée » au solde ; e-mail au client
+  facultatif pour ressaisir un paiement ancien) ; `record_project_receipt` (ancien appel) passe par la même fonction ;
+  la carte se traduit elle-même (FR/EN, `data-no-translate`) ; `project_tracking` donne total, reçu, reste.
   Avancement : la fiche publie 1 à 6 groupes (Design, Comptes, Lieux, Conversations, Sécurité, Autres travaux ;
   état Prévu / En cours / Construit / Testé) d’un coup via `publish_project_updates` (`batch_id`) :
   une seule mise à jour dans le portail et UN seul e-mail (`progress_digest`), pour ne pas noyer le client.

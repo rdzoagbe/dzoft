@@ -73,3 +73,40 @@ begin
   raise exception 'FAIL: anonymous read';
  exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
 end $test$;
+
+-- One-step payment: create the invoice and record the receipt together (empty invoice list, like a fresh project).
+do $test$
+declare owner_id uuid:=gen_random_uuid(); client_user uuid:=gen_random_uuid(); c uuid:=gen_random_uuid(); q uuid:=gen_random_uuid();
+ r1 uuid:=gen_random_uuid(); r2 uuid:=gen_random_uuid(); state jsonb; n integer;
+begin
+ insert into auth.users(id,aud,role) values(client_user,'authenticated','authenticated');
+ insert into public.clients(id,nom,user_id,email) values(c,'Payment test',client_user,'payment@example.invalid');
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated','app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
+ insert into public.quotes(id,client_id,numero,total,accepted_total,accepted_at,shared,invoices) values(q,c,'TEST-P',1500,1500,now(),true,'[]');
+ -- Earlier deposit re-entered without emailing the client.
+ state:=public.record_project_payment(q,r1,'inv-dep','{"n":"Facture d’acompte","num":"T-1","amt":450}',450,current_date-3,'transfer','',false);
+ if (state->>'received')::numeric<>450 or (state->>'remaining')::numeric<>1050 then raise exception 'Deposit not recorded'; end if;
+ if not exists(select 1 from public.quotes,jsonb_array_elements(invoices) i where id=q and i->>'id'='inv-dep' and i->>'paid'='true') then raise exception 'Deposit invoice not created as paid'; end if;
+ select count(*) into n from public.email_outbox o join public.project_events e on e.id=o.event_id where e.event_key='receipt:'||r1;
+ if n<>0 then raise exception 'Silent entry queued % emails',n; end if;
+ -- Same call again: nothing new.
+ perform public.record_project_payment(q,r1,'inv-dep','{"n":"Facture d’acompte","num":"T-1","amt":450}',450,current_date-3,'transfer','',false);
+ select count(*) into n from public.project_receipts where quote_id=q; if n<>1 then raise exception 'Duplicate receipt on retry'; end if;
+ -- Partial payment on a new balance invoice, with emails.
+ state:=public.record_project_payment(q,r2,'inv-bal','{"n":"Facture de solde","num":"T-2","amt":1050}',350,current_date,'transfer','',true);
+ if (state->>'received')::numeric<>800 or (state->>'remaining')::numeric<>700 then raise exception 'Partial balance wrong'; end if;
+ select count(*) into n from public.email_outbox o join public.project_events e on e.id=o.event_id where e.event_key='receipt:'||r2;
+ if n<>2 then raise exception 'Expected client + owner email, got %',n; end if;
+ -- Then pay the rest on the existing invoice.
+ perform public.record_project_payment(q,gen_random_uuid(),'inv-bal',null,700,current_date,'card','',true);
+ if not exists(select 1 from public.quotes,jsonb_array_elements(invoices) i where id=q and i->>'id'='inv-bal' and i->>'paid'='true') then raise exception 'Balance not marked paid'; end if;
+ begin perform public.record_project_payment(q,gen_random_uuid(),'inv-x','{"n":"Autre","num":"t-1","amt":10}',10,current_date,'card','',true);
+  raise exception 'FAIL: duplicate invoice number accepted'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+ begin perform public.record_project_payment(q,gen_random_uuid(),'inv-y','{"n":"Autre","num":"T-9","amt":10}',10,current_date,'card','',true);
+  raise exception 'FAIL: invoices above agreed total accepted'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+ begin perform public.record_project_payment(q,gen_random_uuid(),'inv-z','{"n":"Autre","num":"T-8","amt":10}',10,current_date+1,'card','',true);
+  raise exception 'FAIL: future date accepted'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',client_user,'role','authenticated')::text,true);
+ begin perform public.record_project_payment(q,gen_random_uuid(),'inv-c','{"n":"Autre","num":"T-7","amt":1}',1,current_date,'card','',true);
+  raise exception 'FAIL: client recorded a payment'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+end $test$;
