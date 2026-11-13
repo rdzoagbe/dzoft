@@ -1,18 +1,91 @@
 (function(){
 'use strict';
-var main=document.getElementById('main');if(!main)return;
-var en=document.documentElement.lang==='en';
-var groups=[['overview','Vue d’ensemble','Overview',[]],['work','Travaux & demandes','Work & requests',['c-steps','c-journal']],['documents','Documents & liens','Documents & links',['c-docs','c-files','c-env']],['billing','Paiements & suivi','Payments & care',['c-inv','c-care']],['communication','Communication','Communication',['c-note','c-msg','c-activity','c-rv']],['settings','Accès & accord','Access & agreement',['c-share','c-acc']]];
-var shell=document.createElement('div');shell.className='project-shell';main.parentNode.insertBefore(shell,main);
-var nav=document.createElement('nav');nav.className='project-nav';nav.setAttribute('aria-label',en?'Project sections':'Sections du projet');shell.appendChild(nav);shell.appendChild(main);
-var label=document.createElement('p');label.className='project-nav-label';label.textContent=en?'Project workspace':'Espace projet';nav.appendChild(label);
-var panels={};groups.forEach(function(g){var panel=document.createElement('div');panel.className='project-panel';panel.id='project-'+g[0];panels[g[0]]=panel;main.appendChild(panel);var h=document.createElement('h1');h.className='project-heading';h.textContent=g[en?2:1];panel.appendChild(h);g[3].forEach(function(id){var el=document.getElementById(id);if(el)panel.appendChild(el)});var b=document.createElement('button');b.type='button';b.textContent=g[en?2:1];b.dataset.page=g[0];b.setAttribute('aria-controls',panel.id);b.onclick=function(){select(g[0]);};nav.appendChild(b)});
-var paymentSteps=document.getElementById('payment-steps');
-window.DzoftPlacePaymentSteps=function(){if(!paymentSteps)return;paymentSteps.replaceChildren();document.querySelectorAll('#steps [data-step-key="deposit"]').forEach(function(row){paymentSteps.appendChild(row)})};
-if(paymentSteps){['input','change','click'].forEach(function(type){paymentSteps.addEventListener(type,function(e){var handler=document.getElementById('steps')['on'+type];if(handler)handler.call(document.getElementById('steps'),e)})});window.DzoftPlacePaymentSteps();}
-var overview=document.createElement('div');overview.className='project-overview';panels.overview.appendChild(overview);
-function select(key){if(key==='milestones')key='work';if(!panels[key])key='overview';Object.keys(panels).forEach(function(k){panels[k].hidden=k!==key});nav.querySelectorAll('button').forEach(function(b){if(b.dataset.page===key)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});try{sessionStorage.setItem('dzoft-project-section',key)}catch(e){}}
-function card(title,text){var box=document.createElement('section');box.className='card';var h=document.createElement('h2');h.textContent=title;box.appendChild(h);var p=document.createElement('p');p.textContent=text;box.appendChild(p);return box}
-function refresh(){overview.replaceChildren();var steps=Array.from(document.querySelectorAll('#steps .st, #payment-steps .st'));var done=steps.filter(function(s){return s.querySelector('.ck')&&s.querySelector('.ck').checked}).length;var current=steps.find(function(s){return s.querySelector('.ck')&&!s.querySelector('.ck').checked});var title=current&&current.querySelector('input.t');var progress=card(en?'Delivery milestones':'Jalons de livraison',steps.length?(done+' / '+steps.length+(en?' completed':' terminés')):(en?'Loading project…':'Chargement du projet…'));var track=document.createElement('div');track.className='project-meter';var fill=document.createElement('span');fill.style.width=(steps.length?done/steps.length*100:0)+'%';track.appendChild(fill);progress.appendChild(track);var next=document.createElement('p');next.textContent=(en?'Current stage: ':'Étape actuelle : ')+(title?title.value:'—');progress.appendChild(next);overview.appendChild(progress);overview.appendChild(card(en?'Client access':'Espace client',(document.getElementById('sh-pill')||{}).textContent||'—'));var recent=card(en?'Recent project activity':'Dernières avancées',en?'Private journal · latest entries':'Journal privé · dernières entrées');Array.from(document.querySelectorAll('#journal .jr-item')).slice(0,5).forEach(function(item){var row=document.createElement('div');row.className='project-summary-row';row.textContent=item.textContent;recent.appendChild(row)});overview.appendChild(recent);overview.appendChild(card(en?'Work classification':'Classement des travaux',en?'Client requests remain in the private journal. Their origin does not establish completion or approval.':'Les demandes restent dans le journal privé. Leur origine ne détermine pas leur réalisation ou leur validation.'))}
-var timer;var observer=new MutationObserver(function(){clearTimeout(timer);timer=setTimeout(refresh,100)});['steps','journal','sh-pill'].forEach(function(id){var el=document.getElementById(id);if(el)observer.observe(el,{childList:true,subtree:true,characterData:true})});main.addEventListener('change',function(){clearTimeout(timer);timer=setTimeout(refresh,100)});var key='overview';try{key=sessionStorage.getItem('dzoft-project-section')||key}catch(e){}select(key);refresh();
+var main=document.getElementById('main');if(!main||!document.getElementById('c-steps'))return;
+var en=function(){return document.documentElement.lang==='en';};
+var tr=function(fr,english){return en()?english:fr;};
+var shell=document.createElement('div');shell.className='workspace-shell';main.parentNode.insertBefore(shell,main);shell.appendChild(main);
+var intro=document.createElement('section');intro.className='workspace-intro';intro.innerHTML='<div class="workspace-overline">DZOFT · PROJECT WORKSPACE</div><div class="workspace-intro-row"><div><h1 id="workspace-title">Project workspace</h1><p id="workspace-subtitle"></p></div><span class="workspace-badge" id="workspace-badge"></span></div><div class="workspace-actions"><button type="button" class="btn main" data-workspace-action="payment"></button><button type="button" class="btn line" data-workspace-action="progress"></button><button type="button" class="btn line" data-workspace-action="message"></button></div><div class="workspace-glance"><div><span id="workspace-progress-label"></span><b id="workspace-progress-value">—</b><div class="workspace-meter"><span id="workspace-progress-bar"></span></div></div><div><span id="workspace-next-label"></span><b id="workspace-next-value">—</b></div><div><span id="workspace-access-label"></span><b id="workspace-access-value">—</b></div></div>';main.prepend(intro);
+var layout=document.createElement('div');layout.className='workspace-columns';main.appendChild(layout);
+var primary=document.createElement('div');primary.className='workspace-primary';var aside=document.createElement('aside');aside.className='workspace-aside';layout.appendChild(primary);layout.appendChild(aside);
+var extras=document.createElement('details');extras.className='workspace-advanced';extras.innerHTML='<summary></summary><div class="workspace-advanced-grid"></div>';main.appendChild(extras);
+var advance=extras.querySelector('div');
+function fold(id,fr,eng,container,opened){var node=document.getElementById(id);if(!node)return;var det=document.createElement('details');det.className='workspace-fold';det.open=!!opened;var summary=document.createElement('summary');summary.dataset.fr=fr;summary.dataset.en=eng;det.appendChild(summary);det.appendChild(node);container.appendChild(det);return det;}
+function move(id,to){var node=document.getElementById(id);if(node)to.appendChild(node);return node;}
+move('c-steps',primary);
+move('c-inv',aside);
+move('c-msg',aside);
+fold('c-note','Message visible par le client','Client-facing note',aside,false);
+fold('c-docs','Documents partagés','Shared documents',primary,false);
+fold('c-files','Fichiers du client','Client files',primary,false);
+fold('c-journal','Journal privé du projet','Private project journal',primary,false);
+fold('c-care','Suivi mensuel','Monthly maintenance',aside,false);
+['c-share','c-acc','c-env','c-activity','c-rv'].forEach(function(id){move(id,advance);});
+var steps=document.getElementById('c-steps');
+if(steps){
+ var edits=document.createElement('details');edits.className='workspace-fold workspace-step-edit';var sum=document.createElement('summary');sum.dataset.fr='Gérer toutes les étapes et validations';sum.dataset.en='Manage milestones and approvals';edits.appendChild(sum);
+ ['steps'].forEach(function(id){var el=document.getElementById(id);if(el)edits.appendChild(el);});steps.appendChild(edits);
+ // The deposit milestone must keep its original event handlers after being moved.
+ var paymentSteps=document.getElementById('payment-steps');
+ window.DzoftPlacePaymentSteps=function(){
+   if(!paymentSteps)return;paymentSteps.replaceChildren();
+   document.querySelectorAll('#steps [data-step-key="deposit"]').forEach(function(row){paymentSteps.appendChild(row);});
+ };
+ if(paymentSteps){
+   ['input','change','click'].forEach(function(type){paymentSteps.addEventListener(type,function(ev){var original=document.getElementById('steps');var fn=original&&original['on'+type];if(fn)fn.call(original,ev);});});
+   window.DzoftPlacePaymentSteps();
+ }
+}
+var invoice=document.getElementById('c-inv');
+if(invoice){
+ var legacy=document.createElement('details');legacy.className='workspace-fold workspace-legacy';var sum=document.createElement('summary');sum.dataset.fr='Factures officielles et détails';sum.dataset.en='Official invoices and details';legacy.appendChild(sum);
+ Array.from(invoice.children).filter(function(node){return node.id!=='tracking-admin';}).forEach(function(node){legacy.appendChild(node);});invoice.appendChild(legacy);
+}
+function openParents(node){for(var x=node;x&&x!==main;x=x.parentElement){if(x.tagName==='DETAILS')x.open=true;}}
+function jump(target){
+ var id=target==='payment'?'tracking-admin':target==='progress'?'tracking-publish':'c-msg';
+ var element=document.getElementById(id)||(target==='payment'?document.getElementById('c-inv'):document.getElementById('c-steps'));
+ if(!element)return;
+ openParents(element);
+ if(target==='payment'){var edit=element.querySelector('details.tracking-editor');if(edit)edit.open=true;}
+ if(target==='progress'){var publish=element.querySelector('details.tracking-editor');if(publish)publish.open=true;}
+ element.scrollIntoView({behavior:'smooth',block:'start'});
+ if(target==='message'){var field=document.getElementById('reply');if(field)setTimeout(function(){field.focus({preventScroll:true});},350);}
+}
+intro.querySelectorAll('[data-workspace-action]').forEach(function(b){b.addEventListener('click',function(){jump(b.dataset.workspaceAction);});});
+function refresh(){
+ var full=(document.getElementById('ttl')||{}).textContent||'';
+ var title=document.getElementById('workspace-title'),sub=document.getElementById('workspace-subtitle');
+ title.textContent=full.replace(/^Fiche projet\s*·\s*/,'').replace(/^Project record\s*·\s*/,'')||tr('Projet','Project');
+ sub.textContent=tr('Toutes vos actions importantes, sans changer de page.','All essential actions, on one page.');
+ var active=document.querySelectorAll('#steps .st,#payment-steps .st');
+ var completed=Array.from(active).filter(function(row){var ck=row.querySelector('input.ck');return ck&&ck.checked;}).length;
+ var total=active.length;
+ var percent=total?Math.round(completed*100/total):0;
+ document.getElementById('workspace-progress-value').textContent=total?completed+' / '+total+' · '+percent+'%':'—';
+ document.getElementById('workspace-progress-bar').style.width=percent+'%';
+ var next=Array.from(active).find(function(row){var ck=row.querySelector('input.ck');return ck&&!ck.checked;});
+ var nextTitle=next&&next.querySelector('input.t');
+ document.getElementById('workspace-next-value').textContent=nextTitle?(nextTitle.value||'—'):(total?tr('Toutes les étapes terminées','All steps completed'):'—');
+ var access=(document.getElementById('sh-pill')||{}).textContent||'—';
+ document.getElementById('workspace-access-value').textContent=access;
+ document.getElementById('workspace-badge').textContent=total&&completed===total?tr('Terminé','Completed'):tr('En cours','In progress');
+}
+function translate(){
+ intro.querySelector('.workspace-overline').textContent=tr('DZOFT · ESPACE PROJET','DZOFT · PROJECT WORKSPACE');
+ document.getElementById('workspace-progress-label').textContent=tr('Avancement','Progress');
+ document.getElementById('workspace-next-label').textContent=tr('Prochaine étape','Next step');
+ document.getElementById('workspace-access-label').textContent=tr('Espace client','Client access');
+ intro.querySelector('[data-workspace-action=payment]').textContent=tr('＋ Enregistrer un paiement','＋ Record payment');
+ intro.querySelector('[data-workspace-action=progress]').textContent=tr('↗ Publier une avancée','↗ Publish progress');
+ intro.querySelector('[data-workspace-action=message]').textContent=tr('✉ Écrire au client','✉ Message client');
+ extras.querySelector('summary').textContent=tr('Accès, accord, environnement et historique','Access, agreement, environment & history');
+ main.querySelectorAll('summary[data-fr]').forEach(function(s){s.textContent=s.dataset[en()?'en':'fr'];});
+ refresh();
+}
+var scheduled=false;
+function schedule(){if(scheduled)return;scheduled=true;setTimeout(function(){scheduled=false;refresh();},120);}
+['steps','payment-steps','sh-pill','ttl','tracking-admin'].forEach(function(id){var el=document.getElementById(id);if(el)new MutationObserver(schedule).observe(el,{childList:true,subtree:true,characterData:true,attributes:false});});
+main.addEventListener('change',schedule);
+document.addEventListener('dzoft:locale-change',translate);
+translate();
 })();

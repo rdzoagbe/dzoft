@@ -352,6 +352,7 @@ footer{max-width:1180px}
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=3">
 <script src="../assets/project-tracking.js?v=5"></script>
+<link rel="stylesheet" href="simplified-client.css?v=20261113">
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -544,11 +545,15 @@ footer{max-width:1180px}
     var parts = (location.hash.replace(/^#\/?/, '') || 'accueil').split('/'), page = parts[0], id = parts[1];
     if (!NAV.some(function(n){ return n[0] === page; })) page = 'accueil';
     var pend = quotes().filter(pending).length, un = unseen();
-    $('nav').innerHTML = '<div class="who"><b>' + esc(D.client.nom || '') + '</b>' + (D.client.entreprise ? '<span>' + esc(D.client.entreprise) + '</span>' : '') + '</div>' +
-      NAV.map(function(n){
-        var badge = n[0] === 'devis' && pend ? pend : n[0] === 'messages' && un ? un : 0;
-        return '<a href="#/' + n[0] + '"' + (n[0] === page ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + n[2] + '</svg><span>' + n[1] + '</span>' + (badge ? '<i>' + badge + '</i>' : '') + '</a>';
-      }).join('');
+    var primaryNav = ['accueil','projets','devis','messages','documents'];
+    function navigationLink(n){
+      var badge=n[0]==='devis'&&pend?pend:n[0]==='messages'&&un?un:0;
+      return '<a href="#/'+n[0]+'"'+(n[0]===page?' aria-current="page"':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+n[2]+'</svg><span>'+n[1]+'</span>'+(badge?'<i>'+badge+'</i>':'')+'</a>';
+    }
+    $('nav').innerHTML='<div class="who"><b>'+esc(D.client.nom||'')+'</b>'+(D.client.entreprise?'<span>'+esc(D.client.entreprise)+'</span>':'')+'</div>'+
+      NAV.filter(function(n){return primaryNav.indexOf(n[0])>=0;}).map(navigationLink).join('')+
+      '<details class="client-more"'+(primaryNav.indexOf(page)<0?' open':'')+'><summary>＋ Plus d’options</summary><div>'+
+      NAV.filter(function(n){return primaryNav.indexOf(n[0])<0;}).map(navigationLink).join('')+'</div></details>';
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id);
     (WIRE[page] || function(){})(id);
