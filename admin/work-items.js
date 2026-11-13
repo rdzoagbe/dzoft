@@ -141,9 +141,14 @@ function render(){
       pubBtn.disabled=true;
       rpc('publish_project_work_item',{p_quote:quoteId,p_id:item.id,p_batch:batchId,
        p_category:pubCategory.value,p_summary:summary,p_tested:check.checked
-      }).then(function(){
-       message(t('Publication enregistrée, notification mise en file. Livraison non encore confirmée.','Published and notification queued. Delivery not confirmed.'));
-       sb.fn('process-notification-outbox',{}).catch(function(){});
+      }).then(function(result){
+       var state=result&&result.client_email_status;
+       var msg=state==='queued'?t('Publication enregistrée. E-mail en attente d’envoi.','Published. Email queued for sending.'):
+          state==='sent'?t('Publié. E-mail accepté par le fournisseur.','Published. Email accepted by provider.'):
+          state==='failed'?t('Publié, mais l’e-mail a échoué : vérifiez l’historique.','Published, but email failed: check email history.'):
+          t('Publié. Notification client non confirmée : vérifiez l’historique.','Published. Client notification unconfirmed: check email history.');
+       message(msg,state==='failed');
+       if(state==='queued')sb.fn('process-notification-outbox',{}).catch(function(){});
        setTimeout(load,900);
       }).catch(function(){message(t('Publication non confirmée. Vous pouvez réessayer sans dupliquer la notification.','Publication not confirmed. Retry will not duplicate the notification.'),true);})
        .finally(function(){pubBtn.disabled=false;});
