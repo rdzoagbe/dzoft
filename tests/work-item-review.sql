@@ -34,7 +34,7 @@ begin
  if ret->>'status'<>'done' then raise exception 'Task update did not persist'; end if;
  ret:=public.publish_project_work_item(
   quote_id,task_id,batch_id,'safety','Mobile access errors corrected and verified',false);
- if ret->>'published'<>'true' or ret->>'email_queued'<>'true' then
+ if ret->>'published'<>'true' or ret->>'client_email_status'<>'queued' then
   raise exception 'Publication did not succeed'; end if;
  if not exists(select 1 from public.project_updates where public.project_updates.quote_id=fixture.quote_id
     and public.project_updates.batch_id=fixture.batch_id and summary='Mobile access errors corrected and verified'
