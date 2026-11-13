@@ -88,8 +88,10 @@ def run_cli(arguments: list[str], *, binary: bool = False) -> bytes:
     if not executable:
         raise BackupError("Supabase CLI not installed. See docs/backup-recovery.md.")
     command = [executable] + arguments
+    # Keep Supabase's interactive login/password prompts visible on the owner's PC.
+    # Only the SQL payload on stdout is captured; never print it to the terminal.
     result = subprocess.run(command, stdin=sys.stdin, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, check=False)
+                            stderr=None, check=False)
     if result.returncode != 0:
         # Do not echo full stderr: CLI logs may include connection details.
         raise BackupError(
