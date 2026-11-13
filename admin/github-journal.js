@@ -13,6 +13,9 @@ var url='https://api.github.com/repos/ProjectRodney/ProRod/commits?sha=main&per_
 var ttl=15*60*1000,last=0,loading=false;
 var categories=[
  ['administration',/admin|dashboard|tableau de bord|back.?office|moderation|modération|management|portal/i,'Administration'],
+ ['qr',/\bqr\b|qr code|scanner/i,'QR codes et accès aux lieux'],
+ ['evenements',/venue|lieu|event|événement|établissement/i,'Lieux et événements'],
+ ['profils',/profil|profile|inscription|registration|onboard|signup|sign.up/i,'Profils et inscription'],
  ['securite',/secur|sécur|auth|login|password|mot de passe|permission|access|accès|privacy|confidential|consent|rls|pass|token/i,'Sécurité et accès'],
  ['messagerie',/email|e-mail|notification|sms|brevo|message|chat|push/i,'Messages et notifications'],
  ['interface',/design|layout|ui\b|screen|écran|mobile|responsive|style|css|typograph|couleur|color|translation|traduction|wording|texte|photo|image|icon|icône/i,'Interface et affichage'],
