@@ -272,8 +272,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <div class="dashboard-focus" id="dash-focus"></div>
       <section class="today-action-center" id="today-action-center" aria-label="Actions prioritaires" aria-live="polite"><p class="today-data-note">Chargement des priorités…</p></section>
       <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
-      <details class="today-advanced"><summary>Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
-      <details class="today-advanced today-followups"><summary>Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
+      <details class="today-advanced"><summary data-fr="Autres indicateurs d’activité" data-en="Other business indicators">Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
+      <details class="today-advanced today-followups"><summary data-fr="Autres rappels et suivis" data-en="Other reminders and follow-ups">Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
       <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
       <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
     </section>
@@ -331,6 +331,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
         <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
         <div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" style="font-size:13.5px;color:var(--mute);align-self:center"></span></div>
+      </div>
+      <div class="panel" id="backup-readiness">
+        <h3>Protection des données clients</h3>
+        <p class="today-backup-warning"><b>Sauvegarde récupérable : non vérifiée.</b> La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.</p>
+        <p class="today-backup-caption">Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.</p>
+        <div class="acts" style="display:flex;flex-wrap:wrap;gap:9px;margin-top:13px">
+          <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/database/backups">Vérifier les sauvegardes Supabase</a>
+          <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/docs/guides/platform/backups">Guide de sauvegarde et restauration</a>
+        </div>
       </div>
       <div class="panel">
         <h3>Double authentification</h3>
