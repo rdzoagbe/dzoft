@@ -270,9 +270,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <section id="v-dash">
       <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
       <div class="dashboard-focus" id="dash-focus"></div>
+      <section class="today-action-center" id="today-action-center" aria-label="Actions prioritaires" aria-live="polite"><p class="today-data-note">Chargement des priorités…</p></section>
       <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
-      <div class="kpis" id="kpis"></div>
-      <div class="panel"><h3>Autres actions à suivre</h3><ul class="todo" id="todo"></ul></div>
+      <details class="today-advanced"><summary>Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
+      <details class="today-advanced today-followups"><summary>Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
       <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
       <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
     </section>
@@ -563,16 +564,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
   function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
-  var dashboardReceiptStates={},receiptQueryGeneration=0;
+  var dashboardReceiptStates={},dashboardReceiptReady=false,dashboardReceiptFailures=0,receiptQueryGeneration=0;
   function refreshReceiptDashboard(){
     var ps=projectsList(),current=++receiptQueryGeneration;
-    if(!ps.length){dashboardReceiptStates={};return;}
+    dashboardReceiptReady=false;
+    dashboardReceiptFailures=0;
+    if(!ps.length){dashboardReceiptStates={};dashboardReceiptReady=true;renderDash();return;}
     Promise.all(ps.map(function(q){
       return sb.rpc('project_tracking',{p_quote:q.id},true).then(function(d){return {id:q.id,d:d};},function(){return {id:q.id,d:null};});
     })).then(function(rows){
       if(current!==receiptQueryGeneration)return;
       var next={}; rows.forEach(function(x){if(x.d)next[x.id]=x.d;});
-      dashboardReceiptStates=next;renderDash();
+      dashboardReceiptStates=next;dashboardReceiptFailures=rows.filter(function(x){return !x.d;}).length;
+      dashboardReceiptReady=true;renderDash();
+    }).catch(function(){
+      if(current!==receiptQueryGeneration)return;
+      dashboardReceiptStates={};dashboardReceiptFailures=ps.length;dashboardReceiptReady=true;renderDash();
     });
   }
   var financeGeneration = 0;
@@ -677,7 +684,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     running.forEach(function(q){
       var dep=steps(q).filter(function(s){return s.k==='deposit'&&!s.done;})[0];
       var paid=dashboardReceiptStates[q.id];
-      if(dep&&!(q.invoices||[]).some(function(x){return x.n||x.num;})&&!(paid&&Number(paid.received)>0)){
+      if(dashboardReceiptReady&&paid&&dep&&!(q.invoices||[]).some(function(x){return x.n||x.num;})&&Number(paid.received)===0){
         todo.push(['Acompte à recevoir · '+q.numero+' ('+((client(q.client_id)||{}).nom||'—')+')','remind:'+q.id,'Demander l’acompte']);
       }
     });
@@ -685,6 +692,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       var d=dashboardReceiptStates[q.id];
       var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}):[];
       if(pending.length)todo.push([pending.length+' facture'+(pending.length>1?'s':'')+' à établir · '+q.numero+' ('+((client(q.client_id)||{}).nom||'—')+')','follow:'+q.id,'Associer une facture']);
+    });
+    ps.forEach(function(q){
+      var d=dashboardReceiptStates[q.id];if(!d)return;
+      (d.payment_statuses||[]).forEach(function(p){
+        if(p.status==='sent_by_client')todo.push(['Virement signalé par le client · '+eur(p.amount)+' · '+q.numero+' · Vérifiez votre compte avant de confirmer','follow:'+q.id,'Vérifier']);
+      });
     });
     running.forEach(function(q){
       var s = steps(q), i = -1;
@@ -701,9 +714,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
     }); });
     // Put conversations and scheduled follow-ups before routine administration.
-    todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[1].indexOf('thread:') === 0 ? 0 : t[1] === 'leads' ? 1 : t[0].indexOf('Échec') === 0 ? 2 : 3 }; })
+    todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[0].indexOf('Virement signalé par le client') === 0 ? 0 : t[1].indexOf('thread:') === 0 ? 1 : t[1] === 'leads' ? 2 : t[0].indexOf('Échec') === 0 ? 3 : 4 }; })
       .sort(function(a,b){ return a.rank - b.rank || a.order - b.order; }).map(function(x){ return x.task; });
     var firstAction = todo[0];
+    if(window.DzoftToday){
+      window.DzoftToday.render($('today-action-center'),{
+        projects:ps.map(function(q){return {id:q.id,numero:q.numero||'',clientName:(client(q.client_id)||{}).nom||'Client',
+          tracking:dashboardReceiptStates[q.id]||null};}),
+        unread:data.unread.map(function(m){return {client_id:m.client_id,clientName:(client(m.client_id)||{}).nom||'Client'};}),
+        ready:dashboardReceiptReady,failures:dashboardReceiptFailures,
+        english:document.documentElement.lang==='en'
+      });
+    }
     $('dash-focus').innerHTML = '<div><span class="dashboard-eyebrow">Votre prochaine action</span><h3>' + (firstAction ? esc(firstAction[0]) : 'Tout est à jour') + '</h3><p>' + (todo.length ? '<b>' + todo.length + '</b> <span>' + (todo.length === 1 ? 'action à suivre' : 'actions à suivre') + '</span>' : 'Aucune action en attente. Retrouvez vos projets et vos échanges ci-dessous.') + '</p></div>' +
       (firstAction ? '<button class="btn main" type="button" data-go="' + esc(firstAction[1]) + '">' + '<span>' + esc(firstAction[2]) + '</span> →</button>' : '<button class="btn main" type="button" data-go="projects">Voir les projets →</button>');
     $('todo').innerHTML = todo.length > 1 ? todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Aucune autre action en attente.</li>';
@@ -1264,6 +1286,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 })();
 </script>
 <script src="simplified-ui.js?v=20261113"></script>
+<script src="today-actions.js?v=20261113-action-center"></script>
 </body>
 </html>
 
