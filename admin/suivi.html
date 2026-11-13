@@ -139,7 +139,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
-<link rel="stylesheet" href="project-workspace.css">
+<link rel="stylesheet" href="project-workspace.css?v=20261113-2">
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -220,9 +220,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
   <section class="card" id="c-inv" hidden>
     <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez le PDF pour le conserver dans l’espace client. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception. Pour un acompte, cochez aussi l’étape « Acompte reçu » dans le suivi du projet : le statut de la facture et l’avancement sont deux confirmations distinctes.</p>
+    <p class="muted" style="margin-bottom:8px">Créez la facture officielle dans <b>Revolut Pro</b>, puis renseignez son numéro et son montant ici. Joignez le PDF pour le conserver dans l’espace client. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception. Le suivi de l’acompte est regroupé ici. Confirmez chaque facture après réception bancaire ; la date de confirmation est conservée. Le jalon d’acompte reste distinct pour préserver l’historique existant.</p>
     <p class="muted" id="iv-account-note" hidden>Pour joindre un PDF privé, le client doit avoir créé son compte avec l’adresse e-mail de sa fiche.</p>
-    <div id="invs"></div>
+    <div id="payment-steps"></div><div id="invs"></div>
   </section>
 
   <section class="card" id="c-care" hidden>
@@ -490,7 +490,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function renderSteps(){
     var box = $('steps');
     box.innerHTML = Q.steps.map(function(s, i){
-      return '<div class="st' + (s.done ? ' done' : '') + '" data-i="' + i + '"><input type="checkbox" class="ck" aria-label="Étape faite"' + (s.done ? ' checked' : '') + '>' +
+      return '<div data-step-key="' + esc(s.k || '') + '" class="st' + (s.done ? ' done' : '') + '" data-i="' + i + '"><input type="checkbox" class="ck" aria-label="Étape faite"' + (s.done ? ' checked' : '') + '>' +
         '<div class="f"><input class="t" value="' + esc(s.t) + '" placeholder="Nom de l’étape"><input type="date" class="d" value="' + esc(s.d || '') + '" aria-label="Date">' +
         '<input class="s" value="' + esc(s.s || '') + '" placeholder="Explication pour le client"><textarea class="n" placeholder="Note pour le client sur cette étape (facultatif)">' + esc(s.note || '') + '</textarea>' +
         (s.vby ? '<p class="vok">✓ Validé par ' + esc(s.vby) + ' le ' + new Date(s.vat).toLocaleString('fr-FR') + '</p>' :
@@ -499,6 +499,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         (Q.accepted_at && s.done && !s.vby && s.k !== 'accept' ? '<p class="mailrow"><button class="btn sm line" type="button" data-m="step">✉ Prévenir le client que c’est fait</button>' + (sentAt('step', s.t) ? ' <span>prévenu le ' + sentAt('step', s.t) + '</span>' : '') + '</p>' : '') + '</div>' +
         '<div class="tools"><button type="button" data-a="up" title="Monter">↑</button><button type="button" data-a="down" title="Descendre">↓</button><button type="button" data-a="rm" title="Retirer">×</button></div></div>';
     }).join('');
+    if(window.DzoftPlacePaymentSteps)window.DzoftPlacePaymentSteps();
   }
   $('steps').oninput = function(e){
     var row = e.target.closest('.st'); if (!row) return;
@@ -886,7 +887,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* Installable admin app: registers the background script (no private data is cached). */
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
-<script src="project-workspace.js" defer></script>
+<script src="project-workspace.js?v=20261113-2" defer></script>
 </body>
 </html>
 
