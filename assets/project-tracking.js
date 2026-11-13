@@ -34,9 +34,8 @@
  }
  function paymentStatusLabel(s){return s==='sent_by_client'?t('Envoyé selon le client · à vérifier','Client says sent · awaiting verification'):s==='pending'?t('En attente','Pending'):s==='received'?t('Reçu et confirmé','Received and confirmed'):t('Annulé','Cancelled');}
  function paymentStatuses(d,admin){
-  var claims=d.payment_statuses||[];
+  var claims=(d.payment_statuses||[]).filter(function(c){return admin||c.status!=='cancelled';});
   var outstanding=claims.filter(function(c){return c.status==='pending'||c.status==='sent_by_client';});
-  var confirmed=claims.filter(function(c){return c.status==='received';});
   var totalPending=outstanding.reduce(function(n,c){return n+cents(c.amount);},0)/100;
   var text='<section class="tracking-claims"><div class="tracking-claims-title"><h3>'+t('Suivi des versements','Payment status tracking')+'</h3>'+
     '<span class="tracking-status-pill pending">'+t('En cours de vérification : ','Awaiting verification: ')+money(totalPending)+'</span></div>'+
@@ -46,12 +45,12 @@
   claims.forEach(function(c){
     var active=c.status==='pending'||c.status==='sent_by_client';
     text+='<article class="tracking-claim"><div class="tracking-claim-head"><b>'+money(c.amount)+' · '+esc(label(methods,c.method))+'</b>'+
-      '<span class="tracking-status-pill '+(active?'pending':'received')+'">'+paymentStatusLabel(c.status)+'</span></div>'+
+      '<span class="tracking-status-pill '+(active?'pending':(c.status==='received'?'received':'cancelled'))+'">'+paymentStatusLabel(c.status)+'</span></div>'+
       (c.reported_on?'<p class="tracking-help">'+t('Date signalée : ','Reported date: ')+day(c.reported_on)+'</p>':'')+
       (c.reference?'<p class="tracking-help">'+t('Référence : ','Reference: ')+esc(c.reference)+'</p>':'')+
       (admin&&active?'<div class="tracking-claim-actions">'+
          '<form data-status-id="'+esc(c.id)+'">'+
-          field(t('Avancement du paiement','Payment status'),'<select name="status"><option value="pending"'+(c.status==='pending'?' selected':'')+'>'+t('En attente','Pending')+'</option><option value="sent_by_client"'+(c.status==='sent_by_client'?' selected':'')+'>'+t('Confirmé envoyé par le client','Client confirmed sent')+'</option></select>')+
+          field(t('Avancement du paiement','Payment status'),'<select name="status"><option value="pending"'+(c.status==='pending'?' selected':'')+'>'+t('En attente','Pending')+'</option><option value="sent_by_client"'+(c.status==='sent_by_client'?' selected':'')+'>'+t('Confirmé envoyé par le client','Client confirmed sent')+'</option><option value="cancelled">'+t('Annuler cette attente','Cancel pending payment')+'</option></select>')+
           field(t('Date annoncée par le client','Date reported by client'),'<input name="reportedOn" type="date" value="'+esc(c.reported_on||'')+'">')+
           '<button type="submit" class="btn line">'+t('Mettre à jour le statut','Update status')+'</button><span role="status" class="tracking-message" aria-live="polite"></span>'+
          '</form>'+
@@ -101,6 +100,7 @@
     select.onchange=sync;sync();
     form.onsubmit=function(e){
      e.preventDefault();var b=form.querySelector('button[type=submit]'),msg=form.querySelector('[role=status]');
+     if(select.value==='cancelled'&&!confirm(t('Annuler ce paiement en attente ? Aucun paiement reçu ne sera supprimé.','Cancel this pending payment? No confirmed receipt will be deleted.')))return;
      b.disabled=true;status(msg,t('Mise à jour…','Updating…'));
      sb.rpc('update_project_payment_status',{p_quote:q.id,p_id:key,p_status:select.value,p_reported_on:reported.value||null},true).then(function(){
        status(msg,t('Statut actualisé. Encaissement non confirmé.','Status updated. Receipt not confirmed.'));setTimeout(reload,650);
@@ -135,7 +135,8 @@
   if(/Amount exceeds invoice balance/.test(m))return t('Le paiement dépasse le solde de cette facture.','Payment exceeds the invoice balance.');
   if(/Pending payments exceed remaining/.test(m))return t('Les paiements en attente dépasseraient le solde restant.','Pending payments would exceed the remaining balance.');
   if(/Invalid payment status/.test(m))return t('Vérifiez le statut et la date annoncée.','Check payment status and reported date.');
-  if(/cannot return to pending/.test(m))return t('Un versement déjà encaissé ne peut pas redevenir en attente.','Received payments cannot return to pending.');
+  if(/finalized payment status/.test(m))return t('Ce statut finalisé ne peut pas être modifié.','This finalized status cannot be changed.');
+  if(/Cancelled payments cannot be confirmed/.test(m))return t('Un paiement annulé ne peut pas être encaissé.','A cancelled payment cannot be confirmed.');
   if(/Receipt already linked/.test(m))return t('Ce paiement est déjà associé à une facture. Rechargez le projet.','This payment has already been linked. Reload the project.');
   return t('Non enregistré. Réessayez. ','Not saved. Please retry. ')+m;}
  var last=null;
