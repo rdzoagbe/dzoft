@@ -23,6 +23,7 @@ test('cash deposit remains ledger-based and nothing is automatically re-entered'
  const code=read('assets/project-tracking.js');
  assert.match(code,/record_project_payment_unbilled/);
  assert.match(code,/link_project_receipt_invoice/);
+ assert.match(code,/name="method" required/,'cash must not silently default to bank transfer');
  assert.match(code,/Previously saved payments are preserved/);
  assert.match(code,/setTimeout\(reload,1200\)/);
  for(const p of ['admin/suivi.html','espace/index.html']){
