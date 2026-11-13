@@ -104,3 +104,49 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
 }
 @media(prefers-reduced-motion:reduce){.workspace-meter span{transition:none}}
 @media print{.workspace-actions,.workspace-intro{display:none}.workspace-shell{max-width:none}.workspace-columns{display:block}.workspace-fold,.workspace-advanced{display:block}}
+
+
+/* Compact private project journal + read-only sanitized GitHub activity. */
+#c-journal .jr-heading h2{margin:0 0 5px;font-size:19px;letter-spacing:-.025em}
+#c-journal .jr-heading .muted{font-size:12px}
+#c-journal .jr-heading .pill{vertical-align:middle}
+#c-journal .jr-quick{background:#f9f9ff;border:1px solid #e8e7f7;border-radius:14px;padding:14px;margin:15px 0}
+#c-journal .jr-quick-task{display:block;margin:0;font-size:13px;font-weight:800}
+#c-journal .jr-quick-task textarea{margin-top:7px;min-height:65px;width:100%;font-size:13.5px}
+#c-journal .jr-quick-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:11px}
+#c-journal .jr-quick-controls label{flex:1 1 130px;min-width:0;margin:0;font-size:12px}
+#c-journal .jr-quick-controls input,#c-journal .jr-quick-controls select{min-height:40px;margin-top:5px}
+#c-journal .jr-quick-controls button{min-height:40px;flex:0 0 auto}
+#c-journal .jr-github{background:#fff;border:1px solid #e7e5f7;border-radius:15px;padding:15px;margin:16px 0}
+#c-journal .jr-github-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+#c-journal .jr-source{color:#5a45d5;font-size:10px;font-weight:900;letter-spacing:.09em}
+#c-journal .jr-github h3{margin:5px 0 8px;font-size:16px}
+#c-journal .jr-github-head .muted{font-size:11.5px;line-height:1.6;max-width:560px}
+#c-journal .jr-github-days{margin:14px 0 0;display:grid;gap:8px}
+#c-journal .jr-github-day{border:1px solid #eeecf7;border-radius:11px;padding:11px 12px;background:#fbfbff}
+#c-journal .jr-github-date{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+#c-journal .jr-github-date strong{font-size:13px}
+#c-journal .jr-github-date span{color:#68718a;font-size:11px}
+#c-journal .jr-github-categories{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+#c-journal .jr-github-pill{display:inline-flex;border-radius:30px;background:#eeebff;color:#4b38bd;font-size:11px;font-weight:750;padding:5px 8px}
+#c-journal .jr-github-foot{font-size:11px;line-height:1.55;margin-top:12px}
+#c-journal .jr-github-status{padding:12px;background:#f6f5fc;border-radius:10px;margin:12px 0}
+#c-journal .jr-manual-title{margin:19px 0 8px}
+#c-journal .jr-manual-title h3{font-size:15px}
+#c-journal .jr-show-more{margin-top:15px;width:100%;min-height:40px}
+#c-journal .jr-advanced{border:1px solid #e8e9f2;border-radius:12px;padding:0;margin-top:20px}
+#c-journal .jr-advanced>summary{list-style:none;cursor:pointer;font-size:12.5px;font-weight:800;padding:14px;color:#555a70}
+#c-journal .jr-advanced>summary::-webkit-details-marker{display:none}
+#c-journal .jr-advanced>summary::after{content:'＋';float:right;color:#5540d0;font-size:16px}
+#c-journal .jr-advanced[open]>summary::after{content:'−'}
+#c-journal .jr-advanced-actions{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 12px}
+#c-journal .jr-advanced #jr-bulk{padding:0 12px 12px}
+#c-journal #jr-filters button{font-size:12px;padding:5px 10px}
+@media(max-width:650px){
+ #c-journal .jr-quick{padding:12px}
+ #c-journal .jr-quick-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+ #c-journal .jr-quick-controls button{grid-column:1/-1;width:100%}
+ #c-journal .jr-github{padding:12px}
+ #c-journal .jr-github-head .btn{padding:8px 9px;font-size:11px}
+ #c-journal .jr-github-head .muted{font-size:11px}
+}
