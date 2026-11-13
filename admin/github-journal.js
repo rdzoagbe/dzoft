@@ -26,8 +26,8 @@ var categories=[
 ];
 function classify(subject){
  // The raw subject never appears in the page, journal, client portal or API.
- for(var i=0;i<categories.length;i++){if(categories[i][1].test(subject))return categories[i][2];}
- return 'Développement et maintenance';
+ for(var i=0;i<categories.length;i++){if(categories[i][1].test(subject))return categories[i][0];}
+ return 'other';
 }
 function summarize(data){
  var days={};
@@ -72,8 +72,25 @@ function draw(rows){
   var groups=document.createElement('div');groups.className='jr-github-categories';
   Object.keys(row.groups).sort().forEach(function(category){
    var pill=document.createElement('span');pill.className='jr-github-pill';
-   pill.textContent=category+(row.groups[category]>1?' · '+row.groups[category]:'');
+   var matched=categories.filter(function(c){return c[0]===category;})[0];
+   pill.textContent=(matched?matched[2]:'Développement et maintenance')+(row.groups[category]>1?' · '+row.groups[category]:'');
    groups.append(pill);
+   var follow=document.createElement('button');follow.type='button';
+   follow.className='jr-github-follow';follow.textContent='＋ Suivre';
+   var dateKey=row.date,groupKey=category;
+   follow.setAttribute('aria-label','Créer une tâche privée pour '+pill.textContent+' du '+dateKey);
+   follow.onclick=function(){
+     if(!window.DzoftWorkItems||typeof window.DzoftWorkItems.addFromGithub!=='function'){
+       follow.textContent='Ouvrez de nouveau le projet';return;
+     }
+     follow.disabled=true;follow.textContent='Ajout…';
+     window.DzoftWorkItems.addFromGithub(dateKey,groupKey).then(function(){
+       follow.textContent='✓ Dans les tâches';
+     }).catch(function(){
+       follow.disabled=false;follow.textContent='Réessayer';
+     });
+   };
+   groups.append(follow);
   });section.append(groups);body.append(section);
  }
  box.append(body);
