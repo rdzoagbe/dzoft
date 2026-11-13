@@ -49,7 +49,7 @@ function render(node,input){
  var tr=function(fr,eng){return en?eng:fr;};
  var pretty=function(v){return money(v,en);};
  function card(label,value,kind){return '<div class="today-stat '+kind+'"><span>'+label+'</span><b>'+value+'</b></div>';}
- var moneyReady=m.ready?(m.failures===m.projects?false:true):false;
+ var moneyReady=m.ready&&(m.projects===0||m.failures<m.projects);
  var fmt=function(n){return moneyReady?pretty(n):'—';};
  var warning=m.ready&&m.failures?'<p class="today-data-note" role="status">'+tr('Certains projets n’ont pas pu être consultés. Les montants affichés sont partiels.','Some projects could not be loaded. Displayed amounts are partial.')+'</p>':!m.ready?'<p class="today-data-note" role="status">'+tr('Actualisation des montants confirmés…','Loading verified payment figures…')+'</p>':'';
  var entries=m.actions.slice(0,5).map(function(a){
@@ -71,7 +71,7 @@ function render(node,input){
  '<div class="today-stats">'+
  card(tr('Reçu et confirmé','Received and verified'),fmt(m.received),'received')+
  card(tr('À vérifier (non reçu)','To verify (not received)'),fmt(m.pending),'pending')+
- card(tr('Factures à traiter','Invoices to address'),m.ready&&m.failures===m.projects?'—':m.ready?String(m.documents):'—','invoices')+
+ card(tr('Factures à traiter','Invoices to address'),m.ready&&m.projects>0&&m.failures===m.projects?'—':m.ready?String(m.documents):'—','invoices')+
  card(tr('Messages à traiter','Messages to reply'),String(m.messages),'messages')+
  '</div>'+warning+
  '<div class="today-tasks">'+(m.actions.length?entries+later:'<p class="today-no-tasks">'+(m.ready?tr('Aucun paiement annoncé ni facture en attente détecté dans les projets accessibles.','No reported payments or outstanding invoices found in accessible projects.'):tr('Les actions apparaîtront après synchronisation.','Actions will appear after synchronization.'))+'</p>')+'</div>'+
