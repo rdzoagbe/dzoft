@@ -36,16 +36,16 @@ begin
   quote_id,task_id,batch_id,'safety','Mobile access errors corrected and verified',false);
  if ret->>'published'<>'true' or ret->>'email_queued'<>'true' then
   raise exception 'Publication did not succeed'; end if;
- if not exists(select 1 from public.project_updates where quote_id=fixture.quote_id
-    and batch_id=batch_id and summary='Mobile access errors corrected and verified'
+ if not exists(select 1 from public.project_updates where public.project_updates.quote_id=fixture.quote_id
+    and public.project_updates.batch_id=fixture.batch_id and summary='Mobile access errors corrected and verified'
     and status='built') then
   raise exception 'Client-safe progress update missing'; end if;
- if (select count(*) from public.email_outbox where quote_id=fixture.quote_id and recipient_role='client')<>1 then
+ if (select count(*) from public.email_outbox where public.email_outbox.quote_id=fixture.quote_id and recipient_role='client')<>1 then
   raise exception 'Must queue exactly one optional client notification'; end if;
  ret:=public.publish_project_work_item(
   quote_id,task_id,batch_id,'safety','Mobile access errors corrected and verified',false);
  if ret->>'already_published'<>'true' then raise exception 'Retry not idempotent'; end if;
- if (select count(*) from public.email_outbox where quote_id=fixture.quote_id and recipient_role='client')<>1 then
+ if (select count(*) from public.email_outbox where public.email_outbox.quote_id=fixture.quote_id and recipient_role='client')<>1 then
   raise exception 'Duplicate email on retry'; end if;
  if (select journal from public.quotes where id=quote_id) is distinct from journal_before then
   raise exception 'Manual project journal changed'; end if;
@@ -77,7 +77,7 @@ begin
  if second_id<>(ret->>'id')::uuid then
   raise exception 'Duplicate GitHub review task created'; end if;
  if (select count(*) from public.project_work_items
-  where quote_id='c8a50cee-3856-4539-98a3-f5df201dbff0'::uuid
+  where public.project_work_items.quote_id='c8a50cee-3856-4539-98a3-f5df201dbff0'::uuid
    and source_date=current_date and source_group='qr')<>1 then
   raise exception 'GitHub source uniqueness failed'; end if;
 
