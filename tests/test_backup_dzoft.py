@@ -71,7 +71,7 @@ class BackupTests(unittest.TestCase):
                         sys.stdout.write("invoice.pdf\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "cp"]:
-                    dst = pathlib.Path(args[5]) if args[2] == "-r" else pathlib.Path(args[4])
+                    dst = pathlib.Path(args[4])
                     dst.mkdir(parents=True, exist_ok=True)
                     (dst / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
                     sys.exit(0)
