@@ -37,6 +37,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
   décision, en attente) dans `quotes.journal`, collage de plusieurs lignes « date | type | texte », jamais renvoyée au client
   (test `tests/project-journal.test.cjs`). Ne jamais y mettre de journal dans le dépôt : il vit dans la base.
+  Vue par défaut : frise par jour avec étiquettes de couleur et filtres (tout, fait, demandes du client, décisions, en attente) ;
+  « Modifier » ouvre l’édition. L’assistant peut ajouter des entrées directement dans `quotes.journal` (SQL, à la fin d’un travail) ;
+  la fiche relit le journal quand la fenêtre revient au premier plan, pour ne pas écraser ces ajouts.
   Admin installable sur téléphone (PWA, 10 nov. 2026) : `admin/manifest.webmanifest`, `admin/icons/`,
   `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
   bouton « Installer l’app » affiché quand le navigateur le propose.
