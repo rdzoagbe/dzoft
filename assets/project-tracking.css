@@ -48,3 +48,19 @@
 
 .tracking-confirm-preview{border:1px solid #b9dec8;background:#eaf8ee;border-radius:9px;color:#145c39;font-weight:800;font-size:12px;padding:11px 13px;margin:9px 0}
 .tracking-status-pill.cancelled{background:#f0f1f5;color:#667085}
+
+
+/* Financial record reliability: visible delivery state and auditable corrections. */
+.tracking-receipt-admin{border-top:1px solid #e9edf4;margin:12px 0 0;padding-top:10px}
+.tracking-email-state{font-size:12px;line-height:1.5;color:#566377;margin:0 0 6px}
+.tracking-email-state.tracking-email-failure{color:#a3271c;font-weight:700}
+.tracking-correction{margin:9px 0;border:1px solid #e5e8f0;background:#f9faff;border-radius:10px;padding:10px 12px}
+.tracking-correction>summary,.tracking-audit>summary{font-size:12.5px;font-weight:700;cursor:pointer;line-height:1.5;color:#43526c}
+.tracking-correction>form{padding-top:9px}
+.tracking-correction .tracking-help{font-weight:400}
+.tracking-correction button[type=submit]{margin:8px 0}
+.tracking-correction textarea{min-height:70px}
+.tracking-audit{margin:12px 0;padding:10px 13px;background:#f8f9fc;border:1px solid #e5e8f0;border-radius:11px}
+.tracking-audit [data-audit-list]{margin-top:11px}
+.tracking-audit-entry{border-top:1px solid #e1e5ed;padding:9px 0;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+.tracking-audit-entry b{font-weight:800}

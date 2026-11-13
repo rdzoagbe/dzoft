@@ -39,7 +39,7 @@ test('invoice is optional; notification only triggered on receipt confirmation',
 
 test('live project and client portal load fresh payment-state assets',()=>{
  for(const p of ['admin/suivi.html','espace/index.html']){
-  assert.match(read(p),/project-tracking\.js\?v=20261113-statuses/);
-  assert.match(read(p),/project-tracking\.css\?v=20261113-statuses/);
+  assert.match(read(p),/project-tracking\.js\?v=20261113-payment-audit/);
+  assert.match(read(p),/project-tracking\.css\?v=20261113-payment-audit/);
  }
 });

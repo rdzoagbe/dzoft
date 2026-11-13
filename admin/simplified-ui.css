@@ -108,3 +108,11 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 
 /* Verified payment with an official invoice still to issue. */
 #app .finance-pending{display:inline-block;margin-top:6px;font-size:11.5px;font-weight:800;color:#875b00;background:#fff2cf;border-radius:20px;padding:4px 9px}
+
+/* Separate future/reported transfers from verified revenue. */
+#app .finance-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+#app .finance-kpis>div:last-child{background:#fff7e6;border-color:#f4e1b6}
+#app .finance-note{margin:-4px 0 17px;font-size:12px;color:#596477}
+#app .finance-awaiting{display:inline-block;margin-top:6px;padding:4px 9px;font-size:11.5px;font-weight:800;color:#875b00;background:#fff3d8;border-radius:20px}
+@media(max-width:1100px){#app .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#app .finance-kpis>div:last-child{grid-column:auto}}

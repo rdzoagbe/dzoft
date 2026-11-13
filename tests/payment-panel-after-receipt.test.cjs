@@ -27,6 +27,6 @@ test('cash deposit remains ledger-based and nothing is automatically re-entered'
  assert.match(code,/Previously saved payments are preserved/);
  assert.match(code,/setTimeout\(reload,1200\)/);
  for(const p of ['admin/suivi.html','espace/index.html']){
-  assert.match(read(p),/project-tracking\.js\?v=20261113-statuses/);
+  assert.match(read(p),/project-tracking\.js\?v=20261113-payment-audit/);
  }
 });
