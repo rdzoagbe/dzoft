@@ -105,3 +105,6 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
  #app .side .tab{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){#app *{scroll-behavior:auto}}
+
+/* Verified payment with an official invoice still to issue. */
+#app .finance-pending{display:inline-block;margin-top:6px;font-size:11.5px;font-weight:800;color:#875b00;background:#fff2cf;border-radius:20px;padding:4px 9px}

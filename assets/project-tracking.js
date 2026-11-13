@@ -14,7 +14,24 @@
  function label(map,key){return map[key]?map[key][en()?1:0]:key;}
  function options(map){return Object.keys(map).map(function(k){return '<option value="'+k+'">'+esc(label(map,k))+'</option>';}).join('');}
  function stats(d){return '<div class="tracking-stats">'+[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]].map(function(x){return '<div><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div><p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
- function receipts(d){return (d.legacy>0?'<p class="tracking-help">'+t('Déjà confirmé sur les factures existantes :','Already confirmed on existing invoices:')+' '+money(d.legacy)+'. '+t('Déjà inclus dans le total reçu. Ne pas le saisir de nouveau.','Already included in the received total. Do not record it again.')+'</p>':'')+'<div class="tracking-history">'+d.receipts.map(function(r){return '<article><div><b>'+money(r.amount)+'</b><span>'+day(r.received_on)+' · '+esc(label(methods,r.method))+'</span></div>'+(r.reference?'<small>'+esc(r.reference)+'</small>':'')+'</article>';}).join('')+'</div>';}
+ function receipts(d){return (d.legacy>0?'<p class="tracking-help">'+t('Déjà confirmé sur les factures existantes :','Already confirmed on existing invoices:')+' '+money(d.legacy)+'. '+t('Déjà inclus dans le total reçu. Ne pas le saisir de nouveau.','Already included in the received total. Do not record it again.')+'</p>':'')+'<div class="tracking-history">'+d.receipts.map(function(r){return '<article><div><b>'+money(r.amount)+'</b><span>'+day(r.received_on)+' · '+esc(label(methods,r.method))+'</span></div><p class="tracking-invoice-status '+(r.invoice_id?'linked':'pending')+'">'+(r.invoice_id?t('✓ Facture associée','✓ Invoice linked'):t('⚠ Facture à établir','⚠ Invoice to be issued'))+'</p>'+(r.reference?'<small>'+esc(r.reference)+'</small>':'')+'</article>';}).join('')+'</div>';}
+ function invoiceLinkForms(d,q,paidOn){
+  var pending=d.receipts.filter(function(r){return !r.invoice_id;});
+  if(!pending.length)return '';
+  var rows=pending.map(function(r){
+   var candidates=(q.invoices||[]).filter(function(i){return i.id&&i.num&&!i.paid&&!i.care&&Number(i.amt)-paidOn(i.id)>=Number(r.amount);});
+   var invoiceOptions=candidates.map(function(i){return '<option value="'+esc(i.id)+'">'+esc(i.num+' · '+(i.n||''))+' · '+money(i.amt)+'</option>';}).join('');
+   return '<details class="tracking-link" data-receipt-link="'+esc(r.id)+'"><summary>'+t('Associer une facture au paiement du ','Attach an invoice to payment received on ')+day(r.received_on)+' · '+money(r.amount)+'</summary><form>'+
+    field(t('Facture officielle','Official invoice'),'<select name="linkInvoice"><option value="new">'+t('＋ Facture à créer après émission','＋ Create invoice once issued')+'</option>'+invoiceOptions+'</select>')+
+    '<fieldset class="tracking-new"><legend>'+t('Informations de la facture émise','Issued invoice details')+'</legend><div class="tracking-fields">'+
+    field(t('Type','Type'),'<select name="kind">'+kinds.map(function(k,i){return '<option value="'+i+'">'+esc(en()?k[1]:k[0])+'</option>';}).join('')+'</select>')+
+    field(t('Numéro officiel de la facture','Official invoice number'),'<input name="num" required maxlength="40" autocomplete="off" placeholder="INV-2026-...">')+
+    field(t('Montant total de la facture (€)','Invoice total (€)'),'<input name="amt" required type="number" min="'+esc(r.amount)+'" step="0.01" value="'+esc(r.amount)+'">')+
+    '</div></fieldset><p class="tracking-help">'+t('Le paiement est déjà enregistré : l’association ne le compte pas une deuxième fois et ne renvoie pas de confirmation de paiement. Émettez d’abord la facture officielle.','The payment is already recorded: linking does not count it twice or resend a payment confirmation. Issue the official invoice first.')+'</p>'+
+    '<button type="submit" class="btn main">'+t('Associer la facture','Link invoice')+'</button><p class="tracking-message" role="status" aria-live="polite"></p></form></details>';
+  }).join('');
+  return '<div class="tracking-unbilled"><p class="tracking-warning">'+t('Factures à établir : ','Invoices to issue: ')+pending.length+'</p>'+rows+'</div>';
+ }
  function updates(d){var seen={};var recent=d.updates.filter(function(u){if(seen[u.category])return false;seen[u.category]=true;return true;});return '<div class="tracking-updates">'+(recent.length?recent.map(function(u){return '<article><div><b>'+esc(label(categories,u.category))+'</b><span class="tracking-status">'+esc(label(statuses,u.status))+'</span></div><p>'+esc(u.summary)+'</p><small>'+day(u.created_at)+'</small></article>';}).join(''):'<p class="tracking-help">'+t('Les prochains résumés publiés apparaîtront ici.','Published progress summaries will appear here.')+'</p>')+'</div>'+(d.updates.length>recent.length?'<details><summary>'+t('Historique des publications','Publication history')+'</summary>'+d.updates.map(function(u){return '<p><b>'+esc(label(categories,u.category))+'</b> · '+esc(label(statuses,u.status))+' · '+day(u.created_at)+'<br>'+esc(u.summary)+'</p>';}).join('')+'</details>':'');}
  function field(text,html,cls){return '<label'+(cls?' class="'+cls+'"':'')+'>'+text+html+'</label>';}
  function status(box,text,error){box.textContent=text;box.className='tracking-message'+(error?' error':'');}
@@ -24,6 +41,8 @@
   if(/exceeds remaining/.test(m))return t('Le montant dépasse ce qui reste à régler sur cette facture.','The amount is more than what remains on this invoice.');
   if(/Invalid invoice/.test(m))return t('Vérifiez le numéro, le libellé et le montant de la facture.','Check the invoice number, label and amount.');
   if(/Invalid payment/.test(m))return t('Vérifiez le montant et la date (pas dans le futur).','Check the amount and the date (not in the future).');
+  if(/Amount exceeds invoice balance/.test(m))return t('Le paiement dépasse le solde de cette facture.','Payment exceeds the invoice balance.');
+  if(/Receipt already linked/.test(m))return t('Ce paiement est déjà associé à une facture. Rechargez le projet.','This payment has already been linked. Reload the project.');
   return t('Non enregistré. Réessayez. ','Not saved. Please retry. ')+m;}
  var last=null;
  function admin(q,sb,reload){
@@ -41,28 +60,46 @@
    var total=Number(d.total)||0,f=((q.accepted_data||q.data||{}).f)||{},pct=parseFloat(f.deppct)||30;
    var suggest=invoiced?Math.max(0,Math.round((total-invoiced)*100)/100):Math.round(total*pct)/100;
    var today=new Date().toLocaleDateString('en-CA');
-   box.innerHTML='<h2>'+t('Paiements du projet','Project payments')+'</h2>'+stats(d)+receipts(d)+
+   box.innerHTML='<h2>'+t('Paiements du projet','Project payments')+'</h2>'+stats(d)+receipts(d)+invoiceLinkForms(d,q,paidOn)+
     '<details class="tracking-editor"'+(d.receipts.length||d.legacy>0?'':' open')+'><summary>'+t('＋ Enregistrer un paiement reçu','＋ Record a received payment')+'</summary><form>'+
-    field(t('Facture concernée','Invoice'),'<select name="invoice">'+open.map(function(i){var rest=Math.round((Number(i.amt)-paidOn(i.id))*100)/100;return '<option value="'+esc(i.id)+'" data-rest="'+rest+'">'+esc(i.num+' · '+(i.n||''))+' · '+t('reste ','remaining ')+money(rest)+'</option>';}).join('')+'<option value="new">'+t('＋ Nouvelle facture','＋ New invoice')+'</option></select>')+
-    '<fieldset class="tracking-new"><legend>'+t('Nouvelle facture','New invoice')+'</legend><div class="tracking-fields">'+
+    field(t('Facture concernée','Invoice'),'<select name="invoice"><option value="unbilled">'+t('Sans numéro de facture — à établir','No invoice number — to be issued')+'</option>'+open.map(function(i){var rest=Math.round((Number(i.amt)-paidOn(i.id))*100)/100;return '<option value="'+esc(i.id)+'" data-rest="'+rest+'">'+esc(i.num+' · '+(i.n||''))+' · '+t('reste ','remaining ')+money(rest)+'</option>';}).join('')+'<option value="new">'+t('＋ Nouvelle facture','＋ New invoice')+'</option></select>')+
+    '<p class="tracking-help tracking-unbilled-tip">'+t('Vous pouvez confirmer l’encaissement maintenant et associer le numéro officiel de facture plus tard, sans compter le paiement deux fois.','Confirm the received money now and attach the official invoice number later, without counting the payment twice.')+'</p>'+'<fieldset class="tracking-new"><legend>'+t('Nouvelle facture','New invoice')+'</legend><div class="tracking-fields">'+
      field(t('Type','Type'),'<select name="kind">'+kinds.map(function(k,i){return '<option value="'+i+'">'+esc(en()?k[1]:k[0])+'</option>';}).join('')+'</select>')+
      field(t('N° de la facture (Revolut)','Invoice number (Revolut)'),'<input name="num" maxlength="40" autocomplete="off" placeholder="INV-1">')+
      field(t('Montant de la facture (€)','Invoice amount (€)'),'<input name="amt" type="number" min="0.01" step="0.01" value="'+(suggest||'')+'">')+
     '</div></fieldset>'+
     '<div class="tracking-fields">'+field(t('Montant reçu (€)','Amount received (€)'),'<input name="amount" type="number" min="0.01" step="0.01" required>')+field(t('Date de réception','Receipt date'),'<input name="date" type="date" required value="'+today+'" max="'+today+'">')+field(t('Mode de paiement','Payment method'),'<select name="method">'+options(methods)+'</select>')+field(t('Référence (facultatif)','Reference (optional)'),'<input name="reference" maxlength="100">')+'</div>'+
     '<label class="tracking-check"><input type="checkbox" name="notify" checked> '+t('Prévenir le client par e-mail','Email the client')+'</label>'+
-    '<p class="tracking-help">'+t('À enregistrer uniquement après vérification de votre compte. Pour un paiement ancien déjà confirmé au client, décochez l’e-mail.','Record only after checking your bank account. For an earlier payment the client already knows about, untick the email.')+'</p><button class="btn main" type="submit">'+t('Confirmer la réception','Confirm receipt')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
+    '<p class="tracking-help">'+t('Confirmez uniquement l’argent réellement reçu (espèces remises, virement crédité ou carte encaissée). Pour un paiement ancien déjà annoncé, décochez l’e-mail.','Confirm only money actually received (cash in hand, transfer credited or card settled). For a previously reported payment, untick the email.')+'</p><button class="btn main" type="submit">'+t('Confirmer la réception','Confirm receipt')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
    var fm=box.querySelector('form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=box.querySelector('.tracking-new');
-   function sync(){var isNew=el.invoice.value==='new';news.hidden=!isNew;el.num.required=isNew;el.amt.required=isNew;
-    var opt=el.invoice.selectedOptions[0];el.amount.value=isNew?(el.amt.value||''):(opt&&opt.dataset.rest||'');
+   function sync(){var isNew=el.invoice.value==='new',noInvoice=el.invoice.value==='unbilled';news.hidden=!isNew;el.num.required=isNew;el.amt.required=isNew;
+    var tip=box.querySelector('.tracking-unbilled-tip');if(tip)tip.hidden=!noInvoice;
+    var opt=el.invoice.selectedOptions[0];el.amount.value=noInvoice?'':isNew?(el.amt.value||''):(opt&&opt.dataset.rest||'');
     if(isNew)el.kind.value=invoiced?((total-invoiced)>0?'2':'1'):'0';}
    el.invoice.onchange=sync;el.amt.oninput=function(){if(el.invoice.value==='new')el.amount.value=el.amt.value;};
    el.kind.onchange=function(){if(el.kind.value==='0'&&!invoiced){el.amt.value=Math.round(total*pct)/100;el.amount.value=el.amt.value;}};
    sync();
+   box.querySelectorAll('details[data-receipt-link]').forEach(function(det){
+     var form=det.querySelector('form'),select=form.elements.linkInvoice,fields=form.querySelector('.tracking-new');
+     function update(){var fresh=select.value==='new';fields.hidden=!fresh;form.elements.num.required=fresh;form.elements.amt.required=fresh;}
+     select.onchange=update;update();
+     form.onsubmit=function(e){
+       e.preventDefault();
+       var fresh=select.value==='new',btn=form.querySelector('button[type=submit]'),note=form.querySelector('[role=status]'),invoiceKey=fresh?crypto.randomUUID():select.value;
+       var data={p_quote:q.id,p_receipt:det.dataset.receiptLink,p_invoice:invoiceKey,p_new_invoice:fresh?{n:kinds[Number(form.elements.kind.value)][0],num:form.elements.num.value.trim(),amt:Number(form.elements.amt.value)}:null};
+       btn.disabled=true;status(note,t('Association en cours…','Linking…'));
+       sb.rpc('link_project_receipt_invoice',data,true).then(function(){
+         status(note,t('Facture associée. Le paiement n’a pas été compté deux fois.','Invoice linked. The payment was not counted twice.'));
+         setTimeout(reload,500);
+       }).catch(function(err){btn.disabled=false;status(note,friendly(err),true);});
+     };
+   });
    fm.onsubmit=function(e){e.preventDefault();var b=fm.querySelector('button[type=submit]'),msg=box.querySelector('[role=status]');var isNew=el.invoice.value==='new';
-    var payload={p_quote:q.id,p_id:key,p_invoice:isNew?newKey:el.invoice.value,p_new_invoice:isNew?{n:kinds[+el.kind.value][0],num:el.num.value.trim(),amt:Number(el.amt.value)}:null,p_amount:Number(el.amount.value),p_date:el.date.value,p_method:el.method.value,p_reference:el.reference.value.trim(),p_notify:el.notify.checked};
+    var unbilled=el.invoice.value==='unbilled';
+    var payload={p_quote:q.id,p_id:key,p_amount:Number(el.amount.value),p_date:el.date.value,p_method:el.method.value,p_reference:el.reference.value.trim(),p_notify:el.notify.checked};
+    if(!unbilled){payload.p_invoice=isNew?newKey:el.invoice.value;payload.p_new_invoice=isNew?{n:kinds[+el.kind.value][0],num:el.num.value.trim(),amt:Number(el.amt.value)}:null;}
     b.disabled=true;status(msg,t('Enregistrement…','Saving…'));
-    sb.rpc('record_project_payment',payload,true).then(function(){
+    sb.rpc(unbilled?'record_project_payment_unbilled':'record_project_payment',payload,true).then(function(){
      key=crypto.randomUUID();newKey=crypto.randomUUID();status(msg,payload.p_notify?t('Paiement enregistré. E-mails mis en file d’envoi.','Payment recorded. Emails queued.'):t('Paiement enregistré, sans e-mail.','Payment recorded, no email sent.'));if(payload.p_notify)notify(sb);setTimeout(reload,1200);
     }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});};
    pub.innerHTML='<h2>'+t('Avancement partagé','Shared progress')+'</h2>'+updates(d)+'<details class="tracking-editor"><summary>'+t('＋ Publier une avancée','＋ Publish progress')+'</summary><form><div class="tracking-rows"></div><button class="btn tracking-add" type="button">'+t('＋ Ajouter un groupe','＋ Add a group')+'</button><p class="tracking-help">'+t('Un résumé court par groupe, relu par vous (6 au maximum). Tous les groupes partent ensemble : une seule mise à jour dans l’espace client et un seul e-mail. Le journal privé reste privé ; « Testé » ne signifie pas « Validé par le client ».','One short summary per group, reviewed by you (up to 6). All groups are sent together: one update in the client portal and one email. The private journal stays private; “Tested” does not mean “Client approved”.')+'</p><button class="btn main" type="submit">'+t('Publier et notifier','Publish and notify')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
