@@ -203,15 +203,41 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   </section>
 
   <section class="card" id="c-journal" hidden>
-    <h2>Journal du projet <span class="pill">privé</span><span class="sp"></span><button class="btn sm line" id="jr-add" type="button">+ Entrée</button><button class="btn sm ghost" id="jr-edit" type="button">Modifier</button><button class="btn sm ghost" id="jr-paste" type="button">Coller plusieurs lignes</button><button class="btn sm ghost" id="jr-copy" type="button">Copier</button></h2>
-    <p class="muted" style="margin-bottom:8px">Ce qui a été fait, demandé ou décidé, avec la date. Le client ne voit jamais ce journal.</p>
-    <div id="jr-bulk" hidden>
-      <textarea id="jr-text" placeholder="Une ligne par entrée, par exemple :&#10;2026-11-13 | demande | Photo floutée avant le pass&#10;2026-11-13 | fait | Liste du lieu : 3 personnes par ligne" style="min-height:120px"></textarea>
-      <p class="muted" style="margin:6px 0">Format : date | type | texte. Types : fait, demande, décision, attente. Sans date : aujourd’hui. Sans type : fait.</p>
-      <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn sm main" id="jr-import" type="button">Ajouter au journal</button><button class="btn sm ghost" id="jr-cancel" type="button">Annuler</button></div>
+    <div class="jr-heading">
+      <div><h2>Journal du projet <span class="pill">privé</span></h2>
+        <p class="muted">Vos notes et l’activité GitHub, au même endroit. Rien n’est publié au client automatiquement.</p>
+      </div>
     </div>
-    <div id="jr-filters" role="group" aria-label="Filtrer le journal"></div>
+    <form id="jr-quick" class="jr-quick">
+      <label class="jr-quick-task">Note rapide
+        <textarea id="jr-quick-text" maxlength="600" rows="2" required placeholder="Ce qui a été fait, demandé ou décidé…"></textarea>
+      </label>
+      <div class="jr-quick-controls">
+        <label>Type
+          <select id="jr-quick-type"><option value="fait">Fait</option><option value="demande">Demande du client</option><option value="décision">Décision</option><option value="attente">En attente</option></select>
+        </label>
+        <label>Date <input id="jr-quick-date" type="date" required></label>
+        <button class="btn sm main" type="submit" id="jr-quick-save">Ajouter au journal</button>
+      </div>
+    </form>
+    <div id="jr-github-slot"></div>
+    <div class="jr-manual-title"><h3>Notes et décisions</h3></div>
+    <div id="jr-filters" role="group" aria-label="Filtrer les notes"></div>
     <div id="journal"></div>
+    <details class="jr-advanced">
+      <summary>Outils avancés · Modifier, importer ou copier</summary>
+      <div class="jr-advanced-actions">
+        <button class="btn sm line" id="jr-add" type="button">+ Entrée à éditer</button>
+        <button class="btn sm ghost" id="jr-edit" type="button">Modifier l’historique</button>
+        <button class="btn sm ghost" id="jr-paste" type="button">Importer des lignes</button>
+        <button class="btn sm ghost" id="jr-copy" type="button">Copier les notes</button>
+      </div>
+      <div id="jr-bulk" hidden>
+        <textarea id="jr-text" placeholder="Une ligne par entrée, par exemple :&#10;2026-11-13 | demande | Photo floutée avant le pass&#10;2026-11-13 | fait | Liste du lieu : 3 personnes par ligne" style="min-height:120px"></textarea>
+        <p class="muted" style="margin:6px 0">Format : date | type | texte. Types : fait, demande, décision, attente. Sans date : aujourd’hui.</p>
+        <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn sm main" id="jr-import" type="button">Importer les notes</button><button class="btn sm ghost" id="jr-cancel" type="button">Annuler</button></div>
+      </div>
+    </details>
   </section>
 
   <section class="card" id="c-docs" hidden>
@@ -550,7 +576,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function jrToday(){ var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function jrSort(){ Q.journal.sort(function(a, b){ return String(b.d).localeCompare(String(a.d)); }); }
   function jrSave(){ $('sync').textContent = 'modifications non enregistrées…'; clearTimeout(jrTimer); jrPending = true; jrTimer = setTimeout(function(){ jrPending = false; save({ journal: Q.journal.filter(function(x){ return String(x.t || '').trim(); }) }); }, 700); }
-  var jrFilter = 'all', jrEdit = false;
+  var jrFilter = 'all', jrEdit = false, jrExpanded = false;
   function jrDay(v){ return v ? new Date(v + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Sans date'; }
   function renderJournal(){
     Q.journal = Array.isArray(Q.journal) ? Q.journal : [];
@@ -568,15 +594,18 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       }).join('');
       return;
     }
-    var shown = Q.journal.filter(function(x){ return jrFilter === 'all' || x.k === jrFilter; }), html = '', day = null, per = {};
+    var filtered = Q.journal.filter(function(x){ return jrFilter === 'all' || x.k === jrFilter; }).sort(function(a,b){return String(b.d||'').localeCompare(String(a.d||''));}), shown = jrExpanded ? filtered : filtered.slice(0,8), html = '', day = null, per = {};
     shown.forEach(function(x){ per[x.d || ''] = (per[x.d || ''] || 0) + 1; });
     shown.forEach(function(x){
       if ((x.d || '') !== day) { day = x.d || ''; html += '<p class="jr-day">' + esc(jrDay(day)) + '<span>' + per[day] + ' entrée' + (per[day] > 1 ? 's' : '') + '</span></p>'; }
       html += '<div class="jr-item"><span class="jr-tag k-' + esc(x.k || 'fait') + '">' + esc(label[x.k] || 'Fait') + '</span><span>' + esc(x.t || '') + '</span></div>';
     });
-    $('journal').innerHTML = html || '<p class="muted">Aucune entrée de ce type.</p>';
+    if(filtered.length>8){
+      html += '<button type="button" class="btn sm line jr-show-more" data-more="1">'+(jrExpanded?'Voir moins':'Voir tout l’historique ('+filtered.length+')')+'</button>';
+    }
+    $('journal').innerHTML = html || '<p class="muted">Aucune note dans cette catégorie.</p>';
   }
-  $('jr-filters').onclick = function(e){ var b = e.target.closest('[data-f]'); if (!b) return; jrFilter = b.dataset.f; renderJournal(); };
+  $('jr-filters').onclick = function(e){ var b = e.target.closest('[data-f]'); if (!b) return; jrFilter = b.dataset.f; jrExpanded = false; renderJournal(); };
   $('jr-edit').onclick = function(){ jrEdit = !jrEdit; if (!jrEdit) { Q.journal = Q.journal.filter(function(x){ return String(x.t || '').trim(); }); jrSort(); } renderJournal(); };
   // Entries can be added from elsewhere (for example by the assistant, straight in the database): when the window comes back
   // to the front and nothing is being edited, the journal is read again so nothing is overwritten by an old copy.
@@ -589,7 +618,22 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     jrSave();
   };
   $('journal').onchange = function(e){ if (e.target.classList.contains('d')) { jrSort(); renderJournal(); } };
-  $('journal').onclick = function(e){ if (!e.target.classList.contains('rm')) return; var i = +e.target.closest('.jr').dataset.i; if (String(Q.journal[i].t || '').trim() && !confirm('Retirer cette entrée du journal ?')) return; Q.journal.splice(i, 1); renderJournal(); jrSave(); };
+  $('journal').onclick = function(e){ if(e.target.closest('[data-more]')){jrExpanded=!jrExpanded;renderJournal();return;} if (!e.target.classList.contains('rm')) return; var i = +e.target.closest('.jr').dataset.i; if (String(Q.journal[i].t || '').trim() && !confirm('Retirer cette entrée du journal ?')) return; Q.journal.splice(i, 1); renderJournal(); jrSave(); };
+  $('jr-quick-date').value = jrToday();
+  $('jr-quick').onsubmit = function(e){
+    e.preventDefault();
+    if (!Q || !$('jr-quick').reportValidity()) return;
+    var content = $('jr-quick-text').value.trim();
+    if(!content) return;
+    Q.journal = Array.isArray(Q.journal) ? Q.journal : [];
+    Q.journal.unshift({ d:$('jr-quick-date').value || jrToday(),
+      k:$('jr-quick-type').value, t:content.slice(0,600) });
+    jrSort();jrFilter='all';jrExpanded=false;jrEdit=false;
+    renderJournal();jrSave();
+    $('jr-quick-text').value='';
+    $('jr-quick-date').value=jrToday();
+    toast('Note ajoutée au journal privé.');
+  };
   $('jr-add').onclick = function(){ Q.journal = Q.journal || []; Q.journal.unshift({ d: jrToday(), k: 'fait', t: '' }); jrEdit = true; renderJournal(); var t = $('journal').querySelector('textarea.t'); if (t) t.focus(); };
   $('jr-paste').onclick = function(){ $('jr-bulk').hidden = !$('jr-bulk').hidden; if (!$('jr-bulk').hidden) $('jr-text').focus(); };
   $('jr-cancel').onclick = function(){ $('jr-bulk').hidden = true; };
@@ -892,6 +936,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
 <script src="project-workspace.js?v=20261113-payment-audit" defer></script>
+<script src="github-journal.js?v=20261113-rodney-private" defer></script>
 </body>
 </html>
 
