@@ -150,3 +150,50 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
  #c-journal .jr-github-head .btn{padding:8px 9px;font-size:11px}
  #c-journal .jr-github-head .muted{font-size:11px}
 }
+
+
+/* Project task review: private by default, publishing is an explicit owner action. */
+#c-journal .jr-work-items{padding:16px;margin:16px 0;border:1px solid #e5e3f4;border-radius:15px;background:#fff}
+#c-journal .jr-work-header{display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:12px}
+#c-journal .jr-work-header h3{font-size:16px;margin:0 0 5px}
+#c-journal .jr-work-header .muted{font-size:11.5px;line-height:1.55}
+#c-journal .jr-work-count{font-size:11px;color:#5a47bb;background:#eeecff;border-radius:30px;padding:7px 10px;white-space:nowrap;font-weight:800}
+#c-journal .jr-task-new{display:flex;align-items:end;gap:8px;margin:14px 0}
+#c-journal .jr-task-new label{flex:1 1 auto;margin:0;min-width:0;font-size:12px}
+#c-journal .jr-task-new input{display:block;width:100%;margin-top:5px;min-height:40px}
+#c-journal .jr-task-new button{min-height:40px}
+#c-journal .jr-task-progress{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 13px}
+#c-journal .jr-task-progress span{font-weight:700;color:#575f78;border-radius:20px;background:#f5f5fb;padding:5px 9px;font-size:11px}
+#c-journal .jr-task-list{display:grid;gap:8px}
+#c-journal .jr-task-card{border:1px solid #e7e8f1;border-radius:12px;padding:12px;background:#fbfbfe;min-width:0}
+#c-journal .jr-task-published{background:#f3faf6;border-color:#d5eadd}
+#c-journal .jr-task-top{display:flex;justify-content:space-between;gap:9px;align-items:start}
+#c-journal .jr-task-title{flex:1;min-width:0}
+#c-journal .jr-task-title strong{display:block;overflow-wrap:anywhere;font-size:13.5px}
+#c-journal .jr-task-title small{display:block;color:#6a7287;font-size:11px;margin-top:4px}
+#c-journal .jr-task-top select{width:auto;max-width:130px;min-width:104px;padding:6px 8px;flex:0 0 auto;border-radius:9px;font-size:12px}
+#c-journal .jr-work-badge{color:#126240;background:#d9f1e4;padding:5px 9px;font-weight:800;font-size:11px;border-radius:20px}
+#c-journal .jr-task-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+#c-journal .jr-task-actions details{flex:0 1 auto;min-width:0}
+#c-journal .jr-task-actions summary{cursor:pointer;font-size:12px;font-weight:800;color:#513fc1;padding:6px 2px}
+#c-journal .jr-task-actions details[open]{width:100%;flex-basis:100%;border-top:1px solid #e6e4f1;padding-top:8px}
+#c-journal .jr-task-actions form{display:grid;gap:9px;margin-top:9px}
+#c-journal .jr-task-actions form input,#c-journal .jr-task-actions form select,#c-journal .jr-task-actions form textarea{width:100%}
+#c-journal .jr-task-actions form button{justify-self:start}
+#c-journal .jr-work-help{font-size:11.5px;color:#5f6b81;line-height:1.6;margin-top:9px}
+#c-journal .jr-task-message{color:#175d44;font-size:12px;line-height:1.5;min-height:0}
+#c-journal .jr-task-message.error{color:#ad302b}
+#c-journal .jr-work-tested{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin:0}
+#c-journal .jr-work-tested input{width:17px;height:17px;flex:0 0 17px}
+#c-journal .jr-task-publish label{margin:0}
+#c-journal .jr-task-publish textarea{margin-top:6px}
+#c-journal .jr-github-follow{background:#fff;border:1px solid #d9d6ed;color:#5942b9;font-size:11px;cursor:pointer;padding:5px 8px;font-weight:800;border-radius:20px}
+#c-journal .jr-github-follow:disabled{color:#607a6e;background:#e9f5ed;border-color:#d3e9dc;cursor:default}
+@media(max-width:650px){
+ #c-journal .jr-work-items{padding:12px}
+ #c-journal .jr-task-top{flex-direction:column}
+ #c-journal .jr-task-top select{max-width:100%;width:100%}
+ #c-journal .jr-task-new{display:grid;grid-template-columns:1fr}
+ #c-journal .jr-task-new button{width:100%}
+ #c-journal .jr-task-actions form button{width:100%}
+}
