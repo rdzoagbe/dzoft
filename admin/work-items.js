@@ -6,8 +6,8 @@
 var quoteId=new URLSearchParams(location.search).get('q');
 var root=document.getElementById('jr-tasks-slot'),sb=window.RDsb;
 if(!quoteId||!root||!sb||!sb.session())return;
-var items=[],busy=false,loaded=false;
-var statusNames={todo:['À faire','To do'],working:['En cours','In progress'],review:['À relire','To review'],done:['Terminé','Completed']};
+var items=[],busy=false,loaded=false,refreshQueued=false,autoPromise=null,tasksExpanded=false;
+var statusNames={todo:['À faire','To do'],working:['En cours','In progress'],review:['À vérifier','To verify'],done:['Terminé','Completed']};
 var categories={design:['Interface','Interface'],accounts:['Comptes et profils','Accounts and profiles'],venue:['Lieux et événements','Venues and events'],chat:['Messages','Messaging'],safety:['Sécurité','Security'],other:['Autre','Other']};
 var safeGithub={
  administration:['Administration','other'],
@@ -35,14 +35,17 @@ function selection(values,value){
 }
 function rpc(name,details){return sb.rpc(name,details,true);}
 function load(){
- if(busy)return;busy=true;root.replaceChildren(el('p','muted',t('Lecture des tâches privées…','Loading private tasks…')));
+ if(busy){refreshQueued=true;return;}busy=true;root.replaceChildren(el('p','muted',t('Lecture des tâches privées…','Loading private tasks…')));
  rpc('list_project_work_items',{p_quote:quoteId}).then(function(data){
   items=Array.isArray(data)?data:[];loaded=true;render();
  }).catch(function(){
   root.replaceChildren();
   root.append(el('p','jr-task-message error',t('Tâches indisponibles. Votre journal est conservé.','Tasks unavailable. Your journal is preserved.')));
   var retry=button(t('Réessayer','Retry'));retry.onclick=load;root.append(retry);
- }).finally(function(){busy=false;});
+ }).finally(function(){
+  busy=false;
+  if(refreshQueued){refreshQueued=false;load();}
+ });
 }
 function save(item,done){
  return rpc('save_project_work_item',{
@@ -57,7 +60,7 @@ function render(){
  var header=el('div','jr-work-header');
  var titles=el('div');
  titles.append(el('h3','',t('Tâches et validations','Tasks and approvals')));
- titles.append(el('p','muted',t('Suivi privé. Une modification GitHub ne signifie jamais « terminé ».','Private tracking. A GitHub commit never automatically means completed.')));
+ titles.append(el('p','muted',t('GitHub alimente ce suivi automatiquement à l’ouverture. Chaque activité reste à vérifier, jamais terminée d’office.','GitHub fills this review list when you open it. Activities always require verification and are never marked completed automatically.')));
  header.append(titles,el('span','jr-work-count',items.filter(function(x){return x.status!=='done';}).length+' '+t('à suivre','open')));
  outer.append(header);
  var form=el('form','jr-task-new');
@@ -79,11 +82,20 @@ function render(){
  };
  var summary=el('div','jr-task-progress');
  summary.append(el('span','',items.filter(function(x){return x.status==='done';}).length+' '+t('terminée(s)','completed')));
- summary.append(el('span','',items.filter(function(x){return x.status==='review';}).length+' '+t('à relire','to review')));
+ summary.append(el('span','',items.filter(function(x){return x.status==='review';}).length+' '+t('à vérifier','to verify')));
  outer.append(summary);
- if(!items.length)outer.append(el('p','muted jr-tasks-empty',t('Aucune tâche encore. Ajoutez une note ou sélectionnez une catégorie GitHub.','No tasks yet. Add one or review a GitHub category.')));
+ if(!items.length)outer.append(el('p','muted jr-tasks-empty',t(
+  quoteId==='c8a50cee-3856-4539-98a3-f5df201dbff0'?'Les activités GitHub récentes seront ajoutées ici automatiquement.':'Aucune tâche pour le moment.',
+  quoteId==='c8a50cee-3856-4539-98a3-f5df201dbff0'?'Recent GitHub activity will appear here automatically.':'No tasks yet.'
+ )));
  var list=el('div','jr-task-list');
- items.forEach(function(item){
+ var order={review:0,working:1,todo:2,done:3};
+ var ordered=items.slice().sort(function(a,b){
+  var pri=(order[a.status]===undefined?9:order[a.status])-(order[b.status]===undefined?9:order[b.status]);
+  if(pri)return pri;
+  return String(b.source_date||b.created_at||'').localeCompare(String(a.source_date||a.created_at||''));
+ });
+ (tasksExpanded?ordered:ordered.slice(0,8)).forEach(function(item){
   var card=el('article','jr-task-card'+(item.published_at?' jr-task-published':''));
   var top=el('div','jr-task-top');
   var text=el('div','jr-task-title');
@@ -160,18 +172,52 @@ function render(){
   list.append(card);
  });
  outer.append(list);
+ if(ordered.length>8){
+  var more=button(tasksExpanded?t('Voir les 8 priorités','Show top 8'):t('Voir toutes les tâches ('+ordered.length+')','Show all tasks ('+ordered.length+')'),'btn sm line jr-tasks-more');
+  more.onclick=function(){tasksExpanded=!tasksExpanded;render();};
+  outer.append(more);
+ }
  var foot=el('p','jr-work-help',t('Les tâches restent privées. Seul « Approuver et notifier » rend votre propre résumé visible au client.','Tasks remain private. Only “Approve and notify” shares your own summary with the client.'));
  outer.append(foot);
  root.append(outer);
 }
-function addFromGithub(date,group){
- if(quoteId!=='c8a50cee-3856-4539-98a3-f5df201dbff0'||!Object.prototype.hasOwnProperty.call(safeGithub,group)
-  ||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return Promise.reject(new Error('Source not approved'));
- var item={title:'GitHub · '+safeGithub[group][0]+' (à examiner)',status:'todo',category:safeGithub[group][1],
-  source_date:date,source_group:group};
- return save(item).then(function(saved){if(loaded)load();return saved;});
+// Auto-import is triggered exclusively by the already-sanitized, read-only
+// GitHub activity viewer. Only date and allowlisted category cross to Supabase.
+// Keep an overlap for missed visits; DB unique(quote,date,group) prevents repeats.
+function sanitizedActivity(rows){
+ if(!Array.isArray(rows))return [];
+ var windowStart=new Date(Date.now()-13*24*60*60*1000).toISOString().slice(0,10);
+ var windowEnd=new Date(Date.now()+24*60*60*1000).toISOString().slice(0,10);
+ var seen=Object.create(null),out=[];
+ rows.forEach(function(row){
+  if(!row||typeof row.date!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(row.date)
+     ||row.date<windowStart||row.date>windowEnd||!row.groups||typeof row.groups!=='object')return;
+  Object.keys(row.groups).sort().forEach(function(group){
+   if(out.length>=40||!Object.prototype.hasOwnProperty.call(safeGithub,group)
+      ||!(Number(row.groups[group])>0))return;
+   var key=row.date+'|'+group;
+   if(seen[key])return;
+   seen[key]=true;
+   // Do not transmit group counts, commit subjects, authors, URLs, SHAs, or code.
+   out.push({date:row.date,group:group});
+  });
+ });
+ return out;
 }
-window.DzoftWorkItems={addFromGithub:addFromGithub,refresh:load};
+function syncFromGithub(rows){
+ if(quoteId!=='c8a50cee-3856-4539-98a3-f5df201dbff0')
+  return Promise.reject(new Error('Unapproved project'));
+ var safe=sanitizedActivity(rows);
+ if(!safe.length)return Promise.resolve({added:0,checked:0,client_notified:false});
+ if(autoPromise)return autoPromise;
+ autoPromise=rpc('sync_project_github_groups',{p_quote:quoteId,p_items:safe})
+ .then(function(result){
+  if(result && Number(result.added)>0)load();
+  return result;
+ }).finally(function(){autoPromise=null;});
+ return autoPromise;
+}
+window.DzoftWorkItems={syncFromGithub:syncFromGithub,refresh:load};
 var fold=root.closest('details');
 if(fold){
  fold.addEventListener('toggle',function(){if(fold.open&&(!loaded||!busy))load();});

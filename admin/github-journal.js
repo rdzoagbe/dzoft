@@ -1,6 +1,6 @@
-/* DZOFT private GitHub activity viewer. Never writes GitHub content to Supabase.
- * No commit text, author, AI attribution, links, file diffs, source or sessions
- * are rendered, logged, stored or published to the client portal.
+/* DZOFT private GitHub activity viewer. Sends ONLY fixed date/category pairs
+ * to the owner-guarded private task intake. No commit message, author, AI
+ * attribution, code, diff, SHA or session is sent to Supabase/client portal.
  * Rodney's repo is public and a reviewed, fixed allowlist; no GitHub key used. */
 (function(){
 'use strict';
@@ -55,7 +55,7 @@ function draw(rows){
  var eyebrow=document.createElement('span');eyebrow.className='jr-source';eyebrow.textContent='GITHUB · ProRod · main';
  var h=document.createElement('h3');h.textContent='Activité de développement';
  var subtitle=document.createElement('p');subtitle.className='muted';
- subtitle.textContent='Résumé automatique privé. Aucun message de commit, code, attribution IA ni lien de session n’est importé ou envoyé au client.';
+ subtitle.textContent='Les activités récentes alimentent automatiquement les tâches privées « À vérifier ». Aucun message de commit, code, attribution IA ni session ne sont enregistrés.';
  title.append(eyebrow,h,subtitle);
  var refresh=document.createElement('button');refresh.type='button';refresh.className='btn sm line';refresh.textContent='Actualiser';
  refresh.onclick=function(){load(true);};head.append(title,refresh);box.append(head);
@@ -75,27 +75,16 @@ function draw(rows){
    var matched=categories.filter(function(c){return c[0]===category;})[0];
    pill.textContent=(matched?matched[2]:'Développement et maintenance')+(row.groups[category]>1?' · '+row.groups[category]:'');
    groups.append(pill);
-   var follow=document.createElement('button');follow.type='button';
-   follow.className='jr-github-follow';follow.textContent='＋ Suivre';
-   var dateKey=row.date,groupKey=category;
-   follow.setAttribute('aria-label','Créer une tâche privée pour '+pill.textContent+' du '+dateKey);
-   follow.onclick=function(){
-     if(!window.DzoftWorkItems||typeof window.DzoftWorkItems.addFromGithub!=='function'){
-       follow.textContent='Ouvrez de nouveau le projet';return;
-     }
-     follow.disabled=true;follow.textContent='Ajout…';
-     window.DzoftWorkItems.addFromGithub(dateKey,groupKey).then(function(){
-       follow.textContent='✓ Dans les tâches';
-     }).catch(function(){
-       follow.disabled=false;follow.textContent='Réessayer';
-     });
-   };
-   groups.append(follow);
+
   });section.append(groups);body.append(section);
  }
  box.append(body);
- var foot=document.createElement('p');foot.className='muted jr-github-foot';foot.textContent='Actualisation automatique à l’ouverture du journal et lorsque l’application reste ouverte. Ne modifie pas votre journal manuel ni l’espace client.';
- box.append(foot);root.append(box);
+ var foot=document.createElement('p');foot.className='muted jr-github-foot';foot.textContent='Lecture automatique à l’ouverture et périodiquement lorsque DZOFT reste ouvert. Import privé des 14 derniers jours, regroupé par date et catégorie. Les notes manuelles et l’espace client restent inchangés.';
+ box.append(foot);
+ var sync=document.createElement('p');sync.className='muted jr-github-sync';sync.setAttribute('role','status');
+ sync.textContent='Synchronisation des catégories privées en cours…';
+ box.append(sync);root.append(box);
+ return sync;
 }
 function status(text){
  root.replaceChildren();
@@ -111,7 +100,20 @@ function load(force){
   return resp.json();
  }).then(function(payload){
   if(!Array.isArray(payload))throw new Error('Unexpected GitHub data');
-  last=Date.now();draw(summarize(payload));
+  last=Date.now();
+  var summary=summarize(payload),notice=draw(summary);
+  if(!window.DzoftWorkItems||typeof window.DzoftWorkItems.syncFromGithub!=='function'){
+   notice.textContent='Synchronisation automatique indisponible. Rechargez votre espace privé.';
+   return;
+  }
+  return window.DzoftWorkItems.syncFromGithub(summary).then(function(result){
+   var added=Number(result&&result.added)||0,checked=Number(result&&result.checked)||0;
+   notice.textContent=added?
+    added+' activité'+(added>1?'s':'')+' ajoutée'+(added>1?'s':'')+' automatiquement dans les tâches « À vérifier ». Rien envoyé au client.':
+    'Suivi privé à jour · '+checked+' catégorie'+(checked>1?'s':'')+' vérifiée'+(checked>1?'s':'')+'. Rien envoyé au client.';
+  }).catch(function(){
+   notice.textContent='Activité GitHub affichée, mais enregistrement automatique indisponible. Réessayez avec « Actualiser ».';
+  });
  }).catch(function(){
   status('Activité GitHub temporairement indisponible. Vos notes manuelles restent enregistrées.');
   var retry=document.createElement('button');retry.type='button';retry.className='btn sm line';retry.textContent='Réessayer';retry.onclick=function(){load(true);};root.append(retry);

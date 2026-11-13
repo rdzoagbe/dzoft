@@ -139,7 +139,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
-<link rel="stylesheet" href="project-workspace.css?v=20261113-review-tasks">
+<link rel="stylesheet" href="project-workspace.css?v=20261113-auto-gh">
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261113-payment-audit">
 <script src="../assets/project-tracking.js?v=20261113-payment-audit"></script>
 </head>
@@ -205,7 +205,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   <section class="card" id="c-journal" hidden>
     <div class="jr-heading">
       <div><h2>Journal du projet <span class="pill">privé</span></h2>
-        <p class="muted">Vos notes et l’activité GitHub, au même endroit. Le client ne voit jamais ce journal. Rien n’est publié automatiquement.</p>
+        <p class="muted">GitHub ajoute automatiquement les activités récentes aux tâches privées « À vérifier ». Le client ne voit jamais ce journal. Seules les publications approuvées lui sont communiquées.</p>
       </div>
     </div>
     <form id="jr-quick" class="jr-quick">
@@ -937,8 +937,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
 <script src="project-workspace.js?v=20261113-payment-audit" defer></script>
-<script src="github-journal.js?v=20261113-rodney-private" defer></script>
-<script src="work-items.js?v=20261113-review-tasks" defer></script>
+<script src="github-journal.js?v=20261113-auto-gh" defer></script>
+<script src="work-items.js?v=20261113-auto-gh" defer></script>
 </body>
 </html>
 

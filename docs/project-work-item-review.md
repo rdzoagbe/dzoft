@@ -4,16 +4,16 @@
 
 Rodney's **private project journal** now contains a small tasks area above the GitHub activity feed:
 
-- **À faire** — initial state for new tasks and GitHub-derived activity.
+- **À faire** — initial state for manual tasks.
 - **En cours** — actively being worked on.
-- **À relire** — owner review pending (NOT client approval).
+- **À vérifier** — default for automatically imported GitHub activity; requires owner review (NOT client approval).
 - **Terminé** — owner has checked completion, but **still unpublished**.
 
 You may add manual tasks on any accepted project. The existing quote milestones, journal, payment history and client portal remain intact. Task statuses are distinct from client-approved milestones and do not change them automatically.
 
-The public GitHub activity feed for **ProjectRodney/ProRod main** still auto-refreshes when DZOFT is open. On any dated category, tap **＋ Suivre** to create one private task from a fixed category label and date. GitHub commits themselves do **not** create project tasks or mark work complete.
+The public GitHub activity feed for **ProjectRodney/ProRod main** still auto-refreshes when DZOFT is open. Reading a recent dated category now **automatically creates or reuses** one owner-private task with a fixed category label/date, initially **À vérifier**. GitHub commits themselves never mark work complete or publish to the client.
 
-The database stores only `source_date` and `source_group` from GitHub. It never stores commit subjects, bodies, author names or emails, AI co-author/trailer metadata, model/vendor names, code, diffs, SHA values, or session URLs. Duplicate category/date selections return the same existing work item.
+The database stores only `source_date` and `source_group` from GitHub. It never stores commit subjects, bodies, author names or emails, AI co-author/trailer metadata, model/vendor names, code, diffs, SHA values, or session URLs. Repeat synchronization preserves each existing work item (including its owner-edited status) and does not create duplicates. The database rejects any AI/model/source/author metadata keys.
 
 ## Publishing requires human approval
 
@@ -41,19 +41,19 @@ The new `private.publish_project_work_item` RPC verifies owner authentication an
 
 `tests/work-item-review.sql` runs in a transaction that is always rolled back. It verifies owner access, safe GitHub provenance, per-date deduplication, immutability after publication, client-visible summary, single email record, idempotent retry, and preservation of private legacy notes. It does not actually send an email.
 
-`tests/project-work-item-review.test.cjs` uses fake browser/Supabase objects and confirms that only allowed GitHub date/category values can reach the task RPC, and that client publishing requires both owner task completion and an explicit confirmation.
+`tests/project-work-item-review.test.cjs` uses fake browser/Supabase objects and confirms that only allowed GitHub date/category values can reach the owner-only automatic sync RPC, and that client publishing requires both task completion and an explicit confirmation. `tests/auto-github-private-sync.sql` verifies the new RPC transactionally.
 
 ### Mobile smoke test
 
 Open installed DZOFT Admin → Dossiers → Projets → Rodney → Journal privé.
 
 1. See the **Tâches et validations** card and existing private notes.
-2. Expand GitHub activity, tap **＋ Suivre** on a recent group.
-3. Return to tasks: a new private **À faire** item appears (tapping again does not duplicate it).
-4. Update its status through En cours / À relire / Terminé.
+2. Expand the journal: GitHub activity is loaded and recent categories are added automatically.
+3. Confirm new private items are **À vérifier**, and pressing **Actualiser** doesn't create duplicates.
+4. Update a reviewed task through En cours / Terminé.
 5. Only after Terminé, expand the publication review and type an approved summary. **Publishing really notifies the client**, so use a synthetic test client to test the final button; never press it on Rodney just for demonstration.
 6. Verify client portal still contains no private work item source data.
 
 ### Deliberately not in scope
 
-This is not a GitHub webhook or a push-triggered background import. Activity is read when admin opens the project, and a task is created only by tapping **＋ Suivre**. This protects the client from noise and keeps the person managing DZOFT in control.
+This is not a GitHub webhook or a push-triggered background import. Categories are automatically registered only while the authenticated admin journal is open and refreshed. The app cannot sync while closed; a separate authenticated server integration is required for that. Task completion and client publication remain strictly manual.
