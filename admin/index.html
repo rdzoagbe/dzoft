@@ -562,7 +562,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
-  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); }
+  function render(){ renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
+  var dashboardReceiptStates={},receiptQueryGeneration=0;
+  function refreshReceiptDashboard(){
+    var ps=projectsList(),current=++receiptQueryGeneration;
+    if(!ps.length){dashboardReceiptStates={};return;}
+    Promise.all(ps.map(function(q){
+      return sb.rpc('project_tracking',{p_quote:q.id},true).then(function(d){return {id:q.id,d:d};},function(){return {id:q.id,d:null};});
+    })).then(function(rows){
+      if(current!==receiptQueryGeneration)return;
+      var next={}; rows.forEach(function(x){if(x.d)next[x.id]=x.d;});
+      dashboardReceiptStates=next;renderDash();
+    });
+  }
   var financeGeneration = 0;
   function renderFinance(){
     var box=$('finance-content'); if(!box)return;
@@ -585,8 +597,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       var warning=valid.length===rows.length?'':'<div class="panel finance-warning">'+(en?'Some project balances are unavailable; totals include only accessible projects.':'Certains soldes sont indisponibles : les totaux comprennent uniquement les projets accessibles.')+'</div>';
       box.innerHTML=summary+warning+'<div class="finance-list">'+rows.map(function(item){
         var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
+        var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}).length:0;
         return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span></div>'+
          (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
+         (pending?'<p class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</p>':'')+
          '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Open & record payment':'Ouvrir et enregistrer')+'</button></article>';
       }).join('')+'</div>';
     }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
@@ -656,7 +670,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     });
     data.quotes.filter(function(q){ return q.shared && !q.accepted_at && q.status !== 'refusé' && q.valid && new Date(q.valid + 'T23:59:59') < new Date(); })
       .forEach(function(q){ todo.push(['Devis ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ') expiré le ' + day(q.valid + 'T12:00:00') + ' : prolongez sa validité ou classez-le', 'follow:' + q.id, 'Suivi']); });
-    running.forEach(function(q){ var dep = steps(q).filter(function(s){ return s.k === 'deposit' && !s.done; })[0]; if (dep && !(q.invoices || []).some(function(x){return x.n || x.num;})) todo.push(['Acompte à recevoir · ' + q.numero + ' (' + ((client(q.client_id) || {}).nom || '—') + ')', 'remind:' + q.id, 'Demander l’acompte']); });
+    running.forEach(function(q){
+      var dep=steps(q).filter(function(s){return s.k==='deposit'&&!s.done;})[0];
+      var paid=dashboardReceiptStates[q.id];
+      if(dep&&!(q.invoices||[]).some(function(x){return x.n||x.num;})&&!(paid&&Number(paid.received)>0)){
+        todo.push(['Acompte à recevoir · '+q.numero+' ('+((client(q.client_id)||{}).nom||'—')+')','remind:'+q.id,'Demander l’acompte']);
+      }
+    });
+    ps.forEach(function(q){
+      var d=dashboardReceiptStates[q.id];
+      var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}):[];
+      if(pending.length)todo.push([pending.length+' facture'+(pending.length>1?'s':'')+' à établir · '+q.numero+' ('+((client(q.client_id)||{}).nom||'—')+')','follow:'+q.id,'Associer une facture']);
+    });
     running.forEach(function(q){
       var s = steps(q), i = -1;
       s.forEach(function(x, j){ if (x.done) i = j; });
