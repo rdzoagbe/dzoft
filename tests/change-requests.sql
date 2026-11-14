@@ -50,8 +50,18 @@ begin
  exception when others then if sqlerrm like 'FAIL%' then raise;end if; end;
  select accepted_total into after_total from public.quotes where id=qid;
  if after_total<>before_total or after_total<>1500 then raise exception 'Original quote changed';end if;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated',
+       'app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
+ p:=public.owner_progress_change(req_id,'in_progress');
+ if p->>'status'<>'in_progress' then raise exception 'Approved work cannot start';end if;
+ p:=public.owner_progress_change(req_id,'completed');
+ if p->>'status'<>'completed' then raise exception 'Work completion not recorded';end if;
+ begin
+   perform public.owner_progress_change(req_id,'in_progress');
+   raise exception 'FAIL completed work reopened';
+ exception when others then if sqlerrm like 'FAIL%' then raise;end if; end;
  select count(*) into event_count from public.dzoft_change_events where request_id=req_id;
- if event_count<>4 then raise exception 'Audit history incomplete %',event_count;end if;
+ if event_count<>6 then raise exception 'Audit history incomplete %',event_count;end if;
  begin
    update public.dzoft_change_events set event_type='withdrawn' where request_id=req_id;
    raise exception 'FAIL audit edit permitted';
