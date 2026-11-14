@@ -1,40 +1,82 @@
-# DZOFT — Verified Brevo transactional email delivery
+# DZOFT — Brevo delivery verification (live)
 
-## What you see in Admin
+## Status, 14 November 2026
 
-**DZOFT Admin → Dashboard → Email delivery history** and **Projects → Rodney → Activity** now show a **separate delivery state for each recipient**:
+**Active in Supabase RD-Clients:** Brevo event-reporting reconciliation, scheduled every hour.
+The first backfill checked **10** existing email records and recorded **18** matching
+provider events. Brevo independently confirmed delivery of Rodney's €350 payment
+confirmation at **2026-11-14 09:16:52 UTC** (10:16:52 Paris time).
+The owner's copy was delivered and has an open-tracking signal.
 
-- **Accepted by Brevo:** Brevo accepted the sending API call; delivery is **not verified**.
-- **Delivered:** Brevo reports that the recipient's mail server accepted the message. This does not guarantee the person saw it in their inbox.
-- **Opened (tracked):** a tracking-pixel signal was observed; automatic image fetching and privacy proxies can produce opens. It is not proof Rodney read it.
-- **Temporary bounce / Bounced / Blocked / Invalid / Deferred / Spam complaint:** provider-reported delivery problems. Displayed without changing the underlying payment status or sending record.
-- **Sending failed:** the existing outbound queue failed and its existing explicit retry is available.
+The Brevo **webhook-management API returned HTTP 400** on this account for
+both filtered and unfiltered GET /v3/webhooks. Consequently, the
+webhook receiver is securely deployed but **no Brevo webhook has been
+successfully registered**. Do not call it connected. Instead the
+working official reporting API `GET /v3/smtp/statistics/events` is used
+for an automated, hourly, server-side poll. It requires no changes to a
+recipient's email or action by Rodney. There are no automatic emails.
 
-The separate `email_outbox.status = sent` still means accepted by the provider, never “delivered”. Historical sent messages have an initial **unconfirmed** delivery state until a verified provider event arrives.
+## Owner interface
 
-## Integration architecture
+**DZOFT Admin → Dashboard → Email delivery history** and
+**Projects → Rodney → Activity** show each recipient separately:
 
-- Provider: Brevo transactional email API and transactional webhooks.
-- Supabase Edge worker: `brevo-delivery-events`, URL
-  `https://rzghbvmszbjlqkdjzpxc.supabase.co/functions/v1/brevo-delivery-events`.
-- Incoming webhook requests authenticate through a **256-bit random secret** in the HTTP header `X-DZOFT-Delivery-Token`. The secret is created and held inside **Supabase Vault**, and checked using a service-role-only RPC; it is never saved to GitHub, local storage, client JavaScript, or a chat message.
-- A one-time trusted `/setup` call uses a **different** Vault setup token to register or update the exact DZOFT webhook through the existing server-side `BREVO_API_KEY`. Custom webhook headers are configured in Brevo automatically. The setup function never changes any unrelated Brevo webhooks.
-- Events tracked: delivered, opened (with caveat), hard/soft bounced, blocked, invalid, deferred and spam. Only the Brevo message-ID, recipient email, event name and UTC event timestamp are used to match an existing `email_outbox` row. Raw message content, IP, user-agent, subject and click links are not stored.
-- An event with an unknown message-ID or the wrong recipient cannot update DZOFT. Duplicate callbacks are idempotent; out-of-order provider callbacks do not regress a more recent state.
-- The private audit table stores minimal event type and timestamp, not full webhook payloads. It is not available to anonymous or client users; owner-only RLS for email_outbox is retained.
-- The setup worker performs a one-time **read-only reconciliation** of a bounded set of previously sent DZOFT emails against Brevo's `GET /v3/smtp/statistics/events?messageId=...` API. It never re-sends emails, publishes updates or touches client payments.
+- **Accepted by Brevo:** sending API accepted the request; no delivery verification yet.
+- **Delivered:** the receiving mail server accepted the message; not proof the
+  recipient read or noticed it.
+- **Opened (tracked):** an email image/open event was detected; privacy proxies
+  and automatic image downloads can trigger this without human reading.
+- **Bounced, temporary bounce, blocked, invalid address, deferred, spam:** provider-reported issues.
+- **Sending failed:** the pre-existing email sending process failed, with its
+  existing manual retry available.
 
-## Verification and operations
+The original `email_outbox.status` is **unchanged**: `sent` continues to
+mean accepted by the sending provider. New `delivery_status` and event
+timestamps record the downstream result. Old emails without a matched provider
+event remain `unconfirmed`.
 
-- Supabase SQL tests: `tests/brevo-delivery-lifecycle.sql`, run strictly inside `BEGIN; ... ROLLBACK;`.
-- Node tests: `tests/brevo-delivery-ui.test.cjs` verify classification, spoofing resistance contracts and private client-facing boundaries.
-- Chromium E2E: synthetic owner dashboard + private project activity, with two separate recipients and no actual API writes.
-- Live smoke: an unauthenticated webhook request must return **401**, a configured webhook must be visible in Brevo's Transactional Webhooks, and a live provider event must update only its matching recipient.
-- If Brevo is temporarily unavailable, an email must remain **Unconfirmed** rather than being labeled Delivered. A setup-backfill failure should be shown as incomplete, not reported as proof of delivery.
+## Data flow and security
 
-**Brevo webhook and logs references:**
+The Edge Function `brevo-delivery-events` is deployed as an HTTP endpoint
+with `verify_jwt=false`, but its `/reconcile` and `/backfill` routes
+require a **256-bit random secret generated and stored exclusively in Supabase Vault**.
+Only the server-side Cron job and trusted Edge Function use that token.
+
+- Cron job: `dzoft_brevo_delivery_reconcile`, runs at minute 25 of every
+  hour (UTC). No mobile app, laptop, or browser needs to remain open.
+- The worker reads at most **18 recent DZOFT messages** (past 14 days) during
+  each poll. It queries Brevo by the **known provider message ID + recipient email**.
+- One-off backfill can check up to 25 past emails (up to 85 days), without
+  sending anything.
+- Brevo events are saved only when **both** message ID and recipient address
+  match an already sent DZOFT outbox record. Callback ordering and duplicates
+  are handled safely; the existing `status=sent` is never changed.
+- Event audit rows contain only internal outbox ID, event type and timestamp.
+  Raw email content, tracking links, IP, user agent, and other Brevo payload
+  fields are never stored in DZOFT.
+- The delivery status and audit are owner-private. Client portal access,
+  finance records, signed quotes and payment receipts remain unchanged.
+- The separate HTTP webhook route can process future Brevo events, but only
+  with a different Vault-protected secret in a custom header; it is not yet
+  connected in Brevo due to webhook-management API errors.
+
+If Brevo is unavailable or its API returns an error, a message remains in its
+last *verified* state. We do not invent delivery results.
+
+## Tests and proof
+
+- SQL transaction-only tests:
+  `tests/brevo-delivery-lifecycle.sql`: recipient substitution, unknown IDs,
+  retries, out-of-order callbacks, valid Vault credentials, owner-only grants.
+- JS tests: `tests/brevo-delivery-ui.test.cjs`.
+- Chromium tests: mocked owner and client rows, verifies independent statuses
+  on dashboard and project activity without reaching production.
+- Live initial backfill: HTTP 200 `{"ok":true,"mode":"scheduled_polling","checked":10,"matched":18}`.
+- Next monitoring check: confirm the scheduled Cron job runs successfully and
+  `last_polled_at` advances. A manual successful backfill does not prove a
+  scheduled run occurred.
+
+Brevo documentation:
+https://developers.brevo.com/reference/get-email-event-report
 https://developers.brevo.com/docs/transactional-webhooks
 https://developers.brevo.com/docs/secured-webhooks
-https://developers.brevo.com/reference/get-email-event-report
-
-The integration is added without confirming or changing receipts, generating invoices, emailing Rodney, or changing the signed quote.
