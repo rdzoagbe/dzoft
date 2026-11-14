@@ -80,6 +80,10 @@ begin
  p_title:=btrim(coalesce(p_title,''));p_description:=btrim(coalesce(p_description,''));
  if char_length(p_title) not between 3 and 120 or char_length(p_description) not between 10 and 2000
  then raise exception 'Request title or description length is invalid';end if;
+ if (select count(*) from public.dzoft_change_requests where quote_id=p_quote and client_id=p_client
+      and status in ('requested','proposed'))>=5 then raise exception 'Please resolve an existing open change request first'; end if;
+ if exists(select 1 from public.dzoft_change_requests where quote_id=p_quote and client_id=p_client
+      and created_at>now()-interval '60 seconds') then raise exception 'Please wait before submitting another request'; end if;
  insert into public.dzoft_change_requests(quote_id,client_id,title,description)
  values(p_quote,p_client,p_title,p_description) returning * into c;
  insert into public.dzoft_change_events(request_id,event_type,actor_type,proposal_version,details)
