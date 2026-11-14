@@ -4,6 +4,7 @@ import {test,expect} from '@playwright/test';
 // never reads Rodney's actual notes, never writes payments or sends an email.
 const syntheticSb = `
 (function(){
+ window.__syntheticCalls=[];window.__syntheticVersion='20261114-debug';
  const qid='c8a50cee-3856-4539-98a3-f5df201dbff0';
  const now=new Date().toISOString();
  const quote={
@@ -29,13 +30,13 @@ const syntheticSb = `
   fromUrl:()=>null,
   aal:()=> 'aal2',mfaFresh:()=>true,
   mfa:{passkey:{supported:()=>false},challenge:()=>Promise.reject('disabled'),verify:()=>Promise.reject('disabled')},
-  select:async (table)=>{
+  select:async (table)=>{window.__syntheticCalls.push('select:'+table);
    if(table==='quotes')return [quote];
    if(table==='clients')return [client];
    if(table==='settings')return [{id:1,payment:{}}];
    return [];
   },
-  rpc:async(name)=>{
+  rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
    if(name==='project_tracking')return {received:450,remaining:1050,payment_statuses:[],receipts:[]};
    if(name==='list_project_work_items')return work;
@@ -79,7 +80,11 @@ test('Owner dashboard renders real navigation and action panel with synthetic da
  await expect(page.locator('#today-action-center')).toBeVisible();
  await expect(page.locator('[data-tab="projects"]').first()).toBeAttached();
  await expect(page.locator('[data-tab="dash"]').first()).toBeAttached();
- await expect(page.locator('#today-action-center')).toContainText(/450|Received|Reçu/);
+ const todayText=await page.locator('#today-action-center').textContent();
+ if(!/450|Received|Reçu/.test(todayText||'')){
+  const diagnostic=await page.evaluate(()=>({mock:window.__syntheticVersion,calls:window.__syntheticCalls,toast:document.querySelector('#toast')?.textContent,panels:document.querySelector('#dash-focus')?.textContent?.slice(0,120)}));
+  throw new Error('Synthetic dashboard did not render verified payments: '+JSON.stringify({diagnostic,errors}));
+ }
  expect(errors,'JavaScript exceptions in authenticated synthetic admin').toEqual([]);
 });
 
@@ -91,7 +96,7 @@ test('Rodney project weekly review and private task statuses render without a re
  });
  await page.waitForTimeout(250);
  if (!(await page.locator('#c-journal').isVisible())) {
-  const state=await page.evaluate(()=>({url:location.href,mockPresent:!!window.RDsb,loading:document.querySelector('#loading')?.textContent}));
+  const state=await page.evaluate(()=>({url:location.href,mock:window.__syntheticVersion,hasSession:!!window.RDsb?.session(),calls:window.__syntheticCalls,loading:document.querySelector('#loading')?.textContent}));
   throw new Error('Synthetic project failed to render: '+JSON.stringify({state,errors}));
  }
  await expect(page.locator('#c-journal')).toBeVisible();
@@ -111,6 +116,8 @@ test('Read-only synthetic owner tests never emit network requests containing rea
   if(req.url().includes('supabase.co/rest/v1')||req.url().includes('supabase.co/functions/v1'))external.push(req.url());
  });
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
- await expect(page.locator('#jr-tasks-slot')).toContainText(/Tâches et validations|Tasks and approvals/);
+ await expect.poll(async()=> {
+  const text=await page.locator('#jr-tasks-slot').textContent();return /Tâches et validations|Tasks and approvals/.test(text||'');
+ }).toBeTruthy();
  expect(external,'Synthetic browser tests should not send API calls to production').toEqual([]);
 });
