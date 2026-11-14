@@ -26,6 +26,7 @@ const syntheticSb = `
   ADMIN:location.origin+'/admin/',PORTAL:location.origin+'/espace/',
   session:()=>({access_token:'synthetic-test-only',user}),
   me:()=>Promise.resolve(user),
+  fromUrl:()=>null,
   aal:()=> 'aal2',mfaFresh:()=>true,
   mfa:{passkey:{supported:()=>false},challenge:()=>Promise.reject('disabled'),verify:()=>Promise.reject('disabled')},
   select:async (table)=>{
@@ -54,7 +55,7 @@ const syntheticSb = `
 `;
 
 async function syntheticOwner(page) {
- await page.route('**/admin/sb.js?*', async route=>{
+ await page.route(url => url.pathname.endsWith('/admin/sb.js'), async route=>{
    await route.fulfill({status:200,contentType:'text/javascript; charset=utf-8',body:syntheticSb});
  });
  // Do not allow any private live API calls in these synthetic tests.
@@ -68,6 +69,11 @@ test('Owner dashboard renders real navigation and action panel with synthetic da
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.waitForTimeout(250);
+ if (!(await page.locator('#app').isVisible())) {
+   const state=await page.evaluate(()=>({mockPresent:!!window.RDsb,fromUrl:typeof window.RDsb?.fromUrl,loginVisible:!!document.querySelector('#auth')&&!document.querySelector('#auth').hidden}));
+   throw new Error('Synthetic admin failed to initialize: '+JSON.stringify({state,errors}));
+ }
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('#auth')).toBeHidden();
  await expect(page.locator('#today-action-center')).toBeVisible();
@@ -83,6 +89,11 @@ test('Rodney project weekly review and private task statuses render without a re
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{
   waitUntil:'domcontentloaded'
  });
+ await page.waitForTimeout(250);
+ if (!(await page.locator('#c-journal').isVisible())) {
+  const state=await page.evaluate(()=>({url:location.href,mockPresent:!!window.RDsb,loading:document.querySelector('#loading')?.textContent}));
+  throw new Error('Synthetic project failed to render: '+JSON.stringify({state,errors}));
+ }
  await expect(page.locator('#c-journal')).toBeVisible();
  await expect(page.locator('#jr-weekly-slot')).toContainText("This week's project review");
  await expect(page.locator('#jr-tasks-slot')).toContainText(/Tâches et validations|Tasks and approvals/);
