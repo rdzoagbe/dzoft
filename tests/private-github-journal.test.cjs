@@ -84,7 +84,7 @@ test('automatic viewer passes only synthetic safe activity groups into the owner
  assert.equal(calls.length,1);
  assert.ok(Array.isArray(received));
  assert.ok(received.length>=1);
- assert.match(root.textContent,/ajoutées? automatiquement/);
+ assert.match(root.textContent,/ajoutées? au résumé de la semaine/);
  assert.doesNotMatch(JSON.stringify(received),/Claude|Co.Authored|claude.ai|private@example|session|QR code printable|Mobile layout update|[de]{40}/i);
  assert.equal(received.reduce((n,r)=>n+Object.keys(r.groups).length,0)>=2,true);
 });
