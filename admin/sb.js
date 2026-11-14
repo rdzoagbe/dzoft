@@ -32,7 +32,7 @@
           var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) { d = t; }
           if (!r.ok) {
             var msg = (d && (d.msg || d.message || d.error_description || d.error)) || ('Erreur ' + r.status);
-            var err = new Error(msg); err.status = r.status; throw err;
+            var err = new Error(msg); err.status = r.status; if (d && typeof (d.code || d.error_code) === 'string') err.code = d.code || d.error_code; throw err;
           }
           return d;
         });
