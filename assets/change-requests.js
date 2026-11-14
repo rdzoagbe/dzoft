@@ -83,6 +83,7 @@ function bindClient(root,options){
 }
 function bindOwner(root,options){
  var sb=options.sb,quoteId=options.quoteId,en=!!options.en,busy=false;
+ if(root.__dzoftOwnerRefresh)return root.__dzoftOwnerRefresh();
  root.innerHTML=rootMarkup(en);var records=[];
  function refresh(){return sb.rpc('owner_list_change_requests',{p_quote:quoteId},true).then(function(data){records=Array.isArray(data)?data:[];root.querySelector('.dzoft-change-content').innerHTML=
  '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Envoyez un montant et un délai proposés, puis attendez l’approbation explicite du client avant de commencer les travaux complémentaires.','A request is not an order. Propose a price and timeline, then await the client’s explicit approval before additional work begins.')+'</p>'+
