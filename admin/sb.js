@@ -179,6 +179,26 @@
        an enrolled AAL2/TOTP factor. The server, never local browser state,
        decides which permissions and verification are required. */
     devicePasskey: {
+      /* Supabase Auth may have passkeys disabled even when a browser supports
+         WebAuthn. Probe the server first and fail closed on network errors.
+         An options challenge is public and contains no user/biometric data. */
+      availability: function (refresh) {
+        if (!sb.devicePasskey.supported()) return Promise.resolve(false);
+        if (!refresh && sb.devicePasskey._availabilityCheck) return sb.devicePasskey._availabilityCheck;
+        sb.devicePasskey._availabilityCheck = req('/auth/v1/passkeys/authentication/options', {
+          method: 'POST', body: {}
+        }).then(function (options) {
+          if (!options || !options.challenge_id || !options.options) {
+            throw new Error('Passkey service returned an invalid response.');
+          }
+          return true;
+        }, function (err) {
+          var code = String((err && (err.code || err.message)) || '').toLowerCase();
+          if (code.indexOf('passkey_disabled') >= 0) return false;
+          throw err;
+        });
+        return sb.devicePasskey._availabilityCheck;
+      },
       supported: function () {
         return !!(global.isSecureContext && global.PublicKeyCredential &&
           global.navigator && navigator.credentials &&
