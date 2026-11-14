@@ -1,7 +1,7 @@
 (function(global){
  'use strict';
  // Owner-only invoice print sheet. No network requests, mutations, or automatic email.
- // The official invoice number is supplied by the owner, never invented by DZOFT.
+ // Number is issued by DZOFT's atomic server-side sequence, or supplied for an already-issued external invoice.
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
  function amount(n){return Number(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});}
  function date(v){var d=new Date(/^\d{4}-\d{2}-\d{2}$/.test(v)?v+'T12:00:00':v);return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});}
@@ -18,7 +18,7 @@
    if(!seller||!buyer||!address){
      throw new Error('Complétez le nom et l’adresse du client et votre adresse professionnelle sur le devis accepté avant de créer le PDF.');
    }
-   var now=new Date(), issued=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+   var now=new Date(), issued=invoice.issuedOn && /^\d{4}-\d{2}-\d{2}$/.test(invoice.issuedOn)?invoice.issuedOn:[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
    var taxable=f.novat===false||f.novat==='false';
    var ht=taxable?Math.round(amt/1.2*100)/100:amt, vat=Math.round((amt-ht)*100)/100;
    var title=invoice.label||'Facture d’acompte', remaining=Math.round((amt-paid)*100)/100;
