@@ -84,3 +84,9 @@
 @media(max-width:600px){.tracking-print-btn{width:100%;justify-content:center}}
 
 .tracking-draft{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px 14px;margin:0 0 12px}.tracking-draft p{margin:0 0 8px;font-size:14px}
+
+/* Private draft refreshed from permitted GitHub activity */
+.tracking-auto-draft{border:1px solid #c1d5f1;background:#eef5ff;border-radius:12px;padding:14px;margin:12px 0;color:#223e69}
+.tracking-auto-draft p{margin:7px 0 11px;font-size:13px;line-height:1.5}
+.tracking-github-refresh{display:inline-flex;margin:7px 0 13px;align-items:center;justify-content:center}
+@media(max-width:640px){.tracking-github-refresh,.tracking-auto-draft .btn{width:100%;justify-content:center}}
