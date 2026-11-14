@@ -108,9 +108,10 @@ test('Device-first login fails closed when Supabase passkeys are disabled', asyn
   if (!(await device.isVisible())) {
     test.skip(true,'WebAuthn not supported by this browser');
   }
-  await device.click();
-  await expect(page.locator('#a-msg')).toContainText('not enabled in Supabase');
+  // A disabled backend must not expose a button that can never work.
+  await expect(device).toBeHidden();
   await expect(page.locator('#email-signin-details')).toHaveAttribute('open','');
   await expect(page.locator('#f-login')).toBeVisible();
+  await expect.poll(() => blocked.length).toBe(1);
   expect(blocked).toEqual(['POST']);
 });
