@@ -356,7 +356,9 @@ footer{max-width:1180px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var TERMS = 'v2026-10', TERMS_URL = '../cgv.html';
+  var TERMS = 'v2026-11', TERMS_URL = '../cgv.html';
+  function quoteTermsUrl(q){return q && q.accepted_at && q.accepted_terms==='v2026-10'?'../cgv-2026-10.html':TERMS_URL;}
+  function showNewScopeClause(q){return !q.accepted_at || q.accepted_terms==='v2026-11';}
   var GOOGLE_REVIEW = 'https://g.page/r/CYguS5Uj8gxpECE/review';
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
@@ -787,8 +789,9 @@ footer{max-width:1180px}
     else if (expired(q)) h += '<div class="warnbox">Ce devis a expiré le ' + day(isoDay(f.valid)) + '. <a href="#/messages">Écrivez-moi</a> : je vous en envoie un à jour.</div>';
     if (pending(q)) h += '<section class="card accept" id="acc"><h2>Bon pour accord</h2>' +
       '<p>Si le devis ci-dessous vous convient, vous pouvez l’accepter ici, sans rien imprimer. Une question ou une modification avant ? <a href="#/messages">Écrivez-moi</a>.</p>' +
+      '<div class="infobox"><b>Votre budget reste maîtrisé.</b> Le prix est fixe pour les prestations décrites dans le devis. Toute nouvelle demande après signature pouvant entraîner un supplément ou un délai différent fera d’abord l’objet d’un devis complémentaire soumis à votre accord explicite. Sans accord, aucun supplément n’est facturé et le périmètre initial reste inchangé. Les corrections dues au devis signé restent incluses.</div>' +
       '<label for="a-name">Votre nom et prénom</label><input id="a-name" autocomplete="name" maxlength="120" value="' + esc(D.client.nom) + '">' +
-      '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>' +
+      '<label class="chk"><input type="checkbox" id="a-ok"><span>J’ai lu le devis n° ' + esc(q.numero) + ' d’un montant de <b>' + eur(q.total) + '</b> et j’accepte son contenu ainsi que les <a href="' + TERMS_URL + '" target="_blank" rel="noopener">conditions générales de vente</a>. Je comprends que toute prestation supplémentaire sera soumise à un nouveau devis à accepter avant sa réalisation et sa facturation.</span></label>' +
       '<div class="withdraw"><b>Délai de rétractation</b><p>Si vous êtes un particulier, ou un professionnel de 5 salariés au plus et que ce projet ne relève pas de votre activité principale, vous disposez de 14 jours pour changer d’avis, sans frais (<a href="' + TERMS_URL + '#a6" target="_blank" rel="noopener">article 6 des CGV</a>). Sans demande de votre part, je commence le travail à la fin de ce délai.</p>' +
       '<label class="chk"><input type="checkbox" id="a-early"><span>Je demande que le travail commence <b>dès maintenant</b>, avant la fin du délai de 14 jours. Je reconnais que si je me rétracte, je paierai le travail déjà réalisé, et que je perdrai mon droit de rétractation une fois la prestation entièrement réalisée.</span></label></div>' +
       '<div class="sign"><b>Signature électronique</b>' + (
@@ -1029,6 +1032,7 @@ footer{max-width:1180px}
     h += '<div class="why"><b>Comment lire ce devis.</b> Chaque ligne correspond à une partie du travail, avec son prix : le total en est la somme. ' +
       (a.opt ? 'Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. ' : '') +
       'Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>';
+    if (showNewScopeClause(q)) h += '<div class="why"><b>Prix et modifications après signature.</b> Ce devis fixe le prix des prestations décrites. Toute demande supplémentaire ou modification importante après acceptation peut entraîner un devis complémentaire et un délai ajusté, soumis à votre accord exprès avant intervention ou facturation. Les corrections nécessaires pour respecter ce devis sont incluses.</div>';
     var host = d.host || [];
     if (host.length) h += '<h4>Hébergement et comptes, à votre nom</h4>' + (f.accnote ? '<p class="sub" style="font-size:13px;margin-bottom:6px">' + esc(f.accnote) + '</p>' : '') +
       '<table><thead><tr><th>Élément</th><th>Où</th><th>Coût indicatif</th></tr></thead><tbody>' +
@@ -1038,7 +1042,7 @@ footer{max-width:1180px}
       '<div><span>Acompte</span>' + a.pct + ' %</div>' + (f.pay ? '<div><span>Paiement</span>' + esc(f.pay) + '</div>' : '') +
       (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
       (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
-    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + TERMS_URL + '" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a></p>';
+    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/' + (q.accepted_at && q.accepted_terms==='v2026-10'?'cgv-2026-10.html':'cgv.html') + '</a></p>';
     if (q.accepted_at) h += '<div class="signed">' + (q.accepted_method ? 'Signé électroniquement' : 'Bon pour accord donné en ligne') + ' le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
       (q.accepted_method ? ' (code reçu ' + (q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(q.accepted_target || '') + ')' : '') +
       (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';
