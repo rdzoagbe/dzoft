@@ -5,7 +5,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function cash(v){return Number(v||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});}
 function when(v){return v?new Date(v).toLocaleString('fr-FR',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';}
 function tr(en,fr,english){return en?english:fr;}
-function labels(en){return {requested:tr(en,'À étudier','Awaiting review'),proposed:tr(en,'Proposition à valider','Awaiting approval'),approved:tr(en,'Approuvée','Approved'),declined:tr(en,'Refusée par le client','Declined by client'),rejected:tr(en,'Non retenue','Not proceeding'),withdrawn:tr(en,'Retirée','Withdrawn')};}
+function labels(en){return {requested:tr(en,'À étudier','Awaiting review'),proposed:tr(en,'Proposition à valider','Awaiting approval'),approved:tr(en,'Approuvée','Approved'),declined:tr(en,'Refusée par le client','Declined by client'),rejected:tr(en,'Non retenue','Not proceeding'),withdrawn:tr(en,'Retirée','Withdrawn'),in_progress:tr(en,'Travaux en cours','In progress'),completed:tr(en,'Travaux terminés','Work completed')};}
 function history(r,en){var h=r.history||[];return '<details class="dzoft-change-history"><summary>'+tr(en,'Historique des décisions','Decision history')+' ('+h.length+')</summary><ol>'+h.map(function(e){return '<li>'+esc(labels(en)[e.event_type]||e.event_type)+' · '+esc(tr(en,e.actor_type==='owner'?'DZOFT':'Client',e.actor_type==='owner'?'DZOFT':'Client'))+' · '+esc(when(e.at))+'</li>';}).join('')+'</ol></details>';}
 function stateError(err,en){return esc((err&&err.message)||tr(en,'Opération impossible. Réessayez.','Action failed. Please retry.'));}
 function banner(root,message,error){var m=root.querySelector('.dzoft-change-message');if(!m)return;m.textContent=message;m.style.color=error?'#9b2020':'#14613e';m.setAttribute('role','status');}
@@ -35,7 +35,7 @@ function clientCard(r,en,name){
    '</button><button class="btn line" type="button" data-change-decline="'+esc(r.id)+'">'+tr(en,'Refuser cette proposition','Decline proposal')+'</button></div></form>';
  }
  if(r.status==='requested'||r.status==='proposed')h+='<button class="btn line sm" type="button" data-change-withdraw="'+esc(r.id)+'">'+tr(en,'Retirer ma demande','Withdraw request')+'</button>';
- if(r.status==='approved')h+='<p class="dzoft-change-confirm">'+tr(en,'Accord confirmé par ','Approved by ')+esc(r.decision_name||'')+' · '+esc(when(r.decided_at))+'. '+tr(en,'Le prix du devis d’origine reste inchangé ; cet accord autorise uniquement les prestations supplémentaires détaillées.','The original quote price remains unchanged; this approval covers only the additional work described.')+'</p>';
+ if(['approved','in_progress','completed'].includes(r.status))h+='<p class="dzoft-change-confirm">'+tr(en,'Accord confirmé par ','Approved by ')+esc(r.decision_name||'')+' · '+esc(when(r.decided_at))+'. '+tr(en,'Le prix du devis d’origine reste inchangé ; cet accord autorise uniquement les prestations supplémentaires détaillées.','The original quote price remains unchanged; this approval covers only the additional work described.')+'</p>';
  return h+history(r,en)+'</article>';
 }
 function adminCard(r,en){
@@ -58,8 +58,11 @@ function adminCard(r,en){
    '<input name="reason" minlength="5" maxlength="600" placeholder="'+tr(en,'Ex. : non réalisable dans les conditions proposées','E.g. not feasible under the requested conditions')+'" required></label>'+
    '<button class="btn line sm" type="submit">'+tr(en,'Refuser la demande','Reject request')+'</button></form>';
  }
- if(r.status==='approved')h+='<p class="dzoft-change-confirm">'+tr(en,'Approuvé par ','Approved by ')+esc(r.decision_name||'')+' · '+esc(when(r.decided_at))+
+ if(['approved','in_progress','completed'].includes(r.status))h+='<p class="dzoft-change-confirm">'+tr(en,'Approuvé par ','Approved by ')+esc(r.decision_name||'')+' · '+esc(when(r.decided_at))+
  '. '+tr(en,'Vous pouvez planifier ce travail. Facturez-le séparément conformément à cet accord, sans modifier la facture initiale.','You can schedule the additional work. Invoice it separately under this agreement; do not change the original invoice.')+'</p>';
+ if(r.status==='approved')h+='<button class="btn main sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="in_progress">'+tr(en,'Démarrer les travaux complémentaires','Start approved additional work')+'</button>';
+ if(r.status==='in_progress')h+='<button class="btn main sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="completed">'+tr(en,'Marquer les travaux terminés','Mark additional work completed')+'</button>';
+ if(r.status==='completed')h+='<p class="dzoft-change-meta">'+tr(en,'Travaux complémentaires terminés. La facturation complémentaire doit être faite séparément, sans modifier le devis et les paiements d’origine.','Additional work complete. Supplementary billing must be handled separately without altering the original quote or payment ledger.')+'</p>';
  return h+history(r,en)+'</article>';
 }
 function bindClient(root,options){
@@ -90,6 +93,7 @@ function bindOwner(root,options){
  (records.length?records.map(function(r){return adminCard(r,en);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p){if(busy)return;busy=true;p.then(function(){banner(root,tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
+ root.addEventListener('click',function(ev){var button=ev.target.closest('[data-change-progress]');if(!button||busy)return;var next=button.dataset.next;if(next!=='in_progress'&&next!=='completed')return;if(!global.confirm(tr(en,'Enregistrer cette progression des travaux complémentaires ?','Record additional-work progress?')))return;perform(sb.rpc('owner_progress_change',{p_request:button.dataset.changeProgress,p_status:next},true));});
  root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-propose],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
   if(f.dataset.changePropose){perform(sb.rpc('owner_propose_change',{p_request:f.dataset.changePropose,p_scope:f.elements.scope.value.trim(),p_extra_price:Number(f.elements.amount.value),p_timeline:f.elements.timeline.value.trim()},true));return;}
   if(f.dataset.changeReject){if(!global.confirm(tr(en,'Refuser cette demande ?','Reject this request?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
