@@ -37,7 +37,9 @@ function rpc(name,details){return sb.rpc(name,details,true);}
 function load(){
  if(busy){refreshQueued=true;return;}busy=true;root.replaceChildren(el('p','muted',t('Lecture des tâches privées…','Loading private tasks…')));
  rpc('list_project_work_items',{p_quote:quoteId}).then(function(data){
-  items=Array.isArray(data)?data:[];loaded=true;render();
+  // Automatic GitHub activity groups are kept for the weekly summary only. They are listed as tasks
+  // only once the owner has acted on one (moved it out of « to verify », or shared it with the client).
+  items=(Array.isArray(data)?data:[]).filter(function(x){return x&&(!x.source_group||x.published_at||x.status!=='review');});loaded=true;render();
  }).catch(function(){
   root.replaceChildren();
   root.append(el('p','jr-task-message error',t('Tâches indisponibles. Votre journal est conservé.','Tasks unavailable. Your journal is preserved.')));
@@ -60,7 +62,7 @@ function render(){
  var header=el('div','jr-work-header');
  var titles=el('div');
  titles.append(el('h3','',t('Tâches et validations','Tasks and approvals')));
- titles.append(el('p','muted',t('GitHub alimente ce suivi automatiquement à l’ouverture. Chaque activité reste à vérifier, jamais terminée d’office.','GitHub fills this review list when you open it. Activities always require verification and are never marked completed automatically.')));
+ titles.append(el('p','muted',t('Ajoutez une tâche quand vous voulez suivre un point ou en informer le client. Rien n’est envoyé au client sans votre validation.','Add a task when you want to follow something or tell the client about it. Nothing is sent to the client without your approval.')));
  header.append(titles,el('span','jr-work-count',items.filter(function(x){return x.status!=='done';}).length+' '+t('à suivre','open')));
  outer.append(header);
  var form=el('form','jr-task-new');
@@ -85,8 +87,8 @@ function render(){
  summary.append(el('span','',items.filter(function(x){return x.status==='review';}).length+' '+t('à vérifier','to verify')));
  outer.append(summary);
  if(!items.length)outer.append(el('p','muted jr-tasks-empty',t(
-  quoteId==='c8a50cee-3856-4539-98a3-f5df201dbff0'?'Les activités GitHub récentes seront ajoutées ici automatiquement.':'Aucune tâche pour le moment.',
-  quoteId==='c8a50cee-3856-4539-98a3-f5df201dbff0'?'Recent GitHub activity will appear here automatically.':'No tasks yet.'
+  'Aucune tâche pour le moment.',
+  'No tasks yet.'
  )));
  var list=el('div','jr-task-list');
  var order={review:0,working:1,todo:2,done:3};

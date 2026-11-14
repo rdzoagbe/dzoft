@@ -57,3 +57,11 @@ Open installed DZOFT Admin → Dossiers → Projets → Rodney → Journal priv�
 ### Deliberately not in scope
 
 This is not a GitHub webhook or a push-triggered background import. Categories are automatically registered only while the authenticated admin journal is open and refreshed. The app cannot sync while closed; a separate authenticated server integration is required for that. Task completion and client publication remain strictly manual.
+
+## Change of 14 November 2026 (owner request)
+
+Automatic GitHub activity groups are no longer listed under « Tâches et validations ». They are still recorded
+(date and category only) and feed the weekly summary, which now shows days with activity and areas worked on,
+without « to verify » counters. An automatic item appears in the task list only if its status was changed by
+the owner or if it was shared with the client. No stored record was deleted. Manual tasks and the
+owner-approved publication to the client are unchanged.

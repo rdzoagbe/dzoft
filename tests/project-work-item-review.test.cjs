@@ -77,3 +77,13 @@ test('project task SQL uses owner-only RPCs, RLS, fixed provenance and atomic on
  const client=read('espace/index.html');
  assert.doesNotMatch(client,/project_work_items|list_project_work_items/);
 });
+
+test('automatic GitHub activity groups feed the weekly summary only; they are not listed as tasks until the owner acts on one',()=>{
+ const tasks=read('admin/work-items.js'),weekly=read('admin/weekly-review.js');
+ assert.ok(tasks.includes("filter(function(x){return x&&(!x.source_group||x.published_at||x.status!=='review');})"),'untouched automatic items are not shown as tasks');
+ assert.doesNotMatch(tasks,/GitHub fills this review list|GitHub alimente ce suivi/);
+ assert.doesNotMatch(weekly,/"To verify"|"In progress"|"Completed"/,'the weekly card asks nothing of the owner');
+ assert.ok(weekly.includes('"Days with activity"')&&weekly.includes('"Areas worked on"'));
+ // Publishing to the client still needs a completed task and an explicit confirmation.
+ assert.ok(tasks.includes('publish_project_work_item'));
+});

@@ -55,7 +55,7 @@ function draw(rows){
  var eyebrow=document.createElement('span');eyebrow.className='jr-source';eyebrow.textContent='GITHUB · ProRod · main';
  var h=document.createElement('h3');h.textContent='Activité de développement';
  var subtitle=document.createElement('p');subtitle.className='muted';
- subtitle.textContent='Les activités récentes alimentent automatiquement les tâches privées « À vérifier ». Aucun message de commit, code, attribution IA ni session ne sont enregistrés.';
+ subtitle.textContent='Les activités récentes sont regroupées par jour et par thème pour le résumé de la semaine. Aucun message de commit, code, attribution IA ni session ne sont enregistrés.';
  title.append(eyebrow,h,subtitle);
  var refresh=document.createElement('button');refresh.type='button';refresh.className='btn sm line';refresh.textContent='Actualiser';
  refresh.onclick=function(){load(true);};head.append(title,refresh);box.append(head);
@@ -109,8 +109,8 @@ function load(force){
   return window.DzoftWorkItems.syncFromGithub(summary).then(function(result){
    var added=Number(result&&result.added)||0,checked=Number(result&&result.checked)||0;
    notice.textContent=added?
-    added+' activité'+(added>1?'s':'')+' ajoutée'+(added>1?'s':'')+' automatiquement dans les tâches « À vérifier ». Rien envoyé au client.':
-    'Suivi privé à jour · '+checked+' catégorie'+(checked>1?'s':'')+' vérifiée'+(checked>1?'s':'')+'. Rien envoyé au client.';
+    added+' activité'+(added>1?'s':'')+' ajoutée'+(added>1?'s':'')+' au résumé de la semaine. Rien envoyé au client.':
+    'Suivi privé à jour · '+checked+' catégorie'+(checked>1?'s':'')+' lue'+(checked>1?'s':'')+'. Rien envoyé au client.';
   }).catch(function(){
    notice.textContent='Activité GitHub affichée, mais enregistrement automatique indisponible. Réessayez avec « Actualiser ».';
   });

@@ -26,22 +26,20 @@ function summary(items){
  var start=monday();
  var rows=(Array.isArray(items)?items:[]).filter(function(v){return v&&safeDay(v.source_date)>=start&&
   Object.prototype.hasOwnProperty.call(label,v.source_group);});
- var counts={review:0,working:0,todo:0,done:0,published:0},categories={};
+ var counts={review:0,working:0,todo:0,done:0,published:0},categories={},days={};
  rows.forEach(function(v){
   if(Object.prototype.hasOwnProperty.call(counts,v.status))counts[v.status]++;
   if(v.published_at)counts.published++;
   categories[v.source_group]=(categories[v.source_group]||0)+1;
+  days[safeDay(v.source_date)]=true;
  });
  var names=Object.keys(categories).sort().map(function(c){return label[c];});
  var text="UPZONE – Internal weekly progress review\nWeek starting "+start+
-  "\nDevelopment topics detected: "+rows.length+
-  "\nAreas: "+(names.join(", ")||"No recent activity")+
-  "\nAwaiting verification: "+counts.review+
-  "\nIn progress: "+counts.working+
-  "\nCompleted internally: "+counts.done+
+  "\nDays with development activity: "+Object.keys(days).length+
+  "\nAreas worked on: "+(names.join(", ")||"No recent activity")+
   "\nAlready shared with client: "+counts.published+
-  "\n\nInternal draft only. Development activity does not prove delivery or testing. Review every task before any client communication.";
- return {start:start,counts:counts,names:names,total:rows.length,text:text};
+  "\n\nInternal draft only. Development activity does not prove delivery or testing. What was done is written in the project journal.";
+ return {start:start,counts:counts,names:names,total:rows.length,days:Object.keys(days).length,text:text};
 }
 function load(){
  if(loading)return;loading=true;
@@ -73,10 +71,9 @@ function draw(report,state){
  section.append(health);
  var stats=node("div","jr-weekly-stats");
  [
-  [String(report.total),"Activity groups"],
-  [String(report.counts.review),"To verify"],
-  [String(report.counts.working),"In progress"],
-  [String(report.counts.done),"Completed"]
+  [String(report.days),"Days with activity"],
+  [String(report.names.length),"Areas worked on"],
+  [String(report.counts.published),"Shared with client"]
  ].forEach(function(v){
   var cell=node("div","jr-weekly-stat");
   cell.append(node("strong","",v[0]),node("span","",v[1]));stats.append(cell);
@@ -84,7 +81,7 @@ function draw(report,state){
  section.append(stats);
  var category=node("p","jr-work-help","Areas this week: "+(report.names.join(" · ")||"No recent categories"));
  section.append(category);
- var info=node("p","jr-work-help","This is a review aid, not an automatically generated client report. Completed work still requires your approval and a separate client-facing summary.");
+ var info=node("p","jr-work-help","A view of where the work went this week. It asks nothing of you: what was done is in the journal above, and the client is told only what you choose to publish.");
  section.append(info);
  var actions=node("div","jr-weekly-actions");
  var copy=node("button","btn sm line","Copy private review");copy.type="button";
