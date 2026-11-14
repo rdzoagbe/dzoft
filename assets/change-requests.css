@@ -1,0 +1,26 @@
+/* DZOFT supplementary quote workflow (admin and authenticated client space) */
+.dzoft-change-message:not(:empty){padding:8px 0;font-weight:600;font-size:13px}
+.dzoft-change-help{color:var(--muted,var(--mute,#5c667c));font-size:13px;line-height:1.6;margin:6px 0 15px}
+.dzoft-change-item{padding:16px;border:1px solid #d9e1ed;border-radius:12px;margin:12px 0;background:var(--card,#fff);max-width:100%;overflow-wrap:anywhere}
+.dzoft-change-item>header{display:flex;justify-content:space-between;align-items:start;gap:14px;flex-wrap:wrap}
+.dzoft-change-status{border-radius:99px;background:#edf2ff;color:#234684;font-size:12px;padding:4px 10px;font-weight:700}
+.dzoft-change-item>p{font-size:13px;white-space:pre-wrap;margin:9px 0;line-height:1.55}
+.dzoft-change-meta{color:#636e81}
+.dzoft-change-proposal{background:#f3f6fc;border:1px solid #d8e1f1;border-radius:9px;padding:13px;margin:13px 0;color:#1b2948}
+.dzoft-change-proposal p{white-space:pre-wrap;font-size:13px;margin:7px 0;line-height:1.5}
+.dzoft-change-new{margin:12px 0;border:1px solid #ccd8f3;border-radius:10px;padding:12px}
+.dzoft-change-new>summary{font-weight:700;color:#254a9a;cursor:pointer}
+.dzoft-change-form{display:grid;gap:11px;margin:13px 0 5px}
+.dzoft-change-form>label:not(.dzoft-change-check){display:grid;gap:5px;font-size:13px;font-weight:600}
+.dzoft-change-form input:not([type=checkbox]),.dzoft-change-form textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-box;border:1px solid #cad3e1;border-radius:8px;padding:10px;font:inherit;background:var(--card,#fff);color:var(--ink,#1b2948)}
+.dzoft-change-form p{font-size:12px;line-height:1.6;color:var(--muted,var(--mute,#636e81))}
+.dzoft-change-actions{display:flex;gap:8px;flex-wrap:wrap}
+.dzoft-change-actions .btn,.dzoft-change-form>.btn{justify-self:start}
+.dzoft-change-check{display:flex;align-items:start;gap:8px;font-size:12px;line-height:1.6}
+.dzoft-change-check input{margin-top:3px;flex-shrink:0}
+.dzoft-change-confirm{background:#edf9f2;border-radius:9px;padding:10px;color:#22593c}
+.dzoft-change-history{margin-top:14px;font-size:12px;color:var(--muted,var(--mute,#4a5970))}
+.dzoft-change-history summary{cursor:pointer}
+.dzoft-change-history ol{padding-left:20px;line-height:1.9;margin:7px 0}
+.dzoft-change-reject{border-top:1px solid #e2e7f0;padding-top:11px}
+@media(max-width:640px){.dzoft-change-item{padding:12px}.dzoft-change-actions{flex-direction:column}.dzoft-change-actions .btn,.dzoft-change-form>.btn{width:100%;justify-content:center}}
