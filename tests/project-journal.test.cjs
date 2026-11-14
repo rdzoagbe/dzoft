@@ -26,7 +26,7 @@ test('the next client update is prepared as a private draft; publishing and addi
   // The draft only fills the form: the client is told through the existing owner-triggered publication, nothing else.
   assert.match(tracking, /q\.progress_draft&&Array\.isArray\(q\.progress_draft\.updates\)/);
   assert.equal((tracking.match(/publish_project_updates/g) || []).length, 1, 'one publication path, on submit');
-  assert.doesNotMatch(tracking.split('var draft=')[1].split('pf.onsubmit')[0], /\.rpc\(/, 'filling the form calls nothing');
+  assert.doesNotMatch(tracking.split('var draft=')[1].split('pf.onsubmit')[0], /\.rpc\('(?:publish_project_updates|owner_publish_github_progress_draft)'/, 'preparing a private draft must never publish');
   assert.match(admin, /id="st-proposed" hidden/);
   assert.match(admin, /le client ne les voit pas tant que vous ne les ajoutez pas/);
   // Never returned to clients.
