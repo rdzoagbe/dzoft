@@ -58,6 +58,12 @@
    if(!taxable)block('TVA non applicable, article 293 B du CGI.',88);
    if(f.pay){text('Conditions de règlement :',10,true);block(f.pay,88);}
    block('Nature : prestation de services. Facture liée au devis '+safe(q.numero||'')+'.',88);
+   // Reminder, not a unilateral revision. Legacy signed agreements keep their original document wording.
+   if(q.accepted_terms==='v2026-11'){
+     y-=7;
+     text('PRIX CONVENU ET CHANGEMENTS',10,true);
+     block('Le prix du devis reste fixe pour les prestations convenues. Une demande hors périmètre peut entraîner un supplément ou un délai ajusté, uniquement après acceptation expresse d’un devis complémentaire ou d’un avenant avant intervention et facturation. Les corrections dues au devis signé restent incluses.',87);
+   }
    // PDF 1.4 with two embedded standard font references and a single content stream.
    var stream=commands.join('\n')+'\n',streamBytes=bytes(stream);
    var chunks=['%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'], offsets=[0];
