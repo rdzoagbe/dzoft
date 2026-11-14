@@ -33,6 +33,23 @@ A valid server challenge does **not** mean a user passkey was already registered
 The Chrome message `beforeinstallpromptevent.preventDefault() called; banner not shown`
 is an unrelated PWA installation notice. It does not affect passkey Auth.
 
+## Android / Google Password Manager — existing laptop passkey
+
+When Chrome on a laptop stores a DZOFT passkey in **Google Password Manager**, Google can synchronize that same passkey to a Samsung/Android phone using the same signed-in Google account. A new passkey does **not** have to be created on each device. The phone may offer the already-registered credential when the user chooses **Unlock with this device** on the DZOFT sign-in page.
+
+The passkey list shows credentials **registered against the DZOFT account**, not physical devices. A row labelled **Google Password Manager** does not prove it lives only on the laptop.
+
+**Owner diagnostic — 14 November 2026:** DZOFT Supabase Auth recorded three successful `POST /passkeys/registration/options` responses (HTTP 200) at 21:21–21:22 UTC, with no matching registration-verification attempt in that window. The failure occurred before a completed credential reached Supabase: possible explanations include a duplicate/synced credential, browser rejection, or an aborted platform prompt. These logs **do not** establish exactly which local Android error was thrown.
+
+The DZOFT Settings UI now:
+- Explains that passkeys can sync through Google Password Manager and recommends testing existing sign-in before creating a second credential.
+- Labels the optional action **Add another passkey** when one is already registered.
+- Differentiates `InvalidStateError` / `webauthn_credential_exists`, `NotAllowedError`, `NotSupportedError`, `SecurityError`, Supabase challenge expiry and expired MFA verification.
+- Reuses one status panel on repeated failures instead of stacking identical red alerts.
+- Never removes or overwrites a registered credential, bypasses AAL2/TOTP or exposes raw passkey challenge data in error messages.
+
+To test without deleting anything: **Sign out on the phone → Unlock with this device → choose the existing Google Password Manager credential → authenticate with fingerprint/PIN → complete the six-digit TOTP step if prompted.** If the installed PWA does not offer the credential, open `https://rdzoagbe.github.io/dzoft/admin/` in the latest Android Chrome browser and try the same flow. Keep email/password and authenticator available as recovery.
+
 ## When the Supabase feature is disabled
 
 The login page now checks the Auth server, not merely WebAuthn browser support.
