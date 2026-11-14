@@ -562,7 +562,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   function clearProposedSteps(){
     var d = Q.progress_draft || {}, next = Array.isArray(d.updates) && d.updates.length ? { prepared: d.prepared || null, updates: d.updates } : null;
-    Q.progress_draft = next; return sb.update('quotes', QID, { progress_draft: next });
+    return sb.update('quotes', QID, { progress_draft: next }).then(function(){ Q.progress_draft = next; });
   }
   function renderProposedSteps(){
     var box = $('st-proposed'), list = proposedSteps();
@@ -573,9 +573,16 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       list.map(function(s){ return '<li>' + esc(s.t.trim()) + (s.done ? ' · faite' + (s.d ? ' le ' + new Date(s.d + 'T12:00:00').toLocaleDateString('fr-FR') : '') : ' · à venir') + (s.s ? '<br><span class="muted">' + esc(s.s) + '</span>' : '') + '</li>'; }).join('') +
       '</ul><button class="btn sm main" type="button" id="st-proposed-add">Ajouter ces étapes</button> <button class="btn sm ghost" type="button" id="st-proposed-skip">Ignorer</button>';
     $('st-proposed-add').onclick = function(){
-      list.forEach(function(s, i){ Q.steps.push({ k: 'x' + Date.now() + i, t: s.t.trim().slice(0, 120), s: (s.s || '').slice(0, 240), done: !!s.done, d: s.done ? (s.d || new Date().toISOString().slice(0, 10)) : '', note: '' }); });
-      // Added first, saved with the other milestones; proposals already in the list are no longer offered.
-      renderSteps(); later(); Promise.resolve(clearProposedSteps()).catch(function(){});
+      if (!confirm('Ajouter ces étapes au projet ? Elles seront toutes « à faire » jusqu’à votre vérification explicite, même si le brouillon proposait « faite ».')) return;
+      var button = $('st-proposed-add'), previous = Q.steps.slice();
+      var added = list.map(function(s, i){ return { k: 'x' + Date.now() + i, t: s.t.trim().slice(0, 120), s: (s.s || '').slice(0, 240), done: false, d: '', note: '' }; });
+      button.disabled = true;
+      // Save milestones BEFORE clearing the draft; never lose proposed work on a failed save.
+      sb.update('quotes', QID, { steps: previous.concat(added) }).then(function(){
+        Q.steps = previous.concat(added);
+        return clearProposedSteps().catch(function(){ /* Saved milestones remain intact; duplicate suggestions are filtered. */ });
+      }).then(function(){ renderSteps(); toast('Étapes ajoutées en attente de vérification.'); },
+        function(err){ Q.steps = previous; renderSteps(); fail(err); });
     };
     $('st-proposed-skip').onclick = function(){ Promise.resolve(clearProposedSteps()).then(renderProposedSteps, fail); };
   }
