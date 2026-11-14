@@ -54,8 +54,8 @@ test('admin archiving is private, immutable and never fabricates a second paymen
 
 test('admin loads PDF generator; client portal uses existing authenticated private download',()=>{
  const admin=read('admin/suivi.html'),client=read('espace/index.html');
- assert.match(admin,/invoice-pdf\.js\?v=20261114-archive/);
- assert.match(admin,/project-tracking\.js\?v=20261114-archive/);
+ assert.match(admin,/invoice-pdf\.js\?v=20261114-(?:archive|github-auto)/);
+ assert.match(admin,/project-tracking\.js\?v=20261114-(?:archive|github-auto)/);
  assert.doesNotMatch(client,/invoice-pdf\.js/);
  assert.match(client,/data-invoice-file/);
  assert.match(client,/sb\.files\.link\(/);
