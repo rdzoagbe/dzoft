@@ -14,7 +14,14 @@
  function label(map,key){return map[key]?map[key][en()?1:0]:key;}
  function options(map){return Object.keys(map).map(function(k){return '<option value="'+k+'">'+esc(label(map,k))+'</option>';}).join('');}
  function stats(d){return '<div class="tracking-stats">'+[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]].map(function(x){return '<div><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div><p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
- function receipts(d,admin,q){return (d.legacy>0?'<p class="tracking-help">'+t('Déjà confirmé sur les factures existantes :','Already confirmed on existing invoices:')+' '+money(d.legacy)+'. '+t('Déjà inclus dans le total reçu. Ne pas le saisir de nouveau.','Already included in the received total. Do not record it again.')+'</p>':'')+'<div class="tracking-history">'+d.receipts.map(function(r){return '<article><div><b>'+money(r.amount)+'</b><span>'+day(r.received_on)+' · '+esc(label(methods,r.method))+'</span></div><p class="tracking-invoice-status '+(r.invoice_id?'linked':'pending')+'">'+(r.invoice_id?t('✓ Facture associée','✓ Invoice linked'):t('⚠ Facture à établir','⚠ Invoice to be issued'))+'</p>'+(r.reference?'<small>'+esc(r.reference)+'</small>':'')+(admin?'<div class="tracking-receipt-admin">'+(!r.invoice_id?'<button class="btn sm main tracking-issue-btn" type="button" data-open-receipt-link="'+esc(r.id)+'">'+t('Générer une facture','Generate an invoice')+'</button>':((q&&q.invoices||[]).some(function(i){return i.id===r.invoice_id&&i.generatedByDzoft;})?'<button class="btn sm line tracking-print-btn" type="button" data-print-receipt-invoice="'+esc(r.id)+'">'+t('Voir / enregistrer la facture PDF','View / save invoice PDF')+'</button>':''))+'<p class="tracking-email-state" data-receipt-email="'+esc(r.id)+'" role="status">'+t('État de l’e-mail : chargement…','Email status: loading…')+'</p><details class="tracking-correction"><summary>'+t('Corriger le mode de paiement','Correct payment method')+'</summary><form data-correct-receipt="'+esc(r.id)+'">'+field(t('Mode réellement utilisé','Actual payment method'),'<select name="method" required>'+Object.keys(methods).map(function(k){return '<option value="'+k+'"'+(r.method===k?' selected':'')+'>'+esc(label(methods,k))+'</option>';}).join('')+'</select>')+field(t('Pourquoi corriger ? (audit)','Why correct this? (audit trail)'),'<textarea name="reason" required minlength="12" maxlength="500" rows="2" placeholder="'+t('Ex. : La remise du 4 novembre a été faite en espèces.','Example: The payment on 4 November was made in cash.')+'"></textarea>')+'<p class="tracking-help">'+t('Le montant et la date restent inchangés. Cette correction est enregistrée dans un historique privé. Aucun e-mail n’est envoyé.','Amount and receipt date stay unchanged. A private audit trail is kept. No email is sent.')+'</p><button class="btn line" type="submit">'+t('Corriger et journaliser','Correct and audit')+'</button><p class="tracking-message" role="status" aria-live="polite"></p></form></details></div>':'')+'</article>';}).join('')+'</div>'+(admin?'<details class="tracking-audit"><summary>'+t('Historique des corrections','Correction history')+' <span data-audit-count></span></summary><div data-audit-list><p class="tracking-help">'+t('Chargement…','Loading…')+'</p></div></details>':'');}
+ function invoiceArchiveAction(r,q){
+   if(!r.invoice_id)return '<button class="btn sm main tracking-issue-btn" type="button" data-open-receipt-link="'+esc(r.id)+'">'+t('Générer une facture','Generate an invoice')+'</button>';
+   var inv=(q&&q.invoices||[]).find(function(x){return x.id===r.invoice_id;});
+   if(!inv||!inv.generatedByDzoft)return '';
+   if(inv.file)return '<button class="btn sm line tracking-print-btn" type="button" data-download-receipt-invoice="'+esc(r.id)+'">'+t('Télécharger la facture PDF','Download invoice PDF')+'</button>';
+   return '<button class="btn sm main tracking-issue-btn" type="button" data-archive-receipt-invoice="'+esc(r.id)+'">'+t('Archiver le PDF de cette facture','Archive invoice PDF')+'</button>';
+  }
+  function receipts(d,admin,q){return (d.legacy>0?'<p class="tracking-help">'+t('Déjà confirmé sur les factures existantes :','Already confirmed on existing invoices:')+' '+money(d.legacy)+'. '+t('Déjà inclus dans le total reçu. Ne pas le saisir de nouveau.','Already included in the received total. Do not record it again.')+'</p>':'')+'<div class="tracking-history">'+d.receipts.map(function(r){return '<article><div><b>'+money(r.amount)+'</b><span>'+day(r.received_on)+' · '+esc(label(methods,r.method))+'</span></div><p class="tracking-invoice-status '+(r.invoice_id?'linked':'pending')+'">'+(r.invoice_id?t('✓ Facture associée','✓ Invoice linked'):t('⚠ Facture à établir','⚠ Invoice to be issued'))+'</p>'+(r.reference?'<small>'+esc(r.reference)+'</small>':'')+(admin?'<div class="tracking-receipt-admin">'+invoiceArchiveAction(r,q)+'<p class="tracking-email-state" data-receipt-email="'+esc(r.id)+'" role="status">'+t('État de l’e-mail : chargement…','Email status: loading…')+'</p><details class="tracking-correction"><summary>'+t('Corriger le mode de paiement','Correct payment method')+'</summary><form data-correct-receipt="'+esc(r.id)+'">'+field(t('Mode réellement utilisé','Actual payment method'),'<select name="method" required>'+Object.keys(methods).map(function(k){return '<option value="'+k+'"'+(r.method===k?' selected':'')+'>'+esc(label(methods,k))+'</option>';}).join('')+'</select>')+field(t('Pourquoi corriger ? (audit)','Why correct this? (audit trail)'),'<textarea name="reason" required minlength="12" maxlength="500" rows="2" placeholder="'+t('Ex. : La remise du 4 novembre a été faite en espèces.','Example: The payment on 4 November was made in cash.')+'"></textarea>')+'<p class="tracking-help">'+t('Le montant et la date restent inchangés. Cette correction est enregistrée dans un historique privé. Aucun e-mail n’est envoyé.','Amount and receipt date stay unchanged. A private audit trail is kept. No email is sent.')+'</p><button class="btn line" type="submit">'+t('Corriger et journaliser','Correct and audit')+'</button><p class="tracking-message" role="status" aria-live="polite"></p></form></details></div>':'')+'</article>';}).join('')+'</div>'+(admin?'<details class="tracking-audit"><summary>'+t('Historique des corrections','Correction history')+' <span data-audit-count></span></summary><div data-audit-list><p class="tracking-help">'+t('Chargement…','Loading…')+'</p></div></details>':'');}
  function receiptEmailLabel(st){
   if(st==='sent')return t('E-mail accepté par le fournisseur (pas une preuve de lecture)','Email accepted by provider (not proof of delivery)');
   if(st==='queued')return t('E-mail en attente de traitement','Email queued for processing');
@@ -220,7 +227,19 @@
    // and the entire payment panel appears unavailable even though the receipt saved.
    wirePaymentStatuses(box,q,sb,reload);
     wireReceiptCorrections(box,q,sb,reload);
-   box.querySelectorAll('[data-print-receipt-invoice]').forEach(function(btn){btn.onclick=function(){var receipt=d.receipts.find(function(r){return r.id===btn.dataset.printReceiptInvoice;}),inv=receipt&&(q.invoices||[]).find(function(i){return i.id===receipt.invoice_id;});if(!receipt||!inv||!inv.generatedByDzoft||!global.DzoftInvoicePreview)return;try{global.DzoftInvoicePreview.open({quote:q,receipt:receipt,invoice:{num:inv.num,amt:inv.amt,label:inv.n,issuedOn:inv.issuedOn}});}catch(err){alert(err.message||t('PDF indisponible','PDF unavailable'));}};});
+   box.querySelectorAll('[data-download-receipt-invoice]').forEach(function(btn){btn.onclick=function(){
+     var receipt=d.receipts.find(function(r){return r.id===btn.dataset.downloadReceiptInvoice;}),inv=receipt&&(q.invoices||[]).find(function(i){return i.id===receipt.invoice_id;});
+     if(!inv||!inv.file)return;var w=global.open('about:blank','_blank');
+     sb.files.link(inv.file,true).then(function(url){if(w)w.location=url;else global.open(url,'_blank');}).catch(function(err){if(w)w.close();alert(err.message||'Download unavailable');});
+   };});
+   box.querySelectorAll('[data-archive-receipt-invoice]').forEach(function(btn){btn.onclick=function(){
+     var receipt=d.receipts.find(function(r){return r.id===btn.dataset.archiveReceiptInvoice;}),inv=receipt&&(q.invoices||[]).find(function(i){return i.id===receipt.invoice_id;});
+     if(!receipt||!inv||!inv.generatedByDzoft||inv.file)return;
+     btn.disabled=true;btn.textContent=t('Archivage sécurisé…','Archiving securely…');
+     archiveInvoice(q,sb,receipt,{id:inv.id,num:inv.num,amt:inv.amt,n:inv.n,issuedOn:inv.issuedOn})
+       .then(function(){btn.textContent=t('PDF archivé','PDF archived');setTimeout(reload,550);})
+       .catch(function(err){btn.disabled=false;btn.textContent=t('Réessayer l’archivage PDF','Retry PDF archive');alert(err.message||'PDF archive failed');});
+   };});
    var fm=box.querySelector('details.tracking-editor:not(.tracking-report-editor) > form'),key=crypto.randomUUID(),newKey=crypto.randomUUID(),el=fm.elements,news=fm.querySelector('.tracking-new');
    function sync(){var isNew=el.invoice.value==='new',noInvoice=el.invoice.value==='unbilled';news.hidden=!isNew;el.num.required=isNew;el.amt.required=isNew;
     var tip=box.querySelector('.tracking-unbilled-tip');if(tip)tip.hidden=!noInvoice;
@@ -242,8 +261,16 @@
          if(!confirm(t('Émettre une facture officielle numérotée maintenant pour ce paiement ? Le numéro ne pourra pas être réutilisé. Vérifiez que DZOFT utilise une série de numérotation distincte de tout autre système de facturation.','Issue a permanently numbered official invoice for this payment now? Its number cannot be reused. Confirm DZOFT’s numbering series does not conflict with another invoicing system.')))return;
          btn.disabled=true;status(note,t('Génération du numéro et de la facture…','Issuing numbered invoice…'));
          sb.rpc('auto_issue_project_receipt_invoice',{p_quote:q.id,p_receipt:det.dataset.receiptLink,p_kind:['deposit','interim','final'][Number(form.elements.autoKind.value)]},true).then(function(out){
-           status(note,t('Facture n° ','Invoice no. ')+esc(out.number)+t(' émise et associée. Ouvrez le PDF après actualisation.',' issued and linked. Open its PDF after refresh.'));
-           setTimeout(reload,650);
+           var receipt=d.receipts.find(function(r){return r.id===det.dataset.receiptLink;});
+           var kind=kinds[Number(form.elements.autoKind.value)][0];
+           status(note,t('Facture n° ','Invoice no. ')+esc(out.number)+t(' émise. Archivage du PDF…',' issued. Archiving PDF…'));
+           return archiveInvoice(q,sb,receipt,{id:out.invoice_id,num:out.number,amt:receipt.amount,n:kind,issuedOn:out.issued_on}).then(function(){
+             status(note,t('Facture archivée et accessible au client.','Invoice archived and accessible to the client.'));
+             setTimeout(reload,650);
+           }).catch(function(err){
+             status(note,t('Facture émise, mais PDF non archivé. Utilisez « Archiver le PDF » après actualisation. ','Invoice issued, but PDF not yet archived. Use “Archive invoice PDF” after refreshing. ')+(err.message||''),true);
+             setTimeout(reload,2500);
+           });
          }).catch(function(err){btn.disabled=false;status(note,friendly(err),true);});
          return;
        }
@@ -278,10 +305,26 @@
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
   }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
  }
- function notify(sb){sb.fn('process-notification-outbox',{}).catch(function(){/* Durable queue retries; never report delivery without provider confirmation. */});}
+ function archiveInvoice(q,sb,receipt,inv){
+   if(!global.DzoftInvoicePdf)return Promise.reject(new Error('PDF generator unavailable; reload the page'));
+   if(!q.client_id)return Promise.reject(new Error('Client account is missing'));
+   if(!receipt||!inv)return Promise.reject(new Error('Invoice receipt unavailable'));
+   return sb.select('clients','select=user_id&id=eq.'+encodeURIComponent(q.client_id)).then(function(rows){
+     var uid=rows&&rows[0]&&rows[0].user_id;
+     if(!uid||!/^[-0-9a-f]{36}$/i.test(uid))throw new Error('Le client doit disposer d’un compte DZOFT pour recevoir son PDF privé.');
+     if(!/^F-[0-9]{4}-[0-9]+$/.test(inv.num))throw new Error('Invalid DZOFT invoice number');
+     var pdf=global.DzoftInvoicePdf.build({quote:q,receipt:receipt,invoice:inv});
+     var path='u/'+uid+'/factures/'+q.id+'/'+inv.num+'.pdf';
+     return sb.files.upload(path,pdf).catch(function(err){if(err&&err.status===409)return;throw err;})
+       .then(function(){return sb.rpc('attach_generated_invoice_pdf',{
+          p_quote:q.id,p_invoice:inv.id,p_path:path,p_size:pdf.size
+       },true);});
+   });
+  }
+  function notify(sb){sb.fn('process-notification-outbox',{}).catch(function(){/* Durable queue retries; never report delivery without provider confirmation. */});}
  function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true).then(function(d){if(box.isConnected)box.innerHTML='<h2>'+t('Paiements & avancement','Payments & progress')+'</h2>'+stats(d)+paymentStatuses(d,false)+receipts(d,false)+'<h3>'+t('Dernières avancées','Latest progress')+'</h3>'+updates(d);invoiceNotes(d);}).catch(function(){box.innerHTML='<p class="tracking-help">'+t('Connectez-vous ou rechargez la page pour consulter le suivi actualisé.','Sign in or reload to see the latest tracking information.')+'</p>';});});}
  function invoiceNotes(d){document.querySelectorAll('[data-invoice-id][data-invoice-total]').forEach(function(row){var amount=d.receipts.filter(function(r){return r.invoice_id===row.dataset.invoiceId;}).reduce(function(n,r){return n+cents(r.amount);},0)/100;if(!amount)return;var rest=Math.max(0,Number(row.dataset.invoiceTotal)-amount);var note=row.querySelector('.tracking-invoice-note');if(!note){note=document.createElement('p');note.className='tracking-invoice-note muted';note.setAttribute('data-no-translate','');row.appendChild(note);}note.textContent=t('Reçu et confirmé','Received and confirmed')+' '+money(amount)+' · '+t('Reste à régler sur cette facture','Remaining on this invoice')+' '+money(rest);var pill=row.querySelector('.pill');if(pill)pill.textContent=rest?t('Partiellement réglé','Partially paid'):t('Paiement reçu et confirmé','Payment received and confirmed');if(!rest){var report=row.querySelector('[data-report-payment]');if(report)report.hidden=true;}});}
- function lockInvoices(q){(q.invoices||[]).forEach(function(i,index){if((q._receiptInvoiceIds||[]).indexOf(i.id)<0)return;var row=document.querySelectorAll('#invs .invr')[index];if(row)row.querySelectorAll('.paid,.amt,.num,.rm').forEach(function(el){el.disabled=true;el.title=t('Calculé depuis les paiements reçus','Calculated from recorded receipts');});});}
+ function lockInvoices(q){(q.invoices||[]).forEach(function(i,index){if((q._receiptInvoiceIds||[]).indexOf(i.id)<0)return;var row=document.querySelectorAll('#invs .invr')[index];if(row)row.querySelectorAll(i.generatedByDzoft?'.paid,.amt,.num,.n,.rm':'.paid,.amt,.num,.rm').forEach(function(el){el.disabled=true;el.title=t('Calculé depuis les paiements reçus','Calculated from recorded receipts');});});}
  function refreshClient(){if(document.visibilityState==='hidden')return;document.querySelectorAll('[data-project-tracking]').forEach(function(box){delete box.dataset.loading;});if(global.RDsb)client(global.RDsb);}
  window.addEventListener('focus',refreshClient);setInterval(refreshClient,30000);
  // Language switch: redraw in the new language (the page dictionary skips this card).

@@ -40,7 +40,7 @@ test('owner UI defaults to automatic number generation, retains manual associati
  assert.match(src,/<option value=\"auto\">/);
  assert.match(src,/auto_issue_project_receipt_invoice/);
  assert.match(src,/p_kind:\['deposit','interim','final'\]/);
- assert.match(src,/data-print-receipt-invoice/);
+ assert.match(src,/data-download-receipt-invoice/);
  assert.match(src,/inv\.issuedOn/);
  assert.match(src,/link_project_receipt_invoice/);
  assert.match(src,/return;\s*}\s*if\(fresh&&!form\.elements\.issued\.checked\)/);
