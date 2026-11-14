@@ -64,3 +64,14 @@
 .tracking-audit [data-audit-list]{margin-top:11px}
 .tracking-audit-entry{border-top:1px solid #e1e5ed;padding:9px 0;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
 .tracking-audit-entry b{font-weight:800}
+
+/* One action per verified-but-unbilled payment; invoice/PDF work is owner-only. */
+.tracking-history .tracking-issue-btn{display:inline-flex;margin:11px 0 4px;min-height:40px;align-items:center}
+.tracking-unbilled>.tracking-help{margin:5px 0 13px}
+.tracking-link[open]{border-color:#b7c4e4;box-shadow:0 3px 10px rgba(27,47,97,.08)}
+.tracking-invoice-actions{display:grid;gap:8px;margin:10px 0}
+.tracking-invoice-actions .btn{justify-self:start}
+.tracking-invoice-actions label.tracking-check{margin:6px 0 0;align-items:flex-start;line-height:1.5}
+.tracking-invoice-actions .tracking-help{margin:0}
+.tracking-link .tracking-message{display:block;margin:8px 0}
+@media(max-width:600px){.tracking-history .tracking-issue-btn{width:100%;justify-content:center}.tracking-invoice-actions .btn{width:100%}}
