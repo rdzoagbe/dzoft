@@ -353,6 +353,8 @@ footer{max-width:1180px}
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number">
 <script src="../assets/project-tracking.js?v=20261114-auto-number"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261113">
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
+<script src="../assets/change-requests.js?v=20261114-1"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -852,6 +854,7 @@ footer{max-width:1180px}
   WIRE.projets = function(id){
     var q = id && byId(id); if (!q) return;
     wireReview(q);
+    if (typeof window !== 'undefined' && window.DzoftChanges) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:false});
     if (/\/avis$/.test(location.hash) && $('avis')) $('avis').scrollIntoView();
     [].forEach.call(document.querySelectorAll('.valid'), function(box){
       var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;
@@ -871,6 +874,7 @@ footer{max-width:1180px}
     if (q.note) h += '<div class="note"><b>Le mot de Roland</b>' + esc(q.note) + '</div>';
     h += withdrawText(q);
     h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '"></section>';
+    h += '<section class="card" id="dzoft-client-changes-card"><h2>Demandes de modification</h2><div id="dzoft-client-changes"></div></section>';
     steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){
       h += '<section class="card accept valid" data-step="' + esc(s.k) + '"><h2>Votre validation est attendue : ' + esc(s.t) + '</h2>' +
         (s.note ? '<p class="note2">' + esc(s.note) + '</p>' : '') +
