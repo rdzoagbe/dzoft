@@ -41,7 +41,7 @@ test('admin displays truthful email outcomes and auditable corrections, client r
  assert.match(js,/not proof of delivery/);
  assert.match(js,/No client email recorded/);
  assert.match(js,/A private audit trail is kept/);
- assert.match(js,/receipts\(d,true\)/);
+ assert.match(js,/receipts\(d,true,q\)/);
  assert.match(js,/receipts\(d,false\)/);
  assert.match(js,/No email is sent/);
  new vm.Script(js,{filename:'assets/project-tracking.js'});
