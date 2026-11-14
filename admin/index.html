@@ -988,6 +988,32 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* Device passkeys use Supabase's server-verified passwordless protocol.
      They don't turn an AAL1 token into AAL2 and cannot bypass TOTP/owner RLS.
      Device labels are generated with textContent, never interpreted as HTML. */
+  function passkeyRegistrationMessage(err) {
+    var code = String((err && err.code) || '').toLowerCase();
+    var message = String((err && err.message) || '').toLowerCase();
+    var name = String((err && err.name) || '');
+    if (code === 'passkey_disabled' || message.indexOf('passkey_disabled') >= 0)
+      return 'Supabase Passkeys are disabled. Enable them in Authentication → Passkeys.';
+    if (name === 'InvalidStateError' || code === 'webauthn_credential_exists' || message.indexOf('webauthn_credential_exists') >= 0)
+      return 'This passkey is already registered or available from your password manager. You do not need to add it again. Sign out and try “Unlock with this device” on your phone.';
+    if (code === 'too_many_passkeys')
+      return 'Your account has reached its passkey limit. Keep your existing passkeys and contact support before removing one.';
+    if (name === 'NotAllowedError')
+      return 'The Android passkey prompt was cancelled, unavailable or timed out. Try using the existing passkey to sign in, or open DZOFT in Chrome.';
+    if (name === 'SecurityError')
+      return 'Your browser could not verify the DZOFT passkey domain. Open https://rdzoagbe.github.io/dzoft/admin/ in Chrome and retry.';
+    if (name === 'NotSupportedError')
+      return 'This browser or password manager cannot create another passkey here. Try Chrome, or sign in with your existing passkey.';
+    if (code === 'webauthn_challenge_expired' || code === 'webauthn_challenge_not_found')
+      return 'The passkey registration challenge expired. Reload the page and try again.';
+    if (code === 'webauthn_verification_failed')
+      return 'Supabase could not verify the new passkey. Keep your existing passkey and try again in Chrome.';
+    if (message.indexOf('complete the account verification step') >= 0)
+      return 'Complete your six-digit authenticator verification on this phone before adding a new passkey.';
+    if (err && err.status === 404)
+      return 'The Supabase registration endpoint is unavailable. Your existing sign-in methods still work.';
+    return 'No new passkey was registered. If you already use Google Password Manager on your laptop, try “Unlock with this device” on this phone before creating another passkey.';
+  }
   function renderDevicePasskeys(u, refreshCapability) {
     var box = $('device-passkeys');
     if (!box) return;
@@ -1040,7 +1066,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       status.textContent = 'Checking registered devices…';
       return sb.devicePasskey.list().then(function(rows){
         box.replaceChildren();
-        note('Add a passkey on each device you use. Your device verifies you locally; DZOFT never receives your fingerprint or Windows PIN.');
+        note('Passkeys in Google Password Manager can sync between Chrome on a laptop and Android. You may already have a working passkey on this phone, even if it was originally created on your laptop. DZOFT never receives your fingerprint or PIN.');
         if (rows.length) {
           var list = document.createElement('div');
           list.className = 'device-list';
@@ -1065,27 +1091,27 @@ td select{width:auto;padding:4px 6px;font-size:13px}
             list.appendChild(row);
           });
           box.appendChild(list);
+          note('To check whether the existing passkey works on this phone, sign out and choose “Unlock with this device”. Keep your password and authenticator as backup.');
         } else {
           note('No passkeys registered yet.');
         }
         var add = document.createElement('button');
         add.type = 'button'; add.className = 'btn main sm';
-        add.textContent = 'Add this device';
+        add.textContent = rows.length ? 'Add another passkey' : 'Add a passkey';
+        var progress = null;
         add.onclick = function(){
+          if (add.disabled) return;
           add.disabled = true;
-          var progress = note('Follow the fingerprint, face, or PIN prompt on this device…','device-feedback');
+          if (!progress) progress = note('Follow the fingerprint, face, or PIN prompt on this device…','device-feedback');
+          else { progress.className = 'device-feedback'; progress.textContent = 'Follow the fingerprint, face, or PIN prompt on this device…'; }
           sb.devicePasskey.register().then(function(){
             markDeviceReady();
             toast('Device added. You can now sign in with this passkey.');
             renderDevicePasskeys(u);
           },function(err){
             add.disabled = false;
-            var raw = String((err && (err.code || err.message)) || '').toLowerCase();
             progress.className = 'device-feedback error';
-            progress.textContent = raw.indexOf('passkey_disabled') >= 0 ?
-              'Supabase Passkeys were disabled. Enable the feature in the dashboard, then check again.' :
-              err && err.name === 'NotAllowedError' ? 'Device registration cancelled or timed out.' :
-              'Could not add this device. Verify your account and try again.';
+            progress.textContent = passkeyRegistrationMessage(err);
           });
         };
         box.appendChild(add);
