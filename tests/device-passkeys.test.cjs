@@ -119,3 +119,25 @@ test('UI has device-first login while retaining password, TOTP and owner enforce
  const inline=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
  for(const script of inline)if(script[1].trim())assert.doesNotThrow(()=>new vm.Script(script[1]));
 });
+
+test('passkey capability probe uses the server, caches disabled state and never starts a biometric prompt',async()=>{
+ const ctx=context({disabled:true});
+ assert.equal(await ctx.sb.devicePasskey.availability(),false);
+ assert.equal(await ctx.sb.devicePasskey.availability(),false);
+ assert.equal(ctx.requests.length,1);
+ assert.match(ctx.requests[0].url,/\/auth\/v1\/passkeys\/authentication\/options$/);
+ assert.equal(ctx.events.length,0);
+ assert.equal(await ctx.sb.devicePasskey.availability(true),false);
+ assert.equal(ctx.requests.length,2);
+});
+test('enabled server capability can be determined without granting an authenticated session',async()=>{
+ const ctx=context({});
+ assert.equal(await ctx.sb.devicePasskey.availability(),true);
+ assert.equal(ctx.sb.session(),null);
+ assert.equal(ctx.events.length,0);
+ const h=fs.readFileSync(path.join(__dirname,'../admin/index.html'),'utf8');
+ assert.match(h,/sb\.devicePasskey\.availability\(\)/);
+ assert.match(h,/sb\.devicePasskey\.availability\(refreshCapability === true\)/);
+ assert.match(h,/Device sign-in is not enabled yet/);
+ assert.match(h,/Open Supabase Passkeys settings/);
+});
