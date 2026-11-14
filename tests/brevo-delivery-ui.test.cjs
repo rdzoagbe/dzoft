@@ -71,3 +71,24 @@ test('SQL protects deliverability from external spoofing and preserves the accep
  const rollback=get('tests/brevo-delivery-lifecycle.sql');
  assert.match(rollback,/^begin;/m);assert.match(rollback,/rollback;\s*$/);
 });
+
+
+test('hourly Brevo reconciliation is service-only and never sends email',()=>{
+ const worker=get('supabase/functions/brevo-delivery-events/index.ts');
+ const migration=get('supabase/migrations/20261114170500_brevo_delivery_polling.sql');
+ const schedule=get('supabase/migrations/20261114171000_brevo_delivery_schedule.sql');
+ assert.match(worker,/brevo_delivery_recent_candidates/);
+ assert.match(worker,/verify_brevo_delivery_token/);
+ assert.match(worker,/mark_brevo_delivery_polling/);
+ assert.match(worker,/path\.endsWith\("\/reconcile"\)/);
+ assert.match(worker,/messageId:c\.message_id,email:c\.email/);
+ assert.match(worker,/normalizeId\(messageId\(e\)\)/);
+ assert.match(migration,/from public\.email_outbox/);
+ assert.match(migration,/now\(\)-interval '14 days'/);
+ assert.match(migration,/from public,anon,authenticated/);
+ assert.match(migration,/to service_role/);
+ assert.match(schedule,/dzoft_brevo_delivery_reconcile/);
+ assert.match(schedule,/vault\.decrypted_secrets/);
+ assert.match(schedule,/brevo-delivery-events\/reconcile/);
+ assert.doesNotMatch(schedule,/BREVO_API_KEY|service_role|sender|recipient|\bemail_outbox\b/);
+});
