@@ -79,7 +79,7 @@ test('Client portal sign-in, sign-up and recovery remain reachable, without leak
   await expect(page.locator('#app')).toBeHidden();
   await page.locator('button[data-go="f-signup"]').click();
   await expect(page.locator('#f-signup')).toBeVisible();
-  await page.locator('button[data-go="f-login"]').click();
+  await page.locator('#f-signup button[data-go="f-login"]').click();
   await expect(page.locator('#f-login')).toBeVisible();
   await page.locator('button[data-go="f-forgot"]').click();
   await expect(page.locator('#f-forgot')).toBeVisible();
