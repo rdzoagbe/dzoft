@@ -1,0 +1,56 @@
+name: DZOFT real-browser smoke and layout checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+  schedule:
+    - cron: "12 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dzoft-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-browser:
+    # Work-in-progress draft commits are not a release and must not flood the
+    # owner with failure alerts. A full gate runs on ready_for_review and on
+    # every subsequent non-draft change, and on main/nightly.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install exact, pinned Playwright test runner
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Install browser and dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Exercise real pages in desktop and mobile Chromium
+        env:
+          CI: "true"
+          # Scheduled and manual runs verify the real Pages release.
+          # Pull requests and main pushes verify the actual checked-out source
+          # locally so a PR can fail before production is deployed.
+          DZOFT_E2E_BASE_URL: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'https://rdzoagbe.github.io/dzoft/' || '' }}
+        run: npx playwright test
+      - name: Upload troubleshooting traces only on failure (synthetic and public pages)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dzoft-browser-failure-${{ github.run_id }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+# This workflow never signs in with a real client, accesses the private database,
+# publishes a project update, queues an email, or confirms a payment.
