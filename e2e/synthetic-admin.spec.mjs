@@ -39,7 +39,7 @@ const syntheticSb = `
   },
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
-   if(name==='project_tracking')return {received:450,remaining:1050,payment_statuses:[],receipts:[]};
+   if(name==='project_tracking')return {total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[]};
    if(name==='list_project_work_items')return work;
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
    if(name==='sync_project_github_groups')return {added:0,checked:0,client_notified:false};
@@ -95,6 +95,7 @@ test('Rodney project weekly review and private task statuses render without a re
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{
   waitUntil:'domcontentloaded'
  });
+ await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
  await page.waitForTimeout(250);
  if (!(await page.locator('#c-journal').isVisible())) {
   const state=await page.evaluate(()=>({url:location.href,mock:window.__syntheticVersion,hasSession:!!window.RDsb?.session(),calls:window.__syntheticCalls,unhandled:window.__syntheticUnhandled,loading:document.querySelector('#loading')?.textContent}));
@@ -117,6 +118,7 @@ test('Read-only synthetic owner tests never emit network requests containing rea
   if(req.url().includes('supabase.co/rest/v1')||req.url().includes('supabase.co/functions/v1'))external.push(req.url());
  });
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
  await expect.poll(async()=> {
   const text=await page.locator('#jr-tasks-slot').textContent();return /Tâches et validations|Tasks and approvals/.test(text||'');
  }).toBeTruthy();
