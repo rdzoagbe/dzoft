@@ -60,4 +60,6 @@ test('admin loads PDF generator; client portal uses existing authenticated priva
  assert.match(client,/data-invoice-file/);
  assert.match(client,/sb\.files\.link\(/);
  assert.match(admin,/x\.generatedByDzoft/);
+ assert.match(admin,/PDF officiel archivé/);
+ assert.match(admin,/Cette archive officielle ne peut pas être supprimée/);
 });
