@@ -128,16 +128,56 @@ async function setup(token:string,reportPhase:(step:string)=>void):Promise<Respo
  return result(200,{configured:true,backfill_complete:backfilled,
      checked_messages:checked,matched_events:matched});
 }
+// Official Brevo event-reporting API is available even when this account
+// rejects webhook management. Polling is authenticated by a Vault setup token.
+async function reconcile(token:string,recent:boolean):Promise<Response>{
+ if(await rpc("verify_brevo_delivery_token",{p_token:token,p_kind:"setup"})!==true)
+  return result(401,{error:"Unauthorized"});
+ const candidates=await rpc(recent?"brevo_delivery_recent_candidates":"brevo_delivery_candidates",
+  {p_setup_token:token});
+ if(!Array.isArray(candidates))throw Error("Reconciliation source unavailable");
+ let checked=0,matched=0;
+ // Bound concurrent Brevo API calls to avoid account rate-limit bursts.
+ for(let i=0;i<Math.min(candidates.length,recent?18:25);i+=3){
+  const batch=candidates.slice(i,i+3);
+  const outcomes=await Promise.all(batch.map(async(c:any)=>{
+    if(typeof c?.message_id!=="string" || typeof c?.email!=="string")return 0;
+    const report=await brevo("/smtp/statistics/events?"+
+      new URLSearchParams({messageId:c.message_id,email:c.email,
+        limit:"100",days:recent?"14":"90"}));
+    if(!report || !Array.isArray(report.events))throw Error("Missing provider events");
+    let found=0;
+    for(const e of report.events.slice(0,100)){
+      if(normalizeId(messageId(e))!==normalizeId(c.message_id) ||
+         String(e.email||"").trim().toLowerCase()!==c.email.trim().toLowerCase())continue;
+      if(await recordEvent(e))found++;
+    }
+    return found;
+  }));
+  matched+=outcomes.reduce((a:number,b:number)=>a+b,0);
+  checked+=batch.length;
+ }
+ await rpc("mark_brevo_delivery_polling",{p_backfill:!recent});
+ return result(200,{ok:true,mode:"scheduled_polling",checked,matched});
+}
+
 Deno.serve(async(req:Request)=>{
  if(req.method!=="POST")return result(405,{error:"Method not allowed"});
  const path=new URL(req.url).pathname;
  const isSetup=path.endsWith("/setup");
  const isProbe=path.endsWith("/probe");
- const token=req.headers.get(isSetup||isProbe?"X-DZOFT-Setup-Token":"X-DZOFT-Delivery-Token") ?? "";
+ const isReconcile=path.endsWith("/reconcile");
+ const isBackfill=path.endsWith("/backfill");
+ const token=req.headers.get(isSetup||isProbe||isReconcile||isBackfill?
+   "X-DZOFT-Setup-Token":"X-DZOFT-Delivery-Token") ?? "";
  if(!validToken(token))return result(401,{error:"Unauthorized"});
  let phase="authenticate_webhook";
  try{
   if(isSetup){phase="authenticate_setup";return await setup(token,function(p){phase=p;});}
+  if(isReconcile || isBackfill){
+    phase="brevo_event_reconciliation";
+    return await reconcile(token,isReconcile);
+  }
   if(isProbe){
    phase="authenticate_probe";
    if(await rpc("verify_brevo_delivery_token",{p_token:token,p_kind:"setup"})!==true)
