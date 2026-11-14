@@ -57,6 +57,12 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 #device-passkeys .device-note{color:var(--mute);font-size:12px;line-height:1.6;margin:9px 0}
 #device-passkeys .device-feedback{font-size:12px;padding:9px 11px;border-radius:9px;background:#f0f3ff;margin:10px 0}
 #device-passkeys .device-feedback.error{background:#fff0ef;color:#9e3135}
+.settings-language-panel .settings-language-help{font-size:13.5px;color:var(--mute);line-height:1.55;margin:7px 0 13px}
+.settings-language-panel .settings-language-switch{display:inline-flex;gap:5px;align-items:center;padding:5px;background:#f3f6ff;border:1px solid #d7e1f2;border-radius:12px;max-width:100%}
+.settings-language-panel .settings-language-switch button{color:#344866;font-size:13px;min-height:44px;min-width:106px;padding:11px 15px;border-radius:9px}
+.settings-language-panel .settings-language-switch button[aria-pressed="true"]{color:#fff;background:#4361ee;box-shadow:0 2px 8px rgba(42,73,163,.17)}
+.settings-language-panel .settings-language-switch button:focus-visible{outline:2px solid #4361ee;outline-offset:3px}
+@media(max-width:450px){.settings-language-panel .settings-language-switch{width:100%;display:flex}.settings-language-panel .settings-language-switch button{flex:1;min-width:0}}
 @media (max-width:450px){.auth .card{padding:22px 20px}.device-entry{padding:11px}}
 
 .email-delivery-event{border-top:1px solid var(--line);padding:11px 0}
@@ -203,7 +209,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
-<script src="../assets/dzoft-language.js?v=20261110-app" defer></script>
+<script src="../assets/dzoft-language.js?v=20261114-lang-settings" defer></script>
 <link rel="stylesheet" href="simplified-ui.css?v=20261113-today">
 </head>
 <body class="dzoft-admin">
@@ -283,7 +289,6 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <a class="brand" href="#/tableau-de-bord" aria-label="DZOFT · revenir au tableau de bord"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace privé</span></div></a>
       <div class="sp"></div>
       <span class="who hide-m" id="who"></span>
-      <div class="lang-switch-app" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
       <button class="btn sm line" id="b-install" type="button" hidden>Installer l’app</button>
       <a class="btn sm line" href="../?workspace=admin">Voir le site</a>
       <button class="btn sm ghost" style="color:#c4d2e1" id="b-out" type="button">Déconnexion</button>
@@ -356,6 +361,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     <section id="v-settings" hidden>
       <div class="bar"><h2>Paramètres</h2></div>
+      <div class="panel settings-language-panel" id="admin-language-settings">
+        <h3>Langue de l’interface</h3>
+        <p class="settings-language-help">Choisissez la langue de l’espace privé DZOFT. Votre choix est enregistré sur cet appareil et appliqué immédiatement.</p>
+        <div class="lang-switch-app settings-language-switch" role="group" aria-label="Langue de l’interface">
+          <button type="button" data-dzoft-lang="fr" aria-pressed="true" aria-label="Français">Français</button>
+          <button type="button" data-dzoft-lang="en" aria-pressed="false" aria-label="English">English</button>
+        </div>
+      </div>
       <div class="panel">
         <h3>Paiement</h3>
         <p style="font-size:13.5px;color:var(--mute);margin-bottom:6px">Affiché dans « Comment payer », uniquement aux clients qui ont accepté un devis. Leur numéro de devis leur est proposé comme référence de virement.</p>
@@ -389,7 +402,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       </div>
       <div class="panel">
         <h3>Documents légaux</h3>
-        <p style="font-size:14px">Conditions générales de vente (version 2026-10) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a>. Le client les accepte en même temps que le devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
+        <p style="font-size:14px">Conditions générales de vente (version actuelle 2026-11) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a>. La version 2026-10, applicable aux accords conclus sous cette version, reste <a href="../cgv-2026-10.html" target="_blank" rel="noopener">archivée ici</a>. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
         <p style="font-size:14px;margin-top:8px;color:#8a5a00;background:#fff3d6;border-radius:8px;padding:8px 10px">À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.</p>
       </div>
     </section>
