@@ -95,25 +95,40 @@ test('Private Rodney project page redirects an unauthenticated visitor to login'
 });
 
 
-test('Device-first login fails closed when Supabase passkeys are disabled', async ({page}) => {
-  const blocked=[];
+test('Unconfigured device sign-in does not repeatedly call unsupported Supabase passkey endpoints', async ({page}) => {
+  const requests=[];
   await page.route('**/auth/v1/passkeys/authentication/options', async route=>{
-    blocked.push(route.request().method());
-    await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({
-      code:'passkey_disabled',message:'Passkey sign-in disabled'
+    requests.push(route.request().method());
+    await route.fulfill({status:404,contentType:'application/json',body:JSON.stringify({
+      code:'not_found',message:'Not Found'
     })});
   });
   await page.goto('admin/', {waitUntil:'domcontentloaded'});
-  const device=page.locator('#device-signin');
+  await expect(page.locator('#f-login')).toBeVisible();
+  await expect(page.locator('#device-signin')).toBeHidden();
+  await expect(page.locator('#email-signin-details')).toHaveAttribute('open','');
+  await expect.poll(() => requests.length).toBe(1);
+  await page.waitForTimeout(200);
+  expect(requests, 'Capability is probed once and a 404 cannot trigger repeated requests').toEqual(['POST']);
+});
+
+test('Hosted Supabase Passkeys beta enables device login without a passkey sign-in', async ({page}) => {
+  const requests=[];
+  await page.route('**/auth/v1/passkeys/authentication/options', async route=>{
+    requests.push(route.request().method());
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+      challenge_id:'00000000-0000-4000-8000-000000000001',
+      options:{challenge:'YQ',rpId:'rdzoagbe.github.io',userVerification:'preferred'}
+    })});
+  });
+  await page.goto('admin/', {waitUntil:'domcontentloaded'});
   const supported=await page.evaluate(()=>!!(
     window.isSecureContext && window.PublicKeyCredential &&
     navigator.credentials && navigator.credentials.create && navigator.credentials.get
   ));
   test.skip(!supported,'WebAuthn not supported by this browser');
-  // A disabled backend must not expose a button that can never work.
-  await expect(device).toBeHidden();
-  await expect(page.locator('#email-signin-details')).toHaveAttribute('open','');
+  await expect(page.locator('#device-signin')).toBeVisible();
   await expect(page.locator('#f-login')).toBeVisible();
-  await expect.poll(() => blocked.length).toBe(1);
-  expect(blocked).toEqual(['POST']);
+  await expect(page.locator('#email-signin-details')).toHaveAttribute('open','');
+  expect(requests).toEqual(['POST']);
 });

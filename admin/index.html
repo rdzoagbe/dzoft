@@ -370,8 +370,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         <div id="mfa-box"><p style="color:var(--mute)">Loading…</p></div>
       </div>
       <div class="panel" id="device-passkey-panel">
-        <h3>Sign in with Windows Hello or fingerprint</h3>
-        <p style="font-size:13.5px;color:var(--mute);margin:5px 0 12px">Set up a passkey on your laptop or phone. This avoids typing your password on that device. Your existing second-factor requirement remains in place until the authentication server supports device-based MFA.</p>
+        <h3>Device sign-in · Windows Hello or fingerprint</h3>
+        <p style="font-size:13.5px;color:var(--mute);margin:5px 0 12px">Optional feature. Your Supabase Auth server must support passkeys before you can register a laptop or phone. Email, password and your authenticator remain available.</p>
         <div id="device-passkeys"><p style="color:var(--mute)">Checking device support…</p></div>
       </div>
       <div class="panel">
@@ -441,7 +441,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261114-passkey-capability"></script>
+<script src="sb.js?v=20261114-passkey-404-safe"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
@@ -499,6 +499,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var supported = !!(sb.devicePasskey && sb.devicePasskey.supported && sb.devicePasskey.supported());
     $('device-signin-area').hidden = true;
     $('email-signin-details').open = true;
+    // Confirm hosted Supabase Auth capability. A shared, cached challenge
+    // probe makes only one request per page even if Settings also checks it.
+    // 404 and passkey_disabled fail closed without biometric prompts.
     if (!supported) return;
     sb.devicePasskey.availability().then(function(enabled){
       $('device-signin-area').hidden = !enabled;
@@ -516,7 +519,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       }, function(err){
         b.disabled = false;
         var message = String((err && (err.code || err.message)) || '').toLowerCase();
-        var fallback = message.indexOf('passkey_disabled') >= 0 ?
+        var fallback = (err && err.status === 404) ?
+          'Device sign-in is not available on this Supabase Auth server (HTTP 404). Use email, password and your authenticator.' :
+          message.indexOf('passkey_disabled') >= 0 ?
           'Device sign-in is not enabled in Supabase yet. Use your password for now, then enable Passkeys in Supabase Authentication settings.' :
           err && err.name === 'NotAllowedError' ? 'Device verification was cancelled or timed out. Try again or use your password.' :
           'Device sign-in was not completed. Use your password or set up a passkey under Settings.';
@@ -975,10 +980,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }
     function unavailable() {
       box.replaceChildren();
+      var missing = sb.devicePasskey.unavailableReason === 'endpoint_missing';
       var title = document.createElement('strong');
-      title.textContent = 'Device sign-in is not enabled yet';
+      title.textContent = missing ? 'Passkey endpoint unavailable (HTTP 404)' : 'Device sign-in is not enabled yet';
       box.appendChild(title);
-      note('Supabase Auth has passkeys disabled for this project. Your laptop and browser are not at fault. The owner must enable Passkeys in the Supabase dashboard before registering a device.');
+      note(missing ?
+        'The Supabase Auth server returned HTTP 404: this experimental passkey endpoint is not available on the current hosted service. This is not a Windows Hello or fingerprint problem. Enabling a setting alone may not fix an unavailable endpoint.' :
+        'Supabase Auth has not enabled passkeys for this project. The device and browser are not at fault.');
       var link = document.createElement('a');
       link.href = 'https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/auth/passkeys';
       link.target = '_blank';

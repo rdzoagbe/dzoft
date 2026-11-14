@@ -10,6 +10,29 @@ No device PIN, fingerprint template, biometric image, GitHub token, Supabase ser
 
 **Critical distinction:** Supabase **passkey login** is currently a first-factor sign-in. It can replace entering your email and password but **does not automatically replace an enrolled TOTP second factor** or grant `aal2`. DZOFT's existing owner permission checks and 12-hour MFA freshness check remain intact. A device-based second-factor alternative depends on Supabase enabling/accepting WebAuthn MFA factors; the existing code detects already verified factors but enrollment is deliberately disabled until supported. This release does NOT claim the phone authenticator is eliminated for every login. We will not forge `aal2` JWTs, reuse TOTP secrets, or disable MFA to achieve that.
 
+## Beta Passkeys enabled — live Auth endpoint verified
+
+On 14 November 2026, after the owner activated the experimental feature, a direct live check of
+`POST /auth/v1/passkeys/authentication/options` on DZOFT project
+`rzghbvmszbjlqkdjzpxc` returned **HTTP 200** with a valid WebAuthn challenge
+and relying-party ID `rdzoagbe.github.io`. The earlier repeated HTTP 404 errors
+occurred before beta activation.
+
+DZOFT can now discover passkey availability on the login page and inside the
+authenticated Settings screen. It caches the capability check within the page,
+so simply opening Settings does not repeatedly start new challenges. When the
+hosted endpoint is unavailable again, the device button stays hidden and
+Settings explains the error without bypassing sign-in.
+
+**Next owner action:** Sign in normally and complete the six-digit authenticator
+step once. In Admin Settings → **Sign in with Windows Hello or fingerprint**,
+select **Add this device** and complete the Windows Hello or Android passkey
+registration prompt. Then sign out and test **Unlock with this device**.
+A valid server challenge does **not** mean a user passkey was already registered.
+
+The Chrome message `beforeinstallpromptevent.preventDefault() called; banner not shown`
+is an unrelated PWA installation notice. It does not affect passkey Auth.
+
 ## When the Supabase feature is disabled
 
 The login page now checks the Auth server, not merely WebAuthn browser support.
@@ -21,8 +44,9 @@ Windows Hello PIN or fingerprint is already linked to DZOFT.
 
 If the Auth service is temporarily unreachable, the device button also stays
 hidden; this is a fail-closed display decision, not a session or authorization
-change. After enabling Passkeys, use **Check again** in Settings and reload the
-login screen before using device sign-in.
+change. After enabling Passkeys, use **Check again** in Settings or reload the login
+screen. DZOFT validates that the hosted endpoint is responding before showing
+the device button.
 
 ## Required owner-side setup in Supabase
 

@@ -40,7 +40,10 @@ function context(mock) {
   requests.push({url,opts});
   const endpoint=url.split('/auth/v1/')[1]||'';
   let value={};let status=200;
-  if(mock.disabled){status=400;value={code:'passkey_disabled',message:'Passkey sign-in disabled'};}
+  if(mock.notFound && endpoint==='passkeys/authentication/options'){
+   status=404;value={code:'not_found',message:'Not Found'};
+  }
+  else if(mock.disabled){status=400;value={code:'passkey_disabled',message:'Passkey sign-in disabled'};}
   else if(endpoint==='passkeys/authentication/options')value={challenge_id:'challenge-login',options:{challenge:'YQ',rpId:'rdzoagbe.github.io',userVerification:'required'}};
   else if(endpoint==='passkeys/authentication/verify')value={access_token:jwt,refresh_token:'synthetic-refresh',expires_in:3600,user:{id:'synthetic-user'}};
   else if(endpoint==='passkeys/registration/options')value={challenge_id:'challenge-register',options:{challenge:'YQ',rp:{name:'DZOFT'},user:{id:'YQ',name:'synthetic'},pubKeyCredParams:[{type:'public-key',alg:-7}]}};
@@ -140,4 +143,23 @@ test('enabled server capability can be determined without granting an authentica
  assert.match(h,/sb\.devicePasskey\.availability\(refreshCapability === true\)/);
  assert.match(h,/Device sign-in is not enabled yet/);
  assert.match(h,/Open Supabase Passkeys settings/);
+});
+
+
+test('hosted Supabase Auth HTTP 404 is classified as unsupported and does not invoke biometrics',async()=>{
+ const ctx=context({notFound:true});
+ assert.equal(await ctx.sb.devicePasskey.availability(),false);
+ assert.equal(ctx.sb.devicePasskey.unavailableReason,'endpoint_missing');
+ assert.equal(await ctx.sb.devicePasskey.availability(),false);
+ assert.equal(ctx.requests.length,1,'No repeat calls for a cached 404 within the page');
+ assert.equal(ctx.events.length,0,'An unsupported endpoint must never open a device prompt');
+});
+test('enabled passkeys are discovered automatically, while HTTP 404 remains a safe fallback',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../admin/index.html'),'utf8');
+ assert.match(html,/sb\.devicePasskey\.availability\(\)\.then\(function\(enabled\)/);
+ assert.match(html,/sb\.devicePasskey\.availability\(refreshCapability === true\)/);
+ assert.match(html,/Check again/);
+ assert.match(html,/Passkey endpoint unavailable \(HTTP 404\)/);
+ assert.match(html,/experimental passkey endpoint/);
+ assert.match(html,/err && err\.status === 404/);
 });

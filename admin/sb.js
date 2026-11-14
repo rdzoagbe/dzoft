@@ -191,10 +191,22 @@
           if (!options || !options.challenge_id || !options.options) {
             throw new Error('Passkey service returned an invalid response.');
           }
+          sb.devicePasskey.unavailableReason = null;
           return true;
         }, function (err) {
           var code = String((err && (err.code || err.message)) || '').toLowerCase();
-          if (code.indexOf('passkey_disabled') >= 0) return false;
+          // Some hosted Auth versions return HTTP 404, not passkey_disabled,
+          // because the experimental endpoint does not exist on that server.
+          // Treat both as unavailable, never as an authenticated session.
+          if (err && err.status === 404) {
+            sb.devicePasskey.unavailableReason = 'endpoint_missing';
+            return false;
+          }
+          if (code.indexOf('passkey_disabled') >= 0) {
+            sb.devicePasskey.unavailableReason = 'disabled';
+            return false;
+          }
+          sb.devicePasskey.unavailableReason = 'connection_failed';
           throw err;
         });
         return sb.devicePasskey._availabilityCheck;
