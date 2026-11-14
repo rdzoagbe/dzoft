@@ -154,12 +154,12 @@ test('hosted Supabase Auth HTTP 404 is classified as unsupported and does not in
  assert.equal(ctx.requests.length,1,'No repeat calls for a cached 404 within the page');
  assert.equal(ctx.events.length,0,'An unsupported endpoint must never open a device prompt');
 });
-test('UI only probes Auth automatically after actual passkey enrollment; otherwise manual check',()=>{
+test('enabled passkeys are discovered automatically, while HTTP 404 remains a safe fallback',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../admin/index.html'),'utf8');
- assert.match(html,/if \(deviceReady\(\)\) sb\.devicePasskey\.availability\(\)/);
- assert.match(html,/if \(refreshCapability !== true && !deviceReady\(\)\)/);
- assert.match(html,/Check server support/);
+ assert.match(html,/sb\.devicePasskey\.availability\(\)\.then\(function\(enabled\)/);
+ assert.match(html,/sb\.devicePasskey\.availability\(refreshCapability === true\)/);
+ assert.match(html,/Check again/);
  assert.match(html,/Passkey endpoint unavailable \(HTTP 404\)/);
  assert.match(html,/experimental passkey endpoint/);
- assert.match(html,/if \(err && err\.status === 404\)/);
+ assert.match(html,/err && err\.status === 404/);
 });
