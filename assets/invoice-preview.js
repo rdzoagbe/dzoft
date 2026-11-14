@@ -45,7 +45,8 @@
     '<p style="margin:8px 0 0">Mode : '+esc(({transfer:'Virement bancaire',cash:'Espèces',card:'Carte',other:'Autre'})[receipt.method]||receipt.method)+'</p>'+
     '<div class="row" style="margin-top:15px;border-top:1px solid #dce5f1;padding-top:10px"><b>Reste dû sur cette facture</b><b>'+esc(amount(remaining))+'</b></div></div>'+
     '<footer class="foot">'+(taxable?'TVA calculée à 20 %. Vérifiez le régime et les mentions fiscales applicables avant émission.':'TVA non applicable, article 293 B du CGI.')+
-    '<p>Facture relative au devis '+esc(quote.numero||'')+'. Les paiements reçus sont affichés séparément du solde du projet.</p></footer>'+
+    '<p>Facture relative au devis '+esc(quote.numero||'')+'. Les paiements reçus sont affichés séparément du solde du projet.</p>'+
+    (quote.accepted_terms==='v2026-11'?'<p><b>Prix convenu et demandes complémentaires :</b> le prix initial couvre uniquement les prestations du devis accepté. Toute demande hors périmètre fera l’objet d’un devis complémentaire ou avenant accepté expressément avant toute facturation supplémentaire. Les corrections dues au devis initial restent incluses.</p>':'')+'</footer>'+
     '</main></body></html>';
    w.document.open();w.document.write(body);w.document.close();w.focus();
    return true;
