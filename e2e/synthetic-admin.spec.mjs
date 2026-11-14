@@ -49,7 +49,7 @@ const syntheticSb = `
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
    if(name==='sync_project_github_groups')return {added:0,checked:0,client_notified:false};
    if(name==='project_payment_admin_meta')return {};
-   if(name==='brevo_delivery_monitor')return {webhook_configured:true,received_events:1};
+   if(name==='brevo_delivery_monitor')return {webhook_configured:false,poll_enabled:true,received_events:1};
    return {};
   },
   fn:async()=>({}),
@@ -137,7 +137,7 @@ test('Brevo status appears per recipient in the authenticated admin, without sen
  await page.goto('admin/',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#email-log')).toContainText('Client: Delivered');
  await expect(page.locator('#email-log')).toContainText('You: Accepted by Brevo');
- await expect(page.locator('#email-delivery-health')).toContainText('Brevo delivery tracking connected');
+ await expect(page.locator('#email-delivery-health')).toContainText('Brevo delivery tracking active');
  await expect(page.locator('#email-log')).not.toContainText('You: Delivered');
 });
 test('Brevo status appears in private project activity with synthetic, read-only rows',async({page})=>{
