@@ -1246,6 +1246,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.quotes.map(function(q){ var c = client(q.client_id) || {}; return [q.numero, c.nom, c.entreprise, day(q.created_at), q.status, String(q.total).replace('.', ',')]; }));
   };
 
+  /* A fast cached login can resolve before the deferred Today renderer loads.
+     Repaint after the page's remaining scripts are ready; keep it display-only. */
+  window.addEventListener('load', function(){
+    if (window.DzoftToday && !$('app').hidden) renderDash();
+  });
+
   /* ---------------- boot ---------------- */
   var kind = sb.fromUrl();
   if (kind === 'recovery') { $('auth').hidden = false; showForm('f-newpass', 'Choisissez votre nouveau mot de passe.', true); }
