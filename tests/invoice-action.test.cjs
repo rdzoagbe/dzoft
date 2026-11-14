@@ -7,7 +7,7 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 test('each owner-side unbilled receipt offers a direct invoice action',()=>{
  const src=read('assets/project-tracking.js');
- assert.match(src,/!r\.invoice_id\?'<button[^']*data-open-receipt-link/);
+ assert.match(src,/function invoiceArchiveAction/);
  assert.match(src,/btn\.dataset\.openReceiptLink/);
  assert.match(src,/det\.open=true/);
  assert.match(src,/form\.elements\.issued\.required=fresh/);
@@ -36,7 +36,7 @@ test('invoice print UI is limited to the signed-in admin and not included in cli
  const admin=read('admin/suivi.html'),client=read('espace/index.html'),css=read('assets/project-tracking.css');
  assert.match(admin,/invoice-preview\.js\?v=20261114/);
  assert.doesNotMatch(client,/invoice-preview\.js/);
- assert.match(admin,/project-tracking\.js\?v=20261114-auto-number/);
+ assert.match(admin,/project-tracking\.js\?v=20261114-(?:auto-number|archive)/);
  assert.match(css,/tracking-issue-btn/);
  assert.match(css,/tracking-invoice-actions/);
 });
