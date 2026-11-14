@@ -13,7 +13,7 @@ test('French and English landing pages describe the scope-bound fixed price',()=
  assert.match(en,/Changes requested after signing may affect the budget only if you approve/);
  assert.doesNotMatch(method,/Le prix ne bouge plus/);
  assert.doesNotMatch(englishMethod,/The price then stays fixed/);
- assert.match(method,/Les corrections nécessaires pour respecter le devis signé restent incluses/);
+ assert.match(method,/les corrections nécessaires pour respecter le devis signé restent incluses/i);
  assert.match(englishMethod,/corrections needed to deliver the original signed quote remain included/);
  assert.match(faq,/Le prix peut-il changer après la signature du devis/);
  assert.match(englishFaq,/Can the price change after I sign the quote/);
