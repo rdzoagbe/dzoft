@@ -105,34 +105,7 @@ returns jsonb language plpgsql security definer set search_path='' as $fn$
 declare q public.quotes; response jsonb;
 begin
  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
- if p_hash is null or p_hash !~ '^[0-9a-f]{32} then raise exception 'Invalid draft identity';end if;
- select * into q from public.quotes where id=p_quote for update;
- if not found or q.deleted_at is not null or q.accepted_at is null
-   or q.progress_auto_draft->>'source_hash' is distinct from p_hash then
-     raise exception 'Draft has changed: refresh before publishing';
- end if;
- if q.progress_auto_draft->>'published_hash'=p_hash then
-   if q.progress_auto_draft->>'published_batch'=p_batch::text then
-     return private.project_tracking(p_quote);
-   end if;
-   raise exception 'This GitHub draft was already published';
- end if;
- response:=private.publish_project_updates(p_quote,p_batch,p_items);
- update public.quotes set progress_auto_draft=
-    coalesce(progress_auto_draft,'{}'::jsonb)||
-    jsonb_build_object('published_hash',p_hash,'published_batch',p_batch::text,'published_at',now())
- where id=p_quote;
- return response;
-end $fn$;
-
-revoke all on function private.dzoft_refresh_github_progress_draft(uuid),
- private.dzoft_refresh_github_insert_trigger(),
- public.owner_refresh_github_progress_draft(uuid),
- public.owner_publish_github_progress_draft(uuid,uuid,text,jsonb)
- from public,anon,authenticated;
-grant execute on function public.owner_refresh_github_progress_draft(uuid),
- public.owner_publish_github_progress_draft(uuid,uuid,text,jsonb) to authenticated;
- or p_batch is null then raise exception 'Invalid draft identity';end if;
+ if p_hash is null or p_hash !~ '^[0-9a-f]{32}$' or p_batch is null then raise exception 'Invalid draft identity';end if;
  select * into q from public.quotes where id=p_quote for update;
  if not found or q.deleted_at is not null or q.accepted_at is null
    or q.progress_auto_draft->>'source_hash' is distinct from p_hash then
