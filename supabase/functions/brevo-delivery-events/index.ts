@@ -69,10 +69,11 @@ async function recordEvent(x:any):Promise<boolean>{
  });
  return !!answer?.matched;
 }
-async function setup(token:string):Promise<Response>{
+async function setup(token:string,reportPhase:(step:string)=>void):Promise<Response>{
  if(!validToken(token) || await rpc("verify_brevo_delivery_token",{
   p_token:token,p_kind:"setup"
  })!==true)return result(401,{error:"Unauthorized"});
+ reportPhase('get_webhook_secret');
  const hookToken=await rpc("brevo_delivery_setup_credential",{p_setup_token:token});
  if(!validToken(hookToken))throw Error("Webhook signing secret unavailable");
  const cfg={
@@ -81,22 +82,27 @@ async function setup(token:string):Promise<Response>{
   events:EVENTS,
   headers:[{key:"X-DZOFT-Delivery-Token",value:hookToken}]
  };
+ reportPhase("brevo_list_webhooks");
  const existing=await brevo("/webhooks?type=transactional");
  const hooks=Array.isArray(existing?.webhooks)?existing.webhooks:[];
  const owned=hooks.find((x:any)=>x&&x.url===WEBHOOK_URL&&x.type==="transactional");
  let id:number;
  if(owned && Number.isInteger(Number(owned.id))){
    id=Number(owned.id);
+   reportPhase("brevo_update_webhook");
    await brevo("/webhooks/"+encodeURIComponent(String(id)),"PUT",cfg);
  } else {
+   reportPhase("brevo_create_webhook");
    const added=await brevo("/webhooks","POST",cfg);
    id=Number(added?.id);
    if(!Number.isSafeInteger(id)||id<=0)throw Error("Brevo webhook ID unavailable");
  }
+ reportPhase("mark_setup");
  await rpc("mark_brevo_delivery_setup",{p_webhook_id:id,p_backfill:false});
 
  // One-time retrospective provider verification, scoped to DZOFT's stored
  // sent-message IDs. This reads provider events; never sends or re-sends email.
+ reportPhase("reconcile_history");
  let checked=0,matched=0,backfilled=true;
  try {
    const candidates=await rpc("brevo_delivery_candidates",{p_setup_token:token});
@@ -123,8 +129,9 @@ Deno.serve(async(req:Request)=>{
  const isSetup=new URL(req.url).pathname.endsWith("/setup");
  const token=req.headers.get(isSetup?"X-DZOFT-Setup-Token":"X-DZOFT-Delivery-Token") ?? "";
  if(!validToken(token))return result(401,{error:"Unauthorized"});
+ let phase="authenticate_webhook";
  try{
-  if(isSetup)return await setup(token);
+  if(isSetup){phase="authenticate_setup";return await setup(token,function(p){phase=p;});}
   if(await rpc("verify_brevo_delivery_token",{p_token:token,p_kind:"webhook"})!==true)
     return result(401,{error:"Unauthorized"});
   const length=Number(req.headers.get("content-length")||"0");
@@ -138,8 +145,14 @@ Deno.serve(async(req:Request)=>{
   let matched=0;
   for(const event of entries)if(await recordEvent(event))matched++;
   return result(200,{ok:true,matched});
- }catch(_){
-  // Never echo sensitive IDs, credentials, Brevo payloads or client addresses.
-  return result(503,{error:"Delivery tracking temporarily unavailable"});
+ }catch(error){
+  // Only emit fixed stage labels and a safe HTTP status. Never provider responses,
+  // client addresses, webhook tokens, message IDs or API keys.
+  const detail=error instanceof Error?error.message:"";
+  const status=/^Brevo API returned HTTP ([0-9]{3})$/.exec(detail);
+  const diagnostic=status?"brevo_http_"+status[1]:
+     detail==="Brevo API key unavailable"?"brevo_credentials_unavailable":
+     detail==="Database RPC rejected"?"database_rpc_unavailable":"unavailable";
+  return result(503,{error:"Delivery tracking temporarily unavailable",phase,diagnostic});
  }
 });
