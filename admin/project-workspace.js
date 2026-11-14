@@ -12,6 +12,7 @@ var advance=extras.querySelector('div');
 function fold(id,fr,eng,container,opened){var node=document.getElementById(id);if(!node)return;var det=document.createElement('details');det.className='workspace-fold';det.open=!!opened;var summary=document.createElement('summary');summary.dataset.fr=fr;summary.dataset.en=eng;det.appendChild(summary);det.appendChild(node);container.appendChild(det);return det;}
 function move(id,to){var node=document.getElementById(id);if(node)to.appendChild(node);return node;}
 move('c-steps',primary);
+move('c-changes',primary);
 move('c-inv',aside);
 move('c-msg',aside);
 fold('c-note','Message visible par le client','Client-facing note',aside,false);
