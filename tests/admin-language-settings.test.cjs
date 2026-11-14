@@ -50,6 +50,8 @@ test('language selection still works before sign-in and persists on this device'
 test('Settings introduction translates correctly; no new permissions or auth changes',()=>{
  assert.match(lang,/'Langue de l’interface': 'Interface language'/);
  assert.match(lang,/Choose the language for your private DZOFT workspace/);
+ assert.match(html,/Conditions générales de vente \(version actuelle 2026-11\)/);
+ assert.match(html,/href="\.\.\/cgv-2026-10\.html"/);
  assert.match(html,/id="device-passkeys"/);
  assert.match(html,/sb\.devicePasskey\.register\(\)/);
  assert.match(html,/sb\.mfa\.challenge\(mfaFactor\)/);
