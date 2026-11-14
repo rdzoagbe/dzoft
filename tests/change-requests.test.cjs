@@ -42,6 +42,8 @@ test('owner proposes extra price and timeline; approval controls the work',()=>{
  assert.match(js,/owner_list_change_requests/);
  assert.match(js,/owner_propose_change/);
  assert.match(js,/owner_reject_change/);
+ assert.match(js,/owner_progress_change/);
+ assert.match(js,/data-change-progress/);
  assert.match(js,/p_extra_price:Number\(f\.elements\.amount\.value\)/);
  assert.match(js,/p_timeline:f\.elements\.timeline\.value\.trim\(\)/);
  assert.match(js,/the original invoice/i);
@@ -58,6 +60,10 @@ test('database restricts all state transitions to signed-project server function
  assert.match(sql,/c\.proposal_version<>p_version/);
  assert.match(sql,/status not in \('requested','proposed'\)/);
  assert.match(sql,/extra_price=p_extra_price/);
+ const progress=read('supabase/migrations/20261114213000_dzoft_change_progress.sql');
+ assert.match(progress,/c.status='approved' and p_status='in_progress'/);
+ assert.match(progress,/c.status='in_progress' and p_status='completed'/);
+ assert.match(progress,/public.is_owner\(\)/);
  assert.match(sql,/jsonb_build_object\('name',p_name,'scope',c\.proposed_scope/);
  assert.doesNotMatch(sql,/update public\.quotes|update public\.project_receipts|insert into public\.project_receipts/);
  assert.doesNotMatch(sql,/process-notification-outbox|sendTransacEmail/);
