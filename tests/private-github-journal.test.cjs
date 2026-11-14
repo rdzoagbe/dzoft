@@ -30,7 +30,7 @@ function contextFor(query,commits){
  return {ctx,root,calls};
 }
 const commit=(sha,date,message)=>({sha,commit:{committer:{date},message,author:{name:'Claude',email:'private@example.com'}}});
-test('Rodney activity updates automatically without copying AI metadata, commit subjects, code or session URLs',async()=>{
+test('Client activity updates automatically without copying AI metadata, commit subjects, code or session URLs',async()=>{
  const data=[
   commit('a'.repeat(40),'2026-11-13T15:10:00Z',
    'Admin portal: print-friendly venue QR code\n\nCo-Authored-By: Claude Fable <noreply@example.com>\nClaude-Session: https://claude.ai/code/session_secret'),
@@ -49,7 +49,7 @@ test('Rodney activity updates automatically without copying AI metadata, commit 
  assert.match(visible,/Administration/);
  assert.doesNotMatch(visible,/Co-Authored-By|Claude-Session|claude\.ai|Claude Fable|noreply@example|internal API token|leak|a{40}|b{40}|print-friendly|user login/i);
 });
-test('the GitHub synchronization is limited to the known Rodney quote',()=>{
+test('the GitHub synchronization is limited to the known client quote',()=>{
  const {ctx,calls}=contextFor('?q=random-client-project',[]);
  vm.runInNewContext(read('admin/github-journal.js'),ctx);
  assert.equal(calls.length,0);

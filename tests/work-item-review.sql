@@ -56,7 +56,7 @@ begin
  exception when others then if sqlerrm like 'FAIL:%' then raise; end if;
  end;
 
- -- GitHub categories are a fixed allowlist and must be attached only to Rodney's quote.
+ -- GitHub categories are a fixed allowlist and must be attached only to the client's quote.
  begin
   perform public.save_project_work_item(
    quote_id,null,'GitHub copied raw commit text','todo','other',

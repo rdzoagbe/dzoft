@@ -2,7 +2,7 @@
 
 ## What changed
 
-Rodney's **private project journal** now contains a small tasks area above the GitHub activity feed:
+The client's **private project journal** now contains a small tasks area above the GitHub activity feed:
 
 - **À faire** — initial state for manual tasks.
 - **En cours** — actively being worked on.
@@ -32,7 +32,7 @@ The new `private.publish_project_work_item` RPC verifies owner authentication an
 
 - Work items are stored in `public.project_work_items` with **RLS enabled and no direct grants** to `anon` or `authenticated`. Access is only through owner-guarded RPCs.
 - Public `save_project_work_item` and `publish_project_work_item` wrappers delegate to an owner-checked, tightly scoped private function.
-- Only Rodney's fixed quote ID accepts the GitHub provenance marker. Other client projects can add manual tasks but cannot accidentally import Rodney's GitHub categories.
+- Only the client's fixed quote ID accepts the GitHub provenance marker. Other client projects can add manual tasks but cannot accidentally import the client's GitHub categories.
 - No existing `quotes.journal`, `project_receipts`, `project_payment_statuses` or `email_outbox` rows are modified by the migration.
 - A new client notification is triggered **only** by explicitly publishing a completed work task. Do not use production records in tests.
 - The separate off-site encrypted backup and isolated disaster recovery validation are **not yet verified**. Run the previously documented Free-plan backup kit on a trusted machine before larger production changes.
@@ -45,13 +45,13 @@ The new `private.publish_project_work_item` RPC verifies owner authentication an
 
 ### Mobile smoke test
 
-Open installed DZOFT Admin → Dossiers → Projets → Rodney → Journal privé.
+Open installed DZOFT Admin → Dossiers → Projets → projet UPZONE → Journal privé.
 
 1. See the **Tâches et validations** card and existing private notes.
 2. Expand the journal: GitHub activity is loaded and recent categories are added automatically.
 3. Confirm new private items are **À vérifier**, and pressing **Actualiser** doesn't create duplicates.
 4. Update a reviewed task through En cours / Terminé.
-5. Only after Terminé, expand the publication review and type an approved summary. **Publishing really notifies the client**, so use a synthetic test client to test the final button; never press it on Rodney just for demonstration.
+5. Only after Terminé, expand the publication review and type an approved summary. **Publishing really notifies the client**, so use a synthetic test client to test the final button; never press it on the client just for demonstration.
 6. Verify client portal still contains no private work item source data.
 
 ### Deliberately not in scope

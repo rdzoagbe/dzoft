@@ -4,7 +4,7 @@
 
 **Active in Supabase RD-Clients:** Brevo event-reporting reconciliation, scheduled every hour.
 The first backfill checked **10** existing email records and recorded **18** matching
-provider events. Brevo independently confirmed delivery of Rodney's €350 payment
+provider events. Brevo independently confirmed delivery of a payment
 confirmation at **2026-11-14 09:16:52 UTC** (10:16:52 Paris time).
 The owner's copy was delivered and has an open-tracking signal.
 
@@ -14,12 +14,12 @@ webhook receiver is securely deployed but **no Brevo webhook has been
 successfully registered**. Do not call it connected. Instead the
 working official reporting API `GET /v3/smtp/statistics/events` is used
 for an automated, hourly, server-side poll. It requires no changes to a
-recipient's email or action by Rodney. There are no automatic emails.
+recipient's email or action by the client. There are no automatic emails.
 
 ## Owner interface
 
 **DZOFT Admin → Dashboard → Email delivery history** and
-**Projects → Rodney → Activity** show each recipient separately:
+**Projects → UPZONE project → Activity** show each recipient separately:
 
 - **Accepted by Brevo:** sending API accepted the request; no delivery verification yet.
 - **Delivered:** the receiving mail server accepted the message; not proof the

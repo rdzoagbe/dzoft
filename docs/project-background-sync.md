@@ -2,7 +2,7 @@
 
 ## Server-side synchronization
 
-The private Rodney/UPZONE project can now synchronize GitHub activity **even when the admin PWA is closed**.
+The private UPZONE project can now synchronize GitHub activity **even when the admin PWA is closed**.
 
 - Source: public `ProjectRodney/ProRod`, branch `main`, maximum 100 recent commits.
 - Cadence: PostgreSQL Cron at minutes **17 and 47** of every hour, UTC (~30 minutes; this is polling, **not instant push-triggered webhooks**).
@@ -19,13 +19,13 @@ The worker logs and returns aggregate counts only. It does not store or upload r
 
 ## Weekly internal review
 
-In **DZOFT Admin → Projects → Rodney → Private project journal**, the new **This week's project review** card shows:
+In **DZOFT Admin → Projects → UPZONE project → Private project journal**, the new **This week's project review** card shows:
 - GitHub topic groups detected this week (no raw descriptions);
 - Tasks **To verify**, **In progress**, and **Completed**;
 - Categories involved and a safe-to-copy internal summary;
 - Whether the backend scheduler is enabled and the time of the last successful server-side sync.
 
-**Copy private review** only copies a generic internal draft to the owner’s clipboard. It does not publish to Rodney. To share anything with the client, the owner must independently validate the work, mark it completed, write and explicitly approve a new client summary, and confirm notification under the existing task workflow.
+**Copy private review** only copies a generic internal draft to the owner’s clipboard. It does not publish to the client. To share anything with the client, the owner must independently validate the work, mark it completed, write and explicitly approve a new client summary, and confirm notification under the existing task workflow.
 
 ## Secure storage and incident response
 

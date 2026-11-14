@@ -87,7 +87,7 @@ test('Client portal sign-in, sign-up and recovery remain reachable, without leak
   assertNoScripts();
 });
 
-test('Private Rodney project page redirects an unauthenticated visitor to login', async ({page}) => {
+test('Private client project page redirects an unauthenticated visitor to login', async ({page}) => {
   await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0', {waitUntil: 'domcontentloaded'});
   await expect(page).toHaveURL(/\/admin\/?(?:\?.*)?$/);
   await expect(page.locator('#f-login')).toBeVisible();

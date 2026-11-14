@@ -1,12 +1,12 @@
 /* DZOFT private GitHub activity viewer. Sends ONLY fixed date/category pairs
  * to the owner-guarded private task intake. No commit message, author, AI
  * attribution, code, diff, SHA or session is sent to Supabase/client portal.
- * Rodney's repo is public and a reviewed, fixed allowlist; no GitHub key used. */
+ * The client's repo is public and a reviewed, fixed allowlist; no GitHub key used. */
 (function(){
 'use strict';
 var quoteId=new URLSearchParams(location.search).get('q');
-var RODNEY_QUOTE='c8a50cee-3856-4539-98a3-f5df201dbff0';
-if(quoteId!==RODNEY_QUOTE)return;
+var CLIENT_QUOTE='c8a50cee-3856-4539-98a3-f5df201dbff0';
+if(quoteId!==CLIENT_QUOTE)return;
 var root=document.getElementById('jr-github-slot');
 if(!root)return;
 var url='https://api.github.com/repos/ProjectRodney/ProRod/commits?sha=main&per_page=100';

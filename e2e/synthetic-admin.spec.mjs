@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 // A fake, in-memory owner and quote. This suite never signs into Supabase,
-// never reads Rodney's actual notes, never writes payments or sends an email.
+// never reads the client's actual notes, never writes payments or sends an email.
 const syntheticSb = `
 (function(){
  window.__syntheticCalls=[];window.__syntheticVersion='20261114-debug';
@@ -95,7 +95,7 @@ test('Owner dashboard renders real navigation and action panel with synthetic da
  expect(errors,'JavaScript exceptions in authenticated synthetic admin').toEqual([]);
 });
 
-test('Rodney project weekly review and private task statuses render without a real account',async({page})=>{
+test('Client project weekly review and private task statuses render without a real account',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{
@@ -114,7 +114,7 @@ test('Rodney project weekly review and private task statuses render without a re
  await expect(page.locator('#jr-weekly-slot')).toContainText('Background sync');
  await expect(page.locator('#jr-github-slot')).toContainText(/Activité de développement|GitHub/);
  await expect(page.locator('#jr-quick-text')).toBeVisible();
- expect(errors,'JavaScript exceptions in synthetic Rodney project').toEqual([]);
+ expect(errors,'JavaScript exceptions in the synthetic client project').toEqual([]);
 });
 
 test('Read-only synthetic owner tests never emit network requests containing real client information',async({page})=>{

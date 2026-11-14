@@ -1,8 +1,8 @@
-# Rodney · UPZONE — private automatic GitHub journal
+# UPZONE project — private automatic GitHub journal
 
 ## Owner experience
 
-Open **DZOFT Admin → Dossiers → Projets → Rodney → Journal privé du projet**.
+Open **DZOFT Admin → Dossiers → Projets → projet UPZONE → Journal privé du projet**.
 
 - Opening the private journal reads recent public activity from `ProjectRodney/ProRod`, branch `main`, through the GitHub REST API.
 - DZOFT groups commits by **calendar date + fixed activity category**.
@@ -24,7 +24,7 @@ Only this exact JSON shape crosses from the admin browser into Supabase:
 
 The owner-only database function **`sync_project_github_groups`** rejects any extra field, unsupported date/category, wrong quote, or non-owner call. The database itself generates a fixed generic title such as **GitHub · QR codes et accès aux lieux (à vérifier)**. The client portal cannot read the private task table.
 
-The browser reads the **first line** of a commit subject locally *only to classify it*. No original subject, commit body, code, diff, commit SHA, author name/email, AI co-author/assistant/model attribution, source file, token, or session URL is sent to Supabase, saved as a task, or sent to Rodney. No AI model is involved.
+The browser reads the **first line** of a commit subject locally *only to classify it*. No original subject, commit body, code, diff, commit SHA, author name/email, AI co-author/assistant/model attribution, source file, token, or session URL is sent to Supabase, saved as a task, or sent to the client. No AI model is involved.
 
 **GitHub activity is not proof of completion or successful testing**. All new tasks are **À vérifier**; they are never automatically marked Terminé. Client-facing updates are published only after you independently confirm the task and explicitly review a new human-written summary using **Approuver et notifier**. The normal email outbox then handles delivery.
 
@@ -46,8 +46,8 @@ Backups: DZOFT's encrypted Free-plan backup toolkit exists, but **a separate off
 ## Mobile smoke check
 
 1. Sign in to DZOFT Admin with your owner account and MFA.
-2. Open Rodney's project and expand **Journal privé du projet**.
+2. Open the client's project and expand **Journal privé du projet**.
 3. Wait for the GitHub activity section and private synchronization status to appear.
 4. Check **Tâches et validations**: newly detected activity is **À vérifier**, with generic titles and dates, not raw commit text.
 5. Reopen the journal or press **Actualiser**: the number of already-created tasks should not increase for unchanged GitHub history.
-6. Do not press **Approuver et notifier** just to test the UI on Rodney: it really publishes a summary and may queue a client email.
+6. Do not press **Approuver et notifier** just to test the UI on the client: it really publishes a summary and may queue a client email.
