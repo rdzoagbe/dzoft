@@ -10,6 +10,20 @@ No device PIN, fingerprint template, biometric image, GitHub token, Supabase ser
 
 **Critical distinction:** Supabase **passkey login** is currently a first-factor sign-in. It can replace entering your email and password but **does not automatically replace an enrolled TOTP second factor** or grant `aal2`. DZOFT's existing owner permission checks and 12-hour MFA freshness check remain intact. A device-based second-factor alternative depends on Supabase enabling/accepting WebAuthn MFA factors; the existing code detects already verified factors but enrollment is deliberately disabled until supported. This release does NOT claim the phone authenticator is eliminated for every login. We will not forge `aal2` JWTs, reuse TOTP secrets, or disable MFA to achieve that.
 
+## When the Supabase feature is disabled
+
+The login page now checks the Auth server, not merely WebAuthn browser support.
+If Supabase returns `passkey_disabled`, DZOFT hides the unusable device-sign-in
+button and keeps email/password visible. Settings explains that the project
+needs **Authentication → Passkeys** enabled, provides the direct dashboard link,
+and offers a **Check again** button. It never pretends that an unregistered
+Windows Hello PIN or fingerprint is already linked to DZOFT.
+
+If the Auth service is temporarily unreachable, the device button also stays
+hidden; this is a fail-closed display decision, not a session or authorization
+change. After enabling Passkeys, use **Check again** in Settings and reload the
+login screen before using device sign-in.
+
 ## Required owner-side setup in Supabase
 
 Supabase's passkey support is **experimental** and must be enabled in the hosted project:

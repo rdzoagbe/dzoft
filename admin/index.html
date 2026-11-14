@@ -441,7 +441,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261114-device-login"></script>
+<script src="sb.js?v=20261114-passkey-capability"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
@@ -494,10 +494,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function deviceReady(){ try { return localStorage.getItem('dzoft-device-login-ready') === '1'; } catch(e){ return false; } }
   function markDeviceReady(){ try { localStorage.setItem('dzoft-device-login-ready','1'); } catch(e){} }
   (function initDeviceEntry(){
-    var available = !!(sb.devicePasskey && sb.devicePasskey.supported && sb.devicePasskey.supported());
-    $('device-signin-area').hidden = !available;
-    $('email-signin-details').open = !available || !deviceReady();
-    if (!available) return;
+    // Hide an inoperative device button until the server confirms support.
+    // Browser WebAuthn support alone never means the Supabase project is enabled.
+    var supported = !!(sb.devicePasskey && sb.devicePasskey.supported && sb.devicePasskey.supported());
+    $('device-signin-area').hidden = true;
+    $('email-signin-details').open = true;
+    if (!supported) return;
+    sb.devicePasskey.availability().then(function(enabled){
+      $('device-signin-area').hidden = !enabled;
+      $('email-signin-details').open = !enabled || !deviceReady();
+    },function(){
+      $('device-signin-area').hidden = true;
+      $('email-signin-details').open = true;
+    });
     var b = $('device-signin');
     b.onclick = function(){
       if (b.disabled) return;
@@ -944,87 +953,116 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* Device passkeys use Supabase's server-verified passwordless protocol.
      They don't turn an AAL1 token into AAL2 and cannot bypass TOTP/owner RLS.
      Device labels are generated with textContent, never interpreted as HTML. */
-  function renderDevicePasskeys(u) {
+  function renderDevicePasskeys(u, refreshCapability) {
     var box = $('device-passkeys');
     if (!box) return;
     box.replaceChildren();
     if (!u || !u.app_metadata || u.app_metadata.dzoft_owner !== true) return;
+
+    function note(text, className) {
+      var p = document.createElement('p');
+      p.className = className || 'device-note';
+      p.textContent = text;
+      box.appendChild(p);
+      return p;
+    }
+    function retryButton() {
+      var button = document.createElement('button');
+      button.type = 'button'; button.className = 'btn line sm';
+      button.textContent = 'Check again';
+      button.onclick = function(){ renderDevicePasskeys(u, true); };
+      box.appendChild(button);
+    }
+    function unavailable() {
+      box.replaceChildren();
+      var title = document.createElement('strong');
+      title.textContent = 'Device sign-in is not enabled yet';
+      box.appendChild(title);
+      note('Supabase Auth has passkeys disabled for this project. Your laptop and browser are not at fault. The owner must enable Passkeys in the Supabase dashboard before registering a device.');
+      var link = document.createElement('a');
+      link.href = 'https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/auth/passkeys';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.className = 'btn sm line';
+      link.textContent = 'Open Supabase Passkeys settings';
+      box.appendChild(link);
+      note('If the dashboard offers Passkeys, use relying-party ID rdzoagbe.github.io and origin https://rdzoagbe.github.io. Do not include the /dzoft/ path. Keep your password and authenticator app available.');
+      note('Important: Passkey sign-in replaces the password step only. Your existing 6-digit authenticator check still protects client and payment data.');
+      retryButton();
+    }
+
     if (!sb.devicePasskey || !sb.devicePasskey.supported || !sb.devicePasskey.supported()) {
-      box.textContent = 'This browser cannot use passkeys. Try an updated Chrome, Edge, or your phone’s supported browser over HTTPS.';
+      note('This browser does not support WebAuthn device sign-in. Try an up-to-date Chrome, Edge, or Android browser over HTTPS.');
       return;
     }
-    var status = document.createElement('p');
-    status.className = 'device-note';
-    status.textContent = 'Checking your registered devices…';
-    box.appendChild(status);
-    sb.devicePasskey.list().then(function(rows){
+
+    var status = note('Checking device sign-in availability…');
+    sb.devicePasskey.availability(refreshCapability === true).then(function(enabled){
+      if (!enabled) { unavailable(); return; }
+      status.textContent = 'Checking registered devices…';
+      return sb.devicePasskey.list().then(function(rows){
+        box.replaceChildren();
+        note('Add a passkey on each device you use. Your device verifies you locally; DZOFT never receives your fingerprint or Windows PIN.');
+        if (rows.length) {
+          var list = document.createElement('div');
+          list.className = 'device-list';
+          rows.forEach(function(item){
+            var row = document.createElement('div');
+            row.className = 'device-row';
+            var description = document.createElement('div');
+            var name = document.createElement('strong');
+            name.textContent = item.friendly_name || 'Registered passkey';
+            var info = document.createElement('small');
+            info.textContent = item.created_at ? 'Added ' + new Date(item.created_at).toLocaleDateString('en-GB') : 'Registered device';
+            description.append(name,info);
+            var remove = document.createElement('button');
+            remove.type = 'button'; remove.className = 'btn danger sm';remove.textContent = 'Remove';
+            remove.onclick = function(){
+              if (!confirm('Remove this passkey? You will no longer be able to sign in with it. Keep your password and authenticator app as backup.')) return;
+              remove.disabled = true;
+              sb.devicePasskey.remove(item.id).then(function(){ renderDevicePasskeys(u); },
+                function(){ remove.disabled = false; toast('Could not remove that passkey.'); });
+            };
+            row.append(description,remove);
+            list.appendChild(row);
+          });
+          box.appendChild(list);
+        } else {
+          note('No passkeys registered yet.');
+        }
+        var add = document.createElement('button');
+        add.type = 'button'; add.className = 'btn main sm';
+        add.textContent = 'Add this device';
+        add.onclick = function(){
+          add.disabled = true;
+          var progress = note('Follow the fingerprint, face, or PIN prompt on this device…','device-feedback');
+          sb.devicePasskey.register().then(function(){
+            markDeviceReady();
+            toast('Device added. You can now sign in with this passkey.');
+            renderDevicePasskeys(u);
+          },function(err){
+            add.disabled = false;
+            var raw = String((err && (err.code || err.message)) || '').toLowerCase();
+            progress.className = 'device-feedback error';
+            progress.textContent = raw.indexOf('passkey_disabled') >= 0 ?
+              'Supabase Passkeys were disabled. Enable the feature in the dashboard, then check again.' :
+              err && err.name === 'NotAllowedError' ? 'Device registration cancelled or timed out.' :
+              'Could not add this device. Verify your account and try again.';
+          });
+        };
+        box.appendChild(add);
+        note('A passkey does not bypass the existing six-digit second factor. Keep your authenticator app as backup.');
+      },function(err){
+        var raw = String((err && (err.code || err.message)) || '').toLowerCase();
+        if (raw.indexOf('passkey_disabled') >= 0) { unavailable(); return; }
+        box.replaceChildren();
+        note('Device sign-in is enabled, but your registered passkeys could not be listed. No account changes were made.');
+        retryButton();
+      });
+    }).catch(function(){
       box.replaceChildren();
-      var intro = document.createElement('p');
-      intro.className = 'device-note';
-      intro.textContent = 'Add a passkey on each device you want to use. Your device verifies you locally; DZOFT never receives your fingerprint or Windows PIN.';
-      box.appendChild(intro);
-      if (rows.length) {
-        var list = document.createElement('div');
-        list.className = 'device-list';
-        rows.forEach(function(item){
-          var row = document.createElement('div');
-          row.className = 'device-row';
-          var description = document.createElement('div');
-          var name = document.createElement('strong');
-          name.textContent = item.friendly_name || 'Registered passkey';
-          var info = document.createElement('small');
-          info.textContent = item.created_at ? 'Added ' + new Date(item.created_at).toLocaleDateString('en-GB') : 'Registered device';
-          description.append(name,info);
-          var remove = document.createElement('button');
-          remove.type = 'button'; remove.className = 'btn danger sm';remove.textContent = 'Remove';
-          remove.onclick = function(){
-            if (!confirm('Remove this passkey? You will no longer be able to sign in with it. Keep your password and authenticator app as backup.')) return;
-            remove.disabled = true;
-            sb.devicePasskey.remove(item.id).then(function(){ renderDevicePasskeys(u); },
-              function(){ remove.disabled = false; toast('Could not remove that passkey.'); });
-          };
-          row.append(description,remove);
-          list.appendChild(row);
-        });
-        box.appendChild(list);
-      } else {
-        var empty=document.createElement('p');empty.className='device-note';
-        empty.textContent='No passkeys registered yet.';box.appendChild(empty);
-      }
-      var add = document.createElement('button');
-      add.type = 'button'; add.className = 'btn main sm';
-      add.textContent = 'Add this device';
-      add.onclick = function(){
-        add.disabled=true;
-        status.textContent='Follow your device’s fingerprint, face, or PIN prompt…';
-        box.appendChild(status);
-        sb.devicePasskey.register().then(function(){
-          markDeviceReady();
-          toast('Device added. You can now sign in with a passkey on this device.');
-          renderDevicePasskeys(u);
-        },function(err){
-          add.disabled=false;
-          var raw=String((err && (err.code || err.message)) || '').toLowerCase();
-          status.className='device-feedback error';
-          status.textContent = raw.indexOf('passkey_disabled')>=0 ?
-           'Passkeys are not enabled for this Supabase project. Enable Authentication → Passkeys first, then return here.' :
-           err && err.name==='NotAllowedError' ? 'Cancelled or timed out. No device was added.' :
-           'Unable to add a passkey. Verify your account and try again.';
-        });
-      };
-      box.appendChild(add);
-      var note = document.createElement('p');
-      note.className='device-note';
-      note.textContent='Security note: device sign-in alone may still require your existing six-digit authenticator check. It does not bypass MFA.';
-      box.appendChild(note);
-    }).catch(function(err){
-      box.replaceChildren();
-      var note=document.createElement('p');note.className='device-note';
-      var raw=String((err && (err.code||err.message))||'').toLowerCase();
-      note.textContent = raw.indexOf('passkey_disabled')>=0 ?
-        'Passkeys are not enabled in this Supabase project yet. In Supabase Dashboard → Authentication → Passkeys, enable passkeys for the DZOFT domain before adding a device. Keep using your authenticator code until then.' :
-        'Could not check device credentials. Existing email, password and authenticator sign-in remain available.';
-      box.appendChild(note);
+      note('Could not contact the device sign-in service. Your current email, password and authenticator sign-in remain available.');
+      retryButton();
     });
   }
 
