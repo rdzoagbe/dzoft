@@ -61,6 +61,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* steps */
 .st{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:start}
 .st+.st{margin-top:8px}
+#st-proposed{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:14px}#st-proposed p{margin:0 0 6px}#st-proposed ul{margin:0 0 10px;padding-left:18px}#st-proposed li{margin:4px 0}
 .st.done{background:#f5fbf7;border-color:#cfe9d8}
 .st .ck{width:22px;height:22px;margin-top:6px}
 .st .f{display:grid;grid-template-columns:1fr 150px;gap:6px}
@@ -210,7 +211,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   <section class="card" id="c-steps" hidden>
     <h2>Avancement <span class="sp"></span><button class="btn sm line" id="st-add" type="button">+ Étape</button><button class="btn sm ghost" id="st-reset" type="button">Étapes par défaut</button></h2>
     <p class="muted" style="margin-bottom:8px">Cochez une étape quand elle est faite : la date du jour s’inscrit et le client la voit tout de suite. La note sous l’étape est visible par le client.</p>
-    <div id="steps"></div>
+    <div id="st-proposed" hidden></div><div id="steps"></div>
   </section>
 
   <section class="card" id="c-journal" hidden>
@@ -544,6 +545,31 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<div class="tools"><button type="button" data-a="up" title="Monter">↑</button><button type="button" data-a="down" title="Descendre">↓</button><button type="button" data-a="rm" title="Retirer">×</button></div></div>';
     }).join('');
     if(window.DzoftPlacePaymentSteps)window.DzoftPlacePaymentSteps();
+    renderProposedSteps();
+  }
+  // Milestones proposed from the private journal. They join the client-visible list only when the owner adds them.
+  function proposedSteps(){
+    var d = Q.progress_draft, have = (Q.steps || []).map(function(s){ return (s.t || '').trim().toLowerCase(); });
+    return (d && Array.isArray(d.steps) ? d.steps : []).filter(function(s){ return s && typeof s.t === 'string' && s.t.trim() && have.indexOf(s.t.trim().toLowerCase()) < 0; }).slice(0, 8);
+  }
+  function clearProposedSteps(){
+    var d = Q.progress_draft || {}, next = Array.isArray(d.updates) && d.updates.length ? { prepared: d.prepared || null, updates: d.updates } : null;
+    Q.progress_draft = next; return sb.update('quotes', QID, { progress_draft: next });
+  }
+  function renderProposedSteps(){
+    var box = $('st-proposed'), list = proposedSteps();
+    if (!box) return;
+    if (!list.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = '<p><b>Étapes proposées à partir du journal</b> · le client ne les voit pas tant que vous ne les ajoutez pas.</p><ul>' +
+      list.map(function(s){ return '<li>' + esc(s.t.trim()) + (s.done ? ' · faite' + (s.d ? ' le ' + new Date(s.d + 'T12:00:00').toLocaleDateString('fr-FR') : '') : ' · à venir') + (s.s ? '<br><span class="muted">' + esc(s.s) + '</span>' : '') + '</li>'; }).join('') +
+      '</ul><button class="btn sm main" type="button" id="st-proposed-add">Ajouter ces étapes</button> <button class="btn sm ghost" type="button" id="st-proposed-skip">Ignorer</button>';
+    $('st-proposed-add').onclick = function(){
+      list.forEach(function(s, i){ Q.steps.push({ k: 'x' + Date.now() + i, t: s.t.trim().slice(0, 120), s: (s.s || '').slice(0, 240), done: !!s.done, d: s.done ? (s.d || new Date().toISOString().slice(0, 10)) : '', note: '' }); });
+      // Added first, saved with the other milestones; proposals already in the list are no longer offered.
+      renderSteps(); later(); Promise.resolve(clearProposedSteps()).catch(function(){});
+    };
+    $('st-proposed-skip').onclick = function(){ Promise.resolve(clearProposedSteps()).then(renderProposedSteps, fail); };
   }
   $('steps').oninput = function(e){
     var row = e.target.closest('.st'); if (!row) return;

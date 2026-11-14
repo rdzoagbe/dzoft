@@ -82,3 +82,5 @@
 .tracking-auto label{max-width:370px}
 .tracking-print-btn{display:inline-flex;margin:11px 0 4px}
 @media(max-width:600px){.tracking-print-btn{width:100%;justify-content:center}}
+
+.tracking-draft{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px 14px;margin:0 0 12px}.tracking-draft p{margin:0 0 8px;font-size:14px}

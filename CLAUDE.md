@@ -40,6 +40,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Vue par défaut : frise par jour avec étiquettes de couleur et filtres (tout, fait, demandes du client, décisions, en attente) ;
   « Modifier » ouvre l’édition. L’assistant peut ajouter des entrées directement dans `quotes.journal` (SQL, à la fin d’un travail) ;
   la fiche relit le journal quand la fenêtre revient au premier plan, pour ne pas écraser ces ajouts.
+  Brouillon de publication (14 nov. 2026) : `quotes.progress_draft` (privé, jamais renvoyé au client) = `{prepared, updates:[{category,status,summary≤220}], steps:[{t,s,done,d}]}`.
+  L’assistant le prépare à la fin d’un travail, à partir du journal ; la fiche pré-remplit « Publier une avancée » et propose les étapes.
+  Rien ne part au client sans le bouton « Publier et notifier » ni « Ajouter ces étapes » (test `tests/project-journal.test.cjs`).
   Admin installable sur téléphone (PWA, 10 nov. 2026) : `admin/manifest.webmanifest`, `admin/icons/`,
   `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
   bouton « Installer l’app » affiché quand le navigateur le propose.

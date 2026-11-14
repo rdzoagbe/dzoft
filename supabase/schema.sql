@@ -78,6 +78,7 @@ create table public.quotes (
   env                  jsonb not null default '[]',
   invoices             jsonb not null default '[]',
   journal              jsonb not null default '[]',  -- private project journal (admin only; never returned by client functions)
+  progress_draft       jsonb,                        -- private draft of the next client update (admin only)
   care                 jsonb,
   ext_link             text not null default '' check (ext_link = '' or ext_link ~* '^https://'),
   deleted_at           timestamptz
