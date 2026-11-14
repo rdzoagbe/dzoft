@@ -44,6 +44,21 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 .pw .eye:hover{color:var(--ink);background:var(--soft)}
 .pw .eye svg{width:20px;height:20px}
 
+.device-entry{background:linear-gradient(125deg,#f6f8ff,#f8fafc);border:1px solid #e2e7f6;border-radius:13px;padding:13px;margin:15px 0 12px}
+.device-entry .device-button,.device-button{width:100%;min-height:45px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:800;font-size:14px}
+.device-hint{font-size:11.5px;color:#626e89;line-height:1.5;margin:8px 0 0}
+.device-fallback{margin-top:12px}
+.device-fallback>summary{cursor:pointer;color:#4651a7;font-size:13px;font-weight:700;padding:9px 1px}
+.device-fallback-fields{padding:9px 0}
+#device-passkeys .device-list{display:grid;gap:8px;margin:12px 0}
+#device-passkeys .device-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;flex-wrap:wrap}
+#device-passkeys .device-row strong{font-size:13px}
+#device-passkeys .device-row small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+#device-passkeys .device-note{color:var(--mute);font-size:12px;line-height:1.6;margin:9px 0}
+#device-passkeys .device-feedback{font-size:12px;padding:9px 11px;border-radius:9px;background:#f0f3ff;margin:10px 0}
+#device-passkeys .device-feedback.error{background:#fff0ef;color:#9e3135}
+@media (max-width:450px){.auth .card{padding:22px 20px}.device-entry{padding:11px}}
+
 /* login */
 .auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
 .auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
@@ -187,13 +202,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · espace privé</b><span>Clients, demandes et devis</span></div></div>
 
     <form id="f-login">
-      <h1>Connexion</h1>
-      <p class="intro">Cet espace est réservé au propriétaire du site.</p>
-      <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="username" required>
-      <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
-      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Se connecter</button>
-      <div class="row"><a id="go-forgot">Mot de passe oublié ?</a><a id="go-first" hidden>Première connexion</a></div>
-      <button class="btn line" id="l-install" type="button" hidden style="width:100%;margin-top:14px">Installer l’application sur ce téléphone</button>
+      <h1>Welcome back</h1>
+      <p class="intro">Your private DZOFT workspace, securely protected.</p>
+      <div id="device-signin-area" class="device-entry" hidden>
+        <button id="device-signin" class="btn main device-button" type="button"><span aria-hidden="true">◈</span> Unlock with this device</button>
+        <p class="device-hint">Windows Hello, fingerprint, face unlock or device PIN. Requires a passkey previously added to your account.</p>
+      </div>
+      <details id="email-signin-details" class="device-fallback" open>
+        <summary id="email-signin-summary">Use email and password</summary>
+        <div class="device-fallback-fields">
+          <label for="l-email">Email address</label><input id="l-email" type="email" autocomplete="username" required>
+          <label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password" required>
+          <button class="btn main" style="width:100%;margin-top:14px" type="submit">Sign in</button>
+          <div class="row"><a id="go-forgot">Forgot password?</a><a id="go-first" hidden>First sign-in</a></div>
+        </div>
+      </details>
+      <button class="btn line" id="l-install" type="button" hidden style="width:100%;margin-top:14px">Install the app on this device</button>
     </form>
 
     <form id="f-first" hidden>
@@ -214,19 +238,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     </form>
 
     <form id="f-mfa" hidden>
-      <h1>Code de vérification</h1>
-      <p class="intro" id="m-intro">Ouvrez votre application d’authentification et touchez le code de « DZOFT » pour le copier, puis revenez ici et appuyez sur « Coller le code copié ». Vous pouvez aussi le taper. Ce code vous sera redemandé toutes les 12 heures.</p>
+      <h1>Confirm it's you</h1>
+      <p class="intro" id="m-intro">Enter the six-digit code from your authenticator app. This extra check protects your client and payment information.</p>
       <div id="m-key" hidden>
-        <button class="btn main" style="width:100%" type="button" id="m-key-go">Utiliser ma clé d’accès</button>
-        <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 12 heures.</p>
-        <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
+        <button class="btn main device-button" style="width:100%" type="button" id="m-key-go">Use this device to verify</button>
+        <p class="intro" style="margin-top:10px;font-size:13.5px">Windows Hello, fingerprint, face unlock or security key.</p>
+        <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>or enter a code<span style="flex:1;height:1px;background:var(--line)"></span></p>
       </div>
       <div id="m-totp">
-        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="______" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
-        <button class="btn" id="m-paste" type="button" hidden style="width:100%;margin-top:10px">Coller le code copié</button>
-        <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
+        <label for="m-code">Verification code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="______" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
+        <button class="btn" id="m-paste" type="button" hidden style="width:100%;margin-top:10px">Paste copied code</button>
+        <button class="btn main" style="width:100%;margin-top:14px" type="submit">Verify and continue</button>
       </div>
-      <div class="row"><a id="mfa-out">Se déconnecter</a></div>
+      <div class="row"><a id="mfa-out">Sign out</a></div>
     </form>
 
     <form id="f-newpass" hidden>
@@ -342,8 +366,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         </div>
       </div>
       <div class="panel">
-        <h3>Double authentification</h3>
-        <div id="mfa-box"><p style="color:var(--mute)">Chargement…</p></div>
+        <h3>Account verification</h3>
+        <div id="mfa-box"><p style="color:var(--mute)">Loading…</p></div>
+      </div>
+      <div class="panel" id="device-passkey-panel">
+        <h3>Sign in with Windows Hello or fingerprint</h3>
+        <p style="font-size:13.5px;color:var(--mute);margin:5px 0 12px">Set up a passkey on your laptop or phone. This avoids typing your password on that device. Your existing second-factor requirement remains in place until the authentication server supports device-based MFA.</p>
+        <div id="device-passkeys"><p style="color:var(--mute)">Checking device support…</p></div>
       </div>
       <div class="panel">
         <h3>Documents légaux</h3>
@@ -412,7 +441,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261109-passkey"></script>
+<script src="sb.js?v=20261114-device-login"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
@@ -429,7 +458,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var MFA_WINDOW = 12 * 60 * 60;
   // Passkey as second factor: ready in the code, but Supabase hosted projects do not allow it yet
   // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
-  var PASSKEY_MFA = false;
+  var PASSKEY_MFA = false; // Hosted WebAuthn MFA isn't enabled; passwordless passkeys are separate.
   var mfaFactor = null, mfaKey = null;
   function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
   function askSecondFactor(u, msg){
@@ -438,11 +467,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa', msg);
     $('m-key').hidden = !mfaKey; $('m-totp').hidden = !mfaFactor;
     $('m-or').hidden = !(mfaKey && mfaFactor);
-    $('m-intro').textContent = mfaKey && mfaFactor ? 'Confirmez avec votre clé d’accès, ou saisissez le code à 6 chiffres de votre application d’authentification.'
-      : mfaKey ? 'Confirmez votre identité avec votre clé d’accès.'
-      : 'Ouvrez votre application d’authentification et touchez le code de « DZOFT » pour le copier, puis revenez ici et appuyez sur « Coller le code copié ». Vous pouvez aussi le taper. Ce code vous sera redemandé toutes les 12 heures.';
+    $('m-intro').textContent = mfaKey && mfaFactor ? 'Verify with your device, or enter the 6-digit code from your authenticator app.'
+      : mfaKey ? 'Confirm your identity with Windows Hello, fingerprint, or face unlock.'
+      : 'Enter the 6-digit code from your authenticator app. This extra check protects client and payment information.';
     $('m-code').value = '';
-    if (!mfaKey && !mfaFactor) amsg('Ce navigateur ne gère pas les clés d’accès. Ouvrez l’espace avec Safari, Chrome, Edge ou Firefox à jour.');
+    if (!mfaKey && !mfaFactor) amsg('No verified second factor is available. Contact the account administrator.');
     if (mfaKey) $('m-key-go').focus(); else $('m-code').focus();
   }
   var startPending = false;
@@ -461,6 +490,32 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('go-forgot').onclick = function(){ showForm('f-forgot'); };
   $('go-first').onclick = function(){ showForm('f-first'); };
   [].forEach.call(document.querySelectorAll('.go-login'), function(a){ a.onclick = function(){ showForm('f-login'); }; });
+  // A local preference only changes the layout; it never grants access.
+  function deviceReady(){ try { return localStorage.getItem('dzoft-device-login-ready') === '1'; } catch(e){ return false; } }
+  function markDeviceReady(){ try { localStorage.setItem('dzoft-device-login-ready','1'); } catch(e){} }
+  (function initDeviceEntry(){
+    var available = !!(sb.devicePasskey && sb.devicePasskey.supported && sb.devicePasskey.supported());
+    $('device-signin-area').hidden = !available;
+    $('email-signin-details').open = !available || !deviceReady();
+    if (!available) return;
+    var b = $('device-signin');
+    b.onclick = function(){
+      if (b.disabled) return;
+      b.disabled = true; amsg('Waiting for your device…', true);
+      sb.devicePasskey.signIn().then(function(){
+        markDeviceReady(); b.disabled = false; amsg(''); start();
+      }, function(err){
+        b.disabled = false;
+        var message = String((err && (err.code || err.message)) || '').toLowerCase();
+        var fallback = message.indexOf('passkey_disabled') >= 0 ?
+          'Device sign-in is not enabled in Supabase yet. Use your password for now, then enable Passkeys in Supabase Authentication settings.' :
+          err && err.name === 'NotAllowedError' ? 'Device verification was cancelled or timed out. Try again or use your password.' :
+          'Device sign-in was not completed. Use your password or set up a passkey under Settings.';
+        $('email-signin-details').open = true;
+        amsg(fallback);
+      });
+    };
+  })();
 
   $('f-login').onsubmit = function(e){
     e.preventDefault(); amsg('Connexion…', true);
@@ -539,7 +594,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         if (returnAfterAuth()) return;
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
-        fromHash(); loadAll(); loadSettings(); renderMfa(u);
+        fromHash(); loadAll(); loadSettings(); renderMfa(u); renderDevicePasskeys(u);
       }, function(){ startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
     }, function(){ startPending = false; $('auth').hidden = false; showForm('f-login'); });
   }
@@ -884,6 +939,93 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           };
         }, function(e){ toast('Activation impossible : ' + (e.message || 'erreur')); });
     };
+  }
+
+  /* Device passkeys use Supabase's server-verified passwordless protocol.
+     They don't turn an AAL1 token into AAL2 and cannot bypass TOTP/owner RLS.
+     Device labels are generated with textContent, never interpreted as HTML. */
+  function renderDevicePasskeys(u) {
+    var box = $('device-passkeys');
+    if (!box) return;
+    box.replaceChildren();
+    if (!u || !u.app_metadata || u.app_metadata.dzoft_owner !== true) return;
+    if (!sb.devicePasskey || !sb.devicePasskey.supported || !sb.devicePasskey.supported()) {
+      box.textContent = 'This browser cannot use passkeys. Try an updated Chrome, Edge, or your phone’s supported browser over HTTPS.';
+      return;
+    }
+    var status = document.createElement('p');
+    status.className = 'device-note';
+    status.textContent = 'Checking your registered devices…';
+    box.appendChild(status);
+    sb.devicePasskey.list().then(function(rows){
+      box.replaceChildren();
+      var intro = document.createElement('p');
+      intro.className = 'device-note';
+      intro.textContent = 'Add a passkey on each device you want to use. Your device verifies you locally; DZOFT never receives your fingerprint or Windows PIN.';
+      box.appendChild(intro);
+      if (rows.length) {
+        var list = document.createElement('div');
+        list.className = 'device-list';
+        rows.forEach(function(item){
+          var row = document.createElement('div');
+          row.className = 'device-row';
+          var description = document.createElement('div');
+          var name = document.createElement('strong');
+          name.textContent = item.friendly_name || 'Registered passkey';
+          var info = document.createElement('small');
+          info.textContent = item.created_at ? 'Added ' + new Date(item.created_at).toLocaleDateString('en-GB') : 'Registered device';
+          description.append(name,info);
+          var remove = document.createElement('button');
+          remove.type = 'button'; remove.className = 'btn danger sm';remove.textContent = 'Remove';
+          remove.onclick = function(){
+            if (!confirm('Remove this passkey? You will no longer be able to sign in with it. Keep your password and authenticator app as backup.')) return;
+            remove.disabled = true;
+            sb.devicePasskey.remove(item.id).then(function(){ renderDevicePasskeys(u); },
+              function(){ remove.disabled = false; toast('Could not remove that passkey.'); });
+          };
+          row.append(description,remove);
+          list.appendChild(row);
+        });
+        box.appendChild(list);
+      } else {
+        var empty=document.createElement('p');empty.className='device-note';
+        empty.textContent='No passkeys registered yet.';box.appendChild(empty);
+      }
+      var add = document.createElement('button');
+      add.type = 'button'; add.className = 'btn main sm';
+      add.textContent = 'Add this device';
+      add.onclick = function(){
+        add.disabled=true;
+        status.textContent='Follow your device’s fingerprint, face, or PIN prompt…';
+        box.appendChild(status);
+        sb.devicePasskey.register().then(function(){
+          markDeviceReady();
+          toast('Device added. You can now sign in with a passkey on this device.');
+          renderDevicePasskeys(u);
+        },function(err){
+          add.disabled=false;
+          var raw=String((err && (err.code || err.message)) || '').toLowerCase();
+          status.className='device-feedback error';
+          status.textContent = raw.indexOf('passkey_disabled')>=0 ?
+           'Passkeys are not enabled for this Supabase project. Enable Authentication → Passkeys first, then return here.' :
+           err && err.name==='NotAllowedError' ? 'Cancelled or timed out. No device was added.' :
+           'Unable to add a passkey. Verify your account and try again.';
+        });
+      };
+      box.appendChild(add);
+      var note = document.createElement('p');
+      note.className='device-note';
+      note.textContent='Security note: device sign-in alone may still require your existing six-digit authenticator check. It does not bypass MFA.';
+      box.appendChild(note);
+    }).catch(function(err){
+      box.replaceChildren();
+      var note=document.createElement('p');note.className='device-note';
+      var raw=String((err && (err.code||err.message))||'').toLowerCase();
+      note.textContent = raw.indexOf('passkey_disabled')>=0 ?
+        'Passkeys are not enabled in this Supabase project yet. In Supabase Dashboard → Authentication → Passkeys, enable passkeys for the DZOFT domain before adding a device. Keep using your authenticator code until then.' :
+        'Could not check device credentials. Existing email, password and authenticator sign-in remain available.';
+      box.appendChild(note);
+    });
   }
 
   /* ---------------- trash ---------------- */

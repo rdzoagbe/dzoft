@@ -32,7 +32,7 @@
           var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) { d = t; }
           if (!r.ok) {
             var msg = (d && (d.msg || d.message || d.error_description || d.error)) || ('Erreur ' + r.status);
-            var err = new Error(msg); err.status = r.status; throw err;
+            var err = new Error(msg); err.status = r.status; if (d && typeof (d.code || d.error_code) === 'string') err.code = d.code || d.error_code; throw err;
           }
           return d;
         });
@@ -77,14 +77,14 @@
     for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-  function creationOptions(pk) {
+  function creationOptions(pk, discoverable) {
     var o = JSON.parse(JSON.stringify(pk));
     o.user = o.user || {};
     // A name is required by the browser: show the account e-mail if the server left it blank.
     if (!o.user.name) o.user.name = (claims().email || 'DZOFT');
     if (!o.user.displayName) o.user.displayName = o.user.name;
     // Built-in authenticators first (Face ID, fingerprint, Windows Hello), with the user verified.
-    o.authenticatorSelection = Object.assign({}, o.authenticatorSelection || {}, { userVerification: 'required', residentKey: 'preferred', requireResidentKey: false });
+    o.authenticatorSelection = Object.assign({}, o.authenticatorSelection || {}, { userVerification: 'required', residentKey: discoverable ? 'required' : 'preferred', requireResidentKey: !!discoverable });
     if (global.PublicKeyCredential && typeof PublicKeyCredential.parseCreationOptionsFromJSON === 'function') return PublicKeyCredential.parseCreationOptionsFromJSON(o);
     o.challenge = fromB64url(o.challenge); o.user.id = fromB64url(o.user.id);
     (o.excludeCredentials || []).forEach(function (c) { c.id = fromB64url(c.id); });
@@ -173,6 +173,73 @@
     rpc: function (name, args, signedIn) {
       if (!signedIn) return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
       return token().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
+    },
+    /* Passwordless device sign-in (Supabase Auth Passkeys, experimental).
+       A passkey is a first-factor sign-in. It does NOT automatically satisfy
+       an enrolled AAL2/TOTP factor. The server, never local browser state,
+       decides which permissions and verification are required. */
+    devicePasskey: {
+      supported: function () {
+        return !!(global.isSecureContext && global.PublicKeyCredential &&
+          global.navigator && navigator.credentials &&
+          navigator.credentials.create && navigator.credentials.get);
+      },
+      signIn: function () {
+        if (!sb.devicePasskey.supported()) return Promise.reject(new Error('WebAuthn is unavailable on this device.'));
+        return req('/auth/v1/passkeys/authentication/options', {
+          method: 'POST', body: {}
+        }).then(function (c) {
+          if (!c || !c.challenge_id || !c.options) throw new Error('Passkey challenge unavailable.');
+          return navigator.credentials.get({ publicKey: requestOptions(c.options) }).then(function (credential) {
+            if (!credential) throw new Error('No device credential selected.');
+            return req('/auth/v1/passkeys/authentication/verify', {
+              method: 'POST', body: { challenge_id: c.challenge_id, credential: credentialJSON(credential, false) }
+            });
+          });
+        }).then(function (d) {
+          if (!d || !d.access_token || !d.refresh_token || !d.user) {
+            throw new Error('Passkey sign-in did not produce a verified session.');
+          }
+          return keep(d);
+        });
+      },
+      register: function () {
+        if (!sb.devicePasskey.supported()) return Promise.reject(new Error('WebAuthn is unavailable on this device.'));
+        if (!getSession() || !mfaFresh(12 * 60 * 60)) {
+          return Promise.reject(new Error('Complete the account verification step before adding a passkey.'));
+        }
+        return token().then(function (t) {
+          return req('/auth/v1/passkeys/registration/options', { method: 'POST', token: t, body: {} });
+        }).then(function (c) {
+          if (!c || !c.challenge_id || !c.options) throw new Error('Passkey registration challenge unavailable.');
+          return navigator.credentials.create({ publicKey: creationOptions(c.options, true) }).then(function (credential) {
+            if (!credential) throw new Error('No device credential registered.');
+            return token().then(function (t) {
+              return req('/auth/v1/passkeys/registration/verify', {
+                method: 'POST', token: t,
+                body: { challenge_id: c.challenge_id, credential: credentialJSON(credential, true) }
+              });
+            });
+          });
+        });
+      },
+      list: function () {
+        return token().then(function (t) {
+          if (!t) throw new Error('Sign in to view your devices.');
+          return req('/auth/v1/passkeys', { token: t });
+        }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
+      },
+      remove: function (passkeyId) {
+        if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(passkeyId || ''))) {
+          return Promise.reject(new Error('Invalid device identifier.'));
+        }
+        if (!mfaFresh(12 * 60 * 60)) {
+          return Promise.reject(new Error('Verify your account before removing a device.'));
+        }
+        return token().then(function (t) {
+          return req('/auth/v1/passkeys/' + encodeURIComponent(passkeyId), { method: 'DELETE', token: t });
+        });
+      }
     },
     /* Two-step sign-in (TOTP code from an authenticator app). */
     aal: function () {

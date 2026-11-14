@@ -93,3 +93,24 @@ test('Private Rodney project page redirects an unauthenticated visitor to login'
   await expect(page.locator('#f-login')).toBeVisible();
   await expect(page.locator('#jr-tasks-slot')).toHaveCount(0);
 });
+
+
+test('Device-first login fails closed when Supabase passkeys are disabled', async ({page}) => {
+  const blocked=[];
+  await page.route('**/auth/v1/passkeys/authentication/options', async route=>{
+    blocked.push(route.request().method());
+    await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({
+      code:'passkey_disabled',message:'Passkey sign-in disabled'
+    })});
+  });
+  await page.goto('admin/', {waitUntil:'domcontentloaded'});
+  const device=page.locator('#device-signin');
+  if (!(await device.isVisible())) {
+    test.skip(true,'WebAuthn not supported by this browser');
+  }
+  await device.click();
+  await expect(page.locator('#a-msg')).toContainText('not enabled in Supabase');
+  await expect(page.locator('#email-signin-details')).toHaveAttribute('open','');
+  await expect(page.locator('#f-login')).toBeVisible();
+  expect(blocked).toEqual(['POST']);
+});
