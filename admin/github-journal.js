@@ -94,7 +94,7 @@ function load(force){
  if(loading||(!force&&last&&Date.now()-last<ttl))return;
  if(document.visibilityState==='hidden')return;
  loading=true;status('Lecture sécurisée des activités GitHub…');
- fetch(url,{credentials:'omit',cache:'no-store',redirect:'error',referrerPolicy:'no-referrer',headers:{'Accept':'application/vnd.github+json'}})
+ return fetch(url,{credentials:'omit',cache:'no-store',redirect:'error',referrerPolicy:'no-referrer',headers:{'Accept':'application/vnd.github+json'}})
  .then(function(resp){
   if(!resp.ok)throw new Error('GitHub HTTP '+resp.status);
   return resp.json();
@@ -111,6 +111,8 @@ function load(force){
    notice.textContent=added?
     added+' activité'+(added>1?'s':'')+' ajoutée'+(added>1?'s':'')+' au résumé de la semaine. Rien envoyé au client.':
     'Suivi privé à jour · '+checked+' catégorie'+(checked>1?'s':'')+' lue'+(checked>1?'s':'')+'. Rien envoyé au client.';
+   if(window.DzoftTracking&&typeof window.DzoftTracking.refreshGithubDraft==='function')
+     return window.DzoftTracking.refreshGithubDraft();
   }).catch(function(){
    notice.textContent='Activité GitHub affichée, mais enregistrement automatique indisponible. Réessayez avec « Actualiser ».';
   });
@@ -123,8 +125,9 @@ function init(){
  var parent=root.closest('details');
  if(parent){
   parent.addEventListener('toggle',function(){if(parent.open)load();});
-  if(parent.open)load();
- }else load();
+ }
+ // The project page refresh also imports approved, metadata-free GitHub groups.
+ load();
  window.setInterval(function(){
   if(document.visibilityState==='visible'&&(!parent||parent.open))load();
  },5*60*1000);
@@ -132,5 +135,6 @@ function init(){
   if(document.visibilityState==='visible'&&(!parent||parent.open))load();
  });
 }
+window.DzoftGithubJournal={refresh:function(){return load(true);}};
 init();
 })();

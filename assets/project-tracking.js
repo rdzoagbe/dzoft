@@ -294,14 +294,34 @@
    pub.innerHTML='<h2>'+t('Avancement partagé','Shared progress')+'</h2>'+updates(d)+'<details class="tracking-editor"><summary>'+t('＋ Publier une avancée','＋ Publish progress')+'</summary><form><div class="tracking-rows"></div><button class="btn tracking-add" type="button">'+t('＋ Ajouter un groupe','＋ Add a group')+'</button><p class="tracking-help">'+t('Un résumé court par groupe, relu par vous (6 au maximum). Tous les groupes partent ensemble : une seule mise à jour dans l’espace client et un seul e-mail. Le journal privé reste privé ; « Testé » ne signifie pas « Validé par le client ».','One short summary per group, reviewed by you (up to 6). All groups are sent together: one update in the client portal and one email. The private journal stays private; “Tested” does not mean “Client approved”.')+'</p><button class="btn main" type="submit">'+t('Publier et notifier','Publish and notify')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
    var pf=pub.querySelector('form'),rows=pf.querySelector('.tracking-rows'),add=pf.querySelector('.tracking-add'),pk=crypto.randomUUID();
    function syncRows(){var list=rows.querySelectorAll('.tracking-row');list.forEach(function(r,i){r.querySelector('legend').textContent=t('Groupe ','Group ')+(i+1);r.querySelector('.tracking-remove').hidden=list.length<2;});add.hidden=list.length>=6;}
+   var activeAutoHash=null;
+   function prefill(items){rows.innerHTML='';items.forEach(function(u){var r=addRow();r.querySelector('[name=category]').value=u.category;r.querySelector('[name=status]').value=u.status;r.querySelector('[name=summary]').value=u.summary.trim().slice(0,220);});syncRows();}
+   function offerAuto(doc){
+     var old=pf.querySelector('.tracking-auto-draft');if(old)old.remove();
+     if(!doc||!doc.configured||!Array.isArray(doc.updates)||!doc.updates.length||doc.source_hash===doc.published_hash)return;
+     var box=document.createElement('div');box.className='tracking-auto-draft';
+     var title=document.createElement('b');title.textContent=t('Brouillon GitHub préparé automatiquement','Automatically prepared GitHub draft');
+     var explanation=document.createElement('p');explanation.textContent=t('Activité GitHub détectée dans '+doc.updates.length+' domaines. À vérifier avant de déclarer une livraison ou des tests.','GitHub activity found in '+doc.updates.length+' areas. Verify before claiming delivery or testing.');
+     var use=document.createElement('button');use.type='button';use.className='btn sm line';use.textContent=t('Utiliser ce brouillon','Use this draft');
+     use.onclick=function(){
+       if(rows.dataset.edited==='true'&&!confirm(t('Remplacer les champs actuels par le brouillon GitHub ?','Replace current fields with the GitHub draft?')))return;
+       prefill(doc.updates);activeAutoHash=doc.source_hash;rows.dataset.edited='false';
+       use.textContent=t('Brouillon GitHub sélectionné ✓','GitHub draft selected ✓');
+       var panel=pub.querySelector('details.tracking-editor');if(panel)panel.open=true;
+     };
+     box.append(title,explanation,use);pf.insertBefore(box,rows);
+     if(!draft.length&&!activeAutoHash&&rows.dataset.edited!=='true')use.click();
+   }
    function addRow(){var used={};rows.querySelectorAll('select[name=category]').forEach(function(s){used[s.value]=1;});var next=Object.keys(categories).filter(function(k){return !used[k];})[0]||'other';var r=document.createElement('fieldset');r.className='tracking-row';r.innerHTML='<legend></legend><div class="tracking-fields">'+field(t('Groupe','Group'),'<select name="category">'+options(categories)+'</select>')+field(t('État réel','Actual status'),'<select name="status">'+options(statuses)+'</select>')+'</div>'+field(t('Résumé pour le client','Client summary'),'<textarea name="summary" required maxlength="220" rows="3"></textarea>')+'<button class="tracking-remove" type="button">'+t('Retirer ce groupe','Remove this group')+'</button>';r.querySelector('select[name=category]').value=next;r.querySelector('.tracking-remove').onclick=function(){r.remove();syncRows();};rows.appendChild(r);syncRows();return r;}
-   addRow();add.onclick=function(){addRow().querySelector('textarea').focus();};
+   addRow();add.onclick=function(){addRow().querySelector('textarea').focus();rows.dataset.edited='true';activeAutoHash=null;};
+   rows.addEventListener('input',function(){rows.dataset.edited='true';});
+   rows.addEventListener('change',function(){rows.dataset.edited='true';});
    // A draft prepared from the private journal fills the form. Nothing is sent until the owner presses « Publier et notifier ».
    var draft=q.progress_draft&&Array.isArray(q.progress_draft.updates)?q.progress_draft.updates.filter(function(u){return u&&categories[u.category]&&statuses[u.status]&&typeof u.summary==='string'&&u.summary.trim();}).slice(0,6):[];
    function keepSteps(){var d=q.progress_draft||{};return Array.isArray(d.steps)&&d.steps.length?{prepared:d.prepared||null,steps:d.steps}:null;}
-   function dropDraft(){var next=keepSteps();q.progress_draft=next;return sb.update('quotes',q.id,{progress_draft:next});}
+   function dropDraft(){var next=keepSteps();return sb.update('quotes',q.id,{progress_draft:next}).then(function(){q.progress_draft=next;});}
    if(draft.length){
-    rows.innerHTML='';draft.forEach(function(u){var row=addRow();row.querySelector('[name=category]').value=u.category;row.querySelector('[name=status]').value=u.status;row.querySelector('[name=summary]').value=u.summary.trim().slice(0,220);});syncRows();
+    prefill(draft);
     var note=document.createElement('div');note.className='tracking-draft';
     var when=q.progress_draft.prepared?day(q.progress_draft.prepared):'';
     var text=document.createElement('p');text.textContent=t('Brouillon préparé à partir du journal'+(when?' le '+when:'')+'. Relisez, corrigez si besoin, puis publiez. Rien n’est envoyé au client avant.','Draft prepared from the journal'+(when?' on '+when:'')+'. Review, correct if needed, then publish. Nothing is sent to the client before that.');
@@ -309,11 +329,35 @@
     skip.onclick=function(){skip.disabled=true;dropDraft().then(function(){note.remove();rows.innerHTML='';addRow();},function(){skip.disabled=false;});};
     note.append(text,skip);pf.insertBefore(note,rows);pub.querySelector('details.tracking-editor').open=true;
    }
+   function refreshAuto(){
+     if(q.id!=='c8a50cee-3856-4539-98a3-f5df201dbff0')return Promise.resolve(null);
+     return sb.rpc('owner_refresh_github_progress_draft',{p_quote:q.id},true).then(function(doc){
+       if(pub.isConnected)offerAuto(doc);return doc;
+     }).catch(function(err){var m=pub.querySelector('[role=status]');if(m)status(m,t('Brouillon GitHub non actualisé. ','GitHub draft unavailable. ')+(err.message||''),true);return null;});
+   }
+   global.DzoftTracking.refreshGithubDraft=refreshAuto;
+   if(q.id==='c8a50cee-3856-4539-98a3-f5df201dbff0'){
+     var refresh=document.createElement('button');refresh.type='button';refresh.className='btn sm line tracking-github-refresh';
+     refresh.textContent=t('↻ Actualiser depuis GitHub','↻ Refresh from GitHub');
+     refresh.onclick=function(){
+       refresh.disabled=true;refresh.textContent=t('Synchronisation…','Syncing…');
+       var task=global.DzoftGithubJournal&&global.DzoftGithubJournal.refresh?global.DzoftGithubJournal.refresh():refreshAuto();
+       Promise.resolve(task).finally(function(){refresh.disabled=false;refresh.textContent=t('↻ Actualiser depuis GitHub','↻ Refresh from GitHub');});
+     };
+     pf.insertBefore(refresh,rows);refreshAuto();
+   }
    pf.onsubmit=function(e){e.preventDefault();var b=pf.querySelector('button[type=submit]'),msg=pub.querySelector('[role=status]');
     var items=[].map.call(rows.querySelectorAll('.tracking-row'),function(r){return {category:r.querySelector('[name=category]').value,status:r.querySelector('[name=status]').value,summary:r.querySelector('[name=summary]').value.trim()};});
     if(items.some(function(i){return !i.summary;})){status(msg,t('Chaque groupe a besoin d’un résumé.','Each group needs a summary.'),true);return;}
     b.disabled=true;status(msg,t('Publication…','Publishing…'));
-    sb.rpc('publish_project_updates',{p_quote:q.id,p_batch:pk,p_items:items},true).then(function(){if(draft.length){draft=[];var dn=pf.querySelector('.tracking-draft');if(dn)dn.remove();dropDraft().catch(function(){});}rows.innerHTML='';addRow();pk=crypto.randomUUID();b.disabled=false;status(msg,items.length>1?t('Publié : '+items.length+' groupes dans une seule mise à jour. Un e-mail mis en file d’envoi.','Published: '+items.length+' groups in one update. One email queued.'):t('Publié. Notifications mises en file d’envoi.','Published. Notifications queued.'));notify(sb);setTimeout(reload,1200);}).catch(function(err){b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);});};
+    var viaAuto=!!activeAutoHash,action=viaAuto?'owner_publish_github_progress_draft':'publish_project_updates';
+    var payload={p_quote:q.id,p_batch:pk,p_items:items};if(viaAuto)payload.p_hash=activeAutoHash;
+    sb.rpc(action,payload,true).then(function(){
+      if(draft.length&&!viaAuto){draft=[];var dn=pf.querySelector('.tracking-draft');if(dn)dn.remove();dropDraft().catch(function(){});}
+      activeAutoHash=null;rows.innerHTML='';addRow();rows.dataset.edited='false';pk=crypto.randomUUID();b.disabled=false;
+      status(msg,items.length>1?t('Publié : '+items.length+' groupes dans une seule mise à jour. Un e-mail mis en file d’envoi.','Published: '+items.length+' groups in one update. One email queued.'):t('Publié. Notifications mises en file d’envoi.','Published. Notifications queued.'));
+      notify(sb);setTimeout(reload,1200);
+    }).catch(function(err){b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);});};
    // Existing invoice toggles cannot overwrite receipt-backed statuses.
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
   }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
