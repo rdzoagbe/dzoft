@@ -73,6 +73,38 @@ async function supabaseRpc(name: string, body: Record<string, unknown>): Promise
   if (!result.ok) throw new Error("rpc_http_"+result.status);
   return await result.json();
 }
+// Retry only temporary GitHub/network failures. Explicit auth failures and
+// exhausted rate limits are not retried. This never logs response bodies.
+async function readGitHubWithRetry(): Promise<Response> {
+  const waits = [0, 900, 1600];
+  for (let attempt = 0; attempt < waits.length; attempt++) {
+    if (waits[attempt]) await new Promise(resolve => setTimeout(resolve, waits[attempt]));
+    let result: Response;
+    try {
+      result = await fetch(GITHUB_API, {
+        headers: {
+          "accept": "application/vnd.github+json",
+          "user-agent": "DZOFT-Private-Background-Sync",
+          "x-github-api-version": "2022-11-28"
+        },
+        cache: "no-store", redirect: "error", signal: AbortSignal.timeout(6500)
+      });
+    } catch (_) {
+      if (attempt === waits.length - 1) throw new Error("github_network_unavailable");
+      continue;
+    }
+    if (result.ok) return result;
+    if ((result.status === 403 || result.status === 429) &&
+        result.headers.get("x-ratelimit-remaining") === "0") {
+      throw new Error("github_rate_limit");
+    }
+    const temporary = [408, 425, 429, 500, 502, 503, 504].includes(result.status);
+    if (!temporary || attempt === waits.length - 1) {
+      throw new Error("github_unavailable");
+    }
+  }
+  throw new Error("github_unavailable");
+}
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return response(405,{error:"Method not allowed"});
   const token = req.headers.get("X-DZOFT-Cron-Secret") ?? "";
@@ -83,15 +115,7 @@ Deno.serve(async (req: Request) => {
     if (verified !== true) return response(401,{error:"Unauthorized"});
 
     phase = "github";
-    const source = await fetch(GITHUB_API, {
-      headers:{
-        "accept":"application/vnd.github+json",
-        "user-agent":"DZOFT-Private-Background-Sync",
-        "x-github-api-version":"2022-11-28",
-      },
-      cache:"no-store",redirect:"error"
-    });
-    if (!source.ok) throw new Error("GitHub unavailable");
+    const source = await readGitHubWithRetry();
     const safe = safeSummary(await source.json());
 
     phase = "database";
