@@ -38,7 +38,7 @@ test('Passkey error classifier distinguishes other common WebAuthn and Supabase 
 
 test('Existing Google Password Manager passkeys are explained and repeated errors reuse one message',()=>{
  assert.match(html,/Passkeys in Google Password Manager can sync between Chrome on a laptop and Android/);
- assert.match(html,/Sign out and choose “Unlock with this device”/);
+ assert.match(html,/sign out and choose “Unlock with this device”/i);
  assert.match(html,/rows\.length \? 'Add another passkey' : 'Add a passkey'/);
  assert.match(html,/var progress = null;/);
  assert.match(html,/if \(!progress\) progress = note\(/);
