@@ -18,7 +18,8 @@ begin
         raise exception 'Issued invoice PDF is immutable';
       end if;
    end if;
-   if after_invoice->>'issuedOn' is distinct from before_invoice->>'issuedOn'
+   if after_invoice->>'n' is distinct from before_invoice->>'n'
+      or after_invoice->>'issuedOn' is distinct from before_invoice->>'issuedOn'
       or after_invoice->>'generatedByDzoft' is distinct from before_invoice->>'generatedByDzoft' then
       raise exception 'Issued invoice metadata is immutable';
    end if;
