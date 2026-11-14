@@ -830,9 +830,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if(health){
       var monitor=data.deliveryMonitor;
       health.textContent = !monitor ? 'Brevo tracking status unavailable · Email delivery may still be unverified.'
+        : monitor.poll_enabled === true ?
+          'Brevo delivery tracking active · Hourly provider checks · '+(Number(monitor.received_events)||0)+' verified event(s).'
         : monitor.webhook_configured === true ?
-          'Brevo delivery tracking connected · '+(Number(monitor.received_events)||0)+' provider event(s) recorded.'
-        : 'Brevo delivery tracking not yet connected · Messages marked “sent” are only provider-accepted.';
+          'Brevo delivery webhook connected · '+(Number(monitor.received_events)||0)+' verified event(s).'
+        : 'Brevo delivery tracking not yet scheduled · Messages marked “sent” are only provider-accepted.';
     }
     if(!data.events.length){
       box.innerHTML='<p style="font-size:14px;color:var(--mute)">Project notification history will appear here.</p>';return;
