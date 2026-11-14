@@ -5,6 +5,7 @@ import {test,expect} from '@playwright/test';
 const syntheticSb = `
 (function(){
  window.__syntheticCalls=[];window.__syntheticVersion='20261114-debug';
+ window.__syntheticUnhandled=[];window.addEventListener('unhandledrejection',e=>window.__syntheticUnhandled.push(String(e.reason?.message||e.reason||'unknown').slice(0,180)));
  const qid='c8a50cee-3856-4539-98a3-f5df201dbff0';
  const now=new Date().toISOString();
  const quote={
@@ -96,7 +97,7 @@ test('Rodney project weekly review and private task statuses render without a re
  });
  await page.waitForTimeout(250);
  if (!(await page.locator('#c-journal').isVisible())) {
-  const state=await page.evaluate(()=>({url:location.href,mock:window.__syntheticVersion,hasSession:!!window.RDsb?.session(),calls:window.__syntheticCalls,loading:document.querySelector('#loading')?.textContent}));
+  const state=await page.evaluate(()=>({url:location.href,mock:window.__syntheticVersion,hasSession:!!window.RDsb?.session(),calls:window.__syntheticCalls,unhandled:window.__syntheticUnhandled,loading:document.querySelector('#loading')?.textContent}));
   throw new Error('Synthetic project failed to render: '+JSON.stringify({state,errors}));
  }
  await expect(page.locator('#c-journal')).toBeVisible();
