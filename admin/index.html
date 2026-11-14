@@ -499,10 +499,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var supported = !!(sb.devicePasskey && sb.devicePasskey.supported && sb.devicePasskey.supported());
     $('device-signin-area').hidden = true;
     $('email-signin-details').open = true;
-    // No speculative Auth requests for accounts that have not successfully
-    // registered a passkey. Experimental endpoints return 404 on this host.
+    // Confirm hosted Supabase Auth capability. A shared, cached challenge
+    // probe makes only one request per page even if Settings also checks it.
+    // 404 and passkey_disabled fail closed without biometric prompts.
     if (!supported) return;
-    if (deviceReady()) sb.devicePasskey.availability().then(function(enabled){
+    sb.devicePasskey.availability().then(function(enabled){
       $('device-signin-area').hidden = !enabled;
       $('email-signin-details').open = !enabled || !deviceReady();
     },function(){
@@ -1000,25 +1001,6 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
     if (!sb.devicePasskey || !sb.devicePasskey.supported || !sb.devicePasskey.supported()) {
       note('This browser does not support WebAuthn device sign-in. Try an up-to-date Chrome, Edge, or Android browser over HTTPS.');
-      return;
-    }
-
-    if (refreshCapability !== true && !deviceReady()) {
-      // Explicit opt-in is safer than generating 404s at every Settings visit.
-      note('Device sign-in has not been configured on this device. Your current sign-in method is working.');
-      note('This Supabase project previously returned HTTP 404 for the experimental passkey endpoint. Check Authentication → Passkeys in the Supabase dashboard before trying again.');
-      var link = document.createElement('a');
-      link.href = 'https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/auth/passkeys';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.className = 'btn sm line';
-      link.textContent = 'Open Supabase Passkeys settings';
-      box.appendChild(link);
-      var check = document.createElement('button');
-      check.type = 'button'; check.className = 'btn sm ghost';
-      check.textContent = 'Check server support';
-      check.onclick = function(){ renderDevicePasskeys(u, true); };
-      box.appendChild(check);
       return;
     }
 
