@@ -136,6 +136,15 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   .doc{grid-template-columns:1fr auto}
   .doc input:nth-child(2){grid-column:1/2}
 }
+.email-delivery-entry{display:block;margin:7px 0;padding:8px 11px;border:1px solid #e1e4ef;background:#fff;border-radius:10px;line-height:1.5;font-size:12.5px;overflow-wrap:anywhere}
+.email-delivery-entry strong{font-weight:800}
+.email-delivery-detail{color:#637087;font-weight:400;font-size:11px}
+.email-delivery-success{background:#f3faf5;border-color:#c7e7d1}
+.email-delivery-success strong{color:#176d45}
+.email-delivery-error{background:#fff7f6;border-color:#f2c9c3}
+.email-delivery-error strong{color:#ba3531}
+.email-delivery-warning{background:#fffaf0;border-color:#e7d3a1}
+
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
@@ -303,6 +312,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 
 <script src="sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
+<script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -339,7 +349,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; }),
         sb.select('reviews', 'select=*&quote_id=eq.' + encodeURIComponent(QID)).catch(function(){ return []; }),
         sb.select('project_events', 'select=id,event_type,summary,created_at,message_id,invoice_id,file_name&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=40').catch(function(){ return []; }),
-        sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,invoice_id,attach_invoice_pdf&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=80').catch(function(){ return []; })
+        sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,invoice_id,attach_invoice_pdf,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=80').catch(function(){ return []; })
       ]).then(function(x){
         C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || []; RV = (x[4] || [])[0] || null;
         events = x[5] || []; outbox = x[6] || [];
@@ -424,12 +434,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       var jobs = outbox.filter(function(x){ return x.event_id === ev.id; });
       var deliveries = jobs.length ? jobs.map(function(job){
         var who = job.recipient_role === 'owner' ? 'Vous' : (C && C.nom || 'Client');
-        var state = job.status === 'sent' ? 'Envoyé le ' + when(job.sent_at) :
-          job.status === 'processing' ? 'En cours d’envoi…' :
-          job.status === 'queued' ? 'En attente · tentative ' + (job.attempts + 1) :
-          'Échec · ' + (job.last_error || 'raison inconnue');
-        return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:' + (job.status === 'failed' ? 'var(--err)' : 'var(--mute)') + '"><b>' + esc(who) + '</b> · ' + esc(state) +
-          (job.status === 'failed' ? ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Réessayer</button>' : '') + '</div>';
+        var delivery = window.DzoftDelivery ? window.DzoftDelivery.describe(job) :
+          {label:job.status,detail:'No delivery status',tone:'muted'};
+        var sentTime = job.sent_at ? ' · ' + when(job.sent_at) : '';
+        return '<div class="email-delivery-entry email-delivery-' + esc(delivery.tone) + '"><b>' + esc(who) +
+          '</b> · <strong>' + esc(delivery.label) + '</strong><small class="email-delivery-detail"> · ' + esc(delivery.detail) + '</small>' +
+          (job.status === 'sent' ? '<small class="email-delivery-detail">' + esc(sentTime) + '</small>' : '') +
+          (job.status === 'failed' ? ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Retry</button>' : '') + '</div>';
       }).join('') : '<div class="muted" style="font-size:13px">' + (ev.event_type === 'client_message' || ev.event_type === 'client_file_uploaded' ? 'Notification regroupée avec une activité récente.' : 'Aucun e-mail associé à cet événement.') + '</div>';
       return '<article style="border-top:1px solid var(--line);padding:10px 0"><b>' + esc(ev.summary) + '</b><span class="muted" style="float:right">' + when(ev.created_at) + '</span>' + deliveries + '</article>';
     }).join('');

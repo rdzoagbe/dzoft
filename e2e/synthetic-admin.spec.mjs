@@ -35,6 +35,11 @@ const syntheticSb = `
    if(table==='quotes')return [quote];
    if(table==='clients')return [client];
    if(table==='settings')return [{id:1,payment:{}}];
+   if(table==='project_events')return [{id:'synthetic-email-event',event_type:'payment_received',summary:'Synthetic payment notification',quote_id:qid,created_at:now}];
+   if(table==='email_outbox')return [
+    {id:'synthetic-client-email',event_id:'synthetic-email-event',recipient_role:'client',status:'sent',delivery_status:'delivered',sent_at:now,created_at:now},
+    {id:'synthetic-owner-email',event_id:'synthetic-email-event',recipient_role:'owner',status:'sent',delivery_status:'unconfirmed',sent_at:now,created_at:now}
+   ];
    return [];
   },
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
@@ -44,6 +49,7 @@ const syntheticSb = `
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
    if(name==='sync_project_github_groups')return {added:0,checked:0,client_notified:false};
    if(name==='project_payment_admin_meta')return {};
+   if(name==='brevo_delivery_monitor')return {webhook_configured:false,poll_enabled:true,received_events:1};
    return {};
   },
   fn:async()=>({}),
@@ -123,4 +129,20 @@ test('Read-only synthetic owner tests never emit network requests containing rea
   const text=await page.locator('#jr-tasks-slot').textContent();return /Tâches et validations|Tasks and approvals/.test(text||'');
  }).toBeTruthy();
  expect(external,'Synthetic browser tests should not send API calls to production').toEqual([]);
+});
+
+
+test('Brevo status appears per recipient in the authenticated admin, without sending anything',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#email-log')).toContainText('Client: Delivered');
+ await expect(page.locator('#email-log')).toContainText('You: Accepted by Brevo');
+ await expect(page.locator('#email-delivery-health')).toContainText('Brevo delivery tracking active');
+ await expect(page.locator('#email-log')).not.toContainText('You: Delivered');
+});
+test('Brevo status appears in private project activity with synthetic, read-only rows',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#activity-log')).toContainText('Delivered');
+ await expect(page.locator('#activity-log')).toContainText('Accepted by Brevo');
 });

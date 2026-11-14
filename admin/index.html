@@ -59,6 +59,19 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 #device-passkeys .device-feedback.error{background:#fff0ef;color:#9e3135}
 @media (max-width:450px){.auth .card{padding:22px 20px}.device-entry{padding:11px}}
 
+.email-delivery-event{border-top:1px solid var(--line);padding:11px 0}
+.email-delivery-date{display:block;font-size:11px;color:var(--mute);margin-top:3px}
+.email-delivery-recips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.email-delivery-entry{display:block;font-size:12px;padding:7px 9px;border:1px solid var(--line);background:var(--surface,#fff);border-radius:10px;line-height:1.6}
+.email-delivery-entry b{font-weight:800}
+.email-delivery-detail{color:var(--mute);font-size:11px}
+.email-delivery-error{border-color:#f3c7c7;background:#fff8f7}
+.email-delivery-error b{color:#af2525}
+.email-delivery-success{border-color:#c7e7d4;background:#f4faf6}
+.email-delivery-success b{color:#186747}
+.email-delivery-warning{border-color:#eecf99;background:#fffaf0}
+@media(max-width:540px){.email-delivery-recips{display:grid;gap:7px}.email-delivery-entry{width:100%}}
+
 /* login */
 .auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
 .auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
@@ -299,7 +312,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <details class="today-advanced"><summary data-fr="Autres indicateurs d’activité" data-en="Other business indicators">Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
       <details class="today-advanced today-followups"><summary data-fr="Autres rappels et suivis" data-en="Other reminders and follow-ups">Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
       <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
-      <div class="panel"><h3>Historique e-mail</h3><p style="font-size:13px;color:var(--mute)">Les notifications importantes et leur livraison sont suivies ici. Les envois échoués peuvent être relancés.</p><div id="email-log"></div></div>
+      <div class="panel"><h3>Email delivery history</h3><p style="font-size:13px;color:var(--mute)">Brevo acceptance, verified delivery, bounces and tracked opens appear here. An open-tracking signal is not proof of reading.</p><p id="email-delivery-health" style="font-size:12px;color:var(--mute)" role="status">Checking Brevo tracking…</p><div id="email-log"></div></div>
     </section>
     <section id="v-leads" hidden>
       <div class="bar">
@@ -443,10 +456,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
 <script src="sb.js?v=20261114-passkey-404-safe"></script>
 <script src="../assets/rd-steps.js"></script>
+<script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [] }, editing = null;
+  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [], deliveryMonitor: null }, editing = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
@@ -628,14 +642,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
       sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; }),
       sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30').catch(function(){ return []; }),
-      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id&order=created_at.desc&limit=80').catch(function(){ return []; })
+      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&order=created_at.desc&limit=80').catch(function(){ return []; }),
+      sb.rpc('brevo_delivery_monitor',{},true).catch(function(){return null;})
     ]).then(function(r){
       // deleted requests and quotes stay in the trash until removed for good
       var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
       data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
       data.clients = r[1] || [];
       data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
-      data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || [];
+      data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
     }, fail);
@@ -811,22 +826,37 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     renderEmailLog();
   }
   function renderEmailLog(){
-    var box = $('email-log'); if (!box) return;
-    if (!data.events.length) { box.innerHTML = '<p style="font-size:14px;color:var(--mute)">Les notifications importantes apparaîtront ici au fil des projets.</p>'; return; }
-    box.innerHTML = data.events.slice(0, 8).map(function(ev){
-      var jobs = data.emailOutbox.filter(function(x){ return x.event_id === ev.id; });
-      var status = jobs.length ? jobs.map(function(job){
-        var to = job.recipient_role === 'owner' ? 'Vous' : 'Client';
-        var label = job.status === 'sent' ? 'envoyé' : job.status === 'queued' ? 'en attente' : job.status === 'processing' ? 'en cours' : 'échec';
-        return '<span style="font-size:12px;color:' + (job.status === 'failed' ? 'var(--err)' : 'var(--mute)') + '">' + esc(to) + ' : ' + esc(label) +
-          (job.status === 'failed' ? ' · ' + esc(job.last_error || '') + ' <button class="btn sm line" type="button" data-retry-email="' + esc(job.id) + '">Réessayer</button>' : '') + '</span>';
-      }).join(' · ') : '<span style="font-size:12px;color:var(--mute)">' + (ev.event_type === 'client_message' || ev.event_type === 'client_file_uploaded' ? 'notification groupée avec une activité récente' : 'journalisé') + '</span>';
-      return '<div style="border-top:1px solid var(--line);padding:9px 0"><b style="font-size:13.5px">' + esc(ev.summary) + '</b><br><span style="font-size:12px;color:var(--mute)">' + new Date(ev.created_at).toLocaleString('fr-FR') + '</span><div>' + status + '</div></div>';
+    var box = $('email-log'),health=$('email-delivery-health'); if(!box) return;
+    if(health){
+      var monitor=data.deliveryMonitor;
+      health.textContent = !monitor ? 'Brevo tracking status unavailable · Email delivery may still be unverified.'
+        : monitor.poll_enabled === true ?
+          'Brevo delivery tracking active · Hourly provider checks · '+(Number(monitor.received_events)||0)+' verified event(s).'
+        : monitor.webhook_configured === true ?
+          'Brevo delivery webhook connected · '+(Number(monitor.received_events)||0)+' verified event(s).'
+        : 'Brevo delivery tracking not yet scheduled · Messages marked “sent” are only provider-accepted.';
+    }
+    if(!data.events.length){
+      box.innerHTML='<p style="font-size:14px;color:var(--mute)">Project notification history will appear here.</p>';return;
+    }
+    box.innerHTML=data.events.slice(0,12).map(function(ev){
+      var jobs=data.emailOutbox.filter(function(x){return x.event_id===ev.id;});
+      var status=jobs.length?jobs.map(function(job){
+        var who=job.recipient_role==='owner'?'You':'Client';
+        var result=window.DzoftDelivery?window.DzoftDelivery.describe(job):{label:job.status,detail:'',tone:'muted'};
+        var error=job.status==='failed';
+        return '<span class="email-delivery-entry email-delivery-'+esc(result.tone)+'">'+esc(who)+': <b>'+esc(result.label)+'</b>'+
+          '<small class="email-delivery-detail"> · '+esc(result.detail)+'</small>'+
+          (error?' · '+esc(job.last_error||'')+' <button class="btn sm line" type="button" data-retry-email="'+esc(job.id)+'">Retry</button>':'')+'</span>';
+      }).join(''):'<span style="font-size:12px;color:var(--mute)">Logged internally; no separate email sent.</span>';
+      return '<div class="email-delivery-event"><b style="font-size:13.5px">'+esc(ev.summary)+'</b><small class="email-delivery-date">'+new Date(ev.created_at).toLocaleString('en-GB')+'</small><div class="email-delivery-recips">'+status+'</div></div>';
     }).join('');
-    box.onclick = function(e){
-      var b = e.target.closest('[data-retry-email]'); if (!b) return;
-      b.disabled = true; b.textContent = 'Relance…';
-      sb.fn('process-notification-outbox', { retry_id: b.dataset.retryEmail }).then(function(){ toast('E-mail relancé.'); return loadAll(); }, function(err){ b.disabled = false; b.textContent = 'Réessayer'; toast('Relance impossible : ' + (err.message || 'erreur')); });
+    box.onclick=function(e){
+      var b=e.target.closest('[data-retry-email]');if(!b)return;
+      b.disabled=true;b.textContent='Retrying…';
+      sb.fn('process-notification-outbox',{retry_id:b.dataset.retryEmail}).then(function(){
+        toast('Email retry queued.');return loadAll();
+      },function(err){b.disabled=false;b.textContent='Retry';toast('Retry failed: '+(err.message||'error'));});
     };
   }
   document.addEventListener('click', function(e){
