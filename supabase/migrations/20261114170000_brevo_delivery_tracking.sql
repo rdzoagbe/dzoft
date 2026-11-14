@@ -181,6 +181,28 @@ returns boolean language sql security invoker set search_path='' as $fn$
  select private.mark_brevo_delivery_setup(p_webhook_id,p_backfill);
 $fn$;
 
+-- Only the trusted provisioning Edge worker can inspect provider IDs for a
+-- bounded one-time reconciliation. Never sent to a browser, webhook caller or log.
+create or replace function private.brevo_delivery_candidates(p_setup_token text)
+ returns jsonb language plpgsql security definer set search_path='' as $fn$
+declare items jsonb;
+begin
+ if not private.verify_brevo_delivery_token(p_setup_token,'setup') then
+  raise exception 'Invalid delivery provisioning token';
+ end if;
+ select coalesce(jsonb_agg(jsonb_build_object('message_id',x.provider_message_id,
+   'email',x.recipient)),'[]'::jsonb) into items
+ from (select provider_message_id,recipient from public.email_outbox
+   where status='sent' and provider_message_id is not null
+     and recipient is not null and created_at>=now()-interval '85 days'
+   order by created_at desc limit 60) x;
+ return items;
+end $fn$;
+create or replace function public.brevo_delivery_candidates(p_setup_token text)
+ returns jsonb language sql security invoker set search_path='' as $fn$
+ select private.brevo_delivery_candidates(p_setup_token);
+$fn$;
+
 create or replace function private.brevo_delivery_monitor()
 returns jsonb language plpgsql security definer set search_path='' as $fn$
 declare enabled boolean; last_configured timestamptz;
@@ -210,6 +232,8 @@ revoke all on function
  public.record_brevo_delivery_event(text,text,text,timestamptz),
  private.mark_brevo_delivery_setup(bigint,boolean),
  public.mark_brevo_delivery_setup(bigint,boolean),
+ private.brevo_delivery_candidates(text),
+ public.brevo_delivery_candidates(text),
  private.brevo_delivery_monitor(),
  public.brevo_delivery_monitor()
  from public,anon,authenticated;
@@ -221,7 +245,9 @@ grant execute on function
  private.record_brevo_delivery_event(text,text,text,timestamptz),
  public.record_brevo_delivery_event(text,text,text,timestamptz),
  private.mark_brevo_delivery_setup(bigint,boolean),
- public.mark_brevo_delivery_setup(bigint,boolean)
+ public.mark_brevo_delivery_setup(bigint,boolean),
+ private.brevo_delivery_candidates(text),
+ public.brevo_delivery_candidates(text)
  to service_role;
 grant execute on function private.brevo_delivery_monitor(),public.brevo_delivery_monitor()
  to authenticated;
