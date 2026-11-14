@@ -83,7 +83,11 @@ async function setup(token:string,reportPhase:(step:string)=>void):Promise<Respo
   headers:[{key:"X-DZOFT-Delivery-Token",value:hookToken}]
  };
  reportPhase("brevo_list_webhooks");
- const existing=await brevo("/webhooks?type=transactional");
+ // Some Brevo accounts reject the optional type filter with HTTP 400.
+ // Try the unfiltered read before assuming webhook management is unavailable.
+ let existing:any;
+ try{existing=await brevo("/webhooks?type=transactional");}
+ catch(_){reportPhase("brevo_list_unfiltered");existing=await brevo("/webhooks");}
  const hooks=Array.isArray(existing?.webhooks)?existing.webhooks:[];
  const owned=hooks.find((x:any)=>x&&x.url===WEBHOOK_URL&&x.type==="transactional");
  let id:number;
