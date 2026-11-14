@@ -44,6 +44,21 @@ label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
 .pw .eye:hover{color:var(--ink);background:var(--soft)}
 .pw .eye svg{width:20px;height:20px}
 
+.device-entry{background:linear-gradient(125deg,#f6f8ff,#f8fafc);border:1px solid #e2e7f6;border-radius:13px;padding:13px;margin:15px 0 12px}
+.device-entry .device-button,.device-button{width:100%;min-height:45px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:800;font-size:14px}
+.device-hint{font-size:11.5px;color:#626e89;line-height:1.5;margin:8px 0 0}
+.device-fallback{margin-top:12px}
+.device-fallback>summary{cursor:pointer;color:#4651a7;font-size:13px;font-weight:700;padding:9px 1px}
+.device-fallback-fields{padding:9px 0}
+#device-passkeys .device-list{display:grid;gap:8px;margin:12px 0}
+#device-passkeys .device-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;flex-wrap:wrap}
+#device-passkeys .device-row strong{font-size:13px}
+#device-passkeys .device-row small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+#device-passkeys .device-note{color:var(--mute);font-size:12px;line-height:1.6;margin:9px 0}
+#device-passkeys .device-feedback{font-size:12px;padding:9px 11px;border-radius:9px;background:#f0f3ff;margin:10px 0}
+#device-passkeys .device-feedback.error{background:#fff0ef;color:#9e3135}
+@media (max-width:450px){.auth .card{padding:22px 20px}.device-entry{padding:11px}}
+
 /* login */
 .auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 80% -10%,#123c69 0,transparent 60%),var(--navy)}
 .auth .card{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:26px}
@@ -187,13 +202,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · espace privé</b><span>Clients, demandes et devis</span></div></div>
 
     <form id="f-login">
-      <h1>Connexion</h1>
-      <p class="intro">Cet espace est réservé au propriétaire du site.</p>
-      <label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="username" required>
-      <label for="l-pass">Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password" required>
-      <button class="btn main" style="width:100%;margin-top:14px" type="submit">Se connecter</button>
-      <div class="row"><a id="go-forgot">Mot de passe oublié ?</a><a id="go-first" hidden>Première connexion</a></div>
-      <button class="btn line" id="l-install" type="button" hidden style="width:100%;margin-top:14px">Installer l’application sur ce téléphone</button>
+      <h1>Welcome back</h1>
+      <p class="intro">Your private DZOFT workspace, securely protected.</p>
+      <div id="device-signin-area" class="device-entry" hidden>
+        <button id="device-signin" class="btn main device-button" type="button"><span aria-hidden="true">◈</span> Unlock with this device</button>
+        <p class="device-hint">Windows Hello, fingerprint, face unlock or device PIN. Requires a passkey previously added to your account.</p>
+      </div>
+      <details id="email-signin-details" class="device-fallback" open>
+        <summary id="email-signin-summary">Use email and password</summary>
+        <div class="device-fallback-fields">
+          <label for="l-email">Email address</label><input id="l-email" type="email" autocomplete="username" required>
+          <label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password" required>
+          <button class="btn main" style="width:100%;margin-top:14px" type="submit">Sign in</button>
+          <div class="row"><a id="go-forgot">Forgot password?</a><a id="go-first" hidden>First sign-in</a></div>
+        </div>
+      </details>
+      <button class="btn line" id="l-install" type="button" hidden style="width:100%;margin-top:14px">Install the app on this device</button>
     </form>
 
     <form id="f-first" hidden>
@@ -214,19 +238,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     </form>
 
     <form id="f-mfa" hidden>
-      <h1>Code de vérification</h1>
-      <p class="intro" id="m-intro">Ouvrez votre application d’authentification et touchez le code de « DZOFT » pour le copier, puis revenez ici et appuyez sur « Coller le code copié ». Vous pouvez aussi le taper. Ce code vous sera redemandé toutes les 12 heures.</p>
+      <h1>Confirm it's you</h1>
+      <p class="intro" id="m-intro">Enter the six-digit code from your authenticator app. This extra check protects your client and payment information.</p>
       <div id="m-key" hidden>
-        <button class="btn main" style="width:100%" type="button" id="m-key-go">Utiliser ma clé d’accès</button>
-        <p class="intro" style="margin-top:10px;font-size:13.5px">Empreinte, Face ID, Windows Hello ou clé de sécurité. Redemandé toutes les 12 heures.</p>
-        <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>ou avec le code<span style="flex:1;height:1px;background:var(--line)"></span></p>
+        <button class="btn main device-button" style="width:100%" type="button" id="m-key-go">Use this device to verify</button>
+        <p class="intro" style="margin-top:10px;font-size:13.5px">Windows Hello, fingerprint, face unlock or security key.</p>
+        <p id="m-or" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:var(--mute);font-size:13px"><span style="flex:1;height:1px;background:var(--line)"></span>or enter a code<span style="flex:1;height:1px;background:var(--line)"></span></p>
       </div>
       <div id="m-totp">
-        <label for="m-code">Code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="______" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
-        <button class="btn" id="m-paste" type="button" hidden style="width:100%;margin-top:10px">Coller le code copié</button>
-        <button class="btn main" style="width:100%;margin-top:14px" type="submit">Valider</button>
+        <label for="m-code">Verification code</label><input id="m-code" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="______" style="font-size:22px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums">
+        <button class="btn" id="m-paste" type="button" hidden style="width:100%;margin-top:10px">Paste copied code</button>
+        <button class="btn main" style="width:100%;margin-top:14px" type="submit">Verify and continue</button>
       </div>
-      <div class="row"><a id="mfa-out">Se déconnecter</a></div>
+      <div class="row"><a id="mfa-out">Sign out</a></div>
     </form>
 
     <form id="f-newpass" hidden>
@@ -342,8 +366,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         </div>
       </div>
       <div class="panel">
-        <h3>Double authentification</h3>
-        <div id="mfa-box"><p style="color:var(--mute)">Chargement…</p></div>
+        <h3>Account verification</h3>
+        <div id="mfa-box"><p style="color:var(--mute)">Loading…</p></div>
+      </div>
+      <div class="panel" id="device-passkey-panel">
+        <h3>Sign in with Windows Hello or fingerprint</h3>
+        <p style="font-size:13.5px;color:var(--mute);margin:5px 0 12px">Set up a passkey on your laptop or phone. This avoids typing your password on that device. Your existing second-factor requirement remains in place until the authentication server supports device-based MFA.</p>
+        <div id="device-passkeys"><p style="color:var(--mute)">Checking device support…</p></div>
       </div>
       <div class="panel">
         <h3>Documents légaux</h3>
@@ -412,7 +441,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261109-passkey"></script>
+<script src="sb.js?v=20261114-device-login"></script>
 <script src="../assets/rd-steps.js"></script>
 <script>
 (function(){
