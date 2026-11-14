@@ -231,6 +231,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     </div>
     <div class="vatline" id="vatline">TVA non applicable, article 293 B du CGI.</div>
     <div class="why"><b>Comment lire ce devis.</b> Chaque ligne correspond à une partie du travail, avec son prix : le total en est la somme. <span id="why-opt" hidden>Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. </span>Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>
+    <div class="why" id="scope-change-quote"><b>Prix convenu et demandes après signature.</b> Le montant ci-dessus couvre les prestations décrites dans le présent devis. Une nouvelle fonctionnalité, une page supplémentaire ou toute modification importante demandée après acceptation peut modifier le budget et le délai. DZOFT proposera d’abord un devis complémentaire ou un avenant précisant ces changements : aucun supplément ne sera réalisé ni facturé sans votre accord exprès. Les corrections nécessaires pour respecter ce devis restent incluses.</div>
     <label class="chk noprint"><input type="checkbox" id="novat" data-k="novat" data-keep="1" checked> Franchise de TVA (article 293 B du CGI)</label>
   </div>
 
@@ -264,7 +265,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     <div class="box" id="client-sign"><b>Le client</b><div class="hint">À compléter : acceptez ce devis dans votre espace client DZOFT, ou datez et signez cette page avec la mention « Bon pour accord ».</div></div>
   </div>
 
-  <div class="foot">DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.<br>L’acceptation du devis vaut acceptation des conditions générales de vente : rdzoagbe.github.io/dzoft/cgv.html</div>
+  <div class="foot">DZOFT · Roland Dzoagbe, entrepreneur individuel · SIRET 104 838 727 00014 · Prix nets, en euros.<br>L’acceptation du devis vaut acceptation des conditions générales de vente : <span id="cgv-ref">rdzoagbe.github.io/dzoft/cgv.html</span></div>
 </main>
 
 <script src="sb.js?v=20261109-passkey"></script>
@@ -578,7 +579,11 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       var d = q.data || {};
       apply(d);
       $('b-follow').hidden = false; $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
-      if (q.accepted_at) {
+      if (q.accepted_at && q.accepted_terms !== 'v2026-11') {
+         $('scope-change-quote').hidden = true;
+         if (q.accepted_terms === 'v2026-10') $('cgv-ref').textContent = 'rdzoagbe.github.io/dzoft/cgv-2026-10.html';
+       }
+       if (q.accepted_at) {
         // the client's box carries the electronic signature, printed with the quote
         $('client-sign').innerHTML = '<b>Le client</b><div class="esign">✓ Bon pour accord · signé électroniquement</div><div>' + esc(q.accepted_name || '') + '</div>' +
           '<div class="hint">Le ' + new Date(q.accepted_at).toLocaleDateString('fr-FR') + ' à ' + new Date(q.accepted_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) +
