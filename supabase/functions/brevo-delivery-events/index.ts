@@ -130,12 +130,22 @@ async function setup(token:string,reportPhase:(step:string)=>void):Promise<Respo
 }
 Deno.serve(async(req:Request)=>{
  if(req.method!=="POST")return result(405,{error:"Method not allowed"});
- const isSetup=new URL(req.url).pathname.endsWith("/setup");
- const token=req.headers.get(isSetup?"X-DZOFT-Setup-Token":"X-DZOFT-Delivery-Token") ?? "";
+ const path=new URL(req.url).pathname;
+ const isSetup=path.endsWith("/setup");
+ const isProbe=path.endsWith("/probe");
+ const token=req.headers.get(isSetup||isProbe?"X-DZOFT-Setup-Token":"X-DZOFT-Delivery-Token") ?? "";
  if(!validToken(token))return result(401,{error:"Unauthorized"});
  let phase="authenticate_webhook";
  try{
   if(isSetup){phase="authenticate_setup";return await setup(token,function(p){phase=p;});}
+  if(isProbe){
+   phase="authenticate_probe";
+   if(await rpc("verify_brevo_delivery_token",{p_token:token,p_kind:"setup"})!==true)
+     return result(401,{error:"Unauthorized"});
+   phase="brevo_reporting_probe";
+   await brevo("/smtp/statistics/events?days=1&limit=1");
+   return result(200,{reporting_api_available:true});
+  }
   if(await rpc("verify_brevo_delivery_token",{p_token:token,p_kind:"webhook"})!==true)
     return result(401,{error:"Unauthorized"});
   const length=Number(req.headers.get("content-length")||"0");
