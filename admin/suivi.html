@@ -202,6 +202,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="acc-box"></div>
   </section>
 
+  <section class="card" id="c-changes" hidden>
+    <h2>Demandes de modification et devis complémentaires</h2>
+    <p class="muted">Après signature, vous pouvez proposer un prix et un calendrier supplémentaires. Les prestations ne sont autorisées qu’après approbation expresse du client. Le devis signé et les paiements existants ne sont jamais modifiés automatiquement.</p>
+    <div id="dzoft-owner-changes"></div>
+  </section>
   <section class="card" id="c-note" hidden>
     <h2>Le mot pour le client</h2>
     <p class="muted">Affiché en haut de son espace. Ex. : « Les maquettes arrivent vendredi. » Laissez vide pour ne rien afficher.</p>
@@ -316,6 +321,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
+<script src="../assets/change-requests.js?v=20261114-1"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -376,7 +383,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function render(){
     $('loading').hidden = true;
     ['c-share', 'c-acc', 'c-note', 'c-steps', 'c-journal', 'c-docs', 'c-env', 'c-msg', 'c-activity'].forEach(function(id){ $(id).hidden = false; });
-    $('c-inv').hidden = !Q.accepted_at; $('c-care').hidden = false;
+    $('c-inv').hidden = !Q.accepted_at; $('c-changes').hidden = !Q.accepted_at; $('c-care').hidden = false;
     $('iv-account-note').hidden = !!(C && C.user_id);
     $('ext').value = Q.ext_link || ''; $('ext-open').hidden = !Q.ext_link; if (Q.ext_link) $('ext-open').href = Q.ext_link;
     $('c-files').hidden = !(C && C.user_id);
@@ -412,6 +419,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     };
     $('note').value = Q.client_note || '';
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
+    if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en'});
     DzoftTracking.admin(Q, sb, load);
   }
 
