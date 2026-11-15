@@ -17,7 +17,13 @@ Deno.serve(async (req) => {
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const key = Deno.env.get("BREVO_API_KEY");
   if (!key) return json({ error: "service d’envoi indisponible" }, 500);
-  const b = await req.json().catch(() => ({}));
+  const announced = Number(req.headers.get("content-length") || 0);
+  if (announced > 8192) return json({ error: "requête trop longue" }, 413);
+  const raw = await req.text();
+  if (raw.length > 8192) return json({ error: "requête trop longue" }, 413);
+  let b: any;
+  try { b = JSON.parse(raw); } catch { return json({ error: "JSON invalide" }, 400); }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return json({ error: "données invalides" }, 400);
 
   // who is signing: secret link, or signed-in client account
   let client: any = null;
@@ -67,18 +73,18 @@ Deno.serve(async (req) => {
 
   let r: Response;
   try { r = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST", headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
+    method: "POST", signal: AbortSignal.timeout(12000), headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({
       sender: { name: "DZOFT", email: Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com" },
       to: [{ email: target }], subject: "Votre code de signature : " + code,
-      htmlContent: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020"><h2 style="color:#0B1020">Signature de votre devis</h2><p>Votre code pour signer le devis n° <b>${q.numero}</b> :</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;text-align:center;margin:24px 0">${code}</p><p>Il est valable 10 minutes. Ne le communiquez à personne : il vaut signature.</p><p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p></div>`,
+      htmlContent: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020"><h2 style="color:#0B1020">Signature de votre devis</h2><p>Votre code pour signer le devis n° <b>${String(q.numero || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!))}</b> :</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;text-align:center;margin:24px 0">${code}</p><p>Il est valable 10 minutes. Ne le communiquez à personne : il vaut signature.</p><p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p></div>`,
     }),
   }); } catch {
     await db.rpc("cancel_sign_code_reservation", { p_sign_code_id: reservation.data.id });
     return json({ error: "l’e-mail n’a pas pu être envoyé : réessayez dans un instant" }, 502);
   }
   if (!r.ok) {
-    console.error("brevo", r.status, (await r.text()).slice(0, 300));
+    console.error("Brevo rejected signature-code delivery; HTTP status", r.status);
     await db.rpc("cancel_sign_code_reservation", { p_sign_code_id: reservation.data.id });
     return json({ error: "l’e-mail n’a pas pu être envoyé : réessayez dans un instant" }, 502);
   }
