@@ -233,17 +233,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261115-billing-fr-en" defer></script>
 <link rel="stylesheet" href="project-workspace.css?v=20261113-weekly">
 <link rel="stylesheet" href="project-workspace-tabs.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-clean3">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4">
-<link rel="stylesheet" href="invoice-workflow.css?v=20261115-update4">
+<link rel="stylesheet" href="invoice-workflow.css?v=20261115-receipt-card2">
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-github-auto">
 <script src="../assets/vendor/qrcode-generator.js?v=20261115-offline"></script>
 <script src="../assets/invoice-preview.js?v=20261115-pay-template"></script>
 <script src="../assets/invoice-pdf.js?v=20261115-pay-template&multi=20261115&accepted=20261115"></script>
-<script src="../assets/project-tracking.js?v=20261115-pay-template&accepted=20261115&clean=20261115-v3"></script>
+<script src="../assets/project-tracking.js?v=20261115-verified-receipts2"></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -866,9 +866,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       var finalInvoice = active.filter(function(x){ return x.basis === 'final'; })[0];
       if (finalInvoice) {
         var previous = active.filter(function(x){return x.id!==finalInvoice.id;}).reduce(function(n,x){return n+(Number(x.amt)||0);},0);
-        breakdown.textContent = 'Pourquoi cette facture fait ' + eur(finalInvoice.amt) + ' ? Devis accepté : ' + eur(signed) + ' − factures d’acompte / intermédiaires déjà émises : ' + eur(previous) + ' = facture de solde : ' + eur(finalInvoice.amt) + '. Aucun montant n’a été changé après émission.';
+        breakdown.textContent = il('Pourquoi cette facture fait ','Why is this invoice ') + eur(finalInvoice.amt) + il(' ? Devis accepté : ','? Accepted quote: ') + eur(signed) + il(' − factures d’acompte / intermédiaires déjà émises : ',' − previously issued deposit / interim invoices: ') + eur(previous) + il(' = facture de solde : ',' = final invoice: ') + eur(finalInvoice.amt) + il('. Aucun montant n’a été changé après émission.','. The issued amount has not been modified.');
       } else {
-        breakdown.textContent = 'Devis accepté : ' + eur(signed) + ' · Déjà facturé : ' + eur(totalIssued) + '. Le montant restant sera vérifié par le serveur avant toute émission.';
+        breakdown.textContent = il('Devis accepté : ','Accepted quote: ') + eur(signed) + il(' · Déjà facturé : ',' · Already invoiced: ') + eur(totalIssued) + il('. Le montant restant sera vérifié par le serveur avant toute émission.','. The remaining amount will be verified by the server before issuing.');
       }
     }
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
@@ -1368,6 +1368,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     }, Promise.resolve()).then(renderFiles);
   };
 
+  document.addEventListener('dzoft:locale-change',function(){ if(Q)renderInv(); });
   load();
 })();
 </script>
