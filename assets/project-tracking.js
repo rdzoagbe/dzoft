@@ -253,7 +253,22 @@
      var form=det.querySelector('form'),select=form.elements.linkInvoice,fields=form.querySelector('.tracking-new'),autoFields=form.querySelector('.tracking-auto');
      function update(){var fresh=select.value==='new',automatic=select.value==='auto';fields.hidden=!fresh;autoFields.hidden=!automatic;form.elements.num.required=fresh;form.elements.amt.required=fresh;form.elements.issued.required=fresh;form.querySelector('button[type=submit]').textContent=automatic?t('Générer et associer la facture','Generate and link invoice'):t('Valider et associer la facture','Confirm and link invoice');}
      select.onchange=update;update();
-     form.querySelector('[data-preview-invoice]').onclick=function(){var note=form.querySelector('[role=status]'),receipt=d.receipts.find(function(x){return x.id===det.dataset.receiptLink;});if(!receipt||!form.elements.num.value.trim()||!form.elements.amt.value||Number(form.elements.amt.value)<Number(receipt.amount)){status(note,t('Renseignez un numéro et un montant corrects.','Enter a valid number and amount.'),true);return;}try{if(!global.DzoftInvoicePreview)throw new Error(t('Préparation PDF indisponible. Rechargez la page.','PDF preparation unavailable. Reload the page.'));global.DzoftInvoicePreview.open({quote:q,receipt:receipt,invoice:{num:form.elements.num.value.trim(),amt:Number(form.elements.amt.value),label:kinds[Number(form.elements.kind.value)][0]}});status(note,t('Aperçu ouvert. Enregistrez le PDF, puis confirmez son émission.','Preview opened. Save the PDF, then confirm issuance.'));}catch(err){status(note,err.message||t('Impossible de créer l’aperçu.','Could not prepare preview.'),true);}};
+     form.querySelector('[data-preview-invoice]').onclick=function(){
+       var note=form.querySelector('[role=status]'),receipt=d.receipts.find(function(x){return x.id===det.dataset.receiptLink;});
+       if(!receipt||!form.elements.num.value.trim()||!form.elements.amt.value||Number(form.elements.amt.value)<Number(receipt.amount)){
+         status(note,t('Renseignez un numéro et un montant corrects.','Enter a valid number and amount.'),true);return;
+       }
+       if(!global.DzoftInvoicePreview){status(note,t('Préparation PDF indisponible. Rechargez la page.','PDF preparation unavailable. Reload the page.'),true);return;}
+       // Open synchronously from the click; Android Chrome blocks popups opened after an async request.
+       var popup=global.open('about:blank','_blank');
+       if(!popup){status(note,t('Autorisez la fenêtre d’aperçu.','Allow the invoice preview window.'),true);return;}
+       var inv={num:form.elements.num.value.trim(),amt:Number(form.elements.amt.value),label:kinds[Number(form.elements.kind.value)][0]};
+       sb.select('settings','select=payment&id=eq.1').catch(function(){return [];}).then(function(rows){
+         var payment=rows&&rows[0]&&rows[0].payment||{};
+         global.DzoftInvoicePreview.open({quote:q,receipt:receipt,invoice:inv,payment:payment,popup:popup});
+         status(note,t('Aperçu ouvert. Enregistrez le PDF, puis confirmez son émission.','Preview opened. Save the PDF, then confirm issuance.'));
+       }).catch(function(err){popup.close();status(note,err.message||t('Impossible de créer l’aperçu.','Could not prepare preview.'),true);});
+     }
      form.onsubmit=function(e){
        e.preventDefault();
        var fresh=select.value==='new',automatic=select.value==='auto',btn=form.querySelector('button[type=submit]'),note=form.querySelector('[role=status]'),invoiceKey=fresh?crypto.randomUUID():select.value;
@@ -366,11 +381,15 @@
    if(!global.DzoftInvoicePdf)return Promise.reject(new Error('PDF generator unavailable; reload the page'));
    if(!q.client_id)return Promise.reject(new Error('Client account is missing'));
    if(!receipt||!inv)return Promise.reject(new Error('Invoice receipt unavailable'));
-   return sb.select('clients','select=user_id&id=eq.'+encodeURIComponent(q.client_id)).then(function(rows){
+   return Promise.all([
+     sb.select('clients','select=user_id&id=eq.'+encodeURIComponent(q.client_id)),
+     sb.select('settings','select=payment&id=eq.1').catch(function(){return [];})
+   ]).then(function(results){
+     var rows=results[0],payment=results[1]&&results[1][0]&&results[1][0].payment||{};
      var uid=rows&&rows[0]&&rows[0].user_id;
      if(!uid||!/^[-0-9a-f]{36}$/i.test(uid))throw new Error('Le client doit disposer d’un compte DZOFT pour recevoir son PDF privé.');
      if(!/^F-[0-9]{4}-[0-9]+$/.test(inv.num))throw new Error('Invalid DZOFT invoice number');
-     var pdf=global.DzoftInvoicePdf.build({quote:q,receipt:receipt,invoice:inv});
+     var pdf=global.DzoftInvoicePdf.build({quote:q,receipt:receipt,invoice:inv,payment:payment});
      var path='u/'+uid+'/factures/'+q.id+'/'+inv.num+'.pdf';
      return sb.files.upload(path,pdf).catch(function(err){if(err&&err.status===409)return;throw err;})
        .then(function(){return sb.rpc('attach_generated_invoice_pdf',{

@@ -79,8 +79,8 @@ test('invoice PDFs carry a non-unilateral reminder only when new terms were acce
 
 test('invoice document delivery still uses private PDFs and existing scripts',()=>{
  const admin=read('admin/suivi.html');
- assert.match(admin,/invoice-pdf\.js\?v=20261114-archive&scope=20261114/);
- assert.match(admin,/invoice-preview\.js\?v=20261114-auto&scope=20261114/);
+ assert.match(admin,/invoice-pdf\.js\?v=(?:20261114-archive&scope=20261114|20261115-pay-template)/);
+ assert.match(admin,/invoice-preview\.js\?v=(?:20261114-auto&scope=20261114|20261115-pay-template)/);
  assert.match(read('assets/project-tracking.js'),/attach_generated_invoice_pdf/);
  assert.match(read('espace/index.html'),/sb\.files\.link/);
 });
