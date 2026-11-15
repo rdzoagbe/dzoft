@@ -214,8 +214,10 @@ def verified_archive(archive: bytes, passphrase: str) -> tuple[bytes, dict]:
                 raise BackupError("Archive file list does not match its manifest.")
             sql_split = REQUIRED_DATABASE_FILES.issubset(actual)
             native_custom = "database/application.dump" in actual
-            if sql_split == native_custom:
-                raise BackupError("Backup must contain either split SQL exports or one native PostgreSQL custom dump.")
+            if not sql_split and not native_custom:
+                raise BackupError("Database schema, data or roles are missing; native PostgreSQL dump missing.")
+            if sql_split and native_custom:
+                raise BackupError("Archive must not mix split SQL and native PostgreSQL custom dump.")
             if native_custom and not z.read("database/application.dump").startswith(b"PGDMP"):
                 raise BackupError("Native PostgreSQL custom dump header is invalid.")
             for name, item in declared.items():
