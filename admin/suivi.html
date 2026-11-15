@@ -156,12 +156,22 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .invoice-studio-title h2{font:700 clamp(21px,2vw,27px)/1.2 Sora,system-ui,sans-serif;letter-spacing:-.04em;margin:0 0 7px}
 .invoice-studio-title p{color:#69738a;font-size:12.5px;line-height:1.55;margin:0;max-width:440px}
 .invoice-studio-icon{width:47px;height:47px;border-radius:14px;background:#eeeaff;color:#5038da;display:grid;place-items:center;font-size:24px;font-weight:800;flex:none}
-.invoice-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:17px 0 23px}
+.invoice-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:17px 0 9px}
 .invoice-stats>div{background:#f7f7fc;border:1px solid #ececf4;padding:13px 12px;border-radius:12px;min-width:0}
 .invoice-stats span{display:block;font-size:11px;line-height:1.35;color:#6c758b;min-height:28px}
 .invoice-stats strong{display:block;color:#171b30;font-size:clamp(13px,1.5vw,17px);letter-spacing:-.03em;overflow-wrap:anywhere;margin-top:5px}
 .invoice-stats>div:last-child{background:#eeebff;border-color:#dfd9ff}
 .invoice-stats>div:last-child strong{color:#4730b8}
+.invoice-balance-explain{font-size:11.5px;line-height:1.55;color:#667087;margin:0 0 21px}
+.invoice-correction{grid-column:1/-1;background:#fffaf1;border:1px solid #efe0ba;border-radius:10px;padding:10px;margin:12px 0 0}
+.invoice-correction>summary{cursor:pointer;font-weight:800;font-size:12px;color:#79581f}
+.invoice-correction>p{margin:9px 0;font-size:11.5px;line-height:1.6;color:#5e5648}
+.invoice-correction>a{font-size:11.5px;font-weight:800;color:#4b3bad;text-decoration:underline}
+.iv-draft-breakdown{font-size:11.5px;line-height:1.55;color:#404b6d;margin:9px 0;padding:10px;background:#f1f0fa;border-radius:9px}
+.iv-issue-warning{font-size:11px;line-height:1.5;color:#785b29;margin:0}
+.iv-issued-done{padding:15px;background:#f6f7ff;border:1px solid #e2e4f5;border-radius:12px}
+.iv-issued-done>b{display:block;font-size:13px;color:#332d87;margin-bottom:6px}
+.iv-issued-done>p{font-size:12px;color:#596279;line-height:1.6}
 .invoice-stage{margin:22px 0 0}
 .invoice-stage+.invoice-stage{padding-top:18px;border-top:1px solid #edecf4}
 .invoice-stage-heading{display:flex;gap:10px;align-items:start;margin-bottom:13px}
@@ -360,7 +370,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       <div><span>Devis accepté</span><strong id="iv-total">—</strong></div>
       <div><span>Déjà facturé</span><strong id="iv-billed">—</strong></div>
       <div><span>Reste à facturer</span><strong id="iv-remaining">—</strong></div>
+      <div><span>Paiements reçus et confirmés</span><strong id="iv-received">—</strong></div>
+      <div><span>Reste à encaisser</span><strong id="iv-due">—</strong></div>
     </div>
+    <p class="invoice-balance-explain">Le <b>reste à facturer</b> correspond aux prestations sans facture. Le <b>reste à encaisser</b> correspond à l'argent non encore reçu. Une facture émise ne change jamais le montant du devis accepté.</p>
     <section class="invoice-stage" aria-labelledby="iv-create-title">
       <div class="invoice-stage-heading"><span class="invoice-step">01</span><div><h3 id="iv-create-title">Créer une facture</h3><p>Le montant est modifiable <b>avant</b> l’émission. Le numéro sera attribué automatiquement.</p></div></div>
       <div id="iv-actions" class="iv-actions-root"></div>
@@ -451,6 +464,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
+  var invoicePaymentRequest = 0, invoiceDraftFacts = null;
   var draftPreviewToken = 0, draftMax = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
@@ -844,9 +858,30 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function invoiceId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'inv-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10); }
   function prepareInvoices(){ Q.invoices = Q.invoices || []; Q.invoices.forEach(function(x){ if (!x.id) x.id = invoiceId(); }); }
   function deposit(){ var f = ((Q.accepted_data || Q.data || {}).f) || {}, t = +Q.accepted_total || +Q.total || 0; return Math.round(t * (parseFloat(f.deppct) || 30)) / 100; }
+  function refreshInvoicePaymentBalance(){
+    // Show the VERIFIED paid and unpaid totals, not the sum of PDF amounts.
+    // The accepted quote and its issued invoices are not changed by this read.
+    var paid = $('iv-received'), due = $('iv-due');
+    if (!paid || !due) return;
+    var request = ++invoicePaymentRequest;
+    paid.textContent = due.textContent = 'Vérification…';
+    sb.rpc('project_tracking', {p_quote: QID}, true).then(function(data){
+      if (request !== invoicePaymentRequest) return;
+      var v = data && data.summary || data;
+      var received = Number(v && v.received), remaining = Number(v && v.remaining);
+      if (!Number.isFinite(received) || received < 0 ||
+          !Number.isFinite(remaining) || remaining < 0) return;
+      paid.textContent = eur(received);
+      due.textContent = eur(remaining);
+    }).catch(function(){
+      if (request !== invoicePaymentRequest) return;
+      paid.textContent = due.textContent = 'Indisponible';
+    });
+  }
   function renderInv(){
     prepareInvoices();
     var total = $('iv-total'), count = $('iv-count'), billed = $('iv-billed'), remaining = $('iv-remaining');
+    refreshInvoicePaymentBalance();
     if (total) total.textContent = eur(Q.accepted_total || Q.total || 0);
     if (count) count.textContent = Q.invoices.length;
     if (billed) billed.textContent = eur((Q.invoices || []).filter(function(x){ return !x.care && !x.change; }).reduce(function(sum,x){ return sum + (Number(x.amt) || 0); },0));
@@ -854,7 +889,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
       var official = !!(x.generatedByDzoft || x.basis), number = String(x.num || '').trim();
       var caption = (x.issuedOn ? 'Émise le ' + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString('fr-FR') : 'Facture externe');
-      var status = x.paid ? 'Paiement reçu' : x.file ? 'PDF prêt' : 'PDF à archiver';
+      var status = x.paid ? 'Paiement reçu' : x.file ? (x.emailAt ? 'Envoi demandé' : 'Émise · non envoyée') : 'PDF à archiver';
       return '<article class="invr invoice-record' + (x.paid ? ' paid' : '') + '" data-i="' + i + '">' +
         '<div class="invoice-record-head"><div><b>' + esc(number || 'Facture externe · numéro à saisir') + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
         '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
@@ -884,6 +919,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
             (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' : '')+
             (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '')+
           '</div>'+
+          (official ? '<details class="invoice-correction"><summary>Corriger ou annuler cette facture</summary><p>Ce numéro est officiel : supprimer sa ligne ou modifier son montant créerait une incohérence comptable. La facture et son PDF d’origine sont conservés.</p><p>Si elle n’est pas réglée, établissez une <b>facture rectificative</b> avec un nouveau numéro, indiquant « annule et remplace la facture n° ' + esc(number) + ' ». Si elle est déjà réglée, utilisez un <b>avoir</b> référencé à la facture initiale.</p><p>Ne renvoyez pas une facture erronée. La rectification n’est pas encore automatisée dans DZOFT.</p><a href="https://entreprendre.service-public.gouv.fr/vosdroits/F23208" target="_blank" rel="noopener noreferrer">Comprendre les règles de rectification</a></details>' : '')+
         '</details>'+
         '</article>';
     }).join('') : '<div class="invoice-empty">Aucune facture émise pour ce projet. Le formulaire ci-dessus vous permet de créer la première.</div>';
@@ -944,14 +980,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (!bar) return;
     ++draftPreviewToken;
     draftMax = null;
+    invoiceDraftFacts = null;
     if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; })) {
-      h += '<div class="iv-act iv-draft"><div class="iv-draft-copy"><b>Préparer une facture DZOFT</b><p class="muted">Montant proposé depuis le devis accepté. Modifiez-le avant l’émission ; le numéro sera créé automatiquement.</p>'+
+      h += '<div class="iv-act iv-draft"><div class="iv-draft-copy"><b>Préparer une facture DZOFT</b><p class="muted">Vérifiez le calcul et adaptez le montant <b>avant</b> de créer un numéro officiel.</p>'+
         '<label for="iv-amount">Montant à facturer (€)</label><input id="iv-amount" data-iv-amount inputmode="decimal" autocomplete="off" placeholder="Chargement…" disabled aria-describedby="iv-amount-hint">'+
-        '<p class="muted" id="iv-amount-hint" data-iv-hint>Chargement du solde…</p></div>'+
-        '<button class="btn main" type="button" data-iv="final" disabled>Créer et numéroter la facture</button></div>';
+        '<p class="muted" id="iv-amount-hint" data-iv-hint>Chargement du solde…</p><p class="iv-draft-breakdown" aria-live="polite" data-iv-breakdown></p></div>'+
+        '<button class="btn main" type="button" data-iv="final" disabled>Émettre une facture officielle</button><p class="iv-issue-warning">Cette action attribue un numéro définitif. L’émission ne peut pas être annulée par une simple suppression.</p></div>';
+    } else if (Q.invoices.some(function(x){ return x.basis === 'final'; })) {
+      h = '<div class="iv-issued-done"><b>Facture de solde déjà émise</b><p>Votre devis reste inchangé. Le montant restant à facturer est de 0 €, mais le solde non payé reste visible dans « Reste à encaisser ». Pour corriger la facture, ouvrez « Corriger ou annuler cette facture » sur sa fiche ci-dessous.</p></div>';
     }
     bar.innerHTML = h; bar.hidden = !h;
-    if (!h && $('iv-remaining')) $('iv-remaining').textContent = '0 €';
+    if (!bar.querySelector('[data-iv-amount]') && $('iv-remaining')) $('iv-remaining').textContent = Q.invoices.some(function(x){return x.basis === 'final';}) ? eur(0) : '—';
     var draft = bar.querySelector('[data-iv-amount]');
     if (draft) {
       var token = draftPreviewToken;
@@ -959,6 +998,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       sb.rpc('invoice_draft_amount', { p_quote: QID }, true).then(function(info){
         if (token !== draftPreviewToken || !draft.isConnected) return;
         var max = Number(info && info.remaining);
+        invoiceDraftFacts = info;
+        var breakdown = bar.querySelector('[data-iv-breakdown]');
+        if (breakdown && Number.isFinite(max)) breakdown.textContent = 'Calcul : devis '+eur(info.base_total)+' − factures existantes '+eur(info.invoiced)+' − versements non encore facturés '+eur(info.unbilled_receipts)+' = '+eur(max)+' à facturer.';
         if (!Number.isFinite(max) || max <= 0 || info.has_final) {
           draftMax = 0; draft.disabled = true;
           if ($('iv-remaining')) $('iv-remaining').textContent = eur(0);
@@ -1001,7 +1043,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   function archiveIssued(x){
     return invoiceExtras(x).then(function(extra){
-      return DzoftTracking.archive(Q, sb, null, { id: x.id, num: x.num, amt: x.amt, n: x.n, issuedOn: x.issuedOn, detail: extra.detail, changeNote: extra.changeNote });
+      return DzoftTracking.archive(Q, sb, null, { id: x.id, num: x.num, amt: x.amt, n: x.n, basis: x.basis, issuedOn: x.issuedOn, detail: extra.detail, changeNote: extra.changeNote });
     });
   }
   function mailInvoice(x, b){
@@ -1037,6 +1079,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       : basis === 'interim'
       ? 'Créer une facture intermédiaire de ' + eur(chosenAmount) + ' ?\n\nCe montant sera déduit du solde restant sur le devis accepté. Vérifiez que les prestations correspondantes ont été réalisées.\n\nLe numéro officiel et le montant seront définitifs.'
       : 'Créer la facture complémentaire de « ' + change.title + ' » ?\n\nMontant approuvé par le client : ' + eur(change.extra_price) + '. La facture reçoit un numéro officiel définitif et devient visible dans son espace.';
+    if ((basis === 'final' || basis === 'interim') && invoiceDraftFacts) {
+      ask += '\n\nCalcul vérifié : devis ' + eur(invoiceDraftFacts.base_total) + ' − déjà facturé ' + eur(invoiceDraftFacts.invoiced) + ' − versements sans facture ' + eur(invoiceDraftFacts.unbilled_receipts) + ' = ' + eur(invoiceDraftFacts.remaining) + ' disponibles avant cette émission.';
+    }
     if (!confirm(ask)) return;
     var key = null, storageKey = null;
     if (basis === 'interim') {
