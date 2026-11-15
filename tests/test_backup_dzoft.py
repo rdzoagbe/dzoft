@@ -64,10 +64,22 @@ class BackupTests(unittest.TestCase):
                     if args != ["link", "--project-ref", "rzghbvmszbjlqkdjzpxc"]:
                         sys.exit(7)
                     sys.exit(0)
+                mode = os.getenv("CLI_MODE", "v2")
+                if len(args) >= 3 and args[2] == "--help" and (
+                    args[:2] == ["db", "dump"] or args[:2] == ["storage", "ls"] or args[:2] == ["storage", "cp"]
+                ):
+                    if mode == "v3":
+                        print("      --remote[=<ref>]  target a hosted project")
+                    elif mode == "v2":
+                        print("      --linked  use the linked project")
+                    else:
+                        print("No remote selection flags available")
+                    sys.exit(0)
                 if os.getenv("FAIL_DUMP") == "1" and args[:2] == ["db", "dump"]:
                     sys.exit(2)
                 if args[:2] == ["db", "dump"]:
-                    if "--linked" not in args or any(a.startswith("--remote") for a in args):
+                    expected = "--remote=rzghbvmszbjlqkdjzpxc" if mode == "v3" else "--linked"
+                    if expected not in args or (mode == "v3" and "--linked" in args):
                         sys.exit(8)
                     if "--role-only" not in args and "--schema=public,private" not in args:
                         sys.exit(9)
@@ -77,13 +89,15 @@ class BackupTests(unittest.TestCase):
                         sys.stdout.write("-- fake SQL export\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "ls"]:
-                    if "--linked" not in args or "--experimental" not in args:
+                    expected = "--remote" if mode == "v3" else "--linked"
+                    if expected not in args or "--experimental" not in args:
                         sys.exit(10)
                     if os.getenv("WITH_STORAGE") == "1":
                         sys.stdout.write("invoice.pdf\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "cp"]:
-                    if "--linked" not in args or "--experimental" not in args:
+                    expected = "--remote" if mode == "v3" else "--linked"
+                    if expected not in args or "--experimental" not in args:
                         sys.exit(11)
                     dst = pathlib.Path(args[4])
                     dst.mkdir(parents=True, exist_ok=True)
@@ -108,6 +122,31 @@ class BackupTests(unittest.TestCase):
                 _, info = mod.verified_archive(files[0].read_bytes(), PASSWORD)
                 expected = "exported" if with_storage else "verified_empty_by_cli"
                 self.assertEqual(info["storage"]["status"], expected)
+
+            for with_storage in (False, True):
+                target = root / ("modern-storage" if with_storage else "modern-empty")
+                env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), CLI_MODE="v3",
+                           WITH_STORAGE="1" if with_storage else "0")
+                result = subprocess.run(
+                    [sys.executable, str(SCRIPT), "backup", "--destination", str(target)],
+                    input=PASSWORD + "\n" + PASSWORD + "\n",
+                    text=True, capture_output=True, env=env, timeout=40)
+                self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+                files = list(target.glob("*.dzoftbak"))
+                self.assertEqual(len(files), 1)
+                _, info = mod.verified_archive(files[0].read_bytes(), PASSWORD)
+                expected = "exported" if with_storage else "verified_empty_by_cli"
+                self.assertEqual(info["storage"]["status"], expected)
+
+            # With no recognized remote flag, never dump local data by accident.
+            unknown = root / "unknown-cli"
+            env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), CLI_MODE="unknown")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "backup", "--destination", str(unknown)],
+                input=PASSWORD + "\n" + PASSWORD + "\n",
+                capture_output=True, text=True, env=env, timeout=40)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(unknown.glob("*.dzoftbak")), [])
 
             failed = root / "failed"
             env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), FAIL_DUMP="1")
