@@ -29,6 +29,7 @@ test('PDF includes real offline payment-link QR and transfer instructions only i
  const win=app(),pdf=win.DzoftInvoicePdf.build(data());
  const raw=Buffer.from(await pdf.arrayBuffer()).toString('latin1');
  assert.match(raw,/^%PDF-1.4/);
+ assert.match(raw,/46 718 m 548 718 l S/);
  assert.match(raw,/MOYENS DE R.GLEMENT/);
  assert.match(raw,/FR7612345678901234567890123/);
  assert.match(raw,/DZOFT Business/);
