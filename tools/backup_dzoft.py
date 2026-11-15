@@ -36,6 +36,7 @@ SALT_SIZE = 16
 NONCE_SIZE = 12
 MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
 BUCKET = "client-files"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class BackupError(RuntimeError):
@@ -90,8 +91,8 @@ def run_cli(arguments: list[str], *, binary: bool = False) -> bytes:
     command = [executable] + arguments
     # Keep Supabase's interactive login/password prompts visible on the owner's PC.
     # Only the SQL payload on stdout is captured; never print it to the terminal.
-    result = subprocess.run(command, stdin=sys.stdin, stdout=subprocess.PIPE,
-                            stderr=None, check=False)
+    result = subprocess.run(command, cwd=PROJECT_ROOT, stdin=sys.stdin,
+                            stdout=subprocess.PIPE, stderr=None, check=False)
     if result.returncode != 0:
         # Do not echo full stderr: CLI logs may include connection details.
         raise BackupError(
@@ -120,7 +121,7 @@ def build_zip(members: dict[str, bytes], project_ref: str, storage: dict) -> byt
                   for name, blob in sorted(members.items())},
         "storage": storage,
         "limitations": [
-            "Supabase CLI db dump excludes managed Auth and Storage schemas by default.",
+            "Schema/data exports include public and private application schemas but exclude managed Auth and Storage schemas.",
             "An isolated database restore drill remains necessary.",
             "The archive is not a live backup until exported off the computer."
         ]
@@ -161,12 +162,15 @@ def do_backup(args: argparse.Namespace) -> None:
     print("This operation reads data. It does not edit any client, payment or email.")
     password = password_prompt(confirm=True)
 
-    remote = "--remote=" + ref
+    # Re-link to exactly this project; the current CLI requires --linked rather than --remote=<ref>.
+    # This changes only local CLI linkage, not the remote database.
+    print("Linking Supabase CLI to the exact RD-Clients project…")
+    run_cli(["link", "--project-ref", ref])
     print("Exporting schema, application data and role definitions…")
     exports = {
-        "database/schema.sql": run_cli(["db", "dump", remote]),
-        "database/data.sql": run_cli(["db", "dump", remote, "--data-only", "--use-copy"]),
-        "database/roles.sql": run_cli(["db", "dump", remote, "--role-only"]),
+        "database/schema.sql": run_cli(["db", "dump", "--linked", "--schema=public,private"]),
+        "database/data.sql": run_cli(["db", "dump", "--linked", "--schema=public,private", "--data-only", "--use-copy"]),
+        "database/roles.sql": run_cli(["db", "dump", "--linked", "--role-only"]),
     }
     if not exports["database/schema.sql"] or not exports["database/data.sql"]:
         raise BackupError("Supabase returned an empty SQL dump; backup aborted.")
@@ -175,7 +179,7 @@ def do_backup(args: argparse.Namespace) -> None:
     if not args.skip_storage:
         print("Checking Supabase Storage for client documents…")
         listing = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
-                           "--experimental", remote])
+                           "--experimental", "--linked"])
         exports["storage/remote-listing.txt"] = listing
         storage_metadata["listing_sha256"] = sha(listing)
         if listing.strip():
@@ -183,7 +187,7 @@ def do_backup(args: argparse.Namespace) -> None:
             print("CAUTION: temporary downloaded files are plaintext; use an encrypted disk.")
             with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
                 run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, scratch,
-                         "--experimental", remote])
+                         "--experimental", "--linked"])
                 base = Path(scratch)
                 files = [p for p in base.rglob("*") if p.is_file()]
                 if not files:
