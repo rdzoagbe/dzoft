@@ -279,6 +279,11 @@ test('Invoice creator shows editable server-approved amount and prevents an exce
  const amount=page.locator('#iv-amount');
  await expect(amount).toBeEnabled();
  await expect(amount).toHaveValue('1050.00');
+ await expect(page.locator('#iv-received')).toContainText('450');
+ await expect(page.locator('#iv-due')).toContainText(/1.050/);
+ await expect(page.locator('[data-iv-breakdown]')).toContainText(/devis/);
+ await expect(page.locator('[data-iv-breakdown]')).toContainText(/versements non encore facturés/);
+ await expect(page.locator('.invoice-balance-explain')).toContainText('reste à encaisser');
  const issue=page.locator('[data-iv="final"]');
  await expect(issue).toBeEnabled();
  await amount.fill('350,50');
