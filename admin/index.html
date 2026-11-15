@@ -261,6 +261,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     <form id="f-mfa" hidden>
       <h1>Confirm it's you</h1>
       <p class="intro" id="m-intro">Enter the six-digit code from your authenticator app. This extra check protects your client and payment information.</p>
+      <div id="m-passwordless" class="device-entry" hidden>
+        <button class="btn main device-button" style="width:100%" type="button" id="m-passkey-go">Unlock with passkey instead</button>
+        <p class="device-hint">Use your registered fingerprint, Windows Hello or device PIN. Password sign-in still requires the code.</p>
+      </div>
       <div id="m-key" hidden>
         <button class="btn main device-button" style="width:100%" type="button" id="m-key-go">Use this device to verify</button>
         <p class="intro" style="margin-top:10px;font-size:13.5px">Windows Hello, fingerprint, face unlock or security key.</p>
@@ -528,7 +532,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261115-session-concurrency"></script>
+<script src="sb.js?v=20261115-owner-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
@@ -548,7 +552,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
   var PASSKEY_MFA = false; // Hosted WebAuthn MFA isn't enabled; passwordless passkeys are separate.
   var mfaFactor = null, mfaKey = null;
-  var activeOwnerId = null;
+  var activeOwnerId = null, activeOwnerHasFactor = false, passkeyAttemptedFromMfa = false;
   // A logout or account switch in another tab must immediately hide
   // client/payment data and wipe this tab's rendered private DOM on reload.
   window.addEventListener('storage', function(event){
@@ -559,7 +563,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (next && next.user && next.user.id === activeOwnerId) return;
     $('app').hidden = true;
     document.querySelectorAll('.modal').forEach(function(box){ box.hidden = true; });
-    activeOwnerId = null;
+    activeOwnerId = null; activeOwnerHasFactor = false;
     location.reload();
   });
   function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
@@ -567,6 +571,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var t = factorOf(u, 'totp'), k = sb.mfa.passkey && sb.mfa.passkey.supported() ? factorOf(u, 'webauthn') : null;
     mfaFactor = t ? t.id : null; mfaKey = k ? k.id : null;
     $('app').hidden = true; $('auth').hidden = false; showForm('f-mfa', msg);
+    $('m-passwordless').hidden = true;
+    // A fresh, signed passkey AMR is handled by the server. For password logins,
+    // offer a new passwordless sign-in instead of forcing a six-digit code.
+    if (!passkeyAttemptedFromMfa && !sb.passkeyFresh(MFA_WINDOW) &&
+        u.app_metadata && u.app_metadata.dzoft_owner === true &&
+        sb.devicePasskey && sb.devicePasskey.supported()) {
+      sb.devicePasskey.availability().then(function(enabled){
+        if (!enabled || $('f-mfa').hidden) return;
+        $('m-passwordless').hidden = false;
+        $('m-intro').textContent = 'Unlock with your registered passkey, or enter the six-digit authenticator code.';
+      }).catch(function(){ /* Password + authenticator remains the fallback. */ });
+    }
     $('m-key').hidden = !mfaKey; $('m-totp').hidden = !mfaFactor;
     $('m-or').hidden = !(mfaKey && mfaFactor);
     $('m-intro').textContent = mfaKey && mfaFactor ? 'Verify with your device, or enter the 6-digit code from your authenticator app.'
@@ -678,6 +694,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (this.value !== d) this.value = d;
     if (d.length === 6 && !mfaBusy) $('f-mfa').requestSubmit ? $('f-mfa').requestSubmit() : $('f-mfa').onsubmit(new Event('submit'));
   });
+  $('m-passkey-go').onclick = function(){
+    var b = $('m-passkey-go');
+    if (b.disabled) return;
+    b.disabled = true; amsg('Waiting for your device…', true);
+    sb.devicePasskey.signIn().then(function(){
+      passkeyAttemptedFromMfa = true;
+      markDeviceReady();
+      b.disabled = false; amsg('');
+      start();
+    }, function(err){
+      b.disabled = false;
+      amsg(err && err.name === 'NotAllowedError'
+        ? 'Passkey verification was cancelled or timed out. Use the six-digit code or try again.'
+        : 'Passkey sign-in failed. Use your authenticator code or retry.');
+    });
+  };
   $('m-key-go').onclick = function(){
     if (!mfaKey) return;
     var b = $('m-key-go'); b.disabled = true; amsg('Validez sur votre appareil…', true);
@@ -694,21 +726,21 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     startPending = true;
     sb.me().then(function(u){
       if (!u) { startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
-      // A verified factor must be recent before any admin data is shown.
+      // An enrolled second factor needs recent MFA, or a recently verified owner passkey.
       var f = factorOf(u, 'totp') || factorOf(u, 'webauthn');
-      if (f && !sb.mfaFresh(MFA_WINDOW)) { startPending = false; askSecondFactor(u); return; }
+      if (f && !sb.ownerAccessFresh(MFA_WINDOW)) { startPending = false; askSecondFactor(u); return; }
       sb.rpc('is_owner', {}, true).then(function(isOwner){
         startPending = false;
         if (!isOwner) {
-          // The server is authoritative; if its clock rejects a borderline-old MFA claim,
-          // ask for a fresh code instead of discarding the password session.
+          // The server is authoritative: a passkey must correspond to the current
+          // Auth session's verified AMR record. Fall back to TOTP if rejected.
           if (u.app_metadata && u.app_metadata.dzoft_owner === true && f) {
             askSecondFactor(u, 'Confirmez à nouveau pour continuer.'); return;
           }
           return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); });
         }
         if (returnAfterAuth()) return;
-        activeOwnerId = u.id;
+        activeOwnerId = u.id; activeOwnerHasFactor = !!f;
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
         fromHash(); loadAll(); loadSettings(); renderMfa(u); renderDevicePasskeys(u);
@@ -716,7 +748,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }, function(){ startPending = false; $('auth').hidden = false; showForm('f-login'); });
   }
   function checkMfaExpiry(){
-    if (document.hidden || $('auth').hidden === false || $('app').hidden || sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return;
+    if (document.hidden || $('auth').hidden === false || $('app').hidden || !activeOwnerHasFactor || sb.ownerAccessFresh(MFA_WINDOW)) return;
     start();
   }
   document.addEventListener('visibilitychange', checkMfaExpiry);
@@ -1140,7 +1172,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       link.textContent = 'Open Supabase Passkeys settings';
       box.appendChild(link);
       note('If the dashboard offers Passkeys, use relying-party ID rdzoagbe.github.io and origin https://rdzoagbe.github.io. Do not include the /dzoft/ path. Keep your password and authenticator app available.');
-      note('Important: Passkey sign-in replaces the password step only. Your existing 6-digit authenticator check still protects client and payment data.');
+      note('For the DZOFT owner, a fresh server-verified passkey sign-in can open Admin without a six-digit code. Password sign-in still requires authenticator verification.');
       retryButton();
     }
 
