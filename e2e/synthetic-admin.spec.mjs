@@ -56,7 +56,10 @@ const syntheticSb = `
   fn:async()=>({}),
   files:{list:async()=>[],link:async()=>'',remove:()=>Promise.reject(Error('Read-only fixture')),upload:()=>Promise.reject(Error('Read-only fixture'))},
   insert:()=>Promise.reject(Error('Read-only fixture')),
-  update:()=>Promise.reject(Error('Read-only fixture')),
+  update:(table,id,values)=>{window.__syntheticCalls.push('update:'+table);
+    if(table==='quotes'&&values&&values.progress_draft){quote.progress_draft=values.progress_draft;return Promise.resolve({});}
+    return Promise.reject(Error('Read-only fixture'));
+  },
   remove:()=>Promise.reject(Error('Read-only fixture')),
   signOut:async()=>{}
  };
@@ -158,7 +161,8 @@ test('Regular mobile browser keeps its dock and normal header; installed-only me
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('body')).not.toHaveClass(/dzoft-installed-mobile/);
  await expect(page.locator('#app .side')).toBeVisible();
- await expect(page.locator('#app .top #b-out')).toBeVisible();
+ await expect(page.locator('#app .top #b-out')).toBeHidden();
+ await expect(page.locator('#app .workspace-more')).toBeVisible();
  await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
 });
 
@@ -387,4 +391,39 @@ test('Owner home offers a single workspace search and safe quick actions',async(
  await expect(page.locator('#v-finance')).toBeVisible();
  await expect(page.locator('#app .side [data-tab="trash"]')).toBeHidden();
  expect(errors).toEqual([]);
+});
+
+test('Financial dashboard shows actual receipts and outstanding money separately',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ const panel=page.locator('#today-action-center');
+ await expect(panel).toContainText(/Reçu et confirmé|Received and verified/);
+ await expect(panel).toContainText(/Reste à encaisser|Still outstanding/);
+ await expect(panel).toContainText('450');
+ await expect(page.locator('#app .top #b-install')).toBeHidden();
+ await expect(page.locator('#app .top #b-out')).toBeHidden();
+ await page.locator('#app .workspace-more>summary').click();
+ await expect(page.locator('#app .workspace-more [data-extra="logout"]')).toBeVisible();
+});
+
+test('Keeping progress private cannot publish or email the client',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="work"]').click();
+ await expect(page.locator('.tracking-private-intro')).toBeVisible();
+ const editor=page.locator('#tracking-publish details.tracking-editor');
+ await editor.locator('summary').click();
+ const form=editor.locator('form');
+ await form.locator('textarea[name=summary]').first().fill('Synthetic work requiring verification');
+ await expect(form.locator('[name=audience][value=private]')).toBeChecked();
+ await form.locator('[data-sharing-submit]').click();
+ await expect(page.locator('#tracking-publish [role=status]').last()).toContainText(/Brouillon enregistré|Private draft saved/);
+ await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(s=>s.includes('publish_project_updates')||s.includes('owner_publish_github_progress_draft')).length)).toBe(0);
+ await form.locator('[name=audience][value=client]').check();
+ await form.locator('[data-sharing-submit]').click();
+ await expect(page.locator('#tracking-publish [role=status]').last()).toContainText(/Cochez|Check the confirmation/);
+ await form.locator('[name=verified]').check();
+ page.once('dialog',dialog=>dialog.dismiss());
+ await form.locator('[data-sharing-submit]').click();
+ await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(s=>s.includes('publish_project_updates')||s.includes('owner_publish_github_progress_draft')).length)).toBe(0);
 });
