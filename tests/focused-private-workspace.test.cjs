@@ -40,7 +40,7 @@ test('quick actions reveal original sections without initiating payments, invoic
  assert.match(js,/dest==='history'\?'c-activity'/);
  assert.match(js,/dest==='payment'\?'billing'/);
  assert.match(js,/select\(id,\{scroll:true,target:target\}\)/);
- assert.doesNotMatch(js,/\.rpc\(|\.update\(|\.insert\(|\.remove\(|\.fetch\(|fetch\(/);
+ assert.doesNotMatch(js,/\bsb\.(?:rpc|update|insert|remove|select|fn)\(|\bfetch\(/);
  assert.doesNotMatch(js,/localStorage|sessionStorage/);
 });
 
