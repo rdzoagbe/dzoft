@@ -63,6 +63,20 @@
    block(inv.n||'Prestation de services numériques',88);
    // A supplementary invoice describes the approved extra work, not the original brief.
    if(inv.detail)block(inv.detail,88);else if(f.desc)block(f.desc,88);
+   // A final balance is NOT a revised quote. Make the calculation transparent.
+   if(inv.basis==='final' && Number.isFinite(Number(q.accepted_total)) && Number(q.accepted_total)>0){
+     var previous=(Array.isArray(q.invoices)?q.invoices:[]).filter(function(row){
+       return row && row.id!==inv.id && !row.care && !row.change &&
+         /^\d{1,10}(?:\.\d{1,2})?$/.test(String(row.amt||'')) && Number(row.amt)>0;
+     });
+     var prior=Math.round(previous.reduce(function(acc,row){return acc+Number(row.amt);},0)*100)/100;
+     y-=8;
+     text('RÉCAPITULATIF DU DEVIS ACCEPTÉ',11,true);
+     text('Montant du devis initial : '+money(q.accepted_total),10);
+     text('Déjà facturé sur ce devis : '+money(prior),10);
+     text('Solde faisant l’objet de cette facture : '+money(total),10,true);
+     text('Cette facture de solde ne modifie pas le montant du devis accepté.',10);
+   }
    y-=10;
    if(taxable){text('Montant HT : '+money(ht),11);text('TVA 20 % : '+money(vat),11);}
    text('TOTAL TTC : '+money(total),14,true);
