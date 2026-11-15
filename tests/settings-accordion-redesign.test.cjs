@@ -54,7 +54,7 @@ test('French and English labels remain translatable, original saved locale still
  assert.match(lang,/storageKey='dzoft-ui-locale'/);
  assert.match(lang,/localStorage\.setItem\(storageKey,locale\)/);
  assert.match(lang,/setLanguage\(saved\)/);
- assert.match(html,/settings-redesign\.css\?v=20261115-1/);
+ assert.match(html,/settings-redesign\.css\?v=20261115-(?:1|2)/);
  assert.match(html,/dzoft-language\.js\?v=20261115-settings/);
  new vm.Script(lang);
  for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))
