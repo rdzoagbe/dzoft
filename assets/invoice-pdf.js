@@ -24,7 +24,7 @@
    if(!Number.isFinite(total)||!Number.isFinite(paid)||total<=0||paid<=0||paid>total||!r.received_on)throw new Error('Invalid invoiced/received amount');
    var payment=data&&data.payment||{};
    var commands=[],y=778;
-   function text(value,size,bold){if(y<70)throw new Error('Invoice details exceed one-page PDF limit');commands.push('BT /'+(bold?'F2':'F1')+' '+(size||11)+' Tf 46 '+y+' Td ('+escapePDF(value)+') Tj ET');y-=size>=16?26:17;}
+   function text(value,size,bold){if(y<70)throw new Error('Invoice details exceed one-page PDF limit');commands.push('BT /'+(bold?'F2':'F1')+' '+(size||11)+' Tf 46 '+y+' Td ('+escapePDF(value)+') Tj ET');y-=size>=16?24:14;}
    function wrap(value,max){var words=asciiLine(value).split(/\s+/),lines=[],line='';for(var word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line='';}while(word.length>max){lines.push(word.slice(0,max));word=word.slice(max);}line=(line?line+' ':'')+word;}if(line)lines.push(line);return lines;}
    function block(value,max){wrap(value,max||84).forEach(x=>text(x,10,false));}
    var taxable=f.novat===false||f.novat==='false', ht=taxable?Math.round(total/1.2*100)/100:total,vat=Math.round((total-ht)*100)/100;
@@ -56,6 +56,16 @@
    text('Paiement reçu : '+money(paid),11);
    text('Reçu le '+frenchDate(r.received_on)+' - '+payLabel,10);
    text('Reste à payer sur cette facture : '+money(total-paid),11,true);
+   y-=10;
+   if(!taxable)block('TVA non applicable, article 293 B du CGI.',88);
+   if(f.pay){text('Conditions de règlement :',10,true);block(f.pay,88);}
+   block('Nature : prestation de services. Facture liée au devis '+safe(q.numero||'')+'.',88);
+   // Reminder, not a unilateral revision. Legacy signed agreements keep their original document wording.
+   if(q.accepted_terms==='v2026-11'){
+     y-=7;
+     text('PRIX CONVENU ET CHANGEMENTS',10,true);
+     block('Le prix du devis reste fixe pour les prestations convenues. Une demande hors périmètre peut entraîner un supplément ou un délai ajusté, uniquement après acceptation expresse d’un devis complémentaire ou d’un avenant avant intervention et facturation. Les corrections dues au devis signé restent incluses.',87);
+   }
    if(Math.round((total-paid)*100)<=0){
      text('FACTURE RÉGLÉE - Aucun paiement supplémentaire à effectuer',10,true);
    }else{
@@ -72,10 +82,10 @@
          var link=String(payment.link);
          block('Paiement en ligne : '+link,77);
          // Offline, payment-link QR. No network calls, no counterfeit Revolut checkout.
-         if(typeof global.qrcode==='function'&&y>182){
+         if(typeof global.qrcode==='function'&&y>154){
            try{
              var qr=global.qrcode(0,'M');qr.addData(link);qr.make();
-             var count=qr.getModuleCount(),size=92,step=size/(count+8),left=46,bottom=y-size-8;
+             var count=qr.getModuleCount(),size=72,step=size/(count+8),left=46,bottom=y-size-8;
              commands.push('0.08 0.16 0.32 rg');
              for(var row=0;row<count;row++)for(var col=0;col<count;col++)if(qr.isDark(row,col))
                commands.push((left+(col+4)*step).toFixed(2)+' '+(bottom+(count-row+3)*step).toFixed(2)+' '+step.toFixed(2)+' '+step.toFixed(2)+' re f');
@@ -86,16 +96,6 @@
        }
      }
      if(payment.note)block(safe(payment.note),78);
-   }
-   y-=10;
-   if(!taxable)block('TVA non applicable, article 293 B du CGI.',88);
-   if(f.pay){text('Conditions de règlement :',10,true);block(f.pay,88);}
-   block('Nature : prestation de services. Facture liée au devis '+safe(q.numero||'')+'.',88);
-   // Reminder, not a unilateral revision. Legacy signed agreements keep their original document wording.
-   if(q.accepted_terms==='v2026-11'){
-     y-=7;
-     text('PRIX CONVENU ET CHANGEMENTS',10,true);
-     block('Le prix du devis reste fixe pour les prestations convenues. Une demande hors périmètre peut entraîner un supplément ou un délai ajusté, uniquement après acceptation expresse d’un devis complémentaire ou d’un avenant avant intervention et facturation. Les corrections dues au devis signé restent incluses.',87);
    }
    // PDF 1.4 with two embedded standard font references and a single content stream.
    var stream=commands.join('\n')+'\n',streamBytes=bytes(stream);
