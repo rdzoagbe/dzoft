@@ -51,7 +51,7 @@ test('invoice has visible calculation breakdown, reversible pre-issue review and
  assert.match(html,/issue_final_invoice_checked/);
  assert.match(html,/issue_interim_invoice/);
  assert.match(html,/if \(!confirm\(ask\)\) return/);
- assert.match(html,/invoice-workflow\.css\?v=20261115-update4/);
+ assert.match(html,/invoice-workflow\.css\?v=(?:20261115-update4|20261115-receipt-card2)/);
  const css=read('admin/invoice-workflow.css');
  assert.match(css,/invoice-draft-review\[hidden\]\{display:none!important\}/);
  for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
