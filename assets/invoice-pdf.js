@@ -23,8 +23,19 @@
    var total=Number(inv.amt),paid=Number(r.amount);
    if(!Number.isFinite(total)||!Number.isFinite(paid)||total<=0||paid<=0||paid>total||!r.received_on)throw new Error('Invalid invoiced/received amount');
    var payment=data&&data.payment||{};
-   var commands=[],y=778;
-   function text(value,size,bold){if(y<70)throw new Error('Invoice details exceed one-page PDF limit');commands.push('BT /'+(bold?'F2':'F1')+' '+(size||11)+' Tf 46 '+y+' Td ('+escapePDF(value)+') Tj ET');y-=size>=16?24:14;}
+   var commands=[],pages=[],y=778;
+   function nextPage(){
+     if(!commands.length)throw new Error('Invoice page cannot be empty');
+     if(pages.length>=19)throw new Error('Invoice content exceeds the 20-page safety limit');
+     pages.push(commands);commands=[];y=765;
+     commands.push('BT /F2 12 Tf 46 797 Td (DZOFT  |  FACTURE '+escapePDF(inv.num)+' - SUITE) Tj ET');
+     commands.push('0.25 0.32 0.65 RG 1 w 46 785 m 548 785 l S 0 0 0 RG');
+   }
+   function text(value,size,bold){
+     if(y<80)nextPage();
+     commands.push('BT /'+(bold?'F2':'F1')+' '+(size||11)+' Tf 46 '+y+' Td ('+escapePDF(value)+') Tj ET');
+     y-=size>=16?24:14;
+   }
    function wrap(value,max){var words=asciiLine(value).split(/\s+/),lines=[],line='';for(var word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line='';}while(word.length>max){lines.push(word.slice(0,max));word=word.slice(max);}line=(line?line+' ':'')+word;}if(line)lines.push(line);return lines;}
    function block(value,max){wrap(value,max||84).forEach(x=>text(x,10,false));}
    var taxable=f.novat===false||f.novat==='false', ht=taxable?Math.round(total/1.2*100)/100:total,vat=Math.round((total-ht)*100)/100;
@@ -82,9 +93,10 @@
          var link=String(payment.link);
          block('Paiement en ligne : '+link,77);
          // Offline, payment-link QR. No network calls, no counterfeit Revolut checkout.
-         if(typeof global.qrcode==='function'&&y>154){
+         if(typeof global.qrcode==='function'){
            try{
              var qr=global.qrcode(0,'M');qr.addData(link);qr.make();
+             if(y<190)nextPage(); // Keep the entire QR matrix on one page.
              var count=qr.getModuleCount(),size=72,step=size/(count+8),left=46,bottom=y-size-8;
              commands.push('0.08 0.16 0.32 rg');
              for(var row=0;row<count;row++)for(var col=0;col<count;col++)if(qr.isDark(row,col))
@@ -97,20 +109,39 @@
      }
      if(payment.note)block(safe(payment.note),78);
    }
-   // PDF 1.4 with two embedded standard font references and a single content stream.
-   var stream=commands.join('\n')+'\n',streamBytes=bytes(stream);
-   var chunks=['%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'], offsets=[0];
-   function length(){return chunks.reduce((n,s)=>n+bytes(s).length,0);}
-   function object(id,data){offsets[id]=length();chunks.push(id+' 0 obj\n'+data+'\nendobj\n');}
+   // Build a valid multi-page PDF, preserving the original one-page object IDs.
+   // Continuation pages repeat the official invoice number and never create new invoices.
+   pages.push(commands);
+   var pageCount=pages.length;
+   pages.forEach(function(items,i){
+     items.push('BT /F1 9 Tf 46 38 Td (Page '+(i+1)+' sur '+pageCount+') Tj ET');
+   });
+   var chunks=['%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'],offsets=[0];
+   function length(){return chunks.reduce(function(n,item){return n+bytes(item).length;},0);}
+   function object(id,content){offsets[id]=length();chunks.push(id+' 0 obj\n'+content+'\nendobj\n');}
+   function pageBody(streamId){
+     return '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents '+streamId+' 0 R >>';
+   }
+   function streamBody(items){
+     var stream=items.join('\n')+'\n';
+     return '<< /Length '+bytes(stream).length+' >>\nstream\n'+stream+'endstream';
+   }
+   var kids=pages.map(function(items,i){return (i===0?3:5+i*2)+' 0 R';}).join(' ');
    object(1,'<< /Type /Catalog /Pages 2 0 R >>');
-   object(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-   object(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>');
+   object(2,'<< /Type /Pages /Kids [ '+kids+' ] /Count '+pageCount+' >>');
+   object(3,pageBody(6));
    object(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
    object(5,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
-   object(6,'<< /Length '+streamBytes.length+' >>\nstream\n'+stream+'endstream');
-   var xref=length();chunks.push('xref\n0 7\n0000000000 65535 f \n');
-   for(var i=1;i<=6;i++)chunks.push(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
-   chunks.push('trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+   object(6,streamBody(pages[0]));
+   for(var i=1;i<pageCount;i++){
+     var pageId=5+2*i,streamId=pageId+1;
+     object(pageId,pageBody(streamId));
+     object(streamId,streamBody(pages[i]));
+   }
+   var lastId=6+2*(pageCount-1),xref=length();
+   chunks.push('xref\n0 '+(lastId+1)+'\n0000000000 65535 f \n');
+   for(var id=1;id<=lastId;id++)chunks.push(String(offsets[id]).padStart(10,'0')+' 00000 n \n');
+   chunks.push('trailer\n<< /Size '+(lastId+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
    return new Blob([Uint8Array.from(bytes(chunks.join('')))],{type:'application/pdf'});
  }
  global.DzoftInvoicePdf={build:build};
