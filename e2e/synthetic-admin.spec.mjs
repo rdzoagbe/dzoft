@@ -45,6 +45,7 @@ const syntheticSb = `
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
    if(name==='project_tracking')return {total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[]};
+   if(name==='invoice_draft_amount')return {remaining:1050,has_final:false};
    if(name==='list_project_work_items')return work;
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
    if(name==='sync_project_github_groups')return {added:0,checked:0,client_notified:false};
@@ -267,3 +268,27 @@ test('Installed mobile one-menu navigates to clean accordion Settings',async({pa
  await page.locator('#settings-payment>summary').click();
  await expect(page.locator('#p-iban')).toBeVisible();
 });
+
+
+test('Invoice creator shows editable server-approved amount and prevents an excessive invoice',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ const amount=page.locator('#iv-amount');
+ await expect(amount).toBeEnabled();
+ await expect(amount).toHaveValue('1050.00');
+ const issue=page.locator('[data-iv="final"]');
+ await expect(issue).toBeEnabled();
+ await amount.fill('350,50');
+ await expect(page.locator('[data-iv-hint]')).toContainText('Facture intermédiaire');
+ await expect(page.locator('[data-iv-hint]')).toContainText('699');
+ await expect(issue).toBeEnabled();
+ await amount.fill('1250');
+ await expect(issue).toBeDisabled();
+ await amount.fill('350.50');
+ // Deliberately cancel confirmation: never invoke an actual issuing RPC.
+ page.once('dialog',async dialog=>dialog.dismiss());
+ await issue.click();
+ await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(x=>x.includes('issue_')).length)).toBe(0);
+ expect(await page.evaluate(()=>window.__syntheticUnhandled)).toEqual([]);
+});
+

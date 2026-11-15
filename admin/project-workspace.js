@@ -36,11 +36,8 @@ if(steps){
    window.DzoftPlacePaymentSteps();
  }
 }
-var invoice=document.getElementById('c-inv');
-if(invoice){
- var legacy=document.createElement('details');legacy.className='workspace-fold workspace-legacy';var sum=document.createElement('summary');sum.dataset.fr='Factures officielles et détails';sum.dataset.en='Official invoices and details';legacy.appendChild(sum);
- Array.from(invoice.children).filter(function(node){return node.id!=='tracking-admin'&&node.id!=='iv-actions';}).forEach(function(node){legacy.appendChild(node);});invoice.appendChild(legacy);
-}
+// Invoice Studio handles its own hierarchy and advanced details.
+// Do not hide invoice issuance or sending under a workspace-level fold.
 function openParents(node){for(var x=node;x&&x!==main;x=x.parentElement){if(x.tagName==='DETAILS')x.open=true;}}
 function jump(target){
  var id=target==='payment'?'tracking-admin':target==='progress'?'tracking-publish':'c-msg';

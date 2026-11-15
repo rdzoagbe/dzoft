@@ -54,3 +54,15 @@ les mentions obligatoires et les échéances par un professionnel.
 - `tests/issue-accepted-invoices.test.cjs` : règles côté page et côté SQL, génération du PDF sans paiement.
 - `tests/issue-accepted-invoices.sql` : scénario complet dans une transaction annulée (rien n’est conservé).
 - Ordre de mise en service : migration `20261115190000_issue_accepted_invoices.sql` → test SQL → mise en ligne des pages.
+
+## Factures à montant ajustable — préparation avant émission (15 novembre 2026)
+
+Depuis la fiche projet, la carte **Factures** propose maintenant un champ **Montant à facturer (€)**. Le serveur calcule le plafond en déduisant les factures existantes et les paiements reçus encore non facturés ; le navigateur charge ce montant. Le propriétaire peut uniquement **le réduire avant émission** pour créer une facture intermédiaire, ou garder la totalité pour créer la facture de solde. Une facture complémentaire garde strictement le montant expressément approuvé par le client. Les factures d'acompte restent liées aux encaissements vérifiés.
+
+Le nouveau numéro officiel `F-AAAA-NNNN` est alloué uniquement par la base PostgreSQL et verrouillé dans la même transaction que la facture. Une clé de requête unique empêche les doublons de facture intermédiaire lors des relances. Une fois émise, la facture conserve **définitivement son montant et son numéro**, y compris les factures liées à un encaissement. Les ajustements postérieurs se traitent selon le cas par facture rectificative/avoir, après avis comptable ; ils ne modifient jamais silencieusement le document historique.
+
+Le bouton **Envoyer le PDF + ma copie** enfile un e-mail pour le client **et un autre pour l'adresse du propriétaire configurée dans les notifications**, chacun avec la facture PDF du stockage privé en pièce jointe (7 Mo maximum). Si le PDF n'est pas archivé, l'envoi est désactivé et il faut l'archiver d'abord. Le texte « envoi demandé » ne prouve pas une livraison ; le suivi affiche séparément « en cours », « accepté par le fournisseur », « livré » ou « échec ». L'historique détaillé conserve les deux destinataires.
+
+### Mise en service
+
+Ne pas livrer l'interface révisée avant application de la migration `20261115221000_interim_invoice_amount_preview.sql`, validation du schéma, des droits des RPC, des tests de non-régression, et contrôle des configurations d'envoi et de l'adresse de notification du propriétaire. La migration ne crée aucune facture, ne modifie aucun prix accepté et n'expédie aucun e-mail.

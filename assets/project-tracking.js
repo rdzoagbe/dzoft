@@ -200,7 +200,7 @@
   last=[q,sb,reload];
   var parent=document.getElementById('c-inv'),work=document.getElementById('c-steps');if(!parent||!work||!q.accepted_at)return;
   var old=document.getElementById('tracking-admin');if(old)old.remove();var oldWork=document.getElementById('tracking-publish');if(oldWork)oldWork.remove();
-  var box=document.createElement('section');box.id='tracking-admin';box.className='tracking';box.setAttribute('data-no-translate','');parent.prepend(box);
+  var box=document.createElement('section');box.id='tracking-admin';box.className='tracking';box.setAttribute('data-no-translate','');var paymentSlot=parent.querySelector('#iv-payments-slot');if(paymentSlot)paymentSlot.appendChild(box);else parent.prepend(box);
   var pub=document.createElement('section');pub.id='tracking-publish';pub.className='tracking';pub.setAttribute('data-no-translate','');work.prepend(pub);
   box.textContent=t('Chargement des paiements…','Loading payments…');
   sb.rpc('project_tracking',{p_quote:q.id},true).then(function(d){
