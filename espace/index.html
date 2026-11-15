@@ -415,7 +415,7 @@ footer{max-width:1180px}
     else if (!sb.session() && !requestedRoute) token = localStorage.getItem('rd-espace');
   } catch(e){}
   if (m) history.replaceState(null, '', location.pathname + '#/accueil');
-  var D = null;
+  var D = null, activeClientUserId = null;
   // Client account sessions can also be open in several tabs. When another
   // tab signs out or switches users, clear the private view immediately.
   // Guest links are handled separately and do not share this login session.
@@ -424,9 +424,9 @@ footer{max-width:1180px}
     if ($('app').hidden) return;
     var next = null;
     try { next = event.newValue ? JSON.parse(event.newValue) : null; } catch(_) {}
-    var owner = D && D.user_id;
+    var owner = activeClientUserId;
     if (next && next.user && owner && next.user.id === owner) return;
-    D = null;
+    D = null; activeClientUserId = null;
     show('s-load');
     location.replace(location.pathname);
   });
@@ -496,7 +496,8 @@ footer{max-width:1180px}
     return sb.routeOwner().then(function(owner){
       if (owner) return;
       return sb.rpc('my_space', {}, true).then(function(d){
-      D = d; $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
+      D = d; var current = sb.session(); activeClientUserId = current && current.user && current.user.id;
+      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
     }, function(err){
       if (/administrateur/.test(err.message)) { form('f-login', 'Impossible de vérifier votre accès administrateur. Réessayez.'); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
