@@ -21,7 +21,7 @@ test('all existing private-workspace destinations remain available',()=>{
  assert.match(main,/case-finder\.js\?v=/);
  assert.match(main,/workspace-flow\.css\?v=/);
  assert.match(follow,/workspace-flow\.css\?v=/);
- assert.match(follow,/project-workspace\.js\?v=20261115-workspaceflow/);
+ assert.match(follow,/project-workspace\.js\?v=20261115-update4/);
 });
 
 test('search across four already rendered datasets, without calls or caching',()=>{
