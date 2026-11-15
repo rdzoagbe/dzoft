@@ -205,6 +205,24 @@
   box.textContent=t('Chargement des paiements…','Loading payments…');
   sb.rpc('project_tracking',{p_quote:q.id},true).then(function(d){
    if(!box.isConnected)return;
+   var paymentTruth=document.getElementById('iv-payment-truth');
+   if(paymentTruth){
+     var confirmed=Number(d.received),outstanding=Number(d.remaining),contract=Number(d.total);
+     if([confirmed,outstanding,contract].every(Number.isFinite)){
+       paymentTruth.replaceChildren();
+       var title=document.createElement('strong');
+       title.textContent=t('Paiements réellement reçus','Payments actually received');
+       var values=document.createElement('div');values.className='invoice-payment-numbers';
+       var paid=document.createElement('span');paid.textContent=t('Confirmé : ','Confirmed: ')+money(confirmed);
+       var due=document.createElement('b');due.textContent=t('Encore à recevoir : ','Still outstanding: ')+money(outstanding);
+       values.append(paid,due);paymentTruth.append(title,values);
+       var note=document.createElement('small');
+       note.textContent=t('Une facture émise n’est pas un paiement. Les changements proposés ne s’ajoutent au prix qu’après l’accord explicite du client.','An issued invoice is not a payment. Proposed changes are added only after explicit client approval.');
+       paymentTruth.appendChild(note);
+     } else {
+       paymentTruth.textContent=t('Montants encaissés indisponibles. Vérifiez les paiements dans le détail.','Payment data unavailable. Check the detailed receipts.');
+     }
+   }
    var paidOn=function(id){return d.receipts.filter(function(r){return r.invoice_id===id;}).reduce(function(n,r){return n+cents(r.amount);},0)/100;};
    var open=(q.invoices||[]).filter(function(i){return i.id&&i.num&&!i.paid&&!i.care;});
    var invoiced=(q.invoices||[]).filter(function(i){return !i.care;}).reduce(function(n,i){return n+cents(i.amt);},0)/100;
@@ -375,7 +393,7 @@
     }).catch(function(err){b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);});};
    // Existing invoice toggles cannot overwrite receipt-backed statuses.
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
-  }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
+  }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);var paymentTruth=document.getElementById('iv-payment-truth');if(paymentTruth)paymentTruth.textContent=t('Paiements indisponibles pour le moment : ne pas considérer les factures comme réglées.','Payment data unavailable: do not assume invoices are paid.');if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
  }
  function archiveInvoice(q,sb,receipt,inv){
    if(!global.DzoftInvoicePdf)return Promise.reject(new Error('PDF generator unavailable; reload the page'));
