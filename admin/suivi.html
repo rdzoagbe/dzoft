@@ -247,7 +247,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   <div class="in">
     <a class="back" href="./">← Espace privé</a>
     <b id="ttl">Fiche projet</b>
-    <span id="sync"></span><div class="lang-switch-app" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
+    <span id="sync"></span>
     <span class="sp"></span>
     <a class="btn sm line" id="to-devis" href="#">Modifier le devis</a>
   </div>
@@ -360,8 +360,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div class="invoice-stats" id="iv-overview" aria-label="Récapitulatif des factures">
       <div><span>Devis accepté</span><strong id="iv-total">—</strong></div>
       <div><span>Déjà facturé</span><strong id="iv-billed">—</strong></div>
-      <div><span>Reste à facturer</span><strong id="iv-remaining">—</strong></div>
+      <div><span>Reste à facturer <small>(pas à encaisser)</small></span><strong id="iv-remaining">—</strong></div>
     </div>
+    <div class="invoice-payment-truth" id="iv-payment-truth" aria-live="polite"><strong>Encaissements vérifiés</strong><span>Chargement du solde réellement reçu…</span></div>
     <p class="invoice-amount-explanation" id="iv-explanation" role="status">Vérification du calcul des factures…</p>
     <section class="invoice-stage" aria-labelledby="iv-create-title">
       <div class="invoice-stage-heading"><span class="invoice-step">01</span><div><h3 id="iv-create-title">Créer une facture</h3><p>Préparez et vérifiez le montant <b>avant</b> de confirmer. Le numéro officiel n’est attribué qu’au dernier clic.</p></div></div>
@@ -372,7 +373,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       <div id="invs" class="invoice-list"></div>
     </section>
     <details class="invoice-more" id="iv-payments-advanced">
-      <summary><span><b>Suivi des paiements</b><small>Encaissements, acomptes, rapprochements</small></span></summary>
+      <summary><span><b>Détail des paiements</b><small>Encaissements confirmés, acomptes, rapprochements</small></span></summary>
       <div id="iv-payments-slot"></div>
       <div id="payment-steps"></div>
     </details>
