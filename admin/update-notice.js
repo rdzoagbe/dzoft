@@ -50,6 +50,21 @@ function buildInfo(){
  info.style.cssText='font-size:12px;color:#67718a;margin:20px 0;';
  info.textContent=tr('Version DZOFT : ','DZOFT version: ')+BUILD;
  settings.appendChild(info);
+ var control=document.createElement('button');control.type='button';control.className='btn sm line';
+ control.id='dzoft-check-updates';
+ control.textContent=tr('Vérifier les mises à jour','Check for updates');
+ settings.appendChild(control);
+ var outcome=document.createElement('span');outcome.id='dzoft-update-status';
+ outcome.style.cssText='font-size:12px;color:#67718a;margin-left:10px';
+ settings.appendChild(outcome);
+ control.addEventListener('click',function(){
+   outcome.textContent=tr('Vérification…','Checking…');
+   fetch('release.json?check='+Date.now(),{cache:'no-store',credentials:'same-origin'})
+    .then(function(r){if(!r.ok)throw new Error('release unavailable');return r.json();})
+    .then(function(x){if(x&&x.version===BUILD)outcome.textContent=tr('Vous utilisez la dernière version.','You have the latest version.');
+      else{outcome.textContent=tr('Mise à jour disponible.','Update available.');show();}})
+    .catch(function(){outcome.textContent=tr('Connexion indisponible.','Connection unavailable.');});
+ });
 }
 function registerUpdater(){
  if(!('serviceWorker' in navigator))return;
