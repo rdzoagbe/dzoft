@@ -123,7 +123,7 @@ class BackupTests(unittest.TestCase):
             env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), FAIL_LINK="1")
             result = subprocess.run(
                 [sys.executable, str(SCRIPT), "backup", "--destination", str(blocked)],
-                input=PASSWORD + "\\n" + PASSWORD + "\\n",
+                input=PASSWORD + "\n" + PASSWORD + "\n",
                 capture_output=True, text=True, env=env, timeout=40)
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(list(blocked.glob("*.dzoftbak")), [])
