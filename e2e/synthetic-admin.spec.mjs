@@ -491,3 +491,23 @@ test.describe('Populated invoice layout and bilingual receipts',()=>{
  expect(errors).toEqual([]);
 });
 });
+
+
+test('Desktop shows sidebar navigation once and keeps direct logout; mobile retains account menu',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ const side=page.locator('#app .side');
+ const headerMenu=page.locator('#app .top .workspace-more');
+ const logout=page.locator('#app .top #b-out');
+ if(testInfo.project.name.includes('desktop')){
+   await expect(side).toBeVisible();
+   await expect(side.locator('[data-tab="settings"]')).toBeVisible();
+   await expect(headerMenu).toBeHidden();
+   await expect(logout).toBeVisible();
+   await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
+ }else{
+   await expect(headerMenu).toBeVisible();
+   await expect(logout).toBeHidden();
+ }
+});
