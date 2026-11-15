@@ -59,7 +59,7 @@ test('the page asks before issuing and before sending, and sending reuses the ex
  assert.match(admin,/data-iv="final" disabled>Créer et numéroter la facture/);
  assert.match(admin,/data-a="invoice-email"/);
  // The shortcuts sit outside the folded list, so they are visible without opening it.
- assert.match(admin,/if \(bar\.parentNode !== card\) card\.insertBefore\(bar, card\.firstChild\)/);
+ assert.match(admin,/var bar = \$\('iv-actions'\), h = '';/);
  assert.match(read('admin/project-workspace.js'),/Do not hide invoice issuance or sending/);
  assert.match(admin,/if \(b\.dataset\.a === 'invoice-email'\) return mailInvoice\(x, b\);/);
 });
