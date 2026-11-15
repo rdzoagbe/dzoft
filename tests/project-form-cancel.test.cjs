@@ -23,3 +23,16 @@ test('cancel only clears local draft and refuses to close during a save',()=>{
  assert.doesNotMatch(section,/\.rpc\(|\.delete\(|fetch\(|sb\./);
  new vm.Script(js,{filename:'project-tracking.js'});
 });
+
+test('received payment cannot be committed or notified until user confirms the exact action',()=>{
+ const beginning=js.indexOf('fm.onsubmit=function(e)');
+ const end=js.indexOf('pub.innerHTML=',beginning);
+ assert.ok(beginning>=0&&end>beginning);
+ const handler=js.slice(beginning,end);
+ assert.match(handler,/var review=t\(/);
+ assert.match(handler,/money\(payload\.p_amount\)/);
+ assert.match(handler,/day\(payload\.p_date\)/);
+ assert.match(handler,/payload\.p_notify/);
+ assert.match(handler,/if\(!confirm\(review\)\)return;/);
+ assert.ok(handler.indexOf('if(!confirm(review))return;')<handler.indexOf('sb.rpc('));
+});
