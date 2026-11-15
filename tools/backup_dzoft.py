@@ -111,11 +111,11 @@ def select_remote_flags(group: list[str], *, explicit_ref: bool = False) -> list
     --linked. Never permit an unqualified local-stack dump.
     """
     help_text = run_cli(group + ["--help"]).decode("utf-8", "replace")
-    if re.search(r"(?<![a-z-])--remote(?=[=\\s\\[\\],]|$)", help_text):
+    if re.search(r"(?m)^\s*--remote\b", help_text):
         # Database dumps can bind to the exact ref; Storage uses the linked
         # target via --remote (confirmed above by 'supabase link').
         return ["--remote=" + PROJECT_REF] if explicit_ref else ["--remote"]
-    if re.search(r"(?<![a-z-])--linked(?=[=\\s\\[\\],]|$)", help_text):
+    if re.search(r"(?m)^\s*--linked\b", help_text):
         return ["--linked"]
     raise BackupError(
         "No supported explicit remote target flag was found in the Supabase "
