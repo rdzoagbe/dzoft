@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath
 import secrets
 import shutil
@@ -103,6 +104,25 @@ def run_cli(arguments: list[str], *, binary: bool = False) -> bytes:
     return result.stdout
 
 
+def select_remote_flags(group: list[str], *, explicit_ref: bool = False) -> list[str]:
+    """Choose flags supported by the installed Supabase CLI (v2 or v3+).
+
+    CLI v3 uses --remote and deprecates --linked; older releases require
+    --linked. Never permit an unqualified local-stack dump.
+    """
+    help_text = run_cli(group + ["--help"]).decode("utf-8", "replace")
+    if re.search(r"(?<![a-z-])--remote(?=[=\\s\\[\\],]|$)", help_text):
+        # Database dumps can bind to the exact ref; Storage uses the linked
+        # target via --remote (confirmed above by 'supabase link').
+        return ["--remote=" + PROJECT_REF] if explicit_ref else ["--remote"]
+    if re.search(r"(?<![a-z-])--linked(?=[=\\s\\[\\],]|$)", help_text):
+        return ["--linked"]
+    raise BackupError(
+        "No supported explicit remote target flag was found in the Supabase "
+        "CLI help. Upgrade the CLI; refusing to export the local/wrong database."
+    )
+
+
 def ensure_destination(destination: Path) -> Path:
     destination = destination.expanduser().resolve()
     for ancestor in (destination,) + tuple(destination.parents):
@@ -162,15 +182,16 @@ def do_backup(args: argparse.Namespace) -> None:
     print("This operation reads data. It does not edit any client, payment or email.")
     password = password_prompt(confirm=True)
 
-    # Re-link to exactly this project; the current CLI requires --linked rather than --remote=<ref>.
-    # This changes only local CLI linkage, not the remote database.
+    # Explicit project linkage protects even when run from an unrelated folder.
+    # Detect v3+ --remote vs. the older --linked CLI flag; never target local.
     print("Linking Supabase CLI to the exact RD-Clients project…")
     run_cli(["link", "--project-ref", ref])
+    dump_flags = select_remote_flags(["db", "dump"], explicit_ref=True)
     print("Exporting schema, application data and role definitions…")
     exports = {
-        "database/schema.sql": run_cli(["db", "dump", "--linked", "--schema=public,private"]),
-        "database/data.sql": run_cli(["db", "dump", "--linked", "--schema=public,private", "--data-only", "--use-copy"]),
-        "database/roles.sql": run_cli(["db", "dump", "--linked", "--role-only"]),
+        "database/schema.sql": run_cli(["db", "dump"] + dump_flags + ["--schema=public,private"]),
+        "database/data.sql": run_cli(["db", "dump"] + dump_flags + ["--schema=public,private", "--data-only", "--use-copy"]),
+        "database/roles.sql": run_cli(["db", "dump"] + dump_flags + ["--role-only"]),
     }
     if not exports["database/schema.sql"] or not exports["database/data.sql"]:
         raise BackupError("Supabase returned an empty SQL dump; backup aborted.")
@@ -178,8 +199,10 @@ def do_backup(args: argparse.Namespace) -> None:
     storage_metadata = {"bucket": BUCKET, "status": "not_exported", "files": 0}
     if not args.skip_storage:
         print("Checking Supabase Storage for client documents…")
+        storage_ls_flags = select_remote_flags(["storage", "ls"])
+        storage_cp_flags = select_remote_flags(["storage", "cp"])
         listing = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
-                           "--experimental", "--linked"])
+                           "--experimental"] + storage_ls_flags)
         exports["storage/remote-listing.txt"] = listing
         storage_metadata["listing_sha256"] = sha(listing)
         if listing.strip():
@@ -187,7 +210,7 @@ def do_backup(args: argparse.Namespace) -> None:
             print("CAUTION: temporary downloaded files are plaintext; use an encrypted disk.")
             with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
                 run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, scratch,
-                         "--experimental", "--linked"])
+                         "--experimental"] + storage_cp_flags)
                 base = Path(scratch)
                 files = [p for p in base.rglob("*") if p.is_file()]
                 if not files:
