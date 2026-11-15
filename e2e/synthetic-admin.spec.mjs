@@ -461,7 +461,7 @@ test('Issued invoice cards stay full width and show independently confirmed rece
  await expect(records.nth(0).locator('.invoice-record-status')).toContainText('Paiement reçu et confirmé');
  await expect(records.nth(1).locator('.invoice-record-status')).toContainText('Paiement reçu et confirmé');
  await expect(records.nth(2).locator('.invoice-record-status')).toContainText('Aucun paiement reçu');
- await records.nth(2).locator('details.invoice-record-more summary').click();
+ await records.nth(2).locator('details.invoice-record-more > summary').click();
  await expect(records.nth(2).locator('.invoice-fixed-values')).toBeVisible();
  const geometry=await page.evaluate(()=>[...document.querySelectorAll('#invs .invoice-record')].map(card=>{
    const c=card.getBoundingClientRect(),h=card.querySelector('.invoice-record-head').getBoundingClientRect();
@@ -481,7 +481,7 @@ test('Issued invoice cards stay full width and show independently confirmed rece
  await expect(page.locator('.invoice-record')).toHaveCount(3);
  await expect(page.locator('#iv-payment-truth')).toContainText('Bank transfer');
  await expect(page.locator('#iv-payment-truth')).toContainText('Cash');
- await expect(page.locator('.invoice-record').nth(2).locator('details.invoice-record-more summary')).toContainText('Invoice details');
+ await expect(page.locator('.invoice-record').nth(2).locator('details.invoice-record-more > summary')).toContainText('Invoice details');
  await expect(page.locator('.invoice-record').nth(2).locator('.invoice-record-status')).toContainText('No payment confirmed');
  expect(errors).toEqual([]);
 });
