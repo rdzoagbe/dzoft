@@ -56,7 +56,9 @@ test('the page asks before issuing and before sending, and sending reuses the ex
  assert.match(fn,/return mailInvoice\(x, null\);/);
  assert.ok(fn.indexOf('sb.rpc(rpc, payload, true)')<fn.indexOf('archiveIssued(x)'));
  assert.ok(fn.indexOf('archiveIssued(x)')<fn.indexOf('mailInvoice(x, null)'));
- assert.match(admin,/data-iv="final" disabled>Créer et numéroter la facture/);
+ assert.match(admin,/data-iv="final" disabled>Vérifier le montant/);
+ assert.match(admin,/data-iv="confirm">Confirmer et émettre officiellement/);
+ assert.match(admin,/data-iv="cancel">Annuler le brouillon/);
  assert.match(admin,/data-a="invoice-email"/);
  // The shortcuts sit outside the folded list, so they are visible without opening it.
  assert.match(admin,/var bar = \$\('iv-actions'\), h = '';/);
