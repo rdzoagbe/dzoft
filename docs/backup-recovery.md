@@ -8,6 +8,7 @@
 | Plan | **Free** — no automatic daily managed database backups |
 | Documents | Private Storage bucket client-files; 0 objects at last inspection |
 | Independent off-site backup | **Not yet created or restore-tested** |
+| Windows verified-copy launcher | Available, but no real backup or off-site copy has been run or verified |
 | Public GitHub | rdzoagbe/dzoft — NEVER commit archives, passphrases or credentials |
 
 Supabase recommends off-site database exports for Free projects. Database backups do not include the actual Storage objects, only metadata.
@@ -44,6 +45,20 @@ This repository includes [tools/backup_dzoft.py](../tools/backup_dzoft.py). It w
    The script verifies encryption authentication, archive CRC checks and SHA-256 hashes. It automatically verifies right after writing the file.
 
 7. **Copy the encrypted .dzoftbak off the computer** to another restricted location (encrypted external drive or separately secured cloud storage), keeping several generations. Do not commit it to this public GitHub repository or attach it to an email.
+
+### Windows: guided encrypted copy to a separate destination
+
+A Windows PowerShell launcher is included at [tools/backup-dzoft-windows.ps1](../tools/backup-dzoft-windows.ps1). It **runs the existing encrypted backup tool** interactively on your trusted PC, then copies the new encrypted `.dzoftbak` file to a directory you choose and compares SHA-256 hashes. It never saves the passphrase, uploads unencrypted SQL or performs a restore.
+
+After following the Python/Supabase CLI preparation above, connect an encrypted external drive or configure a restricted, independently synchronized cloud folder. In PowerShell **from the repository root**, run (replace the example destination with your own real location):
+
+```powershell
+.\tools\backup-dzoft-windows.ps1 -OffsitePath "E:\Private-DZOFT-Backups"
+```
+
+The tool asks for the encryption passphrase through Python and saves a separate local and destination copy. Check that the destination is actually **off-site** or independently protected; a second folder on the same disk is not an off-site backup. A successful copy verifies only file integrity; it **does not** prove the database, Auth accounts or Storage files can be restored.
+
+This launcher is deliberately **interactive**, not unattended: storing a database password or a backup passphrase inside a public GitHub workflow, the website or a Windows scheduled-task argument would be unsafe. Fully unattended scheduling needs a separately managed secret store, a protected runner and a tested isolated recovery process, none of which has been enabled.
 
 ### Storage object handling
 
