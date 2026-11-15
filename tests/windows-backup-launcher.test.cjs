@@ -12,6 +12,9 @@ test('Windows runner encrypts with existing local tool, verifies copy integrity 
  assert.match(runner,/cryptography|passphrase/);
  assert.match(runner,/Get-FileHash -LiteralPath \$destination -Algorithm SHA256/);
  assert.match(runner,/\$localHash -ne \$remoteHash/);
+ assert.match(runner,/& \$python\.Source \$script 'verify' \$destination/);
+ assert.match(runner,/This is NOT independently off-site|NOT independently off-site/);
+ assert.match(runner,/The copied archive could not be decrypted and verified/);
  assert.match(runner,/\.git/);
  assert.match(runner,/No off-site copy was created|No off-site copy was created/i);
  assert.doesNotMatch(runner,/(SUPABASE_SERVICE_ROLE_KEY|SUPABASE_DB_PASSWORD|SUPABASE_ACCESS_TOKEN)\s*=/);

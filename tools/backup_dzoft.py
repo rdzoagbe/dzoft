@@ -18,6 +18,7 @@ import os
 import re
 from pathlib import Path, PurePosixPath
 import secrets
+import stat
 import shutil
 import subprocess
 import sys
@@ -36,6 +37,12 @@ MAGIC = b"DZOFTBK1"
 SALT_SIZE = 16
 NONCE_SIZE = 12
 MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
+MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
+MAX_ARCHIVE_ENTRIES = 10000
+MAX_MANIFEST_BYTES = 256 * 1024
+REQUIRED_DATABASE_FILES = frozenset({
+    "database/schema.sql", "database/data.sql", "database/roles.sql"
+})
 BUCKET = "client-files"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -155,24 +162,92 @@ def build_zip(members: dict[str, bytes], project_ref: str, storage: dict) -> byt
 
 
 def verified_archive(archive: bytes, passphrase: str) -> tuple[bytes, dict]:
+    """Authenticate and validate the entire app-data archive before any extraction.
+
+    A valid AES-GCM tag authenticates the ZIP payload; the checks below also
+    reject malformed/partial backups, duplicate entries, unsafe paths and
+    resource-exhaustion archives. This is NOT proof of database restorability.
+    """
+    if len(archive) > MAX_ARCHIVE_BYTES + len(MAGIC) + SALT_SIZE + NONCE_SIZE + 16:
+        raise BackupError("Encrypted archive exceeds the verification size limit.")
     plain = unseal(archive, passphrase)
     if len(plain) > MAX_ARCHIVE_BYTES:
         raise BackupError("Backup exceeds the safe verification memory limit.")
-    with zipfile.ZipFile(io.BytesIO(plain)) as z:
-        if z.testzip() is not None:
-            raise BackupError("A backup member failed its CRC integrity check.")
-        info = json.loads(z.read("MANIFEST.json"))
-        if info.get("project_ref") != PROJECT_REF:
-            raise BackupError("Backup project does not match RD-Clients.")
-        actual = set(z.namelist()) - {"MANIFEST.json"}
-        expected = set(info["files"])
-        if actual != expected:
-            raise BackupError("Archive file list does not match its manifest.")
-        for name, item in info["files"].items():
-            data = z.read(name)
-            if len(data) != item["size"] or sha(data) != item["sha256"]:
-                raise BackupError("SHA-256 verification failed for " + name)
-    return plain, info
+    try:
+        with zipfile.ZipFile(io.BytesIO(plain)) as z:
+            entries = z.infolist()
+            if len(entries) > MAX_ARCHIVE_ENTRIES:
+                raise BackupError("Archive contains too many entries.")
+            names = [item.filename for item in entries]
+            if len(set(names)) != len(names) or "MANIFEST.json" not in names:
+                raise BackupError("Duplicate archive entries or manifest missing.")
+            size_total = 0
+            for item in entries:
+                path = PurePosixPath(item.filename)
+                if (not item.filename or item.filename.startswith("/") or
+                    "\\" in item.filename or ".." in path.parts or
+                    item.is_dir() or
+                    (item.create_system == 3 and
+                     stat.S_IFMT(item.external_attr >> 16) == stat.S_IFLNK)):
+                    raise BackupError("Unsafe archive entry.")
+                if item.filename != "MANIFEST.json" and not (
+                    item.filename.startswith("database/") or
+                    item.filename.startswith("storage/")
+                ):
+                    raise BackupError("Unknown file location inside archive.")
+                size_total += item.file_size
+                if size_total > MAX_UNCOMPRESSED_BYTES:
+                    raise BackupError("Archive expands beyond the verification limit.")
+            manifest_entry = z.getinfo("MANIFEST.json")
+            if manifest_entry.file_size > MAX_MANIFEST_BYTES:
+                raise BackupError("Backup manifest is unexpectedly large.")
+            manifest = json.loads(z.read(manifest_entry))
+            if not isinstance(manifest, dict) or manifest.get("project_ref") != PROJECT_REF:
+                raise BackupError("Backup project does not match RD-Clients.")
+            if manifest.get("format") != "DZOFT application export v1":
+                raise BackupError("Unknown DZOFT archive format.")
+            declared = manifest.get("files")
+            if not isinstance(declared, dict):
+                raise BackupError("Backup manifest has no valid file inventory.")
+            actual = set(names) - {"MANIFEST.json"}
+            if actual != set(declared):
+                raise BackupError("Archive file list does not match its manifest.")
+            if not REQUIRED_DATABASE_FILES.issubset(actual):
+                raise BackupError("Database schema, data or roles are missing.")
+            for name, item in declared.items():
+                if (not isinstance(item, dict) or type(item.get("size")) is not int or
+                    item["size"] < 0 or
+                    not isinstance(item.get("sha256"), str) or
+                    not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])):
+                    raise BackupError("Invalid file manifest entry.")
+                data = z.read(name)
+                if len(data) != item["size"] or sha(data) != item["sha256"]:
+                    raise BackupError("SHA-256 verification failed for " + name)
+            if z.testzip() is not None:
+                raise BackupError("A backup member failed its CRC integrity check.")
+            storage = manifest.get("storage")
+            if not isinstance(storage, dict) or storage.get("bucket") != BUCKET:
+                raise BackupError("Storage manifest is missing or names another bucket.")
+            storage_count = storage.get("files")
+            if type(storage_count) is not int or storage_count < 0:
+                raise BackupError("Storage file count is invalid.")
+            exported = sum(name.startswith("storage/client-files/") for name in actual)
+            status = storage.get("status")
+            if status == "exported":
+                if exported == 0 or storage_count != exported:
+                    raise BackupError("Storage download count does not match manifest.")
+            elif status in ("verified_empty_by_cli", "skipped_by_operator"):
+                if exported or storage_count:
+                    raise BackupError("Unexpected Storage files in partial/empty backup.")
+            else:
+                raise BackupError("Unknown Storage export state.")
+            if not z.read("database/schema.sql").strip() or not z.read("database/data.sql").strip():
+                raise BackupError("Database schema or data export is empty.")
+    except BackupError:
+        raise
+    except (KeyError, TypeError, zipfile.BadZipFile, zipfile.LargeZipFile, RuntimeError) as exc:
+        raise BackupError("Malformed or incomplete DZOFT archive.") from exc
+    return plain, manifest
 
 
 def do_backup(args: argparse.Namespace) -> None:
@@ -218,6 +293,13 @@ def do_backup(args: argparse.Namespace) -> None:
                         "Storage listing was not empty, but no files were downloaded. "
                         "Aborting to avoid an incomplete backup.")
                 for p in files:
+                    if p.is_symlink():
+                        raise BackupError("Refusing to read a symlink from downloaded Storage.")
+                    # Check before read_bytes() to avoid loading unbounded user
+                    # documents into this in-memory export helper.
+                    projected = sum(len(blob) for blob in exports.values()) + p.stat().st_size
+                    if projected > MAX_UNCOMPRESSED_BYTES:
+                        raise BackupError("Storage exceeds the safe in-memory backup limit.")
                     rel = p.relative_to(base).as_posix()
                     exports["storage/client-files/" + rel] = p.read_bytes()
                 storage_metadata.update({"status": "exported",
@@ -250,6 +332,9 @@ def do_backup(args: argparse.Namespace) -> None:
     print("ENCRYPTED, VERIFIED archive:", output)
     print("Database SQL exports:", 3)
     print("Storage export status:", manifest["storage"]["status"])
+    if manifest["storage"]["status"] == "skipped_by_operator":
+        print("WARNING: partial application backup — Storage was deliberately skipped.")
+    print("WARNING: Supabase Auth accounts are not included in this application export.")
     print("Next: copy this encrypted file to a separate secure location.")
     print("Do not commit the archive or your passphrase to GitHub.")
     print("A full Auth/Storage restore has NOT yet been validated.")
@@ -258,11 +343,14 @@ def do_backup(args: argparse.Namespace) -> None:
 def do_verify(args: argparse.Namespace) -> None:
     password = password_prompt(confirm=False)
     _, meta = verified_archive(Path(args.archive).expanduser().read_bytes(), password)
-    print("PASS: encryption, archive CRC and SHA-256 files verified.")
+    print("PASS: encryption, archive CRC, file inventory and SHA-256 verified.")
     print("Created (UTC):", meta["captured_at_utc"])
     print("Files:", len(meta["files"]))
     print("Storage:", meta["storage"]["status"])
-    print("This checks archive integrity, not database restore success.")
+    if meta["storage"]["status"] == "skipped_by_operator":
+        print("WARNING: database-only archive; Storage objects were not exported.")
+    print("WARNING: Supabase managed Auth accounts are NOT included.")
+    print("This checks archive integrity, not full database/identity restore success.")
 
 
 def do_extract(args: argparse.Namespace) -> None:

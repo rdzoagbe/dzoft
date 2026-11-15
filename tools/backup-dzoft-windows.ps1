@@ -65,6 +65,15 @@ if ($localHash -ne $remoteHash) {
   Remove-Item -LiteralPath $destination -Force -ErrorAction SilentlyContinue
   throw "The copied archive failed SHA-256 comparison. Copy was discarded."
 }
+Write-Host "Rechecking the copied encrypted archive. Enter your passphrase again to verify its contents."
+& $python.Source $script 'verify' $destination
+if ($LASTEXITCODE -ne 0) {
+  throw "The copied archive could not be decrypted and verified. Keep the original local backup and investigate the destination."
+}
+if ([System.IO.Path]::GetPathRoot($localFull).Equals(
+    [System.IO.Path]::GetPathRoot($offsiteFull), [StringComparison]::OrdinalIgnoreCase)) {
+  Write-Warning "Destination is on the same drive as your local backup. This is NOT independently off-site unless an external sync is confirmed."
+}
 Write-Host "PASS: encrypted archive was copied and verified at:" -ForegroundColor Green
 Write-Host $destination
 Write-Host "Important: ensure this destination is genuinely off-site and access-restricted."

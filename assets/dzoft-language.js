@@ -54,6 +54,7 @@ Object.assign(dzoftEnglish, {
   "Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.": "Check your Supabase project backup policy and keep a separate secure copy of client files. A database backup does not contain Storage files.",
   "Vérifier les sauvegardes Supabase": "Review Supabase backups",
   "Guide de sauvegarde et restauration": "Backup and restore guide",
+  "Liste de contrôle : restauration isolée": "Checklist: isolated recovery test",
   "Conditions générales de vente (version actuelle 2026-11) :": "Terms of sale (current version 2026-11):",
   "archivée ici": "archived here",
   "À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.": "To complete in your terms of sale: the consumer mediator (Article 16), required for individual consumers.",

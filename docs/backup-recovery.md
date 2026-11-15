@@ -8,6 +8,8 @@
 | Plan | **Free** — no automatic daily managed database backups |
 | Documents | Private Storage bucket client-files; 0 objects at last inspection |
 | Independent off-site backup | **Not yet created or restore-tested** |
+| Managed Auth identities | **3 accounts observed 15 November 2026 — excluded from the application export** |
+| Recovery drill checklist | [Isolated restore drill](isolated-restore-drill.md); no real restore completed |
 | Windows verified-copy launcher | CLI selector corrected and synthetic tests added; no real off-site backup or restore test yet |
 | Public GitHub | rdzoagbe/dzoft — NEVER commit archives, passphrases or credentials |
 
@@ -59,7 +61,7 @@ After following the Python/Supabase CLI preparation above, connect an encrypted 
 .\tools\backup-dzoft-windows.ps1 -OffsitePath "E:\Private-DZOFT-Backups"
 ```
 
-The tool asks for the encryption passphrase through Python and saves a separate local and destination copy. Check that the destination is actually **off-site** or independently protected; a second folder on the same disk is not an off-site backup. A successful copy verifies only file integrity; it **does not** prove the database, Auth accounts or Storage files can be restored.
+The tool asks for the encryption passphrase through Python, saves a separate local and destination copy, compares their SHA-256 hashes and **asks for the passphrase a second time to independently decrypt and verify the destination copy**. Check that the destination is actually **off-site** or independently protected; a second folder on the same disk is not an off-site backup. The launcher displays a warning for same-drive copies. A successful encrypted-file verification **does not** prove the database, Auth accounts or Storage files can be restored.
 
 This launcher is deliberately **interactive**, not unattended: storing a database password or a backup passphrase inside a public GitHub workflow, the website or a Windows scheduled-task argument would be unsafe. Fully unattended scheduling needs a separately managed secret store, a protected runner and a tested isolated recovery process, none of which has been enabled.
 
@@ -71,7 +73,9 @@ If Storage is not accessible or a nonempty listing produces no downloaded files,
 
 ### Important limitations
 
-This is an **application-data archive**, not a fully verified Supabase disaster-recovery image. Supabase CLI excludes managed Auth and Storage database schemas from its default dump. The archive alone may not recreate Auth accounts, secrets, Storage metadata and all managed services. Separate migration/restore checks are necessary.
+This is an **application-data archive**, not a fully verified Supabase disaster-recovery image. Supabase CLI excludes managed Auth and Storage database schemas from its default dump. The archive alone may not recreate Auth accounts, secrets, Storage metadata and all managed services. **The live project had three Auth accounts on 15 November 2026; these identities, password/passkey/MFA credentials and login sessions are NOT exported by this tool.** Their identifiers may be referenced by client records and foreign keys. Separate identity-recovery and migration/restore checks are necessary.
+
+The verification command now refuses missing database components, mismatched Storage counts, duplicate/unsafe archive entries and excessive uncompressed ZIP contents. If Storage was skipped deliberately, integrity checking can still pass but the result is explicitly marked as **partial**. See the [isolated recovery checklist](isolated-restore-drill.md) for the test procedure and outstanding dependencies.
 
 Never restore to the production RD-Clients project for testing. To decrypt SQL and files for an **isolated** restoration test, choose a new, empty, restricted folder:
 
