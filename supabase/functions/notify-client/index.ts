@@ -62,7 +62,13 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "clé Brevo absente : ajoutez le secret BREVO_API_KEY" }, 500);
   const sender = Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com";
 
-  const b = await req.json().catch(() => ({}));
+  const announced = Number(req.headers.get("content-length") || 0);
+  if (announced > 8192) return json({ error: "requête trop longue" }, 413);
+  const raw = await req.text();
+  if (raw.length > 8192) return json({ error: "requête trop longue" }, 413);
+  let b: any;
+  try { b = JSON.parse(raw); } catch { return json({ error: "JSON invalide" }, 400); }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return json({ error: "données invalides" }, 400);
   const kind = String(b.kind || "");
   if (!["quote", "message", "step", "validate"].includes(kind)) return json({ error: "type d’e-mail inconnu" }, 400);
 
@@ -114,6 +120,7 @@ Deno.serve(async (req) => {
 
   const r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
+    signal: AbortSignal.timeout(12000),
     headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({
       sender: { name: "DZOFT", email: sender },
