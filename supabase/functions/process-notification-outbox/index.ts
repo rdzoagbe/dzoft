@@ -1,7 +1,7 @@
 // Delivers significant project emails from the transactional outbox.
 // Cron calls use a random value stored only in Supabase Vault. Manual calls
 // require the authenticated owner session and the existing MFA check.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const ADMIN = "https://rdzoagbe.github.io/dzoft/admin/";

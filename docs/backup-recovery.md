@@ -8,7 +8,7 @@
 | Plan | **Free** — no automatic daily managed database backups |
 | Documents | Private Storage bucket client-files; 0 objects at last inspection |
 | Independent off-site backup | **Not yet created or restore-tested** |
-| Windows verified-copy launcher | Available, but no real backup or off-site copy has been run or verified |
+| Windows verified-copy launcher | CLI selector corrected and synthetic tests added; no real off-site backup or restore test yet |
 | Public GitHub | rdzoagbe/dzoft — NEVER commit archives, passphrases or credentials |
 
 Supabase recommends off-site database exports for Free projects. Database backups do not include the actual Storage objects, only metadata.
@@ -27,10 +27,13 @@ This repository includes [tools/backup_dzoft.py](../tools/backup_dzoft.py). It w
 
         supabase --version
         supabase db dump --help
+        supabase storage ls --help
         supabase login
+        supabase init
+        supabase link --project-ref rzghbvmszbjlqkdjzpxc
         python tools/backup_dzoft.py self-test
 
-   Check that the CLI accepts the explicit remote project selector. Supabase may request your database password **on your own machine**. Never send passwords to ChatGPT or paste them into GitHub.
+   The supported CLI route is **`supabase link --project-ref ...`**, followed by `supabase db dump --linked` and `supabase storage ... --linked`. The old `--remote=<project-ref>` syntax is **not supported** by these commands. If the repository already has a Supabase config, skip `supabase init`; never overwrite a working configuration. The backup tool re-links to RD-Clients before every export and runs commands from the DZOFT repository root to prevent exporting a different linked project. Supabase may request the database password **on your computer**. Never send credentials to ChatGPT or commit them to GitHub. <Link to official Supabase CLI guide: https://supabase.com/docs/reference/cli/supabase-db-dump>.
 
 5. Run backup:
 

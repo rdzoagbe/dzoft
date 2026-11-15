@@ -1,5 +1,5 @@
 // Sends a project e-mail to a client through Brevo. Only the owner of the private space can call it.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const cors = {
@@ -62,7 +62,13 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "clé Brevo absente : ajoutez le secret BREVO_API_KEY" }, 500);
   const sender = Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com";
 
-  const b = await req.json().catch(() => ({}));
+  const announced = Number(req.headers.get("content-length") || 0);
+  if (announced > 8192) return json({ error: "requête trop longue" }, 413);
+  const raw = await req.text();
+  if (raw.length > 8192) return json({ error: "requête trop longue" }, 413);
+  let b: any;
+  try { b = JSON.parse(raw); } catch { return json({ error: "JSON invalide" }, 400); }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return json({ error: "données invalides" }, 400);
   const kind = String(b.kind || "");
   if (!["quote", "message", "step", "validate"].includes(kind)) return json({ error: "type d’e-mail inconnu" }, 400);
 
@@ -112,8 +118,10 @@ Deno.serve(async (req) => {
     html = mail("Votre avis est attendu", [hello, `L’étape <b>« ${step} »</b> de votre projet « ${esc(title)} » est prête.`, "Merci de la vérifier puis de la valider dans votre espace client, ou de me dire ce qu’il faut changer."], "Voir et valider", link);
   }
 
-  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+  let r: Response;
+  try { r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
+    signal: AbortSignal.timeout(12000),
     headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({
       sender: { name: "DZOFT", email: sender },
@@ -121,11 +129,14 @@ Deno.serve(async (req) => {
       replyTo: { email: sender, name: "Roland Dzoagbe" },
       subject, htmlContent: html,
     }),
-  });
+  }); } catch {
+    await log(false, "Brevo transport temporarily unavailable");
+    return json({ error: "L’envoi n’a pas pu être confirmé. Vérifiez l’historique avant de réessayer." }, 502);
+  }
   if (!r.ok) {
-    const t = await r.text();
-    await log(false, ("Brevo " + r.status + " " + t).slice(0, 300));
-    return json({ error: "Brevo a refusé l’envoi (" + r.status + ") : " + t.slice(0, 200) }, 502);
+    // A provider error body may disclose client or API data; do not log or echo it.
+    await log(false, "Brevo HTTP " + r.status);
+    return json({ error: "Service d’envoi indisponible (" + r.status + ")." }, 502);
   }
   await log(true);
   return json({ ok: true, to });

@@ -6,3 +6,8 @@ backup-exports/
 .env
 .env.*
 !.env.example
+
+# Supabase CLI local project-link metadata / profiles (may contain credentials).
+supabase/.temp/
+supabase/.profiles/
+supabase/.branches/

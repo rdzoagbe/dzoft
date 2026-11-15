@@ -58,19 +58,33 @@ class BackupTests(unittest.TestCase):
                 #!/usr/bin/env python3
                 import os, pathlib, sys
                 args = sys.argv[1:]
+                if args[:1] == ["link"]:
+                    if os.getenv("FAIL_LINK") == "1":
+                        sys.exit(6)
+                    if args != ["link", "--project-ref", "rzghbvmszbjlqkdjzpxc"]:
+                        sys.exit(7)
+                    sys.exit(0)
                 if os.getenv("FAIL_DUMP") == "1" and args[:2] == ["db", "dump"]:
                     sys.exit(2)
                 if args[:2] == ["db", "dump"]:
+                    if "--linked" not in args or any(a.startswith("--remote") for a in args):
+                        sys.exit(8)
+                    if "--role-only" not in args and "--schema=public,private" not in args:
+                        sys.exit(9)
                     if "--data-only" in args:
                         sys.stdout.write("COPY fake FROM stdin;\\n1\\n\\\\.\\n")
                     else:
                         sys.stdout.write("-- fake SQL export\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "ls"]:
+                    if "--linked" not in args or "--experimental" not in args:
+                        sys.exit(10)
                     if os.getenv("WITH_STORAGE") == "1":
                         sys.stdout.write("invoice.pdf\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "cp"]:
+                    if "--linked" not in args or "--experimental" not in args:
+                        sys.exit(11)
                     dst = pathlib.Path(args[4])
                     dst.mkdir(parents=True, exist_ok=True)
                     (dst / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
@@ -103,6 +117,16 @@ class BackupTests(unittest.TestCase):
                 capture_output=True, text=True, env=env, timeout=40)
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(list(failed.glob("*.dzoftbak")), [])
+
+            # Fail closed if the requested project cannot be linked: no exports run.
+            blocked = root / "unlinked"
+            env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), FAIL_LINK="1")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "backup", "--destination", str(blocked)],
+                input=PASSWORD + "\n" + PASSWORD + "\n",
+                capture_output=True, text=True, env=env, timeout=40)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(blocked.glob("*.dzoftbak")), [])
 
 
 if __name__ == "__main__":
