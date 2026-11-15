@@ -324,7 +324,18 @@
     sb.rpc(unbilled?'record_project_payment_unbilled':'record_project_payment',payload,true).then(function(){
      key=crypto.randomUUID();newKey=crypto.randomUUID();status(msg,payload.p_notify?t('Paiement enregistré. E-mails mis en file d’envoi.','Payment recorded. Emails queued.'):t('Paiement enregistré, sans e-mail.','Payment recorded, no email sent.'));if(payload.p_notify)notify(sb);setTimeout(reload,1200);
     }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});};
-   pub.innerHTML='<h2>'+t('Avancement partagé','Shared progress')+'</h2>'+updates(d)+'<details class="tracking-editor"><summary>'+t('＋ Publier une avancée','＋ Publish progress')+'</summary><form><div class="tracking-rows"></div><button class="btn tracking-add" type="button">'+t('＋ Ajouter un groupe','＋ Add a group')+'</button><p class="tracking-help">'+t('Un résumé court par groupe, relu par vous (6 au maximum). Tous les groupes partent ensemble : une seule mise à jour dans l’espace client et un seul e-mail. Le journal privé reste privé ; « Testé » ne signifie pas « Validé par le client ».','One short summary per group, reviewed by you (up to 6). All groups are sent together: one update in the client portal and one email. The private journal stays private; “Tested” does not mean “Client approved”.')+'</p><button class="btn main" type="submit">'+t('Publier et notifier','Publish and notify')+'</button></form></details><p role="status" aria-live="polite" class="tracking-message"></p>';
+   pub.innerHTML='<h2>'+t('Visibilité de l’avancement','Progress visibility')+'</h2>'+
+    '<p class="tracking-help tracking-private-intro">'+t('Le journal privé et les brouillons GitHub ne sont pas visibles par le client. Seules vos mises à jour explicitement publiées ci-dessous sont partagées.','Private journal notes and GitHub drafts are not visible to the client. Only updates you explicitly publish below are shared.')+'</p>'+
+    '<h3 class="tracking-shared-heading">'+t('Déjà partagé avec le client','Already shared with the client')+'</h3>'+updates(d)+
+    '<details class="tracking-editor"><summary>'+t('＋ Préparer une mise à jour','＋ Prepare an update')+'</summary><form>'+
+    '<div class="tracking-rows"></div><button class="btn tracking-add" type="button">'+t('＋ Ajouter un groupe','＋ Add a group')+'</button>'+
+    '<p class="tracking-help">'+t('Vérifiez chaque réalisation et chaque statut. Un brouillon préparé automatiquement ne prouve ni une livraison, ni un test réussi.','Verify every achievement and status. An automatically prepared draft is not proof of delivery or successful testing.')+'</p>'+
+    '<fieldset class="tracking-audience"><legend>'+t('Qui peut voir cette mise à jour ?','Who can see this update?')+'</legend>'+
+    '<label><input type="radio" name="audience" value="private" checked> '+t('Moi uniquement — enregistrer un brouillon privé','Only me — save as private draft')+'</label>'+
+    '<label><input type="radio" name="audience" value="client"> '+t('Partager au client et envoyer une notification','Share with the client and send a notification')+'</label></fieldset>'+
+    '<label class="tracking-review-check" hidden><input type="checkbox" name="verified"> '+t('J’ai vérifié ces informations et je souhaite les partager avec le client.','I have verified these details and want to share them with the client.')+'</label>'+
+    '<button class="btn main" type="submit" data-sharing-submit>'+t('Enregistrer le brouillon privé','Save private draft')+'</button></form></details>'+
+    '<p role="status" aria-live="polite" class="tracking-message"></p>';
    var pf=pub.querySelector('form'),rows=pf.querySelector('.tracking-rows'),add=pf.querySelector('.tracking-add'),pk=crypto.randomUUID();
    function syncRows(){var list=rows.querySelectorAll('.tracking-row');list.forEach(function(r,i){r.querySelector('legend').textContent=t('Groupe ','Group ')+(i+1);r.querySelector('.tracking-remove').hidden=list.length<2;});add.hidden=list.length>=6;}
    var activeAutoHash=null;
@@ -343,7 +354,7 @@
        var panel=pub.querySelector('details.tracking-editor');if(panel)panel.open=true;
      };
      box.append(title,explanation,use);pf.insertBefore(box,rows);
-     if(!draft.length&&!activeAutoHash&&rows.dataset.edited!=='true')use.click();
+     // Never auto-select a GitHub draft: the owner must review it first.
    }
    function addRow(){var used={};rows.querySelectorAll('select[name=category]').forEach(function(s){used[s.value]=1;});var next=Object.keys(categories).filter(function(k){return !used[k];})[0]||'other';var r=document.createElement('fieldset');r.className='tracking-row';r.innerHTML='<legend></legend><div class="tracking-fields">'+field(t('Groupe','Group'),'<select name="category">'+options(categories)+'</select>')+field(t('État réel','Actual status'),'<select name="status">'+options(statuses)+'</select>')+'</div>'+field(t('Résumé pour le client','Client summary'),'<textarea name="summary" required maxlength="220" rows="3"></textarea>')+'<button class="tracking-remove" type="button">'+t('Retirer ce groupe','Remove this group')+'</button>';r.querySelector('select[name=category]').value=next;r.querySelector('.tracking-remove').onclick=function(){r.remove();syncRows();};rows.appendChild(r);syncRows();return r;}
    addRow();add.onclick=function(){addRow().querySelector('textarea').focus();rows.dataset.edited='true';activeAutoHash=null;};
@@ -377,20 +388,66 @@
        var task=global.DzoftGithubJournal&&global.DzoftGithubJournal.refresh?global.DzoftGithubJournal.refresh():refreshAuto();
        Promise.resolve(task).finally(function(){refresh.disabled=false;refresh.textContent=t('↻ Actualiser depuis GitHub','↻ Refresh from GitHub');});
      };
-     pf.insertBefore(refresh,rows);refreshAuto();
+     pf.insertBefore(refresh,rows); // Opt-in only: do not refresh on view load.
    }
-   pf.onsubmit=function(e){e.preventDefault();var b=pf.querySelector('button[type=submit]'),msg=pub.querySelector('[role=status]');
-    var items=[].map.call(rows.querySelectorAll('.tracking-row'),function(r){return {category:r.querySelector('[name=category]').value,status:r.querySelector('[name=status]').value,summary:r.querySelector('[name=summary]').value.trim()};});
-    if(items.some(function(i){return !i.summary;})){status(msg,t('Chaque groupe a besoin d’un résumé.','Each group needs a summary.'),true);return;}
-    b.disabled=true;status(msg,t('Publication…','Publishing…'));
-    var viaAuto=!!activeAutoHash,action=viaAuto?'owner_publish_github_progress_draft':'publish_project_updates';
-    var payload={p_quote:q.id,p_batch:pk,p_items:items};if(viaAuto)payload.p_hash=activeAutoHash;
-    sb.rpc(action,payload,true).then(function(){
-      if(draft.length&&!viaAuto){draft=[];var dn=pf.querySelector('.tracking-draft');if(dn)dn.remove();dropDraft().catch(function(){});}
-      activeAutoHash=null;rows.innerHTML='';addRow();rows.dataset.edited='false';pk=crypto.randomUUID();b.disabled=false;
-      status(msg,items.length>1?t('Publié : '+items.length+' groupes dans une seule mise à jour. Un e-mail mis en file d’envoi.','Published: '+items.length+' groups in one update. One email queued.'):t('Publié. Notifications mises en file d’envoi.','Published. Notifications queued.'));
-      notify(sb);setTimeout(reload,1200);
-    }).catch(function(err){b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);});};
+   var audience=pf.querySelectorAll('[name=audience]'),check=pf.querySelector('[name=verified]');
+   function syncAudience(){
+     var shared=pf.querySelector('[name=audience]:checked').value==='client';
+     check.closest('label').hidden=!shared;
+     pf.querySelector('[data-sharing-submit]').textContent=shared?
+       t('Vérifier puis partager au client','Review and share with client'):
+       t('Enregistrer le brouillon privé','Save private draft');
+     if(!shared)check.checked=false;
+   }
+   audience.forEach(function(input){input.addEventListener('change',syncAudience);});syncAudience();
+   pf.onsubmit=function(e){
+     e.preventDefault();
+     var b=pf.querySelector('button[type=submit]'),msg=pub.querySelector('[role=status]');
+     var items=[].map.call(rows.querySelectorAll('.tracking-row'),function(r){return {
+       category:r.querySelector('[name=category]').value,
+       status:r.querySelector('[name=status]').value,
+       summary:r.querySelector('[name=summary]').value.trim()};});
+     if(items.some(function(i){return !i.summary;})){
+       status(msg,t('Chaque groupe a besoin d’un résumé.','Each group needs a summary.'),true);return;
+     }
+     var shared=pf.querySelector('[name=audience]:checked').value==='client';
+     if(!shared){
+       b.disabled=true;status(msg,t('Enregistrement du brouillon privé…','Saving private draft…'));
+       // Read the latest draft first to preserve separately prepared private milestones.
+       sb.select('quotes','select=progress_draft&id=eq.'+encodeURIComponent(q.id)).then(function(found){
+         var latest=found&&found[0]&&found[0].progress_draft||{};
+         var next={prepared:new Date().toISOString(),updates:items};
+         if(Array.isArray(latest.steps)&&latest.steps.length)next.steps=latest.steps;
+         return sb.update('quotes',q.id,{progress_draft:next}).then(function(){
+           q.progress_draft=next;draft=items.slice();
+         });
+       }).then(function(){
+         b.disabled=false;rows.dataset.edited='false';
+         status(msg,t('Brouillon enregistré. Le client ne voit rien et aucun e-mail n’a été envoyé.','Private draft saved. Nothing is visible to the client and no email was sent.'));
+       }).catch(function(err){
+         b.disabled=false;status(msg,t('Le brouillon n’a pas été enregistré : ','Private draft was not saved: ')+(err.message||''),true);
+       });
+       return;
+     }
+     if(!check.checked){
+       status(msg,t('Cochez la confirmation après avoir vérifié tous les statuts.','Check the confirmation after verifying all statuses.'),true);
+       return;
+     }
+     var preview=items.map(function(i){return label(categories,i.category)+' · '+label(statuses,i.status)+' : '+i.summary;}).join('\n\n');
+     if(!confirm(t('Partager ces mises à jour dans l’espace client et envoyer une notification ?\\n\\n','Share these updates in the client portal and send a notification?\\n\\n')+preview))return;
+     b.disabled=true;status(msg,t('Publication vers le client…','Publishing to the client…'));
+     var viaAuto=!!activeAutoHash,action=viaAuto?'owner_publish_github_progress_draft':'publish_project_updates';
+     var payload={p_quote:q.id,p_batch:pk,p_items:items};if(viaAuto)payload.p_hash=activeAutoHash;
+     sb.rpc(action,payload,true).then(function(){
+       if(draft.length&&!viaAuto){draft=[];var dn=pf.querySelector('.tracking-draft');if(dn)dn.remove();dropDraft().catch(function(){});}
+       activeAutoHash=null;rows.innerHTML='';addRow();rows.dataset.edited='false';pk=crypto.randomUUID();b.disabled=false;
+       check.checked=false;
+       status(msg,t('Publié dans l’espace client. Un e-mail de notification est mis en file.','Published to the client portal. An email notification has been queued.'));
+       notify(sb);setTimeout(reload,1200);
+     }).catch(function(err){
+       b.disabled=false;status(msg,t('Publication non confirmée. ','Publication not confirmed. ')+(err.message||''),true);
+     });
+   };
    // Existing invoice toggles cannot overwrite receipt-backed statuses.
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
   }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);var paymentTruth=document.getElementById('iv-payment-truth');if(paymentTruth)paymentTruth.textContent=t('Paiements indisponibles pour le moment : ne pas considérer les factures comme réglées.','Payment data unavailable: do not assume invoices are paid.');if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
