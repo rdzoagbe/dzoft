@@ -10,8 +10,11 @@
   var PORTAL = 'https://rdzoagbe.github.io/dzoft/espace/';
 
   // SECURITY: this admin and other GitHub Pages projects share one origin, so keep third-party scripts off it and move the admin to a dedicated origin before considering session storage hardened.
+  // A logout or new login invalidates every older, unfinished refresh.
+  var sessionGeneration = 0, refreshInFlight = null;
   function getSession() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
   function setSession(s) {
+    sessionGeneration++;
     try {
       if (s) localStorage.setItem(STORE, JSON.stringify(s)); else localStorage.removeItem(STORE);
     } catch (e) {}
@@ -39,13 +42,60 @@
       });
   }
   function refresh(s) {
-    return req('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: s.refresh_token } }).then(keep);
+    // Dashboard loads can fan out into several simultaneous API requests.
+    // Supabase refresh tokens are single-use: share one refresh per session.
+    if (refreshInFlight && refreshInFlight.access === s.access_token &&
+        refreshInFlight.refresh === s.refresh_token) return refreshInFlight.promise;
+    var generation = sessionGeneration;
+    var run = req('/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST', body: { refresh_token: s.refresh_token }
+    }).then(function (response) {
+      var current = getSession();
+      if (generation !== sessionGeneration || !current ||
+          current.access_token !== s.access_token ||
+          current.refresh_token !== s.refresh_token) {
+        var changed = new Error('Session changed during refresh. Please sign in again.');
+        changed.code = 'session_changed';
+        throw changed;
+      }
+      return keep(response);
+    });
+    var pending = { access: s.access_token, refresh: s.refresh_token, promise: run };
+    refreshInFlight = pending;
+    // Handle both outcomes without creating an unhandled rejection.
+    run.then(function () {
+      if (refreshInFlight === pending) refreshInFlight = null;
+    }, function () {
+      if (refreshInFlight === pending) refreshInFlight = null;
+    });
+    return run;
   }
   function token() {
     var s = getSession();
     if (!s) return Promise.resolve(null);
+    if (!s.access_token || !s.refresh_token) { setSession(null); return Promise.resolve(null); }
     if (s.expires_at - 60 > Date.now() / 1000) return Promise.resolve(s.access_token);
-    return refresh(s).then(function (n) { return n.access_token; }, function () { setSession(null); return null; });
+    return refresh(s).then(function (n) { return n.access_token; }, function (err) {
+      // A failed request must not erase another tab's newer login.
+      var current = getSession();
+      if (current && current.access_token === s.access_token &&
+          current.refresh_token === s.refresh_token &&
+          (err.status === 400 || err.status === 401 || err.status === 403 ||
+           err.code === 'invalid_grant' || err.code === 'refresh_token_not_found')) {
+        setSession(null);
+      }
+      // A temporary network/5xx failure is retryable: do not silently
+      // fall back to the anonymous API key for a private operation.
+      throw err;
+    });
+  }
+  function authenticatedToken() {
+    return token().then(function (value) {
+      if (value) return value;
+      var err = new Error('Your session has expired. Please sign in again.');
+      err.status = 401;
+      throw err;
+    });
   }
   function claims() {
     var s = getSession(); if (!s || !s.access_token) return {};
@@ -120,7 +170,7 @@
       return req('/auth/v1/recover?redirect_to=' + encodeURIComponent(back || ADMIN), { method: 'POST', body: { email: email } });
     },
     setPassword: function (password) {
-      return token().then(function (t) { return req('/auth/v1/user', { method: 'PUT', token: t, body: { password: password } }); });
+      return authenticatedToken().then(function (t) { return req('/auth/v1/user', { method: 'PUT', token: t, body: { password: password } }); });
     },
     signOut: function () {
       var s = getSession(); setSession(null);
@@ -155,24 +205,24 @@
     },
     /* Table access through PostgREST. q is the query string after the table name. */
     select: function (table, q) {
-      return token().then(function (t) { return req('/rest/v1/' + table + (q ? '?' + q : ''), { token: t }); });
+      return authenticatedToken().then(function (t) { return req('/rest/v1/' + table + (q ? '?' + q : ''), { token: t }); });
     },
     insert: function (table, row) {
-      return token().then(function (t) { return req('/rest/v1/' + table, { method: 'POST', token: t, body: row, prefer: 'return=representation' }); })
+      return authenticatedToken().then(function (t) { return req('/rest/v1/' + table, { method: 'POST', token: t, body: row, prefer: 'return=representation' }); })
         .then(function (d) { return d && d[0]; });
     },
     update: function (table, id, row) {
-      return token().then(function (t) {
+      return authenticatedToken().then(function (t) {
         return req('/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'PATCH', token: t, body: row, prefer: 'return=representation' });
       }).then(function (d) { return d && d[0]; });
     },
     remove: function (table, id) {
-      return token().then(function (t) { return req('/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'DELETE', token: t }); });
+      return authenticatedToken().then(function (t) { return req('/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'DELETE', token: t }); });
     },
     /* Client space: database functions reached with the client's secret link, never with a login. */
     rpc: function (name, args, signedIn) {
       if (!signedIn) return req('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} });
-      return token().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
+      return authenticatedToken().then(function (t) { return req('/rest/v1/rpc/' + name, { method: 'POST', token: t, body: args || {} }); });
     },
     /* Passwordless device sign-in (Supabase Auth Passkeys, experimental).
        A passkey is a first-factor sign-in. It does NOT automatically satisfy
@@ -240,13 +290,13 @@
         if (!getSession() || !mfaFresh(12 * 60 * 60)) {
           return Promise.reject(new Error('Complete the account verification step before adding a passkey.'));
         }
-        return token().then(function (t) {
+        return authenticatedToken().then(function (t) {
           return req('/auth/v1/passkeys/registration/options', { method: 'POST', token: t, body: {} });
         }).then(function (c) {
           if (!c || !c.challenge_id || !c.options) throw new Error('Passkey registration challenge unavailable.');
           return navigator.credentials.create({ publicKey: creationOptions(c.options, true) }).then(function (credential) {
             if (!credential) throw new Error('No device credential registered.');
-            return token().then(function (t) {
+            return authenticatedToken().then(function (t) {
               return req('/auth/v1/passkeys/registration/verify', {
                 method: 'POST', token: t,
                 body: { challenge_id: c.challenge_id, credential: credentialJSON(credential, true) }
@@ -256,7 +306,7 @@
         });
       },
       list: function () {
-        return token().then(function (t) {
+        return authenticatedToken().then(function (t) {
           if (!t) throw new Error('Sign in to view your devices.');
           return req('/auth/v1/passkeys', { token: t });
         }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
@@ -268,7 +318,7 @@
         if (!mfaFresh(12 * 60 * 60)) {
           return Promise.reject(new Error('Verify your account before removing a device.'));
         }
-        return token().then(function (t) {
+        return authenticatedToken().then(function (t) {
           return req('/auth/v1/passkeys/' + encodeURIComponent(passkeyId), { method: 'DELETE', token: t });
         });
       }
@@ -279,10 +329,10 @@
     },
     mfaFresh: mfaFresh,
     mfa: {
-      enroll: function () { return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'DZOFT ' + Date.now() } }); }); },
-      challenge: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },
-      verify: function (fid, cid, code) { return token().then(function (t) { return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: { challenge_id: cid, code: code } }); }).then(keep); },
-      remove: function (fid) { return token().then(function (t) { return req('/auth/v1/factors/' + fid, { method: 'DELETE', token: t }); }); },
+      enroll: function () { return authenticatedToken().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'DZOFT ' + Date.now() } }); }); },
+      challenge: function (fid) { return authenticatedToken().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },
+      verify: function (fid, cid, code) { return authenticatedToken().then(function (t) { return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: { challenge_id: cid, code: code } }); }).then(keep); },
+      remove: function (fid) { return authenticatedToken().then(function (t) { return req('/auth/v1/factors/' + fid, { method: 'DELETE', token: t }); }); },
       /* Passkey as second factor (WebAuthn): Face ID, fingerprint, Windows Hello or a security key.
          Same Supabase endpoints as the code, with a browser ceremony between challenge and verify. */
       passkey: {
@@ -290,12 +340,12 @@
           return !!(global.PublicKeyCredential && global.navigator && navigator.credentials && navigator.credentials.create && global.isSecureContext);
         },
         enroll: function (name) {
-          return token().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'webauthn', friendly_name: name } }); });
+          return authenticatedToken().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'webauthn', friendly_name: name } }); });
         },
         /* Runs challenge, browser prompt and verify for one WebAuthn factor; keeps the aal2 session. */
         use: function (fid) {
           var rp = { rpId: global.location.hostname, rpOrigins: [global.location.origin] };
-          return token().then(function (t) {
+          return authenticatedToken().then(function (t) {
             return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: { webauthn: rp } });
           }).then(function (c) {
             var w = c && c.webauthn, pk = w && w.credential_options && w.credential_options.publicKey;
@@ -305,7 +355,7 @@
             var run = create ? navigator.credentials.create({ publicKey: options }) : navigator.credentials.get({ publicKey: options });
             return run.then(function (cred) {
               if (!cred) throw new Error('Aucune clé d’accès reçue.');
-              return token().then(function (t) {
+              return authenticatedToken().then(function (t) {
                 return req('/auth/v1/factors/' + fid + '/verify', { method: 'POST', token: t, body: {
                   challenge_id: c.id,
                   webauthn: { type: w.type, rpId: rp.rpId, rpOrigins: rp.rpOrigins, credential_response: credentialJSON(cred, create) }
@@ -318,32 +368,32 @@
     },
     /* Server function (e-mails to clients), called with the signed-in session. */
     fn: function (name, body) {
-      return token().then(function (t) { return req('/functions/v1/' + name, { method: 'POST', token: t, body: body || {} }); });
+      return authenticatedToken().then(function (t) { return req('/functions/v1/' + name, { method: 'POST', token: t, body: body || {} }); });
     },
     /* Private file storage (bucket client-files). */
     files: {
       list: function (prefix) {
-        return token().then(function (t) { return req('/storage/v1/object/list/client-files', { method: 'POST', token: t, body: { prefix: prefix, limit: 200, offset: 0, sortBy: { column: 'created_at', order: 'desc' } } }); });
+        return authenticatedToken().then(function (t) { return req('/storage/v1/object/list/client-files', { method: 'POST', token: t, body: { prefix: prefix, limit: 200, offset: 0, sortBy: { column: 'created_at', order: 'desc' } } }); });
       },
       upload: function (path, file) {
-        return token().then(function (t) {
+        return authenticatedToken().then(function (t) {
           return fetch(URL + '/storage/v1/object/client-files/' + path.split('/').map(encodeURIComponent).join('/'), {
             method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file
           }).then(function (r) { return r.text().then(function (x) { if (!r.ok) { var d = {}; try { d = JSON.parse(x); } catch (e) {} var err = new Error(d.message || d.error || ('Erreur ' + r.status)); err.status = r.status; throw err; } return x; }); });
         });
       },
       link: function (path, download) {
-        return token().then(function (t) { return req('/storage/v1/object/sign/client-files/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: t, body: download ? { expiresIn: 600, download: true } : { expiresIn: 600 } }); })
+        return authenticatedToken().then(function (t) { return req('/storage/v1/object/sign/client-files/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: t, body: download ? { expiresIn: 600, download: true } : { expiresIn: 600 } }); })
           .then(function (d) { return URL + '/storage/v1' + (d.signedURL || d.signedUrl); });
       },
       remove: function (path) {
-        return token().then(function (t) { return req('/storage/v1/object/client-files', { method: 'DELETE', token: t, body: { prefixes: [path] } }); });
+        return authenticatedToken().then(function (t) { return req('/storage/v1/object/client-files', { method: 'DELETE', token: t, body: { prefixes: [path] } }); });
       }
     },
     /* Public: lets a site visitor drop a request, without reading anything back. */
     submitLead: function (row, signedIn) {
       if (!signedIn) return req('/rest/v1/leads', { method: 'POST', body: row, prefer: 'return=minimal' });
-      return token().then(function (t) { return req('/rest/v1/leads', { method: 'POST', token: t, body: row, prefer: 'return=minimal' }); });
+      return authenticatedToken().then(function (t) { return req('/rest/v1/leads', { method: 'POST', token: t, body: row, prefer: 'return=minimal' }); });
     }
   };
   global.RDsb = sb;
