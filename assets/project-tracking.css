@@ -90,3 +90,7 @@
 .tracking-auto-draft p{margin:7px 0 11px;font-size:13px;line-height:1.5}
 .tracking-github-refresh{display:inline-flex;margin:7px 0 13px;align-items:center;justify-content:center}
 @media(max-width:640px){.tracking-github-refresh,.tracking-auto-draft .btn{width:100%;justify-content:center}}
+
+/* Explicit, reversible draft cancellation throughout project forms. */
+.tracking-cancel-draft{margin-inline-start:10px;min-height:38px}
+@media(max-width:600px){.tracking-cancel-draft{margin:8px 0 0;width:100%;justify-content:center}}

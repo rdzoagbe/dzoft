@@ -67,6 +67,34 @@
   });
  }
 
+ // Cancelling a draft is always local: never create, alter, or reverse a receipt.
+ // Buttons are injected only into editable <details> forms, not issued invoice actions.
+ function wireDraftCancelButtons(root){
+  if(!root)return;
+  root.querySelectorAll('details.tracking-editor > form, details.tracking-link > form, details.tracking-confirm > form, details.tracking-correction > form').forEach(function(form){
+   if(form.querySelector('[data-cancel-draft]'))return;
+   var submit=form.querySelector('button[type="submit"]');
+   if(!submit)return;
+   var cancel=document.createElement('button');
+   cancel.type='button';
+   cancel.className='btn line tracking-cancel-draft';
+   cancel.setAttribute('data-cancel-draft','');
+   cancel.textContent=t('Annuler','Cancel');
+   submit.insertAdjacentElement('afterend',cancel);
+   cancel.addEventListener('click',function(){
+    var detail=form.closest('details');
+    if(form.querySelector('button[type="submit"]:disabled'))return; // Never hide an in-flight save.
+    form.reset(); // Discards unsaved inputs only, never calls the backend.
+    // Re-apply conditional fields (invoice kind, pending date) after resetting.
+    form.querySelectorAll('select').forEach(function(select){select.dispatchEvent(new Event('change',{bubbles:true}));});
+    if(detail)detail.open=false;
+    var message=form.querySelector('[role="status"]');
+    if(message)message.textContent='';
+    var summary=detail&&detail.querySelector(':scope > summary');
+    if(summary)summary.focus({preventScroll:true});
+   });
+  });
+ }
  function invoiceLinkForms(d,q,paidOn){
   var pending=d.receipts.filter(function(r){return !r.invoice_id;});
   if(!pending.length)return '';
@@ -367,10 +395,17 @@
     var unbilled=el.invoice.value==='unbilled';
     var payload={p_quote:q.id,p_id:key,p_amount:Number(el.amount.value),p_date:el.date.value,p_method:el.method.value,p_reference:el.reference.value.trim(),p_notify:el.notify.checked};
     if(!unbilled){payload.p_invoice=isNew?newKey:el.invoice.value;payload.p_new_invoice=isNew?{n:kinds[+el.kind.value][0],num:el.num.value.trim(),amt:Number(el.amt.value)}:null;}
+    // Explicit review before writing immutable payment history or queuing an email.
+    var review=t('Confirmer l’encaissement de ','Confirm received payment of ')+money(payload.p_amount)+
+      t(' reçu le ',' received on ')+day(payload.p_date)+' · '+esc(label(methods,payload.p_method))+
+      (payload.p_notify?t('. Un e-mail sera mis en file pour le client.','. A client email will be queued.'):t('. Aucun e-mail ne sera envoyé.','. No email will be sent.'))+
+      t('\\nCette confirmation sera enregistrée dans l’historique. Continuer ?','\\nThis confirmation will be recorded in the audit history. Continue?');
+    if(!confirm(review))return;
     b.disabled=true;status(msg,t('Enregistrement…','Saving…'));
     sb.rpc(unbilled?'record_project_payment_unbilled':'record_project_payment',payload,true).then(function(){
      key=crypto.randomUUID();newKey=crypto.randomUUID();status(msg,payload.p_notify?t('Paiement enregistré. E-mails mis en file d’envoi.','Payment recorded. Emails queued.'):t('Paiement enregistré, sans e-mail.','Payment recorded, no email sent.'));if(payload.p_notify)notify(sb);setTimeout(reload,1200);
     }).catch(function(err){b.disabled=false;status(msg,friendly(err),true);});};
+   wireDraftCancelButtons(box);
    pub.innerHTML='<h2>'+t('Visibilité de l’avancement','Progress visibility')+'</h2>'+
     '<p class="tracking-help tracking-private-intro">'+t('Le journal privé et les brouillons GitHub ne sont pas visibles par le client. Seules vos mises à jour explicitement publiées ci-dessous sont partagées.','Private journal notes and GitHub drafts are not visible to the client. Only updates you explicitly publish below are shared.')+'</p>'+
     '<h3 class="tracking-shared-heading">'+t('Déjà partagé avec le client','Already shared with the client')+'</h3>'+updates(d)+
@@ -383,6 +418,7 @@
     '<label class="tracking-review-check" hidden><input type="checkbox" name="verified"> '+t('J’ai vérifié ces informations et je souhaite les partager avec le client.','I have verified these details and want to share them with the client.')+'</label>'+
     '<button class="btn main" type="submit" data-sharing-submit>'+t('Enregistrer le brouillon privé','Save private draft')+'</button></form></details>'+
     '<p role="status" aria-live="polite" class="tracking-message"></p>';
+   wireDraftCancelButtons(pub);
    var pf=pub.querySelector('form'),rows=pf.querySelector('.tracking-rows'),add=pf.querySelector('.tracking-add'),pk=crypto.randomUUID();
    function syncRows(){var list=rows.querySelectorAll('.tracking-row');list.forEach(function(r,i){r.querySelector('legend').textContent=t('Groupe ','Group ')+(i+1);r.querySelector('.tracking-remove').hidden=list.length<2;});add.hidden=list.length>=6;}
    var activeAutoHash=null;
