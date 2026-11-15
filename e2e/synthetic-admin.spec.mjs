@@ -445,6 +445,9 @@ test('Keeping progress private cannot publish or email the client',async({page})
 
 test('Issued invoice cards stay full width and show independently confirmed receipts in both languages',async({page})=>{
  await syntheticOwner(page);
+ // Block PWA SW registration in this synthetic test: a controlling service worker
+ // bypasses Playwright route mocks on reload and replaces the fake owner session.
+ await page.route('**/admin/sw.js',route=>route.abort('blockedbyclient'));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const url='admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1';
  await page.goto(url,{waitUntil:'domcontentloaded'});
