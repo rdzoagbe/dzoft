@@ -214,7 +214,7 @@
        title.textContent=t('Paiements réellement reçus','Payments actually received');
        var values=document.createElement('div');values.className='invoice-payment-numbers';
        var paid=document.createElement('span');paid.textContent=t('Confirmé : ','Confirmed: ')+money(confirmed);
-       var due=document.createElement('b');due.textContent=t('Encore à recevoir : ','Still outstanding: ')+money(outstanding);
+       var due=document.createElement('b');due.id='iv-payment-outstanding';due.textContent=t('Encore à recevoir : ','Still outstanding: ')+money(outstanding);
        values.append(paid,due);paymentTruth.append(title,values);
        var note=document.createElement('small');
        note.textContent=t('Une facture émise n’est pas un paiement. Les changements proposés ne s’ajoutent au prix qu’après l’accord explicite du client.','An issued invoice is not a payment. Proposed changes are added only after explicit client approval.');
