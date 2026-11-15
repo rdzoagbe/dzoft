@@ -47,9 +47,13 @@ window.addEventListener('dzoft:data-refreshed',applySearch);
 var top=app.querySelector('.top .in');
 if(top){
  var controls=document.createElement('details');controls.className='workspace-more';
- controls.innerHTML='<summary aria-label="Autres options">•••</summary><div class="workspace-more-menu"><button type="button" data-extra="settings"></button><button type="button" data-extra="trash"></button></div>';
+ controls.innerHTML='<summary aria-label="Menu du compte">☰</summary><div class="workspace-more-menu"><button type="button" data-extra="settings"></button><button type="button" data-extra="trash"></button><a href="../?workspace=admin" target="_blank" rel="noopener noreferrer" data-extra="site"></a><button type="button" data-extra="logout"></button></div>';
  top.insertBefore(controls,document.getElementById('b-out'));
- controls.querySelectorAll('[data-extra]').forEach(function(b){b.addEventListener('click',function(){location.hash='#/'+(b.dataset.extra==='settings'?'parametres':'corbeille');controls.open=false;});});
+ controls.querySelectorAll('button[data-extra]').forEach(function(b){b.addEventListener('click',function(){
+   controls.open=false;
+   if(b.dataset.extra==='logout'){var out=document.getElementById('b-out');if(out)out.click();return;}
+   location.hash='#/'+(b.dataset.extra==='settings'?'parametres':'corbeille');
+  });});
 }
 function translate(){
  if(dashboard){dashboard.lastChild&&dashboard.lastChild.nodeType===3&&(dashboard.lastChild.textContent=tr('Aujourd’hui','Today'));}
@@ -62,6 +66,8 @@ function translate(){
  var more=app.querySelector('.workspace-more');if(more){
   more.querySelector('[data-extra=settings]').textContent=tr('Paramètres','Settings');
   more.querySelector('[data-extra=trash]').textContent=tr('Corbeille','Trash');
+  more.querySelector('[data-extra=site]').textContent=tr('Voir le site','View website');
+  more.querySelector('[data-extra=logout]').textContent=tr('Déconnexion','Log out');
  }
  if(email){var d=email.closest('details');if(d){d.querySelector('summary').textContent=tr('Historique des e-mails et notifications','Email and notification history');}}
 }
