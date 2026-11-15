@@ -30,7 +30,7 @@
    var taxable=f.novat===false||f.novat==='false', ht=taxable?Math.round(total/1.2*100)/100:total,vat=Math.round((total-ht)*100)/100;
    var payLabel={transfer:'Virement bancaire',cash:'Espèces',card:'Carte bancaire',other:'Autre'}[r.method]||'Paiement';
    text('DZOFT  |  FACTURE',21,true);
-   commands.push('0.25 0.32 0.65 RG 1.6 w 46 744 m 548 744 l S 0 0 0 RG');
+   commands.push('0.25 0.32 0.65 RG 1.6 w 46 704 m 548 704 l S 0 0 0 RG');
    text('Numéro : '+inv.num,12,true);
    text('Date d’émission : '+frenchDate(inv.issuedOn),11);
    text('Devis accepté : '+safe(q.numero||''),11);
