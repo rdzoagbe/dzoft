@@ -443,7 +443,9 @@ test('Keeping progress private cannot publish or email the client',async({page})
 });
 
 
-test('Issued invoice cards stay full width and show independently confirmed receipts in both languages',async({page})=>{
+test.describe('Populated invoice layout and bilingual receipts',()=>{
+ test.use({serviceWorkers:'block'});
+ test('Issued invoice cards stay full width and show independently confirmed receipts in both languages',async({page})=>{
  await syntheticOwner(page);
  // Block PWA SW registration in this synthetic test: a controlling service worker
  // bypasses Playwright route mocks on reload and replaces the fake owner session.
@@ -487,4 +489,5 @@ test('Issued invoice cards stay full width and show independently confirmed rece
  await expect(page.locator('.invoice-record').nth(2).locator('details.invoice-record-more > summary')).toContainText('Invoice details');
  await expect(page.locator('.invoice-record').nth(2).locator('.invoice-record-status')).toContainText('No payment confirmed');
  expect(errors).toEqual([]);
+});
 });
