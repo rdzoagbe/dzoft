@@ -407,7 +407,7 @@ test('Owner home offers a single workspace search and safe quick actions',async(
  expect(errors).toEqual([]);
 });
 
-test('Financial dashboard shows actual receipts and outstanding money separately',async({page})=>{
+test('Financial dashboard shows actual receipts and outstanding money separately',async({page},testInfo)=>{
  await syntheticOwner(page);
  await page.goto('admin/',{waitUntil:'domcontentloaded'});
  const panel=page.locator('#today-action-center');
@@ -415,9 +415,14 @@ test('Financial dashboard shows actual receipts and outstanding money separately
  await expect(panel).toContainText(/Reste à encaisser|Still outstanding/);
  await expect(panel).toContainText('450');
  await expect(page.locator('#app .top #b-install')).toBeHidden();
- await expect(page.locator('#app .top #b-out')).toBeHidden();
- await page.locator('#app .workspace-more>summary').click();
- await expect(page.locator('#app .workspace-more [data-extra="logout"]')).toBeVisible();
+ if(testInfo.project.name.includes('desktop')){
+   await expect(page.locator('#app .top #b-out')).toBeVisible();
+   await expect(page.locator('#app .workspace-more')).toBeHidden();
+ }else{
+   await expect(page.locator('#app .top #b-out')).toBeHidden();
+   await page.locator('#app .workspace-more>summary').click();
+   await expect(page.locator('#app .workspace-more [data-extra="logout"]')).toBeVisible();
+ }
 });
 
 test('Keeping progress private cannot publish or email the client',async({page})=>{
