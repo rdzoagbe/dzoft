@@ -9,3 +9,23 @@
 .invoice-issued-help>summary{cursor:pointer;font-weight:750;color:#825600}
 .invoice-issued-help p{margin:10px 0 0;line-height:1.65;color:#55516a}
 @media(max-width:650px){.invoice-amount-explanation{padding:12px;font-size:12px}.invoice-draft-review-actions{display:grid;grid-template-columns:1fr}.invoice-draft-review-actions .btn{width:100%}}
+
+/* A truthful, easy-to-scan receipt ledger beside the invoiced/balance totals. */
+body.dzoft-admin .invoice-receipt-heading{display:block;font-size:12.5px;margin:9px 0 1px;color:#26304b}
+body.dzoft-admin .invoice-receipt-list{list-style:none;padding:0;margin:0;display:grid;gap:0;width:100%;border:1px solid #e8ded0;background:#fff;border-radius:10px;overflow:hidden}
+body.dzoft-admin .invoice-receipt-list>li{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:10px 13px;font-size:12.5px;line-height:1.45}
+body.dzoft-admin .invoice-receipt-list>li+li{border-top:1px solid #eae7e1}
+body.dzoft-admin .invoice-receipt-list>li span{color:#596477}
+body.dzoft-admin .invoice-receipt-list>li strong{color:#194f35;font-variant-numeric:tabular-nums;white-space:nowrap}
+body.dzoft-admin .invoice-receipt-list .invoice-receipt-legacy{color:#6d6c77}
+body.dzoft-admin .invoice-record-head>div{min-width:0}
+body.dzoft-admin .invoice-record-head>div b{overflow-wrap:anywhere}
+body.dzoft-admin .invoice-record-delivery{max-width:100%;overflow-wrap:anywhere}
+body.dzoft-admin .invoice-record-actions{min-width:0}
+body.dzoft-admin .invoice-record .invoice-fixed-values{width:100%;min-width:0}
+@media(max-width:600px){
+ body.dzoft-admin .invoice-receipt-list>li{align-items:start;padding:10px 11px;gap:10px}
+ body.dzoft-admin .invoice-record-head{grid-template-columns:minmax(0,1fr) auto;gap:10px}
+ body.dzoft-admin .invoice-record-head>strong{font-size:15px}
+ body.dzoft-admin .invoice-record-actions .btn{width:100%;min-width:0}
+}

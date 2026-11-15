@@ -14,7 +14,14 @@ const syntheticSb = `
   shared:true,invoices:[],steps:[],journal:[{d:now.slice(0,10),k:'fait',t:'Synthetic journal check'}],
   care:{},env:{},data:{f:{delay:'',pay:'',fix:'',notes:''}}
  };
- const client={id:'fictional-client',nom:'Synthetic Test Customer',email:'demo@example.invalid',
+ if(location.search.includes('invoiceFixture=1')){
+    quote.invoices=[
+      {id:'paid-cash',n:'Facture d’acompte',num:'F-2026-0001',amt:450,basis:'receipt',generatedByDzoft:true,paid:true,issuedOn:'2026-11-04',file:'u/fictional/450.pdf',fileName:'F-2026-0001.pdf',fileSize:15500},
+      {id:'paid-transfer',n:'Facture d’acompte',num:'F-2026-0002',amt:350,basis:'receipt',generatedByDzoft:true,paid:true,issuedOn:'2026-11-14',file:'u/fictional/350.pdf',fileName:'F-2026-0002.pdf',fileSize:15500},
+      {id:'unpaid-final',n:'Facture de solde',num:'F-2026-0003',amt:700,basis:'final',generatedByDzoft:true,paid:false,issuedOn:'2026-11-15',file:'u/fictional/700.pdf',fileName:'F-2026-0003.pdf',fileSize:15500}
+    ];
+  }
+  const client={id:'fictional-client',nom:'Synthetic Test Customer',email:'demo@example.invalid',
   entreprise:'Example Ltd',contact:'demo@example.invalid',user_id:null,portal_token:'synthetic'};
  const work=[{
   id:'synthetic-work-1',title:'GitHub · Venue QR codes (To verify)',status:'review',category:'venue',
@@ -44,7 +51,14 @@ const syntheticSb = `
   },
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
-   if(name==='project_tracking')return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
+   if(name==='project_tracking'){
+      if(location.search.includes('invoiceFixture=1'))return {total:1500,base_total:1500,received:800,remaining:700,legacy:0,payment_statuses:[],
+        receipts:[
+          {id:'receipt-cash',invoice_id:'paid-cash',amount:450,method:'cash',received_on:'2026-11-04'},
+          {id:'receipt-transfer',invoice_id:'paid-transfer',amount:350,method:'transfer',received_on:'2026-11-14'}
+        ],updates:[],supplements:0};
+      return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
+    }
    if(name==='invoice_draft_amount')return {remaining:1050,has_final:false};
    if(name==='list_project_work_items')return work;
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
@@ -426,4 +440,54 @@ test('Keeping progress private cannot publish or email the client',async({page})
  page.once('dialog',dialog=>dialog.dismiss());
  await form.locator('[data-sharing-submit]').click();
  await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(s=>s.includes('publish_project_updates')||s.includes('owner_publish_github_progress_draft')).length)).toBe(0);
+});
+
+
+test.describe('Populated invoice layout and bilingual receipts',()=>{
+ test.use({serviceWorkers:'block'});
+ test('Issued invoice cards stay full width and show independently confirmed receipts in both languages',async({page})=>{
+ await syntheticOwner(page);
+ // Block PWA SW registration in this synthetic test: a controlling service worker
+ // bypasses Playwright route mocks on reload and replaces the fake owner session.
+ await page.route('**/admin/sw.js',route=>route.abort('blockedbyclient'));
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const url='admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1';
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="billing"]').click();
+ const records=page.locator('.invoice-record');
+ await expect(records).toHaveCount(3);
+ const ledger=page.locator('#iv-payment-truth');
+ await expect(ledger).toContainText('800');
+ await expect(ledger).toContainText('700');
+ await expect(ledger).toContainText('450');
+ await expect(ledger).toContainText('350');
+ await expect(ledger).toContainText('Espèces');
+ await expect(ledger).toContainText('Virement');
+ await expect(records.nth(0).locator('.invoice-record-status')).toContainText('Paiement reçu et confirmé');
+ await expect(records.nth(1).locator('.invoice-record-status')).toContainText('Paiement reçu et confirmé');
+ await expect(records.nth(2).locator('.invoice-record-status')).toContainText('Aucun paiement reçu');
+ await records.nth(2).locator('details.invoice-record-more > summary').click();
+ await expect(records.nth(2).locator('.invoice-fixed-values')).toBeVisible();
+ const geometry=await page.evaluate(()=>[...document.querySelectorAll('#invs .invoice-record')].map(card=>{
+   const c=card.getBoundingClientRect(),h=card.querySelector('.invoice-record-head').getBoundingClientRect();
+   const a=card.querySelector('.invoice-record-actions').getBoundingClientRect(),m=card.querySelector('.invoice-record-more').getBoundingClientRect();
+   return {cw:c.width,hw:h.width,actionsTop:a.top,headerBottom:h.bottom,mw:m.width,ml:m.left,cl:c.left,mr:m.right,cr:c.right};
+ }));
+ for(const r of geometry){
+  expect(r.hw).toBeGreaterThan(r.cw*.83);
+  expect(r.actionsTop).toBeGreaterThanOrEqual(r.headerBottom-2);
+  expect(r.mw).toBeGreaterThan(r.cw*.8);
+  expect(r.ml).toBeGreaterThanOrEqual(r.cl);
+  expect(r.mr).toBeLessThanOrEqual(r.cr+2);
+ }
+ await page.evaluate(()=>localStorage.setItem('dzoft-ui-locale','en'));
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="billing"]').click();
+ await expect(page.locator('.invoice-record')).toHaveCount(3);
+ await expect(page.locator('#iv-payment-truth')).toContainText('Bank transfer');
+ await expect(page.locator('#iv-payment-truth')).toContainText('Cash');
+ await expect(page.locator('.invoice-record').nth(2).locator('details.invoice-record-more > summary')).toContainText('Invoice details');
+ await expect(page.locator('.invoice-record').nth(2).locator('.invoice-record-status')).toContainText('No payment confirmed');
+ expect(errors).toEqual([]);
+});
 });

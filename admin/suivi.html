@@ -98,21 +98,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .ask{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);grid-column:1/-1;cursor:pointer;margin:0}
 .ask input{width:16px;height:16px}
 .mailrow{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);margin:2px 0 0}
-.invr{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1.4fr 1fr .8fr auto auto;gap:6px;align-items:center}
+/* Legacy invoice grid intentionally removed. The new invoice studio uses
+   full-width cards; a five-column .invr grid collapsed its header into ~80px. */
+.invr{min-width:0}
 .invr+.invr{margin-top:8px}
-.invr .u{grid-column:1/-1}
 .invfile{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.invr.paid{background:#f5fbf7;border-color:#cfe9d8}
 .pd{display:flex;gap:5px;align-items:center;font-size:13px;font-weight:700;margin:0;cursor:pointer}
 .pd input{width:16px;height:16px}
-@media (max-width:640px){
-  .invr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
-  .invr>.n{grid-column:1}
-  .invr>.num{grid-column:2/4}
-  .invr>.amt{grid-column:1}
-  .invr>.pd{grid-column:2}
-  .invr>.rm{grid-column:3;justify-self:end}
-}
 .rvq{margin:8px 0;padding:10px 14px;background:#f3f7fb;border-radius:12px;white-space:pre-wrap;font-size:14.5px}
 .rvst{color:#f5a623;font-size:19px;letter-spacing:2px}
 .carer{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:10px;align-items:end}
@@ -184,18 +176,22 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .iv-draft-preview{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11.5px;color:#6a748d}
 .iv-draft-preview b{color:#4540aa}
 .invoice-list{display:grid;gap:10px;min-width:0}
-.invoice-record{background:#fff;border:1px solid #e6e8f1;border-radius:14px;padding:14px;min-width:0}
+.invr.invoice-record{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#fff;border:1px solid #e6e8f1;border-radius:14px;padding:18px;overflow-wrap:anywhere}
 .invoice-record.paid{background:#f7fbf9;border-color:#cfe8da}
-.invoice-record-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.invoice-record-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:16px;min-width:0}
+.invoice-record-head>div{min-width:0}
+.invoice-record-head>strong{justify-self:end;text-align:right}
 .invoice-record-head b{font-size:13.5px;color:#161b34;overflow-wrap:anywhere}
 .invoice-record-head p{color:#6a748c;font-size:11.5px;margin:3px 0 0}
 .invoice-record-head>strong{font-size:16px;color:#20244d;white-space:nowrap}
 .invoice-record-status{font-size:11.5px;padding:5px 9px;border-radius:9px;background:#f3f3fa;color:#595c71;font-weight:650;display:inline-flex;margin:10px 0 6px}
 .invoice-record-status.is-paid{background:#e2f4e8;color:#14633d}
 .invoice-record-delivery{font-size:11px;color:#66718a;line-height:1.5;margin:3px 0 10px;overflow-wrap:anywhere}
-.invoice-record-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:9px 0 0}
-.invoice-record-actions .btn{min-height:37px;flex:1 1 auto;white-space:normal}
-.invoice-record-more{margin-top:12px;padding-top:12px;border-top:1px solid #eff0f5}
+.invoice-record-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0;min-width:0}
+.invoice-record-actions .btn{min-height:41px;flex:0 1 auto;min-width:165px;white-space:normal}
+.invoice-record-actions .btn.main{flex-grow:0}
+.invoice-document-status{display:inline-flex;font-size:11.5px;margin:10px 0 6px 8px;color:#5d6681}
+.invoice-record-more{display:block;width:100%;min-width:0;margin-top:14px;padding-top:14px;border-top:1px solid #eff0f5}
 .invoice-record-more>summary{font-size:11.5px;font-weight:750;color:#5652a9;cursor:pointer;padding:2px 0}
 .invoice-record-more[open]>summary{margin-bottom:11px}
 .invoice-record-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
@@ -204,6 +200,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .invoice-record-fields .invoice-wide{grid-column:1/-1}
 .invoice-record-fields .invfile{grid-column:1/-1}
 .invoice-record-fields .pd{display:flex;align-items:center}
+.invoice-record-fields>.invoice-fixed-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px;background:#f8f8fc;border:1px solid #edecf6;border-radius:12px}
+.invoice-fixed-values>div{display:grid;gap:4px;min-width:0}
+.invoice-fixed-values small{font-size:11px;color:#667087}
+.invoice-fixed-values strong{font-size:13px;color:#1b2041;overflow-wrap:anywhere;line-height:1.4}
 .invoice-record-more .invoice-record-note{font-size:11px;color:#71788d;margin-top:7px}
 .invoice-record .rm{margin-left:auto}
 .invoice-more{border:1px solid #e9e9f3;border-radius:14px;margin-top:20px;background:#fafaff}
@@ -227,21 +227,23 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
  .invoice-record-head{gap:7px}
  .invoice-record-head>strong{font-size:14px}
  .invoice-record-fields{grid-template-columns:1fr}
- .invoice-record-actions>.btn{flex-basis:100%}
+ .invoice-record-fields>.invoice-fixed-values{grid-template-columns:1fr;gap:12px}
+ .invoice-record-actions>.btn{flex-basis:100%;min-width:0}
+ .invr.invoice-record{padding:14px}
 }
 </style>
 
-<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
+<link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261115-billing-fr-en" defer></script>
 <link rel="stylesheet" href="project-workspace.css?v=20261113-weekly">
 <link rel="stylesheet" href="project-workspace-tabs.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-clean3">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4">
-<link rel="stylesheet" href="invoice-workflow.css?v=20261115-update4">
+<link rel="stylesheet" href="invoice-workflow.css?v=20261115-receipt-card2">
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-github-auto">
 <script src="../assets/vendor/qrcode-generator.js?v=20261115-offline"></script>
 <script src="../assets/invoice-preview.js?v=20261115-pay-template"></script>
 <script src="../assets/invoice-pdf.js?v=20261115-pay-template&multi=20261115&accepted=20261115"></script>
-<script src="../assets/project-tracking.js?v=20261115-pay-template&accepted=20261115&clean=20261115-v3"></script>
+<script src="../assets/project-tracking.js?v=20261115-verified-receipts2"></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -457,7 +459,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
   var draftPreviewToken = 0, draftMax = null, draftInfo = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-  var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
+  var il = function(fr,en){return document.documentElement.lang==='en'?en:fr;};
+  var eur = function(n){return new Intl.NumberFormat(document.documentElement.lang==='en'?'en-GB':'fr-FR',{style:'currency',currency:'EUR'}).format(Math.round((+n||0)*100)/100);};
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
   var today = function(){ var d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
   function toast(t){ var e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function(){ e.hidden = true; }, 2600); }
@@ -863,44 +866,52 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       var finalInvoice = active.filter(function(x){ return x.basis === 'final'; })[0];
       if (finalInvoice) {
         var previous = active.filter(function(x){return x.id!==finalInvoice.id;}).reduce(function(n,x){return n+(Number(x.amt)||0);},0);
-        breakdown.textContent = 'Pourquoi cette facture fait ' + eur(finalInvoice.amt) + ' ? Devis accepté : ' + eur(signed) + ' − factures d’acompte / intermédiaires déjà émises : ' + eur(previous) + ' = facture de solde : ' + eur(finalInvoice.amt) + '. Aucun montant n’a été changé après émission.';
+        breakdown.textContent = il('Pourquoi cette facture fait ','Why is this invoice ') + eur(finalInvoice.amt) + il(' ? Devis accepté : ','? Accepted quote: ') + eur(signed) + il(' − factures d’acompte / intermédiaires déjà émises : ',' − previously issued deposit / interim invoices: ') + eur(previous) + il(' = facture de solde : ',' = final invoice: ') + eur(finalInvoice.amt) + il('. Aucun montant n’a été changé après émission.','. The issued amount has not been modified.');
       } else {
-        breakdown.textContent = 'Devis accepté : ' + eur(signed) + ' · Déjà facturé : ' + eur(totalIssued) + '. Le montant restant sera vérifié par le serveur avant toute émission.';
+        breakdown.textContent = il('Devis accepté : ','Accepted quote: ') + eur(signed) + il(' · Déjà facturé : ',' · Already invoiced: ') + eur(totalIssued) + il('. Le montant restant sera vérifié par le serveur avant toute émission.','. The remaining amount will be verified by the server before issuing.');
       }
     }
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
       var official = !!(x.generatedByDzoft || x.basis), number = String(x.num || '').trim();
-      var caption = (x.issuedOn ? 'Émise le ' + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString('fr-FR') : 'Facture externe');
-      var status = x.paid ? 'Paiement reçu' : x.file ? 'PDF prêt' : 'PDF à archiver';
+      var caption = (x.issuedOn ? il('Émise le ','Issued on ') + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString(document.documentElement.lang==='en'?'en-GB':'fr-FR') : il('Facture externe','External invoice'));
+      var status = il('Vérification des paiements confirmés…','Checking confirmed payments…');
+      var pdfStatus = x.file ? il('PDF archivé','PDF archived') : il('PDF à archiver','PDF needs archiving');
       return '<article class="invr invoice-record' + (x.paid ? ' paid' : '') + '" data-i="' + i + '">' +
-        '<div class="invoice-record-head"><div><b>' + esc(number || 'Facture externe · numéro à saisir') + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
+        '<div class="invoice-record-head"><div><b>' + esc(number || il('Facture externe · numéro à saisir','External invoice · enter a number')) + '</b><p>' + esc(invoiceTitle(x)) + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
         '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
+        '<span class="invoice-document-status">' + esc(pdfStatus) + '</span>'+
         (official ? '<p class="invoice-record-delivery">' + esc(invoiceDeliverySummary(x)) + '</p>' : '')+
         '<div class="invoice-record-actions">' +
-          (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">Télécharger le PDF</button>' : '')+
-          (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">Archiver le PDF</button>' : '')+
-          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-email">' + (x.emailAt ? 'Renvoyer le PDF + ma copie' : 'Envoyer le PDF + ma copie') + '</button>' : '')+
+          (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">'+il('Télécharger le PDF','Download PDF')+'</button>' : '')+
+          (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">'+il('Archiver le PDF','Archive PDF')+'</button>' : '')+
+          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-email">' + (x.emailAt ? il('Renvoyer le PDF + ma copie','Resend PDF + my copy') : il('Envoyer le PDF + ma copie','Send PDF + my copy')) + '</button>' : '')+
           (!x.file && !official ? '<span class="muted">Ajoutez le PDF dans les détails pour activer l’envoi.</span>' : '')+
         '</div>'+
-        '<details class="invoice-record-more"><summary>' + (official ? 'Informations de la facture' : 'Modifier la facture externe') + '</summary>'+
+        '<details class="invoice-record-more"><summary>' + (official ? il('Informations de la facture','Invoice details') : il('Modifier la facture externe','Edit external invoice')) + '</summary>'+
           '<div class="invoice-record-fields">'+
-            '<label>Libellé<input class="n" list="iv-kinds" value="' + esc(x.n || '') + '" placeholder="Libellé"' + (official ? ' disabled title="Facture émise"' : '') + '></label>'+
-            '<label>Numéro<input class="num" value="' + esc(x.num || '') + '" placeholder="Numéro officiel"' + (official ? ' disabled title="Facture officielle : numéro immuable"' : '') + '></label>'+
-            '<label>Montant (€)<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"' + (official ? ' disabled title="Facture officielle : montant immuable"' : '') + '></label>'+
-            '<label class="invoice-wide">Lien de paiement (facultatif)<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
+            (official ?
+              '<div class="invoice-fixed-values invoice-wide" role="group" aria-label="Informations définitives de la facture">'+
+                '<div><small>'+il('Libellé','Description')+'</small><strong>' + esc(invoiceTitle(x)) + '</strong></div>'+
+                '<div><small>'+il('Numéro officiel','Official invoice number')+'</small><strong>' + esc(number) + '</strong></div>'+
+                '<div><small>'+il('Montant émis','Issued amount')+'</small><strong>' + eur(x.amt) + '</strong></div>'+
+              '</div>' :
+              '<label>'+il('Libellé','Description')+'<input class="n" list="iv-kinds" value="' + esc(x.n || '') + '" placeholder="Libellé"></label>'+
+              '<label>'+il('Numéro','Number')+'<input class="num" value="' + esc(x.num || '') + '" placeholder="Numéro officiel"></label>'+
+              '<label>'+il('Montant (€)','Amount (€)')+'<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"></label>')+
+            '<label class="invoice-wide">'+il('Lien de paiement (facultatif)','Payment link (optional)')+'<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
             '<div class="invoice-wide">' +
-              (official ? '<span class="invoice-record-note">Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».</span>' :
+              (official ? '<span class="invoice-record-note">'+il('Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».','Issued invoice amount and number are locked. Record confirmed payments in Payment history.')+'</span>' :
               '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Marquer comme payée') + '</label>') +
               (x.payment_reported_at ? '<p class="muted">Paiement déclaré le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + '</p>' : '') +
             '</div>'+
             '<div class="invfile">' +
-              (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + ' · ' + (official ? 'PDF officiel archivé · non modifiable' : 'pièce jointe') + '</span>' +
+              (x.file ? '<span class="muted">'+il('PDF : ','PDF: ') + esc(x.fileName || il('facture jointe','attached invoice')) + ' · ' + (official ? il('PDF officiel archivé · non modifiable','Official PDF archived · read-only') : il('pièce jointe','attachment')) + '</span>' +
                 (!official ? '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : '') :
-                (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF en attente</span>')) +
+                (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">'+il('PDF en attente','PDF pending')+'</span>')) +
             '</div>'+
             (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' :
-              '<details class="invoice-issued-help invoice-wide"><summary>Pourquoi je ne peux pas supprimer cette facture ?</summary><p>Cette facture a déjà reçu un numéro officiel et un PDF archivé. Elle doit rester traçable, même si vous ne l’avez pas encore envoyée. Avant paiement, une facture rectificative portant un nouveau numéro peut « annuler et remplacer » l’originale ; après paiement, il faut un avoir. Ne renumérotez pas et ne supprimez pas la facture directement.</p></details>')+
-            (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '')+
+              '<details class="invoice-issued-help invoice-wide"><summary>'+il('Corriger ou annuler une facture émise','Correct or cancel an issued invoice')+'</summary><p>'+il('Le numéro et le PDF officiels doivent rester dans l’historique. Si une correction est nécessaire, établissez un document rectificatif ou un avoir adapté à la situation, avec traçabilité. Aucune suppression automatique ne sera effectuée.','Issued invoice numbers and PDFs must remain in the audit history. If needed, issue a traceable correction or credit note. Nothing is deleted automatically.')+'</p></details>')+
+            (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">'+il('Relancer le paiement','Send payment reminder')+'</button>' : '')+
           '</div>'+
         '</details>'+
         '</article>';
@@ -910,23 +921,24 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   /* Real delivery status from the outbox, never from the timestamp recorded
      when the owner clicked Send. Separate client and owner copy are audited. */
+  function invoiceTitle(x){ var name=x.n||'Facture'; var known={'Facture de solde':'Final invoice','Facture d’acompte':'Deposit invoice','Facture intermédiaire':'Interim invoice','Facture complémentaire':'Additional invoice'};return document.documentElement.lang==='en'?(known[name]||name):name; }
   function invoiceDeliverySummary(invoice){
     var event = events.filter(function(e){ return e.event_type === 'invoice_shared' && e.invoice_id === invoice.id; }).sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);})[0];
-    if (!event) return invoice.emailAt ? 'Envoi demandé · état à actualiser' : 'Pas encore envoyée';
+    if (!event) return invoice.emailAt ? il('Envoi demandé · état à actualiser','Send requested · status pending') : il('Pas encore envoyée','Not sent yet');
     var related = outbox.filter(function(job){ return job.event_id === event.id; });
     function status(role){
       var job = related.filter(function(j){ return j.recipient_role === role; })[0];
-      if (!job) return 'aucun e-mail enregistré';
-      if (job.status === 'failed') return 'échec · consulter « Historique et e-mails »';
-      if (job.status === 'queued' || job.status === 'processing') return 'en cours';
+      if (!job) return il('aucun e-mail enregistré','no email recorded');
+      if (job.status === 'failed') return il('échec · consulter « Historique et e-mails »','failed · check email history');
+      if (job.status === 'queued' || job.status === 'processing') return il('en cours','processing');
       if (job.status === 'sent') {
-        if (job.delivered_at || job.delivery_status === 'delivered') return 'livré';
-        if (job.bounced_at || job.delivery_status === 'bounced') return 'échec de livraison';
-        return 'accepté par le fournisseur (livraison à confirmer)';
+        if (job.delivered_at || job.delivery_status === 'delivered') return il('livré','delivered');
+        if (job.bounced_at || job.delivery_status === 'bounced') return il('échec de livraison','delivery failed');
+        return il('accepté par le fournisseur (livraison à confirmer)','accepted by email provider (delivery unconfirmed)');
       }
-      return 'état indisponible';
+      return il('état indisponible','status unavailable');
     }
-    return 'Client : ' + status('client') + ' · Votre copie : ' + status('owner');
+    return il('Client : ','Client: ') + status('client') + il(' · Votre copie : ',' · Your copy: ') + status('owner');
   }
   function parseInvoiceAmount(raw){
     var s = String(raw || '').trim().replace(',', '.');
@@ -940,14 +952,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var hint = bar.querySelector('[data-iv-hint]');
     if (!field || !btn || !hint) return;
     var val = parseInvoiceAmount(field.value), max = draftMax;
-    if (max === null) { btn.disabled = true; hint.textContent = 'Vérification du solde auprès du serveur…'; return; }
+    if (max === null) { btn.disabled = true; hint.textContent = il('Vérification du solde auprès du serveur…','Checking balance with server…'); return; }
     var valid = val !== null && Math.round(val*100) <= Math.round(max*100);
     btn.disabled = !valid;
     field.setAttribute('aria-invalid', valid ? 'false' : 'true');
-    hint.textContent = !valid ? 'Saisissez un montant positif, inférieur ou égal à ' + eur(max) + '.'
+    hint.textContent = !valid ? il('Saisissez un montant positif, inférieur ou égal à ','Enter a positive amount up to ') + eur(max) + '.'
       : Math.round(val*100) < Math.round(max*100)
-      ? 'Facture intermédiaire. Il restera ' + eur(Math.round((max - val)*100)/100) + ' à facturer sur le devis.'
-      : 'Facture de solde. Vous facturez le montant restant de ' + eur(max) + '.';
+      ? il('Facture intermédiaire. Il restera ','Interim invoice. ') + eur(Math.round((max - val)*100)/100) + il(' à facturer sur le devis.',' will remain to be invoiced.')
+      : il('Facture de solde. Vous facturez le montant restant de ','Final invoice. You are invoicing the outstanding ') + eur(max) + '.';
   }
   function issueDraft(btn){
     var bar = $('iv-actions'), field = bar && bar.querySelector('[data-iv-amount]');
@@ -957,9 +969,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (!review) return;
     review.hidden = false;
     review.dataset.amount = value.toFixed(2);
-    var kind = Math.round(value*100) === Math.round(draftMax*100) ? 'facture de solde' : 'facture intermédiaire';
+    var kind = Math.round(value*100) === Math.round(draftMax*100) ? il('facture de solde','final invoice') : il('facture intermédiaire','interim invoice');
     var detail = review.querySelector('[data-invoice-review-text]');
-    if (detail) detail.textContent = 'Vous allez émettre une ' + kind + ' de ' + eur(value) + '. Devis accepté : ' + eur(draftInfo && draftInfo.base_total || 0) + ' · Déjà facturé : ' + eur(draftInfo && draftInfo.invoiced || 0) + ' · Montant maximal possible : ' + eur(draftMax) + '. Aucun numéro n’a été créé pour l’instant. Après confirmation, la facture officielle ne pourra plus être supprimée ou modifiée directement.';
+    if (detail) detail.textContent = il('Vous allez émettre une ','You are about to issue a ') + kind + il(' de ',' for ') + eur(value) + il('. Devis accepté : ','. Accepted quote: ') + eur(draftInfo && draftInfo.base_total || 0) + il(' · Déjà facturé : ',' · Previously invoiced: ') + eur(draftInfo && draftInfo.invoiced || 0) + il(' · Montant maximal possible : ',' · Maximum amount: ') + eur(draftMax) + il('. Aucun numéro n’a été créé pour l’instant. Après confirmation, la facture officielle ne pourra plus être supprimée ou modifiée directement.','. No invoice number has been issued yet. Once confirmed, the official invoice cannot be deleted or edited directly.');
     var confirmButton = review.querySelector('[data-iv="confirm"]');
     if (confirmButton) confirmButton.focus();
   }
@@ -995,7 +1007,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         draftMax = Math.round(max*100)/100;
         draftInfo = info;
         if ($('iv-explanation')) $('iv-explanation').textContent =
-          'Calcul vérifié : devis accepté ' + eur(info.base_total || 0) + ' − factures précédentes ' + eur(info.invoiced || 0) + ' − paiements non encore facturés ' + eur(info.unbilled_receipts || 0) + ' = montant disponible ' + eur(draftMax) + '. Vous pouvez choisir un montant inférieur avant de créer le numéro officiel.';
+          il('Calcul vérifié : devis accepté ','Verified calculation: accepted quote ') + eur(info.base_total || 0) + il(' − factures précédentes ',' − previously invoiced ') + eur(info.invoiced || 0) + il(' − paiements non encore facturés ',' − confirmed but not yet invoiced payments ') + eur(info.unbilled_receipts || 0) + il(' = montant disponible ',' = available to invoice ') + eur(draftMax) + il('. Vous pouvez choisir un montant inférieur avant de créer le numéro officiel.','. You can enter a smaller amount before the official invoice number is issued.');
         if ($('iv-billed')) $('iv-billed').textContent = eur(info.invoiced || 0);
         if ($('iv-remaining')) $('iv-remaining').textContent = eur(max);
         if ($('iv-total')) $('iv-total').textContent = eur(info.base_total || 0);
@@ -1126,7 +1138,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
     if (c === 'paid') { if (e.target.checked && !x.paid && !confirm(document.documentElement.lang === 'en' ? 'Have you received this payment in your bank account? The client will be notified by email.' : 'Confirmez-vous avoir reçu ce paiement sur votre compte ? Le client sera averti par e-mail.')) { e.target.checked = false; return; } x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
     else if (c === 'attach') x.attachPdf = e.target.checked;
-    else if (x.generatedByDzoft && (c === 'num' || c === 'amt' || c === 'n')) { toast('Cette facture est déjà émise : le montant et le numéro sont définitifs.'); return; }
+    else if ((x.generatedByDzoft || x.basis) && (c === 'num' || c === 'amt' || c === 'n')) { toast('Cette facture est déjà émise : le montant et le numéro sont définitifs.'); return; }
     else if (c === 'amt') x.amt = parseFloat(e.target.value) || 0;
     else if (c === 'u') { x.u = e.target.value.trim(); e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : ''; }
     else x[c] = e.target.value;
@@ -1356,6 +1368,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     }, Promise.resolve()).then(renderFiles);
   };
 
+  document.addEventListener('dzoft:locale-change',function(){ if(Q)renderInv(); });
   load();
 })();
 </script>

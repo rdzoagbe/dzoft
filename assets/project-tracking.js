@@ -223,6 +223,53 @@
        paymentTruth.textContent=t('Montants encaissés indisponibles. Vérifiez les paiements dans le détail.','Payment data unavailable. Check the detailed receipts.');
      }
    }
+   // The payment summary is based on verified, bank/cash-confirmed receipts,
+   // never on the mere existence of a numbered invoice or a paid flag.
+   if(paymentTruth && [d.received,d.remaining,d.total].every(function(v){return Number.isFinite(Number(v));})){
+     var receiptHeading=document.createElement('b');
+     receiptHeading.className='invoice-receipt-heading';
+     receiptHeading.textContent=t('Détail des encaissements confirmés','Confirmed payment history');
+     paymentTruth.appendChild(receiptHeading);
+     var receiptList=document.createElement('ul');receiptList.className='invoice-receipt-list';
+     (d.receipts||[]).forEach(function(receipt){
+       var item=document.createElement('li');
+       var description=document.createElement('span');
+       description.textContent=day(receipt.received_on)+' · '+label(methods,receipt.method);
+       var sum=document.createElement('strong');sum.textContent=money(receipt.amount);
+       item.append(description,sum);receiptList.appendChild(item);
+     });
+     if(Number(d.legacy)>0){
+       var old=document.createElement('li');old.className='invoice-receipt-legacy';
+       old.textContent=t('Versements historiques déjà confirmés : ','Previously confirmed legacy payments: ')+money(d.legacy);
+       receiptList.appendChild(old);
+     }
+     if(!receiptList.children.length){
+       var none=document.createElement('li');
+       none.textContent=t('Aucun paiement confirmé pour le moment.','No payments confirmed yet.');
+       receiptList.appendChild(none);
+     }
+     paymentTruth.appendChild(receiptList);
+   }
+   (q.invoices||[]).forEach(function(inv,index){
+     var card=document.querySelector('#invs .invoice-record[data-i="'+index+'"]');
+     if(!card)return;
+     var pill=card.querySelector('.invoice-record-status');if(!pill)return;
+     var amount=cents(inv.amt);
+     var confirmed=(d.receipts||[]).filter(function(receipt){return receipt.invoice_id===inv.id;})
+       .reduce(function(n,receipt){return n+cents(receipt.amount);},0);
+     pill.classList.remove('is-paid');
+     card.classList.remove('paid');
+     if(amount>0&&confirmed>=amount){
+       pill.textContent=t('Paiement reçu et confirmé','Payment received and confirmed');
+       pill.classList.add('is-paid');card.classList.add('paid');
+     }else if(confirmed>0){
+       pill.textContent=t('Paiement partiel confirmé : ','Partial payment confirmed: ')+money(confirmed);
+     }else if(Number(d.legacy)>0&&inv.paid){
+       pill.textContent=t('Paiement historique : vérifier le détail','Historical payment: check records');
+     }else{
+       pill.textContent=t('Aucun paiement reçu sur cette facture','No payment confirmed for this invoice');
+     }
+   });
    var paidOn=function(id){return d.receipts.filter(function(r){return r.invoice_id===id;}).reduce(function(n,r){return n+cents(r.amount);},0)/100;};
    var open=(q.invoices||[]).filter(function(i){return i.id&&i.num&&!i.paid&&!i.care;});
    var invoiced=(q.invoices||[]).filter(function(i){return !i.care;}).reduce(function(n,i){return n+cents(i.amt);},0)/100;

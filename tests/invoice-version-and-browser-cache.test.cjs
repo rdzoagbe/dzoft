@@ -45,13 +45,13 @@ test('invoice has visible calculation breakdown, reversible pre-issue review and
  assert.match(html,/data-iv="confirm">Confirmer et émettre officiellement/);
  assert.match(html,/Aucun numéro n’a été créé pour l’instant/);
  assert.match(html,/rev\.dataset\.amount !== value\.toFixed\(2\)/);
- assert.match(html,/Pourquoi je ne peux pas supprimer cette facture/);
- assert.match(html,/une facture rectificative/);
+ assert.match(html,/Corriger ou annuler une facture émise/);
+ assert.match(html,/document rectificatif/);
  assert.match(html,/un avoir/);
  assert.match(html,/issue_final_invoice_checked/);
  assert.match(html,/issue_interim_invoice/);
  assert.match(html,/if \(!confirm\(ask\)\) return/);
- assert.match(html,/invoice-workflow\.css\?v=20261115-update4/);
+ assert.match(html,/invoice-workflow\.css\?v=(?:20261115-update4|20261115-receipt-card2)/);
  const css=read('admin/invoice-workflow.css');
  assert.match(css,/invoice-draft-review\[hidden\]\{display:none!important\}/);
  for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
