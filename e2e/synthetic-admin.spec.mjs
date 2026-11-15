@@ -102,6 +102,7 @@ test('Client project weekly review and private task statuses render without a re
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{
   waitUntil:'domcontentloaded'
  });
+ await page.locator('[data-project-tab="work"]').click();
  await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
  await page.waitForTimeout(250);
  if (!(await page.locator('#c-journal').isVisible())) {
@@ -125,6 +126,7 @@ test('Read-only synthetic owner tests never emit network requests containing rea
   if(req.url().includes('supabase.co/rest/v1')||req.url().includes('supabase.co/functions/v1'))external.push(req.url());
  });
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await page.locator('[data-project-tab="work"]').click();
  await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
  await expect.poll(async()=> {
   const text=await page.locator('#jr-tasks-slot').textContent();return /Tâches et validations|Tasks and approvals/.test(text||'');
@@ -273,6 +275,7 @@ test('Installed mobile one-menu navigates to clean accordion Settings',async({pa
 test('Invoice creator shows editable server-approved amount and prevents an excessive invoice',async({page})=>{
  await syntheticOwner(page);
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="billing"]').click();
  const amount=page.locator('#iv-amount');
  await expect(amount).toBeEnabled();
  await expect(amount).toHaveValue('1050.00');
@@ -328,5 +331,51 @@ test('Project quick links reveal real invoices, documents and activity without n
  await expect(page.locator('#c-activity')).toBeVisible();
  await page.locator('[data-workspace-action="payment"]').click();
  await expect(page.locator('#c-inv')).toBeVisible();
+ expect(errors).toEqual([]);
+});
+
+
+test('Focused project navigation keeps overview, work, invoices and messages accessible',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ const tabs=page.locator('.project-focus-tab');
+ await expect(tabs).toHaveCount(4);
+ await expect(page.locator('#project-panel-overview')).toBeVisible();
+ await expect(page.locator('#project-panel-work')).toBeHidden();
+ await expect(page.locator('#project-panel-billing')).toBeHidden();
+ await expect(page.locator('[data-project-tab="overview"]')).toHaveAttribute('aria-selected','true');
+ await page.locator('[data-open-project="work"]').click();
+ await expect(page.locator('#project-panel-work')).toBeVisible();
+ await expect(page.locator('#c-steps')).toBeVisible();
+ await page.locator('[data-project-tab="billing"]').click();
+ await expect(page.locator('#c-inv')).toBeVisible();
+ await expect(page.locator('#iv-amount')).toBeEnabled();
+ await page.locator('[data-project-tab="messages"]').click();
+ await expect(page.locator('#c-msg')).toBeVisible();
+ await page.locator('#project-panel-messages .workspace-fold > summary').filter({hasText:/Historique des e-mails|Email and project activity/}).click();
+ await expect(page.locator('#c-activity')).toBeVisible();
+ await page.locator('[data-project-tab="overview"]').click();
+ await expect(page.locator('#project-overview-balance')).not.toBeEmpty();
+ await expect(page.locator('#project-panel-messages')).toBeHidden();
+ const calls=await page.evaluate(()=>window.__syntheticCalls);
+ expect(calls.filter(c=>/issue_|record_project_payment|publish_project_updates/.test(c))).toEqual([]);
+ expect(errors).toEqual([]);
+});
+
+test('Owner home offers a single workspace search and safe quick actions',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('.owner-command-bar')).toBeVisible();
+ const search=page.locator('#owner-global-search');
+ await search.fill('Synthetic');
+ await page.locator('.owner-command-search button[type="submit"]').click();
+ await expect(page.locator('#v-dossiers')).toBeVisible();
+ await expect(page.locator('#dossier-search')).toHaveValue('Synthetic');
+ await page.locator('#app .side [data-tab="dash"]').click();
+ await page.locator('[data-owner-quick="billing"]').click();
+ await expect(page.locator('#v-finance')).toBeVisible();
+ await expect(page.locator('#app .side [data-tab="trash"]')).toBeHidden();
  expect(errors).toEqual([]);
 });
