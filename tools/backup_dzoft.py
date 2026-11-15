@@ -291,6 +291,13 @@ def do_backup(args: argparse.Namespace) -> None:
                         "Storage listing was not empty, but no files were downloaded. "
                         "Aborting to avoid an incomplete backup.")
                 for p in files:
+                    if p.is_symlink():
+                        raise BackupError("Refusing to read a symlink from downloaded Storage.")
+                    # Check before read_bytes() to avoid loading unbounded user
+                    # documents into this in-memory export helper.
+                    projected = sum(len(blob) for blob in exports.values()) + p.stat().st_size
+                    if projected > MAX_UNCOMPRESSED_BYTES:
+                        raise BackupError("Storage exceeds the safe in-memory backup limit.")
                     rel = p.relative_to(base).as_posix()
                     exports["storage/client-files/" + rel] = p.read_bytes()
                 storage_metadata.update({"status": "exported",
