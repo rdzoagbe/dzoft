@@ -29,3 +29,8 @@ test('extra work invoices do not inherit final balance recap',async()=>{
  const content=Buffer.from(await pdf.arrayBuffer()).toString('latin1');
  assert.doesNotMatch(content,/R.CAPITULATIF DU DEVIS ACCEPT./);
 });
+
+test('admin archiving passes the issued invoice basis into the PDF renderer',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../admin/suivi.html'),'utf8');
+ assert.match(html,/DzoftTracking\.archive\(Q, sb, null, \{ id: x\.id, num: x\.num, amt: x\.amt, n: x\.n, issuedOn: x\.issuedOn, basis: x\.basis,/);
+});
