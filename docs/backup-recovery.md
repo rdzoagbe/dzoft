@@ -1,5 +1,12 @@
 # DZOFT — Secure backup and recovery
 
+## Recovery milestone — 15 November 2026
+
+The owner created an encrypted native PostgreSQL application-data archive `dzoft-20261115-145839Z-b191cd.dzoftbak` (57,786 bytes), copied it to private Google Drive, downloaded it back and successfully ran the authenticated backup integrity/decryption verification on that downloaded copy. The original and downloaded file SHA-256 values have **not yet been compared side-by-side**. This establishes one verified readable cloud copy, **not** a proven database restore or complete Supabase disaster-recovery image.
+
+**Auth recovery is a separate step:** see [Supabase Auth recovery and encrypted identity mapping](auth-recovery.md). The optional `tools/backup_dzoft_auth.py` tool produces an encrypted `.dzoftauth` metadata ledger (old user UUIDs, emails, provider names and account-link counts) without exporting credentials. No real ledger has been generated yet; run it interactively on the trusted Windows PC, then separately copy/verify it in Google Drive.
+
+
 ## Verified infrastructure (13 November 2026)
 
 | Area | Finding |
@@ -7,7 +14,7 @@
 | Supabase | RD-Clients, project rzghbvmszbjlqkdjzpxc, active |
 | Plan | **Free** — no automatic daily managed database backups |
 | Documents | Private Storage bucket client-files; 0 objects at last inspection |
-| Independent off-site backup | **Not yet created or restore-tested** |
+| Independent off-site backup | **Encrypted application-data file exists in Google Drive; downloaded copy passed integrity and decryption checks on 15 November. Full restore NOT tested.** |
 | Managed Auth identities | **3 accounts observed 15 November 2026 — excluded from the application export** |
 | Recovery drill checklist | [Isolated restore drill](isolated-restore-drill.md); no real restore completed |
 | Windows verified-copy launcher | CLI selector corrected and synthetic tests added; no real off-site backup or restore test yet |

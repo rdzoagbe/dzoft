@@ -5,18 +5,22 @@ on:
     paths:
       - "tools/backup_dzoft.py"
       - "tools/backup_dzoft_native.py"
+      - "tools/backup_dzoft_auth.py"
       - "tools/backup-dzoft-windows.ps1"
       - "tests/test_backup_dzoft.py"
       - "tests/test_backup_native.py"
+      - "tests/test_backup_auth_recovery.py"
       - ".github/workflows/backup-tool-tests.yml"
   push:
     branches: [main]
     paths:
       - "tools/backup_dzoft.py"
       - "tools/backup_dzoft_native.py"
+      - "tools/backup_dzoft_auth.py"
       - "tools/backup-dzoft-windows.ps1"
       - "tests/test_backup_dzoft.py"
       - "tests/test_backup_native.py"
+      - "tests/test_backup_auth_recovery.py"
       - ".github/workflows/backup-tool-tests.yml"
 
 permissions:
@@ -33,7 +37,7 @@ jobs:
       - name: Install pinned cryptography dependency
         run: python -m pip install cryptography==46.0.4
       - name: Check Python syntax
-        run: python -m py_compile tools/backup_dzoft.py tools/backup_dzoft_native.py tests/test_backup_dzoft.py tests/test_backup_native.py
+        run: python -m py_compile tools/backup_dzoft.py tools/backup_dzoft_native.py tools/backup_dzoft_auth.py tests/test_backup_dzoft.py tests/test_backup_native.py tests/test_backup_auth_recovery.py
       - name: Exercise encryption and fake Supabase CLI
         run: python -m unittest discover -s tests -p "test_backup_*.py" -v
 

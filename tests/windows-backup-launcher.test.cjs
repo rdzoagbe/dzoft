@@ -32,6 +32,7 @@ test('Backup UI explicitly names Free-plan limitations without marking readiness
  assert.match(docs,/interactive|interactif|interactive/i);
  assert.match(docs,/SHA-256/);
  assert.match(docs,/isolated/i);
- assert.match(docs,/Not yet created or restore-tested/);
+ assert.match(docs,/downloaded copy (passed|successfully)|Google Drive/);
+ assert.match(docs,/full restore|restoration|restore.*not.*test/i);
  assert.doesNotMatch(html,/Dernière sauvegarde vérifiée : aujourd'hui/);
 });

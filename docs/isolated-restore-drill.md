@@ -1,6 +1,6 @@
 # DZOFT — Isolated recovery drill checklist
 
-**Status: NOT restore-tested.** This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
+**Status: NOT restore-tested.** One encrypted application-data archive was later uploaded to Google Drive and the downloaded copy successfully decrypted/validated. The full restore and Auth account re-association remain untested. See [Auth recovery plan](auth-recovery.md). This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
 
 ## Verified inventory snapshot — 15 November 2026
 
@@ -12,7 +12,7 @@ A read-only query against the connected DZOFT Supabase project returned:
 | `private` base tables | 6 |
 | Supabase Auth accounts | 3 |
 | Objects in private `client-files` bucket | 0 |
-| Independently stored encrypted export | Not verified |
+| Independently stored encrypted export | One Google Drive copy downloaded and decrypted; full restore not tested |
 | Auth/Storage restoration test | Not performed |
 
 These are **point-in-time counts**, not a manifest of a particular backup; counts and content may change.
