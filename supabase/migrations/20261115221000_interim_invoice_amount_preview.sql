@@ -225,6 +225,7 @@ returns jsonb
 language plpgsql security definer set search_path='' as $fn$
 declare
   q public.quotes;
+  prior private.dzoft_issued_invoice_registry;
   preview jsonb;
   balance numeric;
 begin
@@ -237,6 +238,16 @@ begin
   end if;
   select * into q from public.quotes where id=p_quote for update;
   if not found then raise exception 'Project not found'; end if;
+  select * into prior from private.dzoft_issued_invoice_registry
+    where quote_id=p_quote and basis='final';
+  if found then
+    if prior.amount is distinct from p_expected_amount then
+      raise exception 'A different final amount was already issued';
+    end if;
+    return jsonb_build_object('invoice_id',prior.invoice_id,
+      'number',prior.invoice_number,'issued_on',prior.issued_on,
+      'amount',prior.amount,'already_issued',true);
+  end if;
   preview:=public.invoice_draft_amount(p_quote);
   balance:=(preview->>'remaining')::numeric;
   if (preview->>'has_final')::boolean then
