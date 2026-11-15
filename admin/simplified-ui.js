@@ -9,8 +9,8 @@ var nav=function(id,fr,english,svg){
  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+svg+'</svg><span data-fr="'+fr+'" data-en="'+english+'">'+tr(fr,english)+'</span>';
  b.addEventListener('click',function(){location.hash='#/'+(id==='dossiers'?'dossiers':id==='finance'?'paiements':id);});return b;
 };
-var folder=nav('dossiers','Dossiers','Cases','<path d="M3 7h7l2 2h9v11H3z"/><path d="M3 7V5h7l2 2"/>');
-var finance=nav('finance','Paiements','Payments','<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M7 15h3"/>');
+var folder=nav('dossiers','Dossiers clients','Clients & projects','<path d="M3 7h7l2 2h9v11H3z"/><path d="M3 7V5h7l2 2"/>');
+var finance=nav('finance','Factures & paiements','Billing','<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M7 15h3"/>');
 var dashboard=side.querySelector('[data-tab=dash]'),inbox=side.querySelector('[data-tab=inbox]');
 if(dashboard)dashboard.insertAdjacentElement('afterend',folder);
 if(inbox)inbox.insertAdjacentElement('afterend',finance);
@@ -55,15 +55,36 @@ function translate(){
  if(dashboard){dashboard.lastChild&&dashboard.lastChild.nodeType===3&&(dashboard.lastChild.textContent=tr('Aujourd’hui','Today'));}
  document.querySelectorAll('[data-fr][data-en]').forEach(function(node){node.textContent=tr(node.dataset.fr,node.dataset.en);});
  document.getElementById('dossiers-title').textContent=tr('Tous mes dossiers','All cases');
- document.getElementById('dossiers-intro').textContent=tr('Clients, demandes, devis et projets au même endroit.','Clients, enquiries, quotations and projects together.');
- search.placeholder=tr('Rechercher un client, un projet, un devis…','Search clients, projects, quotes…');
- document.getElementById('finance-title').textContent=tr('Paiements','Payments');
- document.getElementById('finance-intro').textContent=tr('Montants confirmés, restes à recevoir et accès direct aux paiements des projets.','Confirmed receipts, balances and quick access to project payments.');
+ document.getElementById('dossiers-intro').textContent=tr('Un seul espace pour retrouver un client, sa demande, son devis et son projet.','Find a client, request, quote or project in one place.');
+ search.placeholder=tr('Trouver un client, un devis, un projet…','Find a client, quote or project…');
+ document.getElementById('finance-title').textContent=tr('Factures et paiements','Invoices & payments');
+ document.getElementById('finance-intro').textContent=tr('Encaissements vérifiés, soldes et factures par projet : sélectionnez un projet pour agir.','Verified receipts, balances and invoices by project. Open a project to take action.');
  var more=app.querySelector('.workspace-more');if(more){
   more.querySelector('[data-extra=settings]').textContent=tr('Paramètres','Settings');
   more.querySelector('[data-extra=trash]').textContent=tr('Corbeille','Trash');
  }
  if(email){var d=email.closest('details');if(d){d.querySelector('summary').textContent=tr('Historique des e-mails et notifications','Email and notification history');}}
 }
+// Keep trash reachable without a sixth primary navigation item.
+var settings=document.getElementById('v-settings');
+if(settings&&!document.getElementById('workspace-trash-link')){
+ var link=document.createElement('a');link.id='workspace-trash-link';
+ link.href='#/corbeille';link.className='btn sm line workspace-trash-link';
+ settings.appendChild(link);
+}
+var shortcuts=document.querySelector('#v-dash .dashboard-shortcuts');
+if(shortcuts&&!document.getElementById('workspace-finance-shortcut')){
+ var billing=document.createElement('a');billing.href='#/paiements';
+ billing.id='workspace-finance-shortcut';billing.className='btn sm line';
+ shortcuts.appendChild(billing);
+}
+var oldTranslate=translate;
+translate=function(){
+ oldTranslate();
+ var trash=document.getElementById('workspace-trash-link');
+ if(trash)trash.textContent=tr('Voir la corbeille et restaurer','View trash and restore');
+ var billing=document.getElementById('workspace-finance-shortcut');
+ if(billing)billing.textContent=tr('Voir factures et paiements','Invoices and payments');
+};
 document.addEventListener('dzoft:locale-change',translate);translate();
 })();
