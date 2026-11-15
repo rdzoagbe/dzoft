@@ -45,8 +45,8 @@ test('invoice has visible calculation breakdown, reversible pre-issue review and
  assert.match(html,/data-iv="confirm">Confirmer et émettre officiellement/);
  assert.match(html,/Aucun numéro n’a été créé pour l’instant/);
  assert.match(html,/rev\.dataset\.amount !== value\.toFixed\(2\)/);
- assert.match(html,/Pourquoi je ne peux pas supprimer cette facture/);
- assert.match(html,/une facture rectificative/);
+ assert.match(html,/Corriger ou annuler une facture émise/);
+ assert.match(html,/document rectificatif/);
  assert.match(html,/un avoir/);
  assert.match(html,/issue_final_invoice_checked/);
  assert.match(html,/issue_interim_invoice/);
