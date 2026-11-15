@@ -13,8 +13,8 @@ function deferred(){
 function harness(options={}){
  const now=Math.floor(Date.now()/1000);
  const key=options.store || 'rd-admin-session';
- const disk=new Map(),calls=[],redirects=[];
- if(options.session!==null)disk.set(key,JSON.stringify(options.session||{
+ const disk=options.disk||new Map(),calls=[],redirects=[];
+ if(options.session!==null&&!options.preexisting)disk.set(key,JSON.stringify(options.session||{
   access_token:'access-A',refresh_token:'refresh-A',
   expires_at:now+(options.expiring?-5:3600),
   user:{id:'owner-id'}
@@ -46,7 +46,7 @@ function harness(options={}){
   }
   return {ok:true,status:200,text:async()=>name.startsWith('/rest/v1/')?'[]':'{}'};
  }
- Object.assign(win,{fetch,atob:(s)=>Buffer.from(s,'base64').toString('latin1'),btoa:(s)=>Buffer.from(s,'latin1').toString('base64'),Uint8Array,navigator:{}});
+ Object.assign(win,{fetch,atob:(s)=>Buffer.from(s,'base64').toString('latin1'),btoa:(s)=>Buffer.from(s,'latin1').toString('base64'),Uint8Array,navigator:options.locks?{locks:options.locks}:{}});
  const context={window:win,localStorage,fetch,URL,history:win.history,atob:win.atob,btoa:win.btoa,Uint8Array,
   Promise,Date,Number,String,Math,JSON,Error};
  vm.runInNewContext(source,context,{filename:'admin/sb.js'});
@@ -65,6 +65,28 @@ test('parallel near-expiry private requests share precisely one rotating refresh
  assert.equal(privateCalls.length,3);
  assert.ok(privateCalls.every(c=>c.authorization==='Bearer access-B'));
  assert.equal(h.sb.session().refresh_token,'refresh-B');
+});
+
+test('Web Locks serialize refresh across independent DZOFT tabs sharing storage',async()=>{
+ const disk=new Map(),gate=deferred();
+ let tail=Promise.resolve();
+ const locks={request:(_key,_options,callback)=>{
+  const task=tail.then(callback);
+  tail=task.catch(()=>{});
+  return task;
+ }};
+ const first=harness({expiring:true,disk,locks,refreshGate:gate});
+ const second=harness({preexisting:true,disk,locks});
+ const a=first.sb.select('quotes');
+ const b=second.sb.select('clients');
+ await flush();
+ assert.equal(first.calls.filter(x=>x.path==='/auth/v1/token').length,1);
+ assert.equal(second.calls.filter(x=>x.path==='/auth/v1/token').length,0);
+ gate.resolve();
+ await Promise.all([a,b]);
+ assert.equal(first.calls.filter(x=>x.path==='/auth/v1/token').length,1);
+ assert.equal(second.calls.filter(x=>x.path==='/auth/v1/token').length,0);
+ assert.equal(second.calls.find(x=>x.path==='/rest/v1/clients').authorization,'Bearer access-B');
 });
 
 test('logout during refresh cannot resurrect old session or make private request',async()=>{
