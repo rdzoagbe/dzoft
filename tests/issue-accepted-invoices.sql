@@ -44,7 +44,7 @@ begin
     raise exception 'Balance invoice not idempotent'; end if;
   if not exists(select 1 from public.quotes q,jsonb_array_elements(q.invoices) i
     where q.id=q_key and i->>'id'=final_invoice->>'invoice_id' and i->>'paid'='false'
-      and i->>'generatedByDzoft'='true' and i->>'n'='Facture de solde' and not (i ? 'change')) then
+      and i->>'generatedByDzoft'='true' and i->>'n'='Facture de solde' and i->>'basis'='final' and not (i ? 'change')) then
     raise exception 'Balance invoice not stored as an unpaid issued invoice'; end if;
   state:=public.project_tracking(q_key);
   if (state->>'total')::numeric<>1500 or (state->>'received')::numeric<>800
