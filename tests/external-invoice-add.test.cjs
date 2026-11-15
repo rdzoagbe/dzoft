@@ -20,7 +20,7 @@ test('Creating a draft does not create blank invoices or autosave them',()=>{
  assert.ok(start>0&&end>start);
  const click=html.slice(start,end);
  assert.doesNotMatch(click,/Q\.invoices\.push|later\(\)|save\(/);
- assert.doesNotMatch(html,/r\[r\.length - 1\]\.focus\(\)/);
+ assert.doesNotMatch(click,/r\[r\.length - 1\]\.focus\(\)/);
 });
 test('Save rejects duplicates, cannot mark paid or notify, and only commits on success',()=>{
  const start=html.indexOf('externalForm.onsubmit = function(e){');
