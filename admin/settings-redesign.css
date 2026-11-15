@@ -73,3 +73,8 @@
 @media(prefers-reduced-motion:reduce){
  #app #v-settings .settings-fold-arrow,#app #v-settings .settings-language-switch button{transition:none}
 }
+
+/* Payment QR and locally encrypted backup notes remain inside their collapsed Settings panels. */
+#app #v-settings .settings-payment-qr-tip,
+#app #v-settings .settings-backup-instructions{font-size:12.5px;line-height:1.6;color:#586987;background:#f3f5fc;border:1px solid #e0e6f4;border-radius:10px;padding:10px 12px;margin:8px 0 12px}
+#app #v-settings .settings-resource-links a{overflow-wrap:anywhere;white-space:normal;text-align:center}
