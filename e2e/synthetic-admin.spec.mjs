@@ -146,3 +146,63 @@ test('Brevo status appears in private project activity with synthetic, read-only
  await expect(page.locator('#activity-log')).toContainText('Delivered');
  await expect(page.locator('#activity-log')).toContainText('Accepted by Brevo');
 });
+
+
+test('Regular mobile browser keeps its dock and normal header; installed-only menu stays hidden',async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes('mobile'),'Only the mobile layout is relevant');
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ await expect(page.locator('body')).not.toHaveClass(/dzoft-installed-mobile/);
+ await expect(page.locator('#app .side')).toBeVisible();
+ await expect(page.locator('#app .top #b-out')).toBeVisible();
+ await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
+});
+
+test('Installed mobile admin has exactly one top menu, all routes, no bottom dock, and closes after navigation',async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes('mobile'),'Only the mobile layout is relevant');
+ // Simulate the Android installed PWA display-mode flag without contacting a real account.
+ await page.addInitScript(()=>{
+   const original=window.matchMedia.bind(window);
+   window.matchMedia=function(query){
+     if(query==='(display-mode: standalone)')return {
+       media:query,matches:true,onchange:null,addEventListener(){},removeEventListener(){},
+       addListener(){},removeListener(){},dispatchEvent(){return false;}
+     };
+     return original(query);
+   };
+ });
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ await expect(page.locator('body')).toHaveClass(/dzoft-installed-mobile/);
+ await expect(page.locator('#app .side')).toBeHidden();
+ await expect(page.locator('#app .top .brand')).toBeHidden();
+ await expect(page.locator('#app .top #b-out')).toBeHidden();
+ await expect(page.locator('#app .top .workspace-more')).toBeHidden();
+ const menu=page.locator('#dzoft-installed-app-menu'),toggle=page.locator('#dzoft-installed-menu-toggle');
+ await expect(toggle).toBeVisible();
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ await toggle.click();
+ await expect(toggle).toHaveAttribute('aria-expanded','true');
+ for(const route of ['tableau-de-bord','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille'])
+   await expect(menu.locator('button[data-app-route="'+route+'"]')).toBeVisible();
+ await expect(menu.locator('a[href="../?workspace=admin"]')).toBeVisible();
+ await expect(menu.locator('button[data-app-action="logout"]')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ await toggle.click();
+ await menu.locator('button[data-app-route="parametres"]').click();
+ await expect(page.locator('#v-settings')).toBeVisible();
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ await page.locator('#admin-language-settings button[data-dzoft-lang="en"]').click();
+ await toggle.click();
+ await expect(menu.locator('button[data-app-route="paiements"]')).toContainText('Payments');
+ await menu.locator('button[data-app-route="paiements"]').click();
+ await expect(page.locator('#v-finance')).toBeVisible();
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ expect(errors,'Installed mobile menu should not introduce browser errors').toEqual([]);
+ const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+ expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+});
