@@ -9,7 +9,8 @@ function context(mock) {
  const events=[], storage=new Map();
  const payload=Buffer.from(JSON.stringify({
   aal:mock.aal || 'aal1',
-  amr:mock.aal==='aal2'?[{method:'totp',timestamp:Math.floor(Date.now()/1000)}]:[],
+  session_id:'synthetic-session',
+  amr:mock.amr || (mock.aal==='aal2'?[{method:'totp',timestamp:Math.floor(Date.now()/1000)}]:[]),
   email:'synthetic@example.invalid'
  })).toString('base64url');
  const jwt='eyJhbGciOiJub25lIn0.'+payload+'.synthetic';
@@ -115,9 +116,12 @@ test('UI has device-first login while retaining password, TOTP and owner enforce
  assert.match(html,/id="device-passkeys"/);
  assert.match(html,/sb\.devicePasskey\.signIn\(\)/);
  assert.match(html,/sb\.devicePasskey\.register\(\)/);
- assert.match(html,/if \(f && !sb\.mfaFresh\(MFA_WINDOW\)\)/);
+ assert.match(html,/if \(f && !sb\.ownerAccessFresh\(MFA_WINDOW\)\)/);
  assert.match(html,/sb\.rpc\('is_owner', \{\}, true\)/);
  assert.match(html,/sb\.mfa\.challenge\(mfaFactor\)/);
+ assert.match(html,/id="m-passkey-go"/);
+ assert.match(html,/sb\.devicePasskey\.signIn\(\)/);
+ assert.match(html,/!activeOwnerHasFactor \|\| sb\.ownerAccessFresh\(MFA_WINDOW\)/);
  assert.doesNotMatch(html,/MFA_WINDOW\s*=\s*0|mfaFresh\s*=\s*\(\)\s*=>\s*true/);
  const inline=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
  for(const script of inline)if(script[1].trim())assert.doesNotThrow(()=>new vm.Script(script[1]));
@@ -162,4 +166,29 @@ test('enabled passkeys are discovered automatically, while HTTP 404 remains a sa
  assert.match(html,/Passkey endpoint unavailable \(HTTP 404\)/);
  assert.match(html,/experimental passkey endpoint/);
  assert.match(html,/err && err\.status === 404/);
+});
+
+test('a recent passkey can satisfy owner UI guidance without falsifying Supabase AAL2',async()=>{
+ const t=Math.floor(Date.now()/1000);
+ const h=context({signedIn:true,aal:'aal1',amr:[{method:'passkey',timestamp:t}]});
+ assert.equal(h.sb.passkeyFresh(43200),true);
+ assert.equal(h.sb.ownerAccessFresh(43200),true);
+ assert.equal(h.sb.mfaFresh(43200),false,'Passkey alone must never satisfy the AAL2-only factor-management gate');
+ await assert.rejects(h.sb.devicePasskey.register(),/Complete the account verification step/);
+});
+test('password-only, unrelated AMR and stale passkeys do not satisfy owner freshness',()=>{
+ const now=Math.floor(Date.now()/1000);
+ for(const amr of [
+  [{method:'password',timestamp:now}],
+  [{method:'passkey',timestamp:now-13*3600}],
+  [{method:'passkey',timestamp:now+300}],
+  [{method:'passkey',timestamp:'invalid'}],
+  []
+ ]){
+  const h=context({signedIn:true,aal:'aal1',amr});
+  assert.equal(h.sb.passkeyFresh(43200),false);
+  assert.equal(h.sb.ownerAccessFresh(43200),false);
+ }
+ const totp=context({signedIn:true,aal:'aal2'});
+ assert.equal(totp.sb.ownerAccessFresh(43200),true,'Existing MFA sign-in must still work');
 });
