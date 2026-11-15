@@ -42,13 +42,16 @@ test('signature email remains token/client-scoped, rate-limited and provider err
 test('backup script uses documented remote link flags, explicit project and protected local directory',()=>{
  const src=read('tools/backup_dzoft.py'),gitignore=read('.gitignore');
  assert.match(src,/\["link", "--project-ref", ref\]/);
- assert.match(src,/\["db", "dump", "--linked", "--schema=public,private"\]/);
- assert.match(src,/\["db", "dump", "--linked", "--schema=public,private", "--data-only", "--use-copy"\]/);
- assert.match(src,/\["db", "dump", "--linked", "--role-only"\]/);
- assert.match(src,/\["storage", "ls", "-r", "ss:\/\/\/" \+ BUCKET/);
- assert.match(src,/"--experimental", "--linked"\]/);
+ assert.match(src,/def select_remote_flags\(group:/);
+ assert.match(src,/run_cli\(group \+ \["--help"\]\)/);
+ assert.match(src,/return \["--remote=" \+ PROJECT_REF\] if explicit_ref else \["--remote"\]/);
+ assert.match(src,/return \["--linked"\]/);
+ assert.match(src,/raise BackupError\(/);
+ assert.match(src,/dump_flags = select_remote_flags\(\["db", "dump"\], explicit_ref=True\)/);
+ assert.match(src,/run_cli\(\["db", "dump"\] \+ dump_flags \+ \["--schema=public,private"\]\)/);
+ assert.match(src,/storage_ls_flags = select_remote_flags\(\["storage", "ls"\]\)/);
+ assert.match(src,/storage_cp_flags = select_remote_flags\(\["storage", "cp"\]\)/);
  assert.match(src,/cwd=PROJECT_ROOT/);
- assert.doesNotMatch(src,/remote\s*=\s*"--remote=/);
  assert.match(gitignore,/supabase\/\.temp\//);
  assert.match(gitignore,/supabase\/\.profiles\//);
  assert.match(gitignore,/\*\.dzoftbak/);
