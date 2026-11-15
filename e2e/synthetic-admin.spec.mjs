@@ -44,7 +44,7 @@ const syntheticSb = `
   },
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
-   if(name==='project_tracking')return {total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[]};
+   if(name==='project_tracking')return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
    if(name==='invoice_draft_amount')return {remaining:1050,has_final:false};
    if(name==='list_project_work_items')return work;
    if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
