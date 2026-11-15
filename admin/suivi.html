@@ -891,7 +891,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
           '<div class="invoice-record-fields">'+
             (official ?
               '<div class="invoice-fixed-values invoice-wide" role="group" aria-label="Informations définitives de la facture">'+
-                '<div><small>'+il('Libellé','Description')+'</small><strong>' + esc(x.n || 'Facture') + '</strong></div>'+
+                '<div><small>'+il('Libellé','Description')+'</small><strong>' + esc(invoiceTitle(x)) + '</strong></div>'+
                 '<div><small>'+il('Numéro officiel','Official invoice number')+'</small><strong>' + esc(number) + '</strong></div>'+
                 '<div><small>'+il('Montant émis','Issued amount')+'</small><strong>' + eur(x.amt) + '</strong></div>'+
               '</div>' :
@@ -905,7 +905,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
               (x.payment_reported_at ? '<p class="muted">Paiement déclaré le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + '</p>' : '') +
             '</div>'+
             '<div class="invfile">' +
-              (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + ' · ' + (official ? 'PDF officiel archivé · non modifiable' : 'pièce jointe') + '</span>' +
+              (x.file ? '<span class="muted">'+il('PDF : ','PDF: ') + esc(x.fileName || il('facture jointe','attached invoice')) + ' · ' + (official ? il('PDF officiel archivé · non modifiable','Official PDF archived · read-only') : il('pièce jointe','attachment')) + '</span>' +
                 (!official ? '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : '') :
                 (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">'+il('PDF en attente','PDF pending')+'</span>')) +
             '</div>'+
@@ -1007,7 +1007,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         draftMax = Math.round(max*100)/100;
         draftInfo = info;
         if ($('iv-explanation')) $('iv-explanation').textContent =
-          'Calcul vérifié : devis accepté ' + eur(info.base_total || 0) + ' − factures précédentes ' + eur(info.invoiced || 0) + ' − paiements non encore facturés ' + eur(info.unbilled_receipts || 0) + ' = montant disponible ' + eur(draftMax) + '. Vous pouvez choisir un montant inférieur avant de créer le numéro officiel.';
+          il('Calcul vérifié : devis accepté ','Verified calculation: accepted quote ') + eur(info.base_total || 0) + il(' − factures précédentes ',' − previously invoiced ') + eur(info.invoiced || 0) + il(' − paiements non encore facturés ',' − confirmed but not yet invoiced payments ') + eur(info.unbilled_receipts || 0) + il(' = montant disponible ',' = available to invoice ') + eur(draftMax) + il('. Vous pouvez choisir un montant inférieur avant de créer le numéro officiel.','. You can enter a smaller amount before the official invoice number is issued.');
         if ($('iv-billed')) $('iv-billed').textContent = eur(info.invoiced || 0);
         if ($('iv-remaining')) $('iv-remaining').textContent = eur(max);
         if ($('iv-total')) $('iv-total').textContent = eur(info.base_total || 0);
