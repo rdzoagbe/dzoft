@@ -1,0 +1,75 @@
+/* DZOFT settings redesign, 2026-11-15.
+   Language is always visible; all other settings are accessible in native,
+   keyboard-friendly, initially collapsed <details> sections. */
+#app #v-settings{max-width:980px;margin:0 auto;padding-bottom:28px}
+#app #v-settings .settings-page-heading{margin-bottom:20px}
+#app #v-settings .settings-page-heading h2{font-size:clamp(24px,3vw,30px);margin:2px 0 5px}
+#app #v-settings .settings-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.12em;color:#6650d9}
+#app #v-settings .settings-intro{font-size:13.5px;line-height:1.6;color:#697186}
+#app #v-settings .settings-language-panel{background:linear-gradient(130deg,#fff 10%,#faf8ff 100%);border:1px solid #e3defa;border-radius:20px;box-shadow:0 8px 28px rgba(65,40,155,.05);padding:21px;margin:0 0 15px}
+#app #v-settings .settings-language-intro{display:flex;gap:13px;align-items:flex-start;margin-bottom:17px}
+#app #v-settings .settings-language-intro h3{font-size:17px;line-height:1.35;margin:0 0 4px;color:#20213a}
+#app #v-settings .settings-language-icon{flex:0 0 43px;height:43px;border-radius:13px;background:#eee9ff;color:#5633d5;display:flex;align-items:center;justify-content:center}
+#app #v-settings .settings-language-icon svg{width:24px;height:24px}
+#app #v-settings .settings-language-help{font-size:12.5px;line-height:1.55;color:#6b7185;margin:0;max-width:620px}
+#app #v-settings .settings-language-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;width:100%;max-width:100%;margin:0;padding:0;background:transparent;border:0;border-radius:0;box-sizing:border-box}
+#app #v-settings .settings-language-switch button{min-width:0;min-height:66px;width:100%;background:#fff;color:#262943;border:1px solid #dfe2ef;border-radius:13px;padding:12px;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;font-size:14px;box-shadow:0 2px 7px rgba(37,39,87,.025);transition:background .15s,border-color .15s,box-shadow .15s}
+#app #v-settings .settings-language-switch button:hover{border-color:#9988ea;background:#faf9ff}
+#app #v-settings .settings-language-switch button[aria-pressed="true"]{border:2px solid #6245e8;padding:11px;background:#f5f2ff;color:#32206f;box-shadow:0 0 0 2px rgba(99,70,232,.06)}
+#app #v-settings .settings-lang-code{font-size:12px;letter-spacing:.025em;font-weight:850;flex:0 0 37px;height:37px;border-radius:10px;background:#f0f0f7;color:#666b7d;display:flex;align-items:center;justify-content:center}
+#app #v-settings .settings-language-switch button[aria-pressed="true"] .settings-lang-code{background:#e3dcff;color:#5035cd}
+#app #v-settings .settings-lang-name{font-weight:750;flex:1;white-space:normal;min-width:0}
+#app #v-settings .settings-lang-selected{display:inline-flex;flex:0 0 20px;height:20px;align-items:center;justify-content:center;border-radius:50%;background:#6245e8;color:white;font-size:12px;font-weight:850;opacity:0}
+#app #v-settings .settings-language-switch button[aria-pressed="true"] .settings-lang-selected{opacity:1}
+#app #v-settings .settings-language-switch button:focus-visible{outline:3px solid #a79cf9;outline-offset:3px}
+#app #v-settings .settings-fold-list{display:grid;gap:11px}
+#app #v-settings .settings-fold{margin:0;background:#fff;border:1px solid #e5e6f0;border-radius:16px;box-shadow:0 4px 16px rgba(25,24,54,.03);overflow:hidden;min-width:0}
+#app #v-settings .settings-fold[open]{border-color:#cfc7f8;box-shadow:0 8px 28px rgba(60,44,134,.065)}
+#app #v-settings .settings-fold>summary{list-style:none;display:flex;align-items:center;gap:13px;min-height:73px;padding:14px 17px;cursor:pointer;user-select:none;color:#23253d}
+#app #v-settings .settings-fold>summary::-webkit-details-marker{display:none}
+#app #v-settings .settings-fold>summary::marker{content:''}
+#app #v-settings .settings-fold>summary:hover{background:#fbfaff}
+#app #v-settings .settings-fold>summary:focus-visible{outline:3px solid #8b7ae9;outline-offset:-4px;border-radius:14px}
+#app #v-settings .settings-fold-icon{flex:0 0 43px;height:43px;border-radius:12px;background:#f2f0fc;color:#604bd5;display:flex;align-items:center;justify-content:center}
+#app #v-settings .settings-fold-icon svg{height:21px;width:21px}
+#app #v-settings .settings-fold-label{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+#app #v-settings .settings-fold-label strong{font-size:14px;font-weight:800;color:#282a43;line-height:1.35}
+#app #v-settings .settings-fold-label small{font-size:12px;color:#777d91;line-height:1.4}
+#app #v-settings .settings-fold-status{color:#8a631e;font-size:10px;font-weight:750;white-space:nowrap;background:#fff5dc;border-radius:20px;padding:5px 8px}
+#app #v-settings .settings-fold-arrow{display:flex;align-items:center;justify-content:center;flex:0 0 27px;height:27px;color:#6d6786;transition:transform .15s}
+#app #v-settings .settings-fold-arrow svg{width:19px;height:19px}
+#app #v-settings .settings-fold[open] .settings-fold-arrow{transform:rotate(180deg)}
+#app #v-settings .settings-fold-body{border-top:1px solid #efedf5;padding:19px 20px 22px;overflow-wrap:anywhere}
+#app #v-settings .settings-fold-body .grid2{margin:10px 0 12px}
+#app #v-settings .settings-fold-body input,#app #v-settings .settings-fold-body textarea{max-width:100%;box-sizing:border-box}
+#app #v-settings .settings-fold-body label{font-size:12.5px}
+#app #v-settings .settings-subsection+.settings-subsection{border-top:1px solid #ececf3;margin-top:20px;padding-top:20px}
+#app #v-settings .settings-subsection h3{font-size:15px;margin:0 0 8px}
+#app #v-settings .settings-body-help{font-size:13px;line-height:1.65;color:#677083;margin:0 0 17px}
+#app #v-settings .settings-save-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:15px 0 0}
+#app #v-settings #p-msg{font-size:13px;color:#68748b;align-self:center}
+#app #v-settings .settings-resource-links{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0 0}
+#app #v-settings .settings-legal-warning{font-size:13px;line-height:1.55;margin:12px 0 0;padding:12px;border-radius:11px;border:1px solid #f1dfb5;background:#fff6dc;color:#835914}
+#app #v-settings #backup-readiness .today-backup-warning{margin:0 0 10px}
+@media(max-width:650px){
+ #app #v-settings .settings-page-heading{padding:3px 2px 0}
+ #app #v-settings .settings-language-panel{padding:15px 13px;border-radius:17px}
+ #app #v-settings .settings-language-switch{gap:8px}
+ #app #v-settings .settings-language-switch button{min-height:61px;padding:9px 8px;gap:7px}
+ #app #v-settings .settings-language-switch button[aria-pressed="true"]{padding:8px 7px}
+ #app #v-settings .settings-lang-code{flex-basis:31px;height:31px;font-size:11px}
+ #app #v-settings .settings-lang-name{font-size:12.5px}
+ #app #v-settings .settings-lang-selected{flex-basis:17px;height:17px;font-size:10px}
+ #app #v-settings .settings-fold>summary{min-height:69px;padding:12px 11px;gap:9px}
+ #app #v-settings .settings-fold-icon{flex-basis:38px;height:38px}
+ #app #v-settings .settings-fold-label strong{font-size:13.5px}
+ #app #v-settings .settings-fold-label small{font-size:11.5px}
+ #app #v-settings .settings-fold-status{font-size:9.5px;padding:4px 6px}
+ #app #v-settings .settings-fold-body{padding:16px 13px 20px}
+ #app #v-settings .settings-fold-body .grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
+ #app #v-settings .settings-save-actions .btn{min-height:43px}
+ #app #v-settings .settings-resource-links a{width:100%;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){
+ #app #v-settings .settings-fold-arrow,#app #v-settings .settings-language-switch button{transition:none}
+}

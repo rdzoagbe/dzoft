@@ -30,6 +30,37 @@ Object.assign(dzoftEnglish, {
   'Langue de l’interface': 'Interface language',
   'Choisissez la langue de l’espace privé DZOFT. Votre choix est enregistré sur cet appareil et appliqué immédiatement.': 'Choose the language for your private DZOFT workspace. Your preference is saved on this device and applied immediately.'
 });
+Object.assign(dzoftEnglish, {
+  "DZOFT · MON ESPACE": "DZOFT · MY WORKSPACE",
+  "Personnalisez votre espace et retrouvez vos réglages au même endroit.": "Customize your workspace and find all your preferences in one place.",
+  "Choisissez votre langue. Le changement est immédiat et enregistré sur cet appareil.": "Choose your language. Changes apply instantly and are saved on this device.",
+  "Autres réglages": "Other settings",
+  "Sécurité du compte": "Account security",
+  "Authentification et clés d’accès": "Authentication and passkeys",
+  "Vérification du compte": "Account verification",
+  "Connexion par appareil · empreinte ou Windows Hello": "Device sign-in · fingerprint or Windows Hello",
+  "Option facultative. Les clés d’accès nécessitent la prise en charge des passkeys par Supabase Auth. Votre mot de passe et votre application d’authentification restent disponibles.": "Optional feature. Passkeys require support from Supabase Auth. Your password and authenticator app remain available.",
+  "Moyens de paiement": "Payment methods",
+  "Coordonnées bancaires et liens de règlement": "Bank details and payment links",
+  "Sauvegardes et données": "Backups and data",
+  "Protection et récupération des données": "Data protection and recovery",
+  "À vérifier": "Needs verification",
+  "À compléter": "Action needed",
+  "Documents légaux": "Legal documents",
+  "CGV et obligations légales": "Terms of sale and legal requirements",
+  "Affiché dans « Comment payer », uniquement aux clients qui ont accepté un devis. Leur numéro de devis leur est proposé comme référence de virement.": "Shown under “How to pay” only to clients who have accepted a quote. Their quote number is suggested as a transfer reference.",
+  "Sauvegarde récupérable : non vérifiée.": "Recoverable backup: not verified.",
+  "La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.": "Storing data in Supabase does not constitute an independent backup.",
+  "Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.": "Check your Supabase project backup policy and keep a separate secure copy of client files. A database backup does not contain Storage files.",
+  "Vérifier les sauvegardes Supabase": "Review Supabase backups",
+  "Guide de sauvegarde et restauration": "Backup and restore guide",
+  "Conditions générales de vente (version actuelle 2026-11) :": "Terms of sale (current version 2026-11):",
+  "archivée ici": "archived here",
+  "À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.": "To complete in your terms of sale: the consumer mediator (Article 16), required for individual consumers.",
+  "Conditions générales de vente (version actuelle 2026-11) : rdzoagbe.github.io/dzoft/cgv.html. La version 2026-10, applicable aux accords conclus sous cette version, reste archivée ici. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.": "Terms of sale (current version 2026-11): rdzoagbe.github.io/dzoft/cgv.html. The 2026-10 version remains archived for agreements accepted under that version. Clients accept the applicable terms when signing their quote and may request work to begin before the 14-day withdrawal period ends.",
+  "La version 2026-10, applicable aux accords conclus sous cette version, reste": "The 2026-10 version, applicable to agreements accepted under that version, remains",
+  "Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.": "Clients accept the applicable terms when confirming their quote and may request work to begin before the 14-day withdrawal period ends."
+});
 function dzoftDynamicEnglish(text){
  return text.replace(/^Confirmé par Roland le /,'Confirmed by Roland on ').replace(/^Merci ! Votre déclaration du (.+) a été transmise\. Roland confirmera la réception après vérification\.$/,'Thank you! Your payment notification from $1 has been sent. Roland will confirm receipt after checking.').replace(/^Le client a déclaré son paiement le /,'The client reported their payment on ').replace(' · Réception confirmée.',' · Receipt confirmed.').replace(' · Vérifiez votre compte bancaire avant de confirmer.',' · Check your bank account before confirming.').replace(/^Paiement déclaré envoyé par le client · /,'Payment reported as sent by the client · ').replace(/^Paiement déclaré envoyé · /,'Payment reported as sent · ').replace(/^Paiement reçu et confirmé par Roland · /,'Payment received and confirmed by Roland · ').replace(/^Confirmation de paiement corrigée : vérification en cours · /,'Payment confirmation corrected: verification in progress · ').replace(/^Paiement à vérifier · /,'Payment to check · ').replace(/^Signé électroniquement le /,'Electronically signed on ').replace(' · code reçu par e-mail à ',' · email code sent to ').replace(' · adresse IP ',' · IP address ').replace(' · montant accepté : ',' · accepted amount: ').replace(/^CGV (\S+) acceptées\. Le client a demandé un$/, 'Terms $1 accepted. The client requested an').replace(/^démarrage immédiat$/, 'immediate start').replace(/^: vous pouvez commencer dès réception de l’acompte\.$/, ': work can start once the deposit is received.').replace('(compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)','(active client account: use the sign-in link; the old private link is revoked)').replace(/^E-mail envoyé au client le /,'Client email sent on ').replace(/^Envoyé le /,'Sent on ').replace(/^Fiche projet · /,'Project record · ').replace(/^Devis accepté · /,'Quote accepted · ').replace(/^E-mail du devis renvoyé · /,'Quote email resent · ').replace(/Client : envoyé/g,'Client: sent').replace(/Vous : envoyé/g,'You: sent').replace(/^(\d+) \/ (\d+) étapes terminées$/, '$1 / $2 stages completed').replace(/^Acompte à recevoir · /,'Deposit pending · ').replace(/^(\d+) nouvelles? demandes?$/, '$1 new requests').replace(/^(\d+) messages? non lus?$/, '$1 unread messages').replace(/^(\d+) devis en attente d’accord$/, '$1 quotes awaiting acceptance').replace(/^(\d+) projets? en cours$/, '$1 active projects').replace(/^signés en (\d{4})$/, 'signed in $1').replace(/^de suivi mensuel$/, 'monthly maintenance').replace(/^accepté le /,'accepted on ');
 }

@@ -209,8 +209,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
-<script src="../assets/dzoft-language.js?v=20261114-lang-settings" defer></script>
+<script src="../assets/dzoft-language.js?v=20261115-settings" defer></script>
 <link rel="stylesheet" href="simplified-ui.css?v=20261115-one-menu">
+<link rel="stylesheet" href="settings-redesign.css?v=20261115-1">
 </head>
 <body class="dzoft-admin">
 
@@ -360,50 +361,104 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     </section>
 
     <section id="v-settings" hidden>
-      <div class="bar"><h2>Paramètres</h2></div>
+      <div class="bar settings-page-heading">
+        <div>
+          <p class="settings-eyebrow">DZOFT · MON ESPACE</p>
+          <h2>Paramètres</h2>
+          <p class="settings-intro">Personnalisez votre espace et retrouvez vos réglages au même endroit.</p>
+        </div>
+      </div>
+
       <div class="panel settings-language-panel" id="admin-language-settings">
-        <h3>Langue de l’interface</h3>
-        <p class="settings-language-help">Choisissez la langue de l’espace privé DZOFT. Votre choix est enregistré sur cet appareil et appliqué immédiatement.</p>
+        <div class="settings-language-intro">
+          <span class="settings-language-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9c-3-3-4-6-4-9s1-6 4-9z"/></svg></span>
+          <div><h3>Langue de l’interface</h3><p class="settings-language-help">Choisissez votre langue. Le changement est immédiat et enregistré sur cet appareil.</p></div>
+        </div>
         <div class="lang-switch-app settings-language-switch" role="group" aria-label="Langue de l’interface">
-          <button type="button" data-dzoft-lang="fr" aria-pressed="true" aria-label="Français">Français</button>
-          <button type="button" data-dzoft-lang="en" aria-pressed="false" aria-label="English">English</button>
+          <button type="button" data-dzoft-lang="fr" aria-pressed="true" aria-label="Français">
+            <span class="settings-lang-code" aria-hidden="true">FR</span>
+            <span class="settings-lang-name">Français</span>
+            <span class="settings-lang-selected" aria-hidden="true">✓</span>
+          </button>
+          <button type="button" data-dzoft-lang="en" aria-pressed="false" aria-label="English">
+            <span class="settings-lang-code" aria-hidden="true">EN</span>
+            <span class="settings-lang-name">English</span>
+            <span class="settings-lang-selected" aria-hidden="true">✓</span>
+          </button>
         </div>
       </div>
-      <div class="panel">
-        <h3>Paiement</h3>
-        <p style="font-size:13.5px;color:var(--mute);margin-bottom:6px">Affiché dans « Comment payer », uniquement aux clients qui ont accepté un devis. Leur numéro de devis leur est proposé comme référence de virement.</p>
-        <div class="grid2">
-          <div><label for="p-holder">Titulaire du compte</label><input id="p-holder" placeholder="Roland Dzoagbe"></div>
-          <div><label for="p-bank">Banque (facultatif)</label><input id="p-bank"></div>
-          <div><label for="p-iban">IBAN</label><input id="p-iban" placeholder="FR76 …" autocomplete="off" spellcheck="false"></div>
-          <div><label for="p-bic">BIC (facultatif)</label><input id="p-bic" autocomplete="off" spellcheck="false"></div>
-        </div>
-        <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
-        <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
-        <div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" style="font-size:13.5px;color:var(--mute);align-self:center"></span></div>
-      </div>
-      <div class="panel" id="backup-readiness">
-        <h3>Protection des données clients</h3>
-        <p class="today-backup-warning"><b>Sauvegarde récupérable : non vérifiée.</b> La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.</p>
-        <p class="today-backup-caption">Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.</p>
-        <div class="acts" style="display:flex;flex-wrap:wrap;gap:9px;margin-top:13px">
-          <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/database/backups">Vérifier les sauvegardes Supabase</a>
-          <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/docs/guides/platform/backups">Guide de sauvegarde et restauration</a>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Account verification</h3>
-        <div id="mfa-box"><p style="color:var(--mute)">Loading…</p></div>
-      </div>
-      <div class="panel" id="device-passkey-panel">
-        <h3>Device sign-in · Windows Hello or fingerprint</h3>
-        <p style="font-size:13.5px;color:var(--mute);margin:5px 0 12px">Optional feature. Your Supabase Auth server must support passkeys before you can register a laptop or phone. Email, password and your authenticator remain available.</p>
-        <div id="device-passkeys"><p style="color:var(--mute)">Checking device support…</p></div>
-      </div>
-      <div class="panel">
-        <h3>Documents légaux</h3>
-        <p style="font-size:14px">Conditions générales de vente (version actuelle 2026-11) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a>. La version 2026-10, applicable aux accords conclus sous cette version, reste <a href="../cgv-2026-10.html" target="_blank" rel="noopener">archivée ici</a>. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
-        <p style="font-size:14px;margin-top:8px;color:#8a5a00;background:#fff3d6;border-radius:8px;padding:8px 10px">À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.</p>
+
+      <div class="settings-fold-list" aria-label="Autres réglages">
+        <details class="settings-fold" id="settings-security" name="dzoft-settings">
+        <summary id="settings-security-heading">
+          <span class="settings-fold-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <span class="settings-fold-label"><strong>Sécurité du compte</strong><small>Authentification et clés d’accès</small></span>
+          
+          <span class="settings-fold-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+          <div class="settings-fold-body">
+            <div class="settings-subsection">
+              <h3>Vérification du compte</h3>
+              <div id="mfa-box"><p style="color:var(--mute)">Loading…</p></div>
+            </div>
+            <div class="settings-subsection" id="device-passkey-panel">
+              <h3>Connexion par appareil · empreinte ou Windows Hello</h3>
+              <p class="settings-body-help">Option facultative. Les clés d’accès nécessitent la prise en charge des passkeys par Supabase Auth. Votre mot de passe et votre application d’authentification restent disponibles.</p>
+              <div id="device-passkeys"><p style="color:var(--mute)">Checking device support…</p></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-fold" id="settings-payment" name="dzoft-settings">
+        <summary id="settings-payment-heading">
+          <span class="settings-fold-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h5"/></svg></span>
+          <span class="settings-fold-label"><strong>Moyens de paiement</strong><small>Coordonnées bancaires et liens de règlement</small></span>
+          
+          <span class="settings-fold-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+          <div class="settings-fold-body">
+            <p class="settings-body-help">Affiché dans « Comment payer », uniquement aux clients qui ont accepté un devis. Leur numéro de devis leur est proposé comme référence de virement.</p>
+            <div class="grid2">
+              <div><label for="p-holder">Titulaire du compte</label><input id="p-holder" placeholder="Roland Dzoagbe"></div>
+              <div><label for="p-bank">Banque (facultatif)</label><input id="p-bank"></div>
+              <div><label for="p-iban">IBAN</label><input id="p-iban" placeholder="FR76 …" autocomplete="off" spellcheck="false"></div>
+              <div><label for="p-bic">BIC (facultatif)</label><input id="p-bic" autocomplete="off" spellcheck="false"></div>
+            </div>
+            <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
+            <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
+            <div class="acts settings-save-actions"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" aria-live="polite"></span></div>
+          </div>
+        </details>
+
+        <details class="settings-fold" id="settings-backup" name="dzoft-settings">
+        <summary id="settings-backup-heading">
+          <span class="settings-fold-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h3"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/></svg></span>
+          <span class="settings-fold-label"><strong>Sauvegardes et données</strong><small>Protection et récupération des données</small></span>
+          <span class="settings-fold-status">À vérifier</span>
+          <span class="settings-fold-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+          <div class="settings-fold-body" id="backup-readiness">
+            <p class="today-backup-warning"><b>Sauvegarde récupérable : non vérifiée.</b> La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.</p>
+            <p class="today-backup-caption">Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.</p>
+            <div class="acts settings-resource-links">
+              <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/database/backups">Vérifier les sauvegardes Supabase</a>
+              <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/docs/guides/platform/backups">Guide de sauvegarde et restauration</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-fold" id="settings-legal" name="dzoft-settings">
+        <summary id="settings-legal-heading">
+          <span class="settings-fold-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h9l4 4v14H7a3 3 0 0 1 0-6h13"/><path d="M16 3v5h4M7 3a3 3 0 0 0-3 3v12a3 3 0 0 1 3-3"/></svg></span>
+          <span class="settings-fold-label"><strong>Documents légaux</strong><small>CGV et obligations légales</small></span>
+          <span class="settings-fold-status">À compléter</span>
+          <span class="settings-fold-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+          <div class="settings-fold-body">
+            <p class="settings-body-help">Conditions générales de vente (version actuelle 2026-11) : <a href="../cgv.html" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/cgv.html</a>. La version 2026-10, applicable aux accords conclus sous cette version, reste <a href="../cgv-2026-10.html" target="_blank" rel="noopener">archivée ici</a>. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.</p>
+            <p class="settings-legal-warning">À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.</p>
+          </div>
+        </details>
       </div>
     </section>
 

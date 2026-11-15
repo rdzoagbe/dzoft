@@ -206,3 +206,64 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
 });
+
+
+test('Settings redesign keeps payment, security, backups and legal controls tucked away until opened',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v-settings')).toBeVisible();
+ await expect(page.locator('#admin-language-settings')).toBeVisible();
+ const french=page.locator('#admin-language-settings [data-dzoft-lang="fr"]');
+ const english=page.locator('#admin-language-settings [data-dzoft-lang="en"]');
+ await expect(french).toHaveAttribute('aria-pressed','true');
+ await english.click();
+ await expect(english).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('html')).toHaveAttribute('lang','en');
+ await expect(page.locator('#settings-payment')).not.toHaveAttribute('open');
+ await expect(page.locator('#settings-security')).not.toHaveAttribute('open');
+ await expect(page.locator('#settings-backup')).not.toHaveAttribute('open');
+ await expect(page.locator('#settings-legal')).not.toHaveAttribute('open');
+ await expect(page.locator('#p-holder')).toBeHidden();
+ await page.locator('#settings-payment>summary').click();
+ await expect(page.locator('#p-holder')).toBeVisible();
+ await expect(page.locator('#p-save')).toBeVisible();
+ await page.locator('#settings-security>summary').click();
+ await expect(page.locator('#mfa-box')).toBeVisible();
+ await expect(page.locator('#settings-payment')).not.toHaveAttribute('open');
+ await page.locator('#settings-backup>summary').click();
+ await expect(page.locator('#backup-readiness')).toBeVisible();
+ await page.locator('#settings-legal>summary').click();
+ await expect(page.locator('#settings-legal a[href="../cgv-2026-10.html"]')).toBeVisible();
+ expect(errors,'Settings redesign must not cause browser errors').toEqual([]);
+ const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+ expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+});
+
+test('Installed mobile one-menu navigates to clean accordion Settings',async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes('mobile'),'Installed PWA check needs mobile viewport');
+ await page.addInitScript(()=>{
+  const original=window.matchMedia.bind(window);
+  window.matchMedia=function(query){
+   if(query==='(display-mode: standalone)')return {
+    media:query,matches:true,onchange:null,addEventListener(){},removeEventListener(){},
+    addListener(){},removeListener(){},dispatchEvent(){return false;}
+   };
+   return original(query);
+  };
+ });
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('body')).toHaveClass(/dzoft-installed-mobile/);
+ await page.locator('#dzoft-installed-menu-toggle').click();
+ await page.locator('#dzoft-installed-menu-panel button[data-app-route="parametres"]').click();
+ await expect(page.locator('#v-settings')).toBeVisible();
+ await expect(page.locator('#admin-language-settings')).toBeVisible();
+ await expect(page.locator('#app .side')).toBeHidden();
+ await expect(page.locator('#dzoft-installed-menu-toggle')).toBeVisible();
+ await expect(page.locator('#settings-payment')).not.toHaveAttribute('open');
+ await page.locator('#settings-payment>summary').click();
+ await expect(page.locator('#p-iban')).toBeVisible();
+});
