@@ -20,31 +20,31 @@ Supabase recommends off-site database exports for Free projects. Database backup
 
 This workflow uses **native pg_dump**, not Docker or the Supabase CLI. It preserves the current GitHub Pages + Supabase Free setup. It creates **one consistent custom-format PostgreSQL snapshot of public and private application schemas**, encrypted immediately in memory into a .dzoftbak file. It intentionally does **not** export managed Auth data, Supabase service roles, project settings or Edge Function secrets. It does not restore, change, or upload any client data.
 
-**Prerequisites:** PostgreSQL 18 Command Line Tools (pg_dump, pg_restore, psql), Python with the existing cryptography dependency, a trusted PC with device encryption, and a secure external or independently synced folder. Check \`"C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" --version\`. The client PostgreSQL version can be newer than Supabase's database version.
+**Prerequisites:** PostgreSQL 18 Command Line Tools (pg_dump, pg_restore, psql), Python with the existing cryptography dependency, a trusted PC with device encryption, and a secure external or independently synced folder. Check `"C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" --version`. The client PostgreSQL version can be newer than Supabase's database version.
 
 ### Configure your correct database connection
 
-1. Open [DZOFT Supabase → Connect](https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc?showConnect=true) and choose **Session pooler** (port 5432) if your Windows internet connection uses IPv4. Copy **host** and **user** separately from the Connect details. The user must have the form \`postgres.rzghbvmszbjlqkdjzpxc\`. The port 6543 **transaction pooler must not be used**. If direct IPv6 works, the correct host is \`db.rzghbvmszbjlqkdjzpxc.supabase.co\` and user is \`postgres\`.
+1. Open [DZOFT Supabase → Connect](https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc?showConnect=true) and choose **Session pooler** (port 5432) if your Windows internet connection uses IPv4. Copy **host** and **user** separately from the Connect details. The user must have the form `postgres.rzghbvmszbjlqkdjzpxc`. The port 6543 **transaction pooler must not be used**. If direct IPv6 works, the correct host is `db.rzghbvmszbjlqkdjzpxc.supabase.co` and user is `postgres`.
 2. Retrieve your **database password** privately from Supabase's secure settings. Never send it through chat, insert it into a command, add it to source code or copy the full connection URL into terminal history.
-3. Optionally download the project's SSL CA certificate from Supabase's SSL/connection settings and supply \`-PgSslRootCert "C:\path\to\supabase-ca.crt"\` for **verify-full** identity checks. Without it, SSL is required but server certificate identity is not independently verified.
-4. Run \`git pull --ff-only\` inside your existing DZOFT checkout **after the reviewed PR is merged to main**. Before merge, use a separate checkout on the feature branch to run an isolated synthetic test; do not replace the production script manually.
+3. Optionally download the project's SSL CA certificate from Supabase's SSL/connection settings and supply `-PgSslRootCert "C:\path\to\supabase-ca.crt"` for **verify-full** identity checks. Without it, SSL is required but server certificate identity is not independently verified.
+4. Run `git pull --ff-only` inside your existing DZOFT checkout **after the reviewed PR is merged to main**. Before merge, use a separate checkout on the feature branch to run an isolated synthetic test; do not replace the production script manually.
 
-From PowerShell in \`C:\Users\<WindowsUser>\DZOFT-Backup-Runner\`, using the exact host and user from your Supabase dashboard, and with an independently protected destination connected:
+From PowerShell in `C:\Users\<WindowsUser>\DZOFT-Backup-Runner`, using the exact host and user from your Supabase dashboard, and with an independently protected destination connected:
 
-\`\`\`powershell
-.\tools\backup-dzoft-windows.ps1 -NativePostgres \`
-  -PgHost "HOST_FROM_SUPABASE_CONNECT" \`
-  -PgUser "postgres.rzghbvmszbjlqkdjzpxc" \`
-  -PgPort 5432 \`
-  -PgBin "C:\Program Files\PostgreSQL\18\bin" \`
+```powershell
+.\tools\backup-dzoft-windows.ps1 -NativePostgres `
+  -PgHost "HOST_FROM_SUPABASE_CONNECT" `
+  -PgUser "postgres.rzghbvmszbjlqkdjzpxc" `
+  -PgPort 5432 `
+  -PgBin "C:\Program Files\PostgreSQL\18\bin" `
   -OffsitePath "E:\Private-DZOFT-Backups"
-\`\`\`
+```
 
-The script securely prompts for the **database password** and a separate, strong **encryption passphrase**; it does not store either. Its PostgreSQL child processes receive the database password in process environment (not command line). It uses \`pg_dump --format=custom --schema=public --schema=private\`, passes the dump in memory to the encrypted backup helper, then verifies that the resulting archive is decryptable. It copies the encrypted archive to the chosen destination, SHA-256 compares it, and independently decrypt-verifies that copy with your passphrase again. Do not use a destination under GitHub.
+The script securely prompts for the **database password** and a separate, strong **encryption passphrase**; it does not store either. Its PostgreSQL child processes receive the database password in process environment (not command line). It uses `pg_dump --format=custom --schema=public --schema=private`, passes the dump in memory to the encrypted backup helper, then verifies that the resulting archive is decryptable. It copies the encrypted archive to the chosen destination, SHA-256 compares it, and independently decrypt-verifies that copy with your passphrase again. Do not use a destination under GitHub.
 
-If \`storage.objects\` reports **zero** objects in the private \`client-files\` bucket before and after the dump, the manifest records \`verified_empty_by_sql\`. If it reports objects or cannot be checked, the script **fails closed**. To intentionally create a **partial database-only archive** while separate object backup arrangements are made, add \`-SkipStorage\`; never treat such an archive as complete. Other buckets, managed Storage metadata, Auth credentials, email provider settings, managed roles and secrets are not backed up by this helper.
+If `storage.objects` reports **zero** objects in the private `client-files` bucket before and after the dump, the manifest records `verified_empty_by_sql`. If it reports objects or cannot be checked, the script **fails closed**. To intentionally create a **partial database-only archive** while separate object backup arrangements are made, add `-SkipStorage`; never treat such an archive as complete. Other buckets, managed Storage metadata, Auth credentials, email provider settings, managed roles and secrets are not backed up by this helper.
 
-**Native restore format:** The encrypted archive contains \`database/application.dump\` rather than the CLI workflow's separate \`database/schema.sql\`, \`database/data.sql\`, and \`database/roles.sql\`. Extract only in an isolated encrypted folder. The \`.dump\` file is PostgreSQL custom format intended for \`pg_restore\` after manually preparing a disposable target. It is not an immediately-restorable full Supabase image. Do not restore it to the production database. Refer to the isolated recovery drill guide and explicitly check owner grants, policies, Auth references and extensions.
+**Native restore format:** The encrypted archive contains `database/application.dump` rather than the CLI workflow's separate `database/schema.sql`, `database/data.sql`, and `database/roles.sql`. Extract only in an isolated encrypted folder. The `.dump` file is PostgreSQL custom format intended for `pg_restore` after manually preparing a disposable target. It is not an immediately-restorable full Supabase image. Do not restore it to the production database. Refer to the isolated recovery drill guide and explicitly check owner grants, policies, Auth references and extensions.
 
 
 ## Windows 11: create a local encrypted application-data backup
