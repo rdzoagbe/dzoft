@@ -34,7 +34,7 @@ test('invoice PDF preparation does not create receipts, send mail, or mutate the
 
 test('invoice print UI is limited to the signed-in admin and not included in client portal',()=>{
  const admin=read('admin/suivi.html'),client=read('espace/index.html'),css=read('assets/project-tracking.css');
- assert.match(admin,/invoice-preview\.js\?v=20261114/);
+ assert.match(admin,/invoice-preview\.js\?v=(?:20261114|20261115)/);
  assert.doesNotMatch(client,/invoice-preview\.js/);
  assert.match(admin,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template)/);
  assert.match(css,/tracking-issue-btn/);
