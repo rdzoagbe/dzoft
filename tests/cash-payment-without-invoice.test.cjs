@@ -46,6 +46,6 @@ test('production data remains intact; migration only relaxes the link, adds guar
  assert.match(sql,/create or replace function public\.record_project_payment_unbilled/);
  assert.match(sql,/create or replace function public\.link_project_receipt_invoice/);
  const admin=at('admin/suivi.html'),client=at('espace/index.html');
- assert.match(admin,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template)/);
- assert.match(client,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template)/);
+ assert.match(admin,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2)/);
+ assert.match(client,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2)/);
 });
