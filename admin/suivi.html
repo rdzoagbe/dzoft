@@ -51,6 +51,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .muted{color:var(--mute);font-size:13.5px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .iv-act{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border:1px solid #dfe5f1;border-radius:12px;margin:10px 0;background:#f7f9fd}.iv-act p{margin:0;flex:1;min-width:200px;font-size:14px}
+.iv-draft{align-items:end;background:#f0f4ff;border-color:#cbd6fb}.iv-draft-copy{flex:1;min-width:220px}.iv-draft-copy label{font-size:13px;margin:9px 0 4px}.iv-draft-copy input{width:min(220px,100%);font-weight:800;font-size:18px}.iv-draft [data-iv-hint]{margin-top:5px}.iv-draft button{min-height:42px}.iv-draft button:disabled{opacity:.55;cursor:not-allowed}.invoice-delivery{flex-basis:100%;line-height:1.5;overflow-wrap:anywhere}
 .switch{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;margin:6px 0}
 .switch input{width:20px;height:20px}
 .link{display:flex;gap:8px;margin-top:8px}
@@ -147,6 +148,87 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .email-delivery-error strong{color:#ba3531}
 .email-delivery-warning{background:#fffaf0;border-color:#e7d3a1}
 
+/* Invoice studio — focused, mobile-first billing workflow. */
+.invoice-studio{overflow:visible}
+.invoice-studio-head{padding:0 0 17px;border-bottom:1px solid #e8e9f2;margin-bottom:14px}
+.invoice-studio-kicker{font-size:10px;letter-spacing:.17em;font-weight:900;color:#5840ce;margin:0 0 7px}
+.invoice-studio-title{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.invoice-studio-title h2{font:700 clamp(21px,2vw,27px)/1.2 Sora,system-ui,sans-serif;letter-spacing:-.04em;margin:0 0 7px}
+.invoice-studio-title p{color:#69738a;font-size:12.5px;line-height:1.55;margin:0;max-width:440px}
+.invoice-studio-icon{width:47px;height:47px;border-radius:14px;background:#eeeaff;color:#5038da;display:grid;place-items:center;font-size:24px;font-weight:800;flex:none}
+.invoice-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:17px 0 23px}
+.invoice-stats>div{background:#f7f7fc;border:1px solid #ececf4;padding:13px 12px;border-radius:12px;min-width:0}
+.invoice-stats span{display:block;font-size:11px;line-height:1.35;color:#6c758b;min-height:28px}
+.invoice-stats strong{display:block;color:#171b30;font-size:clamp(13px,1.5vw,17px);letter-spacing:-.03em;overflow-wrap:anywhere;margin-top:5px}
+.invoice-stats>div:last-child{background:#eeebff;border-color:#dfd9ff}
+.invoice-stats>div:last-child strong{color:#4730b8}
+.invoice-stage{margin:22px 0 0}
+.invoice-stage+.invoice-stage{padding-top:18px;border-top:1px solid #edecf4}
+.invoice-stage-heading{display:flex;gap:10px;align-items:start;margin-bottom:13px}
+.invoice-step{display:grid;place-items:center;flex:0 0 30px;height:30px;color:#4c35d2;background:#eeebff;font-size:12px;font-weight:900;border-radius:9px}
+.invoice-stage-heading h3{font-family:Sora,system-ui,sans-serif;font-size:15px;margin:1px 0 3px;letter-spacing:-.025em}
+.invoice-stage-heading p{font-size:12px;line-height:1.5;color:#6d7489;margin:0}
+.invoice-count{display:inline-block;background:#eaeaf4;padding:2px 7px;border-radius:16px;color:#555c76;font-family:system-ui;font-size:11px;vertical-align:middle}
+.iv-actions-root{display:grid;gap:9px}
+.iv-actions-root>.iv-act{margin:0}
+.iv-actions-root .iv-draft{display:grid;grid-template-columns:1fr;gap:11px;background:#fafaff;border:1px solid #dedaf5;border-radius:15px;padding:17px}
+.iv-draft-copy{min-width:0}
+.iv-draft-copy>b{display:none}
+.iv-draft-copy>p:first-of-type{display:none}
+.iv-draft-copy label{font-size:12px;font-weight:800;color:#303957;margin:0 0 6px}
+.iv-draft-copy input{height:53px;font-size:22px;font-weight:800;letter-spacing:-.025em;max-width:none}
+.iv-draft-copy input[aria-invalid="true"]{border-color:#bd5955}
+.iv-draft-copy [data-iv-hint]{font-size:11.5px;line-height:1.55;margin-top:8px!important;color:#666f88}
+.iv-draft .btn.main{width:100%;min-height:45px;font-size:13px}
+.iv-draft .btn.main:disabled{opacity:.56;cursor:not-allowed}
+.iv-draft-preview{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11.5px;color:#6a748d}
+.iv-draft-preview b{color:#4540aa}
+.invoice-list{display:grid;gap:10px;min-width:0}
+.invoice-record{background:#fff;border:1px solid #e6e8f1;border-radius:14px;padding:14px;min-width:0}
+.invoice-record.paid{background:#f7fbf9;border-color:#cfe8da}
+.invoice-record-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.invoice-record-head b{font-size:13.5px;color:#161b34;overflow-wrap:anywhere}
+.invoice-record-head p{color:#6a748c;font-size:11.5px;margin:3px 0 0}
+.invoice-record-head>strong{font-size:16px;color:#20244d;white-space:nowrap}
+.invoice-record-status{font-size:11.5px;padding:5px 9px;border-radius:9px;background:#f3f3fa;color:#595c71;font-weight:650;display:inline-flex;margin:10px 0 6px}
+.invoice-record-status.is-paid{background:#e2f4e8;color:#14633d}
+.invoice-record-delivery{font-size:11px;color:#66718a;line-height:1.5;margin:3px 0 10px;overflow-wrap:anywhere}
+.invoice-record-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:9px 0 0}
+.invoice-record-actions .btn{min-height:37px;flex:1 1 auto;white-space:normal}
+.invoice-record-more{margin-top:12px;padding-top:12px;border-top:1px solid #eff0f5}
+.invoice-record-more>summary{font-size:11.5px;font-weight:750;color:#5652a9;cursor:pointer;padding:2px 0}
+.invoice-record-more[open]>summary{margin-bottom:11px}
+.invoice-record-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
+.invoice-record-fields label{font-size:11px;font-weight:650;color:#59647c;margin:0}
+.invoice-record-fields input{margin-top:4px;min-width:0}
+.invoice-record-fields .invoice-wide{grid-column:1/-1}
+.invoice-record-fields .invfile{grid-column:1/-1}
+.invoice-record-fields .pd{display:flex;align-items:center}
+.invoice-record-more .invoice-record-note{font-size:11px;color:#71788d;margin-top:7px}
+.invoice-record .rm{margin-left:auto}
+.invoice-more{border:1px solid #e9e9f3;border-radius:14px;margin-top:20px;background:#fafaff}
+.invoice-more>summary{cursor:pointer;list-style:none;padding:14px 16px;color:#29304f;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.invoice-more>summary::-webkit-details-marker{display:none}
+.invoice-more>summary:after{content:'+';color:#5540da;font-size:18px;margin-left:14px}
+.invoice-more[open]>summary:after{content:'−'}
+.invoice-more>summary span{display:grid;gap:2px}
+.invoice-more>summary small{font-size:11px;font-weight:400;color:#69738b}
+.invoice-more>#iv-payments-slot,.invoice-more>#payment-steps,.invoice-more>p,.invoice-more>button{margin:0 15px 14px}
+.invoice-more #tracking-admin{margin:0 0 12px}
+.invoice-more #tracking-admin .tracking-stats{margin-top:10px}
+.invoice-more #tracking-admin>h2{font-size:16px}
+.invoice-more #payment-steps:empty{display:none}
+.invoice-more.invoice-legacy>button{display:inline-flex}
+@media(max-width:560px){
+ .invoice-studio-icon{width:40px;height:40px}
+ .invoice-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .invoice-stats>div:last-child{grid-column:1/-1}
+ .invoice-stats span{min-height:0}
+ .invoice-record-head{gap:7px}
+ .invoice-record-head>strong{font-size:14px}
+ .invoice-record-fields{grid-template-columns:1fr}
+ .invoice-record-actions>.btn{flex-basis:100%}
+}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
@@ -268,11 +350,36 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <div id="docs"></div>
   </section>
 
-  <section class="card" id="c-inv" hidden>
-    <h2>Factures <span class="sp"></span><button class="btn sm line" id="iv-add" type="button">+ Facture</button></h2>
-    <p class="muted" style="margin-bottom:8px">DZOFT peut générer et numéroter une facture automatiquement. Son PDF est archivé dans le stockage privé après émission et accessible au client. Si l’archivage a échoué, utilisez « Archiver le PDF » dans le paiement. Pour une facture créée ailleurs, renseignez son numéro et joignez son PDF. Le bouton « Envoyer par e-mail » vous permet de notifier les deux parties ; cochez « Joindre le PDF » seulement si vous souhaitez l’ajouter aux deux e-mails. Cochez « Payée » dès réception. Le suivi de l’acompte est regroupé ici. Confirmez chaque facture après réception bancaire ; la date de confirmation est conservée. Le jalon d’acompte reste distinct pour préserver l’historique existant.</p>
-    <p class="muted" id="iv-account-note" hidden>Pour joindre un PDF privé, le client doit avoir créé son compte avec l’adresse e-mail de sa fiche.</p>
-    <div id="payment-steps"></div><div id="invs"></div>
+  <section class="card invoice-studio" id="c-inv" hidden>
+    <header class="invoice-studio-head">
+      <div class="invoice-studio-kicker">DZOFT · FACTURATION</div>
+      <div class="invoice-studio-title"><div><h2>Factures</h2><p>Préparez une facture, vérifiez son montant, puis envoyez-la au client et à votre adresse de suivi.</p></div><span class="invoice-studio-icon" aria-hidden="true">€</span></div>
+    </header>
+    <div class="invoice-stats" id="iv-overview" aria-label="Récapitulatif des factures">
+      <div><span>Devis accepté</span><strong id="iv-total">—</strong></div>
+      <div><span>Déjà facturé</span><strong id="iv-billed">—</strong></div>
+      <div><span>Reste à facturer</span><strong id="iv-remaining">—</strong></div>
+    </div>
+    <section class="invoice-stage" aria-labelledby="iv-create-title">
+      <div class="invoice-stage-heading"><span class="invoice-step">01</span><div><h3 id="iv-create-title">Créer une facture</h3><p>Le montant est modifiable <b>avant</b> l’émission. Le numéro sera attribué automatiquement.</p></div></div>
+      <div id="iv-actions" class="iv-actions-root"></div>
+    </section>
+    <section class="invoice-stage invoice-issued" aria-labelledby="iv-history-title">
+      <div class="invoice-stage-heading"><span class="invoice-step">02</span><div><h3 id="iv-history-title">Factures émises <span class="invoice-count" id="iv-count"></span></h3><p>Consultez le PDF et le statut de chaque envoi. Les factures émises restent inchangées.</p></div></div>
+      <div id="invs" class="invoice-list"></div>
+    </section>
+    <details class="invoice-more" id="iv-payments-advanced">
+      <summary><span><b>Suivi des paiements</b><small>Encaissements, acomptes, rapprochements</small></span></summary>
+      <div id="iv-payments-slot"></div>
+      <div id="payment-steps"></div>
+    </details>
+    <details class="invoice-more invoice-legacy">
+      <summary><span><b>Options avancées</b><small>Factures externes et informations pratiques</small></span></summary>
+      <p class="muted">Une facture créée ailleurs conserve son propre numéro. Pour une facture DZOFT, utilisez le formulaire « Créer une facture » ci-dessus.</p>
+      <button class="btn sm line" id="iv-add" type="button">+ Ajouter une facture externe</button>
+      <p class="muted" id="iv-account-note" hidden>Pour archiver un PDF privé, le client doit avoir créé son compte.</p>
+      <p class="muted">Pour rectifier une facture déjà émise, ne modifiez pas son montant ni son numéro : utilisez un document rectificatif traçable (avoir ou facture rectificative, selon le cas).</p>
+    </details>
   </section>
 
   <section class="card" id="c-care" hidden>
@@ -318,7 +425,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
-<datalist id="iv-kinds"><option value="Facture d’acompte"><option value="Facture de solde"><option value="Facture suivi mensuel"><option value="Facture"></datalist>
+<datalist id="iv-kinds"><option value="Facture d’acompte"><option value="Facture de solde"><option value="Facture intermédiaire"><option value="Facture suivi mensuel"><option value="Facture"></datalist>
 <datalist id="ev-providers"><option value="GitHub"><option value="GitHub Pages"><option value="OVH"><option value="Supabase (Paris)"><option value="Google Play Console"><option value="Apple App Store Connect"><option value="Formspree"><option value="Brevo"></datalist>
 
 <script src="sb.js?v=20261109-passkey"></script>
@@ -343,6 +450,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
+  var draftPreviewToken = 0, draftMax = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
@@ -737,42 +845,146 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function deposit(){ var f = ((Q.accepted_data || Q.data || {}).f) || {}, t = +Q.accepted_total || +Q.total || 0; return Math.round(t * (parseFloat(f.deppct) || 30)) / 100; }
   function renderInv(){
     prepareInvoices();
-    $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x, i){
-      return '<div class="invr' + (x.paid ? ' paid' : '') + '" data-i="' + i + '"><input class="n" list="iv-kinds" value="' + esc(x.n) + '" placeholder="Libellé"' + (x.generatedByDzoft ? ' disabled title="Facture émise"' : '') + '>' +
-        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° Revolut (ex. INV-2)"' + (x.basis ? ' disabled title="Facture émise"' : '') + '>' +
-        '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"' + (x.basis ? ' disabled title="Facture émise"' : '') + '>' +
-        '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Confirmer la réception du paiement') + '</label>' + (x.payment_reported_at ? '<p class="muted">Le client a déclaré son paiement le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + (x.paid ? ' · Réception confirmée.' : ' · Vérifiez votre compte bancaire avant de confirmer.') + '</p>' : '') +
-        '<button class="rm" type="button" title="Retirer"' + (x.basis ? ' disabled' : '') + '>×</button>' +
-      '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien de paiement Revolut (https://…)" inputmode="url">' +
-      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button>' + (x.generatedByDzoft ? '<span class="muted">PDF officiel archivé · non modifiable</span>' : '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>') : x.basis ? '<span class="muted">PDF en attente d’archivage.</span><button class="btn sm main" type="button" data-a="pdf-archive">Archiver le PDF</button>' : x.generatedByDzoft ? '<span class="muted">PDF en attente d’archivage : utilisez « Archiver le PDF » dans Paiements.</span>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') +
-        '<label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" class="attach"' + (x.attachPdf ? ' checked' : '') + (!x.file ? ' disabled' : '') + '> Joindre le PDF officiel aux e-mails</label>' +
-        '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button>' + (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm main" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '') + '</div></div>';
-    }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
+    var total = $('iv-total'), count = $('iv-count'), billed = $('iv-billed'), remaining = $('iv-remaining');
+    if (total) total.textContent = eur(Q.accepted_total || Q.total || 0);
+    if (count) count.textContent = Q.invoices.length;
+    if (billed) billed.textContent = eur((Q.invoices || []).filter(function(x){ return !x.care && !x.change; }).reduce(function(sum,x){ return sum + (Number(x.amt) || 0); },0));
+    if (remaining) remaining.textContent = 'Vérification…';
+    $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
+      var official = !!(x.generatedByDzoft || x.basis), number = String(x.num || '').trim();
+      var caption = (x.issuedOn ? 'Émise le ' + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString('fr-FR') : 'Facture externe');
+      var status = x.paid ? 'Paiement reçu' : x.file ? 'PDF prêt' : 'PDF à archiver';
+      return '<article class="invr invoice-record' + (x.paid ? ' paid' : '') + '" data-i="' + i + '">' +
+        '<div class="invoice-record-head"><div><b>' + esc(number || 'Facture externe · numéro à saisir') + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
+        '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
+        (official ? '<p class="invoice-record-delivery">' + esc(invoiceDeliverySummary(x)) + '</p>' : '')+
+        '<div class="invoice-record-actions">' +
+          (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">Télécharger le PDF</button>' : '')+
+          (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">Archiver le PDF</button>' : '')+
+          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-email">' + (x.emailAt ? 'Renvoyer le PDF + ma copie' : 'Envoyer le PDF + ma copie') + '</button>' : '')+
+          (!x.file && !official ? '<span class="muted">Ajoutez le PDF dans les détails pour activer l’envoi.</span>' : '')+
+        '</div>'+
+        '<details class="invoice-record-more"><summary>' + (official ? 'Informations de la facture' : 'Modifier la facture externe') + '</summary>'+
+          '<div class="invoice-record-fields">'+
+            '<label>Libellé<input class="n" list="iv-kinds" value="' + esc(x.n || '') + '" placeholder="Libellé"' + (official ? ' disabled title="Facture émise"' : '') + '></label>'+
+            '<label>Numéro<input class="num" value="' + esc(x.num || '') + '" placeholder="Numéro officiel"' + (official ? ' disabled title="Facture officielle : numéro immuable"' : '') + '></label>'+
+            '<label>Montant (€)<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"' + (official ? ' disabled title="Facture officielle : montant immuable"' : '') + '></label>'+
+            '<label class="invoice-wide">Lien de paiement (facultatif)<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
+            '<div class="invoice-wide">' +
+              (official ? '<span class="invoice-record-note">Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».</span>' :
+              '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Marquer comme payée') + '</label>') +
+              (x.payment_reported_at ? '<p class="muted">Paiement déclaré le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + '</p>' : '') +
+            '</div>'+
+            '<div class="invfile">' +
+              (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + ' · ' + (official ? 'PDF officiel archivé · non modifiable' : 'pièce jointe') + '</span>' +
+                (!official ? '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : '') :
+                (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF en attente</span>')) +
+            '</div>'+
+            (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' : '')+
+            (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '')+
+          '</div>'+
+        '</details>'+
+        '</article>';
+    }).join('') : '<div class="invoice-empty">Aucune facture émise pour ce projet. Le formulaire ci-dessus vous permet de créer la première.</div>';
     DzoftTracking.lockInvoices(Q);
     renderInvoiceActions();
   }
-  /* Visible shortcuts above the folded invoice list: create the balance invoice, send an issued invoice. */
+  /* Real delivery status from the outbox, never from the timestamp recorded
+     when the owner clicked Send. Separate client and owner copy are audited. */
+  function invoiceDeliverySummary(invoice){
+    var event = events.filter(function(e){ return e.event_type === 'invoice_shared' && e.invoice_id === invoice.id; }).sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);})[0];
+    if (!event) return invoice.emailAt ? 'Envoi demandé · état à actualiser' : 'Pas encore envoyée';
+    var related = outbox.filter(function(job){ return job.event_id === event.id; });
+    function status(role){
+      var job = related.filter(function(j){ return j.recipient_role === role; })[0];
+      if (!job) return 'aucun e-mail enregistré';
+      if (job.status === 'failed') return 'échec · consulter « Historique et e-mails »';
+      if (job.status === 'queued' || job.status === 'processing') return 'en cours';
+      if (job.status === 'sent') {
+        if (job.delivered_at || job.delivery_status === 'delivered') return 'livré';
+        if (job.bounced_at || job.delivery_status === 'bounced') return 'échec de livraison';
+        return 'accepté par le fournisseur (livraison à confirmer)';
+      }
+      return 'état indisponible';
+    }
+    return 'Client : ' + status('client') + ' · Votre copie : ' + status('owner');
+  }
+  function parseInvoiceAmount(raw){
+    var s = String(raw || '').trim().replace(',', '.');
+    if (!/^\d+(?:\.\d{1,2})?$/.test(s)) return null;
+    var cents = Math.round(Number(s) * 100);
+    return Number.isSafeInteger(cents) && cents > 0 ? cents / 100 : null;
+  }
+  function refreshDraftHint(bar){
+    var field = bar.querySelector('[data-iv-amount]');
+    var btn = bar.querySelector('[data-iv="final"]');
+    var hint = bar.querySelector('[data-iv-hint]');
+    if (!field || !btn || !hint) return;
+    var val = parseInvoiceAmount(field.value), max = draftMax;
+    if (max === null) { btn.disabled = true; hint.textContent = 'Vérification du solde auprès du serveur…'; return; }
+    var valid = val !== null && Math.round(val*100) <= Math.round(max*100);
+    btn.disabled = !valid;
+    field.setAttribute('aria-invalid', valid ? 'false' : 'true');
+    hint.textContent = !valid ? 'Saisissez un montant positif, inférieur ou égal à ' + eur(max) + '.'
+      : Math.round(val*100) < Math.round(max*100)
+      ? 'Facture intermédiaire. Il restera ' + eur(Math.round((max - val)*100)/100) + ' à facturer sur le devis.'
+      : 'Facture de solde. Vous facturez le montant restant de ' + eur(max) + '.';
+  }
+  function issueDraft(btn){
+    var bar = $('iv-actions'), field = bar && bar.querySelector('[data-iv-amount]');
+    var value = field && parseInvoiceAmount(field.value);
+    if (value === null || draftMax === null || value > draftMax) { toast('Vérifiez le montant avant de créer la facture.'); return; }
+    issueAccepted(Math.round(value*100) === Math.round(draftMax*100) ? 'final' : 'interim', null, btn, value);
+  }
+  /* A single editable amount before issuance. Preview and numbering happen
+     server-side. Already-issued invoices remain immutable. */
   function renderInvoiceActions(){
-    var card = $('c-inv'), bar = $('iv-actions'), h = '';
-    if (!bar) { bar = document.createElement('div'); bar.id = 'iv-actions'; }
-    // Keep it directly in the card, above the folded list (the workspace layout folds the other children).
-    if (bar.parentNode !== card) card.insertBefore(bar, card.firstChild);
-    if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; }))
-      h += '<div class="iv-act"><p><b>Facture de solde</b><br><span class="muted">Créée automatiquement depuis le devis accepté, numérotée, puis proposée à l’envoi. À faire à la livraison.</span></p><button class="btn main" type="button" data-iv="final">Créer la facture de solde</button></div>';
-    Q.invoices.forEach(function(x, i){
-      if (!x.basis || x.paid) return;
-      h += '<div class="iv-act"><p><b>' + esc(x.n) + '</b><br><span class="muted">' + esc(x.num) + ' · ' + eur(x.amt) + (x.emailAt ? ' · envoyée le ' + esc(new Date(x.emailAt).toLocaleDateString('fr-FR')) : ' · pas encore envoyée au client') + '</span></p>' +
-        (x.file ? '<button class="btn ' + (x.emailAt ? 'line' : 'main') + '" type="button" data-iv="send" data-i="' + i + '">' + (x.emailAt ? 'Renvoyer au client' : 'Envoyer au client') + '</button>'
-                : '<button class="btn main" type="button" data-iv="archive" data-i="' + i + '">Archiver le PDF</button>') + '</div>';
-    });
+    var bar = $('iv-actions'), h = '';
+    if (!bar) return;
+    ++draftPreviewToken;
+    draftMax = null;
+    if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; })) {
+      h += '<div class="iv-act iv-draft"><div class="iv-draft-copy"><b>Préparer une facture DZOFT</b><p class="muted">Montant proposé depuis le devis accepté. Modifiez-le avant l’émission ; le numéro sera créé automatiquement.</p>'+
+        '<label for="iv-amount">Montant à facturer (€)</label><input id="iv-amount" data-iv-amount inputmode="decimal" autocomplete="off" placeholder="Chargement…" disabled aria-describedby="iv-amount-hint">'+
+        '<p class="muted" id="iv-amount-hint" data-iv-hint>Chargement du solde…</p></div>'+
+        '<button class="btn main" type="button" data-iv="final" disabled>Créer et numéroter la facture</button></div>';
+    }
     bar.innerHTML = h; bar.hidden = !h;
+    if (!h && $('iv-remaining')) $('iv-remaining').textContent = '0 €';
+    var draft = bar.querySelector('[data-iv-amount]');
+    if (draft) {
+      var token = draftPreviewToken;
+      draft.oninput = function(){ refreshDraftHint(bar); };
+      sb.rpc('invoice_draft_amount', { p_quote: QID }, true).then(function(info){
+        if (token !== draftPreviewToken || !draft.isConnected) return;
+        var max = Number(info && info.remaining);
+        if (!Number.isFinite(max) || max <= 0 || info.has_final) {
+          draftMax = 0; draft.disabled = true;
+          if ($('iv-remaining')) $('iv-remaining').textContent = eur(0);
+          bar.querySelector('[data-iv-hint]').textContent = 'Aucun montant restant à facturer sur ce devis.';
+          return;
+        }
+        draftMax = Math.round(max*100)/100;
+        if ($('iv-billed')) $('iv-billed').textContent = eur(info.invoiced || 0);
+        if ($('iv-remaining')) $('iv-remaining').textContent = eur(max);
+        if ($('iv-total')) $('iv-total').textContent = eur(info.base_total || 0);
+        draft.value = draftMax.toFixed(2);
+        draft.disabled = false;
+        draft.placeholder = '0,00';
+        refreshDraftHint(bar);
+      }).catch(function(){
+        if (token !== draftPreviewToken || !draft.isConnected) return;
+        draft.disabled = true;
+        bar.querySelector('[data-iv-hint]').textContent = 'Montant indisponible : actualisez la page avant de créer une facture.';
+      });
+    }
     bar.onclick = function(e){
-      var b = e.target.closest('button[data-iv]'); if (!b) return;
-      if (b.dataset.iv === 'final') return issueAccepted('final', null, b);
+      var b = e.target.closest('button[data-iv]'); if (!b || b.disabled) return;
+      if (b.dataset.iv === 'final') return issueDraft(b);
       var x = Q.invoices[+b.dataset.i]; if (!x) return;
       if (b.dataset.iv === 'archive') { b.disabled = true; toast('Archivage du PDF…'); return archiveIssued(x).then(load).then(function(){ toast('PDF archivé et accessible au client.'); }, function(err){ b.disabled = false; fail(err); }); }
-      if (!confirm('Envoyer la facture ' + x.num + ' (' + eur(x.amt) + ') au client par e-mail, avec le PDF joint ?')) return;
-      x.attachPdf = true; mailInvoice(x, b);
+      if (!confirm('Envoyer le PDF de la facture ' + x.num + ' (' + eur(x.amt) + ') au client et une copie à votre adresse de suivi ?')) return;
+      mailInvoice(x, b);
     };
   }
   /* Invoices issued from what the client accepted: balance of the signed quote, or an approved change.
@@ -793,25 +1005,63 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   function mailInvoice(x, b){
     var label = b ? b.textContent : '';
-    if (!x.num) { toast('Ajoutez d’abord le numéro officiel de la facture.'); return Promise.resolve(false); }
+    if (!x.num || !x.file) { toast('Archivez ou joignez d’abord le PDF officiel pour pouvoir l’envoyer.'); return Promise.resolve(false); }
     if (!C || ![C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); })) { toast('Ajoutez une adresse e-mail valide dans la fiche client.'); return Promise.resolve(false); }
-    if (x.attachPdf && !x.file) { toast('Joignez d’abord le PDF officiel ou décochez « Joindre le PDF ».'); return Promise.resolve(false); }
-    if (x.attachPdf && x.fileSize > 7340032) { toast('Ce PDF dépasse la limite de 7 Mo par e-mail. Décochez « Joindre le PDF » : il restera accessible dans l’espace client.'); return Promise.resolve(false); }
-    x.emailAt = new Date().toISOString(); if (b) { b.disabled = true; b.textContent = 'Mise en file…'; } clearTimeout(timer);
-    return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){
-      if (!ok) { if (b) { b.disabled = false; b.textContent = label; } return false; }
-      return sb.fn('process-notification-outbox', {}).then(function(){ toast('Envoi de facture traité. Vérifiez le statut de chaque destinataire dans l’historique.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); }).then(function(){ return true; });
+    if (!Number.isFinite(Number(x.fileSize)) || Number(x.fileSize) > 7340032) { toast('Le PDF dépasse 7 Mo ou sa taille est inconnue. Vérifiez-le avant l’envoi.'); return Promise.resolve(false); }
+    var previousStamp = x.emailAt, previousAttach = x.attachPdf;
+    x.attachPdf = true;
+    x.emailAt = new Date().toISOString();
+    if (b) { b.disabled = true; b.textContent = 'Mise en file…'; }
+    clearTimeout(timer);
+    return save({ invoices: Q.invoices }).then(function(ok){
+      if (!ok) {
+        x.emailAt = previousStamp; x.attachPdf = previousAttach;
+        if (b) { b.disabled = false; b.textContent = label; }
+        return false;
+      }
+      // The DB trigger queues TWO independent jobs: client and configured owner
+      // address, both with the identical archived invoice PDF. A queue timestamp
+      // is not a delivered email; the outbox shows each recipient's real status.
+      return sb.fn('process-notification-outbox', {}).catch(function(){ return null; })
+        .then(function(){ return load(); })
+        .then(function(){ toast('Facture mise en file pour le client et votre copie. Consultez les statuts d’envoi.'); return true; });
+    }).catch(function(err){
+      if (b) { b.disabled = false; b.textContent = label; }
+      fail(err); return false;
     });
   }
-  function issueAccepted(basis, change, btn){
+  function issueAccepted(basis, change, btn, chosenAmount){
     var ask = basis === 'final'
-      ? 'Créer la facture de solde du devis accepté ?\n\nLe montant est calculé automatiquement : montant accepté, moins ce qui est déjà facturé ou reçu. La facture reçoit un numéro officiel définitif et devient visible dans l’espace du client.\n\nÀ faire une fois la prestation livrée.'
+      ? 'Créer la facture de solde pour ' + eur(chosenAmount) + ' ?\n\nLe numéro officiel sera généré automatiquement. Une fois émise, son montant ne pourra plus être modifié.\n\nÀ faire une fois la prestation livrée.'
+      : basis === 'interim'
+      ? 'Créer une facture intermédiaire de ' + eur(chosenAmount) + ' ?\n\nCe montant sera déduit du solde restant sur le devis accepté. Vérifiez que les prestations correspondantes ont été réalisées.\n\nLe numéro officiel et le montant seront définitifs.'
       : 'Créer la facture complémentaire de « ' + change.title + ' » ?\n\nMontant approuvé par le client : ' + eur(change.extra_price) + '. La facture reçoit un numéro officiel définitif et devient visible dans son espace.';
     if (!confirm(ask)) return;
-    clearTimeout(timer); if (btn) btn.disabled = true; toast('Création de la facture…');
+    var key = null, storageKey = null;
+    if (basis === 'interim') {
+      storageKey = 'dzoft-invoice-request:' + QID + ':' + chosenAmount.toFixed(2);
+      try { key = sessionStorage.getItem(storageKey); } catch (_) {}
+      if (!key) {
+        if (!window.crypto || typeof window.crypto.randomUUID !== 'function') { toast('Impossible de sécuriser la demande : actualisez depuis un navigateur récent.'); return; }
+        key = window.crypto.randomUUID();
+        try { sessionStorage.setItem(storageKey, key); } catch (_) {}
+      }
+    }
+    clearTimeout(timer);
+    if (btn) btn.disabled = true;
+    toast('Création de la facture…');
     var id;
-    sb.rpc('issue_accepted_invoice', { p_quote: QID, p_basis: basis, p_change: change ? change.id : null }, true).then(function(out){
-      id = out.invoice_id; return load();
+    var rpc = basis === 'final' ? 'issue_final_invoice_checked'
+      : basis === 'interim' ? 'issue_interim_invoice' : 'issue_accepted_invoice';
+    var payload = basis === 'final'
+      ? { p_quote: QID, p_expected_amount: chosenAmount }
+      : basis === 'interim'
+      ? { p_quote: QID, p_amount: chosenAmount, p_request_key: key }
+      : { p_quote: QID, p_basis: basis, p_change: change ? change.id : null };
+    return sb.rpc(rpc, payload, true).then(function(out){
+      id = out.invoice_id;
+      if (storageKey) try { sessionStorage.removeItem(storageKey); } catch (_) {}
+      return load();
     }).then(function(){
       var x = (Q.invoices || []).filter(function(i){ return i.id === id; })[0];
       if (!x) throw new Error('Facture créée, mais introuvable après rechargement. Actualisez la page.');
@@ -820,12 +1070,15 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     }).then(function(x){
       if (btn) btn.disabled = false;
       if (!x || !x.file) { toast('Facture émise. PDF à archiver depuis « Factures ».'); return; }
-      if (!confirm('Facture ' + x.num + ' créée (' + eur(x.amt) + ') et archivée.\n\nL’envoyer maintenant au client par e-mail, avec le PDF joint ?')) { toast('Facture ' + x.num + ' créée. Vous pourrez l’envoyer depuis « Factures ».'); return; }
-      x.attachPdf = true;
+      if (!confirm('Facture ' + x.num + ' créée (' + eur(x.amt) + ') et archivée.\n\nEnvoyer son PDF au client et une copie à votre adresse de suivi ?')) {
+        toast('Facture ' + x.num + ' créée. Vous pourrez l’envoyer depuis « Factures ».'); return;
+      }
       return mailInvoice(x, null);
     }).catch(function(err){
       if (btn) btn.disabled = false;
-      load().then(function(){ toast(id ? 'Facture émise, mais PDF non archivé : utilisez « Archiver le PDF » dans « Factures ». ' + (err && err.message || '') : 'Facture non créée : ' + (err && err.message || 'erreur')); });
+      return load().then(function(){
+        toast(id ? 'Facture émise, mais PDF non archivé : utilisez « Archiver le PDF » dans « Factures ». ' + (err && err.message || '') : 'Facture non créée : ' + (err && err.message || 'erreur'));
+      });
     });
   }
   function updateInvoice(e){
@@ -833,6 +1086,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
     if (c === 'paid') { if (e.target.checked && !x.paid && !confirm(document.documentElement.lang === 'en' ? 'Have you received this payment in your bank account? The client will be notified by email.' : 'Confirmez-vous avoir reçu ce paiement sur votre compte ? Le client sera averti par e-mail.')) { e.target.checked = false; return; } x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
     else if (c === 'attach') x.attachPdf = e.target.checked;
+    else if (x.generatedByDzoft && (c === 'num' || c === 'amt' || c === 'n')) { toast('Cette facture est déjà émise : le montant et le numéro sont définitifs.'); return; }
     else if (c === 'amt') x.amt = parseFloat(e.target.value) || 0;
     else if (c === 'u') { x.u = e.target.value.trim(); e.target.style.borderColor = x.u && !/^https:\/\//i.test(x.u) ? 'var(--err)' : ''; }
     else x[c] = e.target.value;
@@ -890,8 +1144,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       }
     }
     if (!e.target.classList.contains('rm')) return;
-    if (!confirm('Retirer cette facture de l’espace du client ? Son PDF sera aussi supprimé.')) return;
-    var i = +e.target.closest('.invr').dataset.i, removed = Q.invoices.splice(i, 1)[0]; renderInv();
+    var invoiceIndex = +e.target.closest('.invr').dataset.i;
+    if (Q.invoices[invoiceIndex] && Q.invoices[invoiceIndex].generatedByDzoft) { toast('Impossible de supprimer une facture officielle.'); return; }
+    if (!confirm('Retirer cette facture externe de l’espace du client ? Son PDF sera aussi supprimé.')) return;
+    var i = invoiceIndex, removed = Q.invoices.splice(i, 1)[0]; renderInv();
     save({ invoices: Q.invoices }).then(function(ok){
       if (!ok) { Q.invoices.splice(i, 0, removed); renderInv(); return; }
       if (removed.file) sb.files.remove(removed.file).catch(fail);

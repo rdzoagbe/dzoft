@@ -16,9 +16,12 @@ test('the server computes the amount; the page never sends one',()=>{
  assert.match(sql,/not public\.is_owner\(\)/);
  assert.match(sql,/v_amount:=q\.accepted_total-invoiced-unbilled;/);
  assert.match(sql,/v_amount:=c\.extra_price;/);
- const call=admin.match(/sb\.rpc\('issue_accepted_invoice',\s*\{([^}]*)\}/);
- assert.ok(call,'page calls the issuing function');
- assert.doesNotMatch(call[1],/amt|amount|num/);
+ // Approved supplement pricing still comes from the server. Editable draft
+ // amounts are checked atomically by separate owner-only RPC functions.
+ assert.match(admin,/: 'issue_accepted_invoice';/);
+ assert.match(admin,/p_quote: QID, p_basis: basis, p_change: change \? change.id : null/);
+ assert.match(admin,/issue_final_invoice_checked/);
+ assert.match(admin,/issue_interim_invoice/);
 });
 
 test('a supplement needs an approved change whose work is completed, and is issued once',()=>{
@@ -49,15 +52,15 @@ test('deposit invoices keep their own rule: issued when the deposit is received'
 test('the page asks before issuing and before sending, and sending reuses the existing invoice e-mail',()=>{
  const fn=admin.slice(admin.indexOf('function issueAccepted('),admin.indexOf('function updateInvoice('));
  assert.match(fn,/if \(!confirm\(ask\)\) return;/);
- assert.match(fn,/L’envoyer maintenant au client par e-mail, avec le PDF joint \?/);
+ assert.match(fn,/Envoyer son PDF au client et une copie à votre adresse de suivi/);
  assert.match(fn,/return mailInvoice\(x, null\);/);
- assert.ok(fn.indexOf('issue_accepted_invoice')<fn.indexOf('archiveIssued(x)'));
+ assert.ok(fn.indexOf('sb.rpc(rpc, payload, true)')<fn.indexOf('archiveIssued(x)'));
  assert.ok(fn.indexOf('archiveIssued(x)')<fn.indexOf('mailInvoice(x, null)'));
- assert.match(admin,/data-iv="final">Créer la facture de solde/);
- assert.match(admin,/data-iv="send"/);
+ assert.match(admin,/data-iv="final" disabled>Créer et numéroter la facture/);
+ assert.match(admin,/data-a="invoice-email"/);
  // The shortcuts sit outside the folded list, so they are visible without opening it.
- assert.match(admin,/if \(bar\.parentNode !== card\) card\.insertBefore\(bar, card\.firstChild\)/);
- assert.match(read('admin/project-workspace.js'),/node\.id!=='iv-actions'/);
+ assert.match(admin,/var bar = \$\('iv-actions'\), h = '';/);
+ assert.match(read('admin/project-workspace.js'),/Do not hide invoice issuance or sending/);
  assert.match(admin,/if \(b\.dataset\.a === 'invoice-email'\) return mailInvoice\(x, b\);/);
 });
 

@@ -24,4 +24,4 @@ The project header offers direct actions for **invoices and payments**, **milest
 - Synthetic Chromium tests: \`e2e/synthetic-admin.spec.mjs\` use mock data and block private Supabase network calls; verify the search and shortcut navigation on desktop/mobile.
 - Follow \`.github/workflows/ui-regressions.yml\` and \`.github/workflows/browser-regressions.yml\` before merging to main.
 
-The invoice-draft functionality in draft PR #49 requires separate SQL review and is **not part of this UI-only work**. No data migration, email sending, new billing records, or recovery work is included.
+The invoicing improvements merged separately in PR #49. This UI-only change preserves the newer invoice studio and does not alter invoice business logic. No data migration, email sending, new billing records, or recovery work is included.
