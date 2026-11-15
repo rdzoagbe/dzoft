@@ -55,8 +55,8 @@ test('issued invoices INCLUDING receipt invoices are immutable',()=>{
  assert.doesNotMatch(sql,/where quote_id=new\.id and basis<>'receipt'/);
  assert.match(sql,/before_invoice->>'amt' is distinct from after_invoice->>'amt'/);
  assert.match(sql,/before_invoice->>'num' is distinct from after_invoice->>'num'/);
- assert.match(html,/x\.generatedByDzoft \|\| x\.basis \? ' disabled title="Facture officielle : montant immuable"/);
- assert.match(html,/x\.generatedByDzoft \|\| x\.basis \? ' disabled title="Facture officielle : numéro immuable"/);
+ assert.match(html,/official \? ' disabled title="Facture officielle : montant immuable"/);
+ assert.match(html,/official \? ' disabled title="Facture officielle : numéro immuable"/);
 });
 
 test('editable input supports French comma decimals and rejects invalid values',()=>{
