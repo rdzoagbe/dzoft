@@ -215,3 +215,38 @@ begin
 end $fn$;
 revoke all on function private.guard_issued_invoice_amounts()
   from public,anon,authenticated;
+
+-- The owner must approve the EXACT total before issuing the final invoice.
+-- If concurrent activity changed the outstanding balance, refuse instead of
+-- issuing an irrevocable invoice for a different amount.
+create or replace function public.issue_final_invoice_checked(
+  p_quote uuid,p_expected_amount numeric)
+returns jsonb
+language plpgsql security definer set search_path='' as $fn$
+declare
+  q public.quotes;
+  preview jsonb;
+  balance numeric;
+begin
+  if auth.uid() is null or not public.is_owner() then
+    raise exception 'Owner access required';
+  end if;
+  if p_quote is null or p_expected_amount is null or
+     p_expected_amount <= 0 or p_expected_amount <> round(p_expected_amount,2) then
+    raise exception 'Invalid final invoice amount';
+  end if;
+  select * into q from public.quotes where id=p_quote for update;
+  if not found then raise exception 'Project not found'; end if;
+  preview:=public.invoice_draft_amount(p_quote);
+  balance:=(preview->>'remaining')::numeric;
+  if (preview->>'has_final')::boolean then
+    raise exception 'A final invoice was already issued for this project';
+  end if;
+  if balance is distinct from p_expected_amount then
+    raise exception 'Invoice balance has changed; refresh before issuing';
+  end if;
+  return private.issue_accepted_invoice(p_quote,'final',null);
+end $fn$;
+revoke all on function public.issue_final_invoice_checked(uuid,numeric)
+  from public,anon,authenticated;
+grant execute on function public.issue_final_invoice_checked(uuid,numeric) to authenticated;
