@@ -877,7 +877,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       var status = il('Vérification des paiements confirmés…','Checking confirmed payments…');
       var pdfStatus = x.file ? il('PDF archivé','PDF archived') : il('PDF à archiver','PDF needs archiving');
       return '<article class="invr invoice-record' + (x.paid ? ' paid' : '') + '" data-i="' + i + '">' +
-        '<div class="invoice-record-head"><div><b>' + esc(number || il('Facture externe · numéro à saisir','External invoice · enter a number')) + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
+        '<div class="invoice-record-head"><div><b>' + esc(number || il('Facture externe · numéro à saisir','External invoice · enter a number')) + '</b><p>' + esc(invoiceTitle(x)) + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
         '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
         '<span class="invoice-document-status">' + esc(pdfStatus) + '</span>'+
         (official ? '<p class="invoice-record-delivery">' + esc(invoiceDeliverySummary(x)) + '</p>' : '')+
@@ -921,23 +921,24 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   /* Real delivery status from the outbox, never from the timestamp recorded
      when the owner clicked Send. Separate client and owner copy are audited. */
+  function invoiceTitle(x){ var name=x.n||'Facture'; var known={'Facture de solde':'Final invoice','Facture d’acompte':'Deposit invoice','Facture intermédiaire':'Interim invoice','Facture complémentaire':'Additional invoice'};return document.documentElement.lang==='en'?(known[name]||name):name; }
   function invoiceDeliverySummary(invoice){
     var event = events.filter(function(e){ return e.event_type === 'invoice_shared' && e.invoice_id === invoice.id; }).sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);})[0];
-    if (!event) return invoice.emailAt ? 'Envoi demandé · état à actualiser' : 'Pas encore envoyée';
+    if (!event) return invoice.emailAt ? il('Envoi demandé · état à actualiser','Send requested · status pending') : il('Pas encore envoyée','Not sent yet');
     var related = outbox.filter(function(job){ return job.event_id === event.id; });
     function status(role){
       var job = related.filter(function(j){ return j.recipient_role === role; })[0];
-      if (!job) return 'aucun e-mail enregistré';
-      if (job.status === 'failed') return 'échec · consulter « Historique et e-mails »';
-      if (job.status === 'queued' || job.status === 'processing') return 'en cours';
+      if (!job) return il('aucun e-mail enregistré','no email recorded');
+      if (job.status === 'failed') return il('échec · consulter « Historique et e-mails »','failed · check email history');
+      if (job.status === 'queued' || job.status === 'processing') return il('en cours','processing');
       if (job.status === 'sent') {
-        if (job.delivered_at || job.delivery_status === 'delivered') return 'livré';
-        if (job.bounced_at || job.delivery_status === 'bounced') return 'échec de livraison';
-        return 'accepté par le fournisseur (livraison à confirmer)';
+        if (job.delivered_at || job.delivery_status === 'delivered') return il('livré','delivered');
+        if (job.bounced_at || job.delivery_status === 'bounced') return il('échec de livraison','delivery failed');
+        return il('accepté par le fournisseur (livraison à confirmer)','accepted by email provider (delivery unconfirmed)');
       }
-      return 'état indisponible';
+      return il('état indisponible','status unavailable');
     }
-    return 'Client : ' + status('client') + ' · Votre copie : ' + status('owner');
+    return il('Client : ','Client: ') + status('client') + il(' · Votre copie : ',' · Your copy: ') + status('owner');
   }
   function parseInvoiceAmount(raw){
     var s = String(raw || '').trim().replace(',', '.');
@@ -951,14 +952,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var hint = bar.querySelector('[data-iv-hint]');
     if (!field || !btn || !hint) return;
     var val = parseInvoiceAmount(field.value), max = draftMax;
-    if (max === null) { btn.disabled = true; hint.textContent = 'Vérification du solde auprès du serveur…'; return; }
+    if (max === null) { btn.disabled = true; hint.textContent = il('Vérification du solde auprès du serveur…','Checking balance with server…'); return; }
     var valid = val !== null && Math.round(val*100) <= Math.round(max*100);
     btn.disabled = !valid;
     field.setAttribute('aria-invalid', valid ? 'false' : 'true');
-    hint.textContent = !valid ? 'Saisissez un montant positif, inférieur ou égal à ' + eur(max) + '.'
+    hint.textContent = !valid ? il('Saisissez un montant positif, inférieur ou égal à ','Enter a positive amount up to ') + eur(max) + '.'
       : Math.round(val*100) < Math.round(max*100)
-      ? 'Facture intermédiaire. Il restera ' + eur(Math.round((max - val)*100)/100) + ' à facturer sur le devis.'
-      : 'Facture de solde. Vous facturez le montant restant de ' + eur(max) + '.';
+      ? il('Facture intermédiaire. Il restera ','Interim invoice. ') + eur(Math.round((max - val)*100)/100) + il(' à facturer sur le devis.',' will remain to be invoiced.')
+      : il('Facture de solde. Vous facturez le montant restant de ','Final invoice. You are invoicing the outstanding ') + eur(max) + '.';
   }
   function issueDraft(btn){
     var bar = $('iv-actions'), field = bar && bar.querySelector('[data-iv-amount]');
@@ -968,9 +969,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (!review) return;
     review.hidden = false;
     review.dataset.amount = value.toFixed(2);
-    var kind = Math.round(value*100) === Math.round(draftMax*100) ? 'facture de solde' : 'facture intermédiaire';
+    var kind = Math.round(value*100) === Math.round(draftMax*100) ? il('facture de solde','final invoice') : il('facture intermédiaire','interim invoice');
     var detail = review.querySelector('[data-invoice-review-text]');
-    if (detail) detail.textContent = 'Vous allez émettre une ' + kind + ' de ' + eur(value) + '. Devis accepté : ' + eur(draftInfo && draftInfo.base_total || 0) + ' · Déjà facturé : ' + eur(draftInfo && draftInfo.invoiced || 0) + ' · Montant maximal possible : ' + eur(draftMax) + '. Aucun numéro n’a été créé pour l’instant. Après confirmation, la facture officielle ne pourra plus être supprimée ou modifiée directement.';
+    if (detail) detail.textContent = il('Vous allez émettre une ','You are about to issue a ') + kind + il(' de ',' for ') + eur(value) + il('. Devis accepté : ','. Accepted quote: ') + eur(draftInfo && draftInfo.base_total || 0) + il(' · Déjà facturé : ',' · Previously invoiced: ') + eur(draftInfo && draftInfo.invoiced || 0) + il(' · Montant maximal possible : ',' · Maximum amount: ') + eur(draftMax) + il('. Aucun numéro n’a été créé pour l’instant. Après confirmation, la facture officielle ne pourra plus être supprimée ou modifiée directement.','. No invoice number has been issued yet. Once confirmed, the official invoice cannot be deleted or edited directly.');
     var confirmButton = review.querySelector('[data-iv="confirm"]');
     if (confirmButton) confirmButton.focus();
   }
