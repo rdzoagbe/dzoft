@@ -424,7 +424,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
               <div><label for="p-iban">IBAN</label><input id="p-iban" placeholder="FR76 …" autocomplete="off" spellcheck="false"></div>
               <div><label for="p-bic">BIC (facultatif)</label><input id="p-bic" autocomplete="off" spellcheck="false"></div>
             </div>
-            <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
+            <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label>
+            <p class="settings-payment-qr-tip">Si ce lien est configuré, les nouvelles factures DZOFT avec un solde à payer pourront afficher un QR code vers cette page. Vérifiez que votre lien Revolut Pro fonctionne : le QR n’ajoute pas automatiquement le montant ni la référence de facture.</p><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
             <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
             <div class="acts settings-save-actions"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" aria-live="polite"></span></div>
           </div>
@@ -439,10 +440,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         </summary>
           <div class="settings-fold-body" id="backup-readiness">
             <p class="today-backup-warning"><b>Sauvegarde récupérable : non vérifiée.</b> La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.</p>
-            <p class="today-backup-caption">Vérifiez la politique de sauvegarde de votre projet Supabase et conservez aussi une copie sécurisée des fichiers de l'espace client. Une sauvegarde de la base ne contient pas les fichiers Storage.</p>
+            <p class="today-backup-caption">Supabase Free ne fournit pas de sauvegardes automatiques gérées. Utilisez le script de sauvegarde chiffrée DZOFT sur votre ordinateur Windows, puis copiez et vérifiez l’archive sur un support indépendant. Les sauvegardes de la base ne contiennent pas les fichiers Storage.</p>
+            <p class="settings-backup-instructions"><b>Sauvegarde locale sécurisée :</b> ouvrez le guide, puis lancez l’outil Windows avec un dossier de destination hors du PC. Aucun mot de passe n’est transmis au site. Une restauration complète reste à vérifier sur un environnement isolé.</p>
             <div class="acts settings-resource-links">
               <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard/project/rzghbvmszbjlqkdjzpxc/database/backups">Vérifier les sauvegardes Supabase</a>
               <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://supabase.com/docs/guides/platform/backups">Guide de sauvegarde et restauration</a>
+              <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://github.com/rdzoagbe/dzoft/blob/main/docs/backup-recovery.md">Guide DZOFT : sauvegarde chiffrée</a>
+              <a class="btn sm line" target="_blank" rel="noopener noreferrer" href="https://github.com/rdzoagbe/dzoft/blob/main/tools/backup-dzoft-windows.ps1">Outil de sauvegarde Windows</a>
             </div>
           </div>
         </details>
