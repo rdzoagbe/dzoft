@@ -1052,7 +1052,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   }
   function archiveIssued(x){
     return invoiceExtras(x).then(function(extra){
-      return DzoftTracking.archive(Q, sb, null, { id: x.id, num: x.num, amt: x.amt, n: x.n, issuedOn: x.issuedOn, detail: extra.detail, changeNote: extra.changeNote });
+      return DzoftTracking.archive(Q, sb, null, { id: x.id, num: x.num, amt: x.amt, n: x.n, issuedOn: x.issuedOn, basis: x.basis, detail: extra.detail, changeNote: extra.changeNote });
     });
   }
   function mailInvoice(x, b){
