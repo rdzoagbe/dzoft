@@ -8,7 +8,7 @@ Settings → **Sign in with Windows Hello or fingerprint** lets the owner regist
 
 No device PIN, fingerprint template, biometric image, GitHub token, Supabase service key, or passkey private key is ever sent to DZOFT. Only a WebAuthn signed assertion is sent to Supabase Auth.
 
-**Critical distinction:** Supabase **passkey login** is currently a first-factor sign-in. It can replace entering your email and password but **does not automatically replace an enrolled TOTP second factor** or grant `aal2`. DZOFT's existing owner permission checks and 12-hour MFA freshness check remain intact. A device-based second-factor alternative depends on Supabase enabling/accepting WebAuthn MFA factors; the existing code detects already verified factors but enrollment is deliberately disabled until supported. This release does NOT claim the phone authenticator is eliminated for every login. We will not forge `aal2` JWTs, reuse TOTP secrets, or disable MFA to achieve that.
+**Owner passkey policy (proposed 15 November 2026):** A successful Supabase Passkey sign-in is still an `aal1` first-factor authentication. For DZOFT's **owner only**, a fresh, server-verified passkey login can be accepted instead of password + TOTP for access to Admin. This is an explicit authentication-policy change, **not a claim that Supabase promoted the session to `aal2`**. The existing TOTP second factor is still mandatory for password sign-ins when one is enrolled, and for sensitive Auth operations such as passkey registration/removal. The change requires the protected `public.is_owner()` SQL gate, which checks the signed JWT, Supabase's `auth.sessions` row, and the server-created `auth.mfa_amr_claims` `passkey` record for the **same user and session**, all within 12 hours. A frontend flag or stored passkey is never sufficient. The six-digit code stays available for recovery.
 
 ## Beta Passkeys enabled — live Auth endpoint verified
 
@@ -48,7 +48,7 @@ The DZOFT Settings UI now:
 - Reuses one status panel on repeated failures instead of stacking identical red alerts.
 - Never removes or overwrites a registered credential, bypasses AAL2/TOTP or exposes raw passkey challenge data in error messages.
 
-To test without deleting anything: **Sign out on the phone → Unlock with this device → choose the existing Google Password Manager credential → authenticate with fingerprint/PIN → complete the six-digit TOTP step if prompted.** If the installed PWA does not offer the credential, open `https://rdzoagbe.github.io/dzoft/admin/` in the latest Android Chrome browser and try the same flow. Keep email/password and authenticator available as recovery.
+To test without deleting anything (after the backend migration is deployed): **Sign out on the phone → Unlock with this device → choose the existing Google Password Manager credential → authenticate with fingerprint/PIN → Admin opens without a six-digit code.** If the installed PWA does not offer the credential, open `https://rdzoagbe.github.io/dzoft/admin/` in the latest Android Chrome browser and try the same flow. Keep email/password and authenticator available as recovery.
 
 ## When the Supabase feature is disabled
 
@@ -84,8 +84,8 @@ If the Supabase project does not expose the Passkeys toggle or returns `passkey_
 ## What remains unchanged
 
 - Owner role and server-side MFA checks protect clients, quotes, receipts, and project journals.
-- Existing TOTP verification, password recovery, sign-out, and 12-hour MFA freshness checks remain.
-- No database migrations, service secrets, client email notifications, finance changes, or stored secrets are added.
+- Password sign-ins retain TOTP verification; password recovery, sign-out and the 12-hour freshness window remain. Passkey sessions have a separate, server-verified owner-only path.
+- One database migration changes only the owner-access function, not customer data, MFA enrollment, Auth service settings, service secrets, emails or payments.
 - A failed/cancelled device prompt never creates a session.
 - Passkey registration requires a fresh server-issued `aal2` claim. Any login token remains exactly what Supabase Auth issued.
 
@@ -98,3 +98,17 @@ If the Supabase project does not expose the Passkeys toggle or returns `passkey_
 A real device/browser biometric ceremony cannot be safely simulated with a customer's live account in automated CI. It must be verified interactively on each device after the hosted Auth setting is enabled.
 
 Sources: https://supabase.com/docs/guides/auth/passkeys and https://supabase.com/docs/guides/auth/auth-mfa
+
+## Passkey-only Admin rollout and safety checks (15 November 2026)
+
+This change is **not live** until the SQL migration is applied to RD-Clients and the reviewed GitHub branch is merged/deployed. It should be staged deliberately because it changes the accepted assurance policy from mandatory AAL2 to either AAL2 **or** a verified owner passkey. A passkey is phishing-resistant but this is **not equivalent** to a separate MFA factor.
+
+- First, run all UI, browser and security tests. The SQL permission check must remain owner-only and cannot accept a password-only `aal1` token.
+- Then apply the proposed `20261115123000_allow_recent_owner_passkey_login.sql` migration using Supabase's migration workflow. Confirm the server function definition and execute grants.
+- Deploy the updated Admin, then manually sign out and select **Unlock with this device** with a previously registered passkey on Windows and Android Chrome. Confirm no TOTP prompt **and** real private data loads.
+- Separately sign out, use **email + password**, confirm the six-digit code is required, and verify wrong/expired codes fail closed.
+- Check a non-owner client account cannot access Admin, and a passkey challenge that is cancelled or fails leaves private data hidden.
+- After 12 hours (or in an isolated test with shortened time), re-verify that the user must perform a new passkey sign-in or enter TOTP.
+- If a passkey is rejected, leave password + TOTP active; **do not disable MFA**. Roll back the server function to `supabase/migrations/20261110090000_owner_mfa_window_12_hours.sql` and the UI to the previous release if necessary.
+
+The deployment can use GitHub Pages and Supabase Free; no new hosting or provider is required.
