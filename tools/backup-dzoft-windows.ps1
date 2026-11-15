@@ -5,7 +5,14 @@
 param(
   [Parameter(Mandatory = $true)]
   [ValidateNotNullOrEmpty()]
-  [string]$OffsitePath
+  [string]$OffsitePath,
+  [switch]$NativePostgres,
+  [string]$PgHost,
+  [string]$PgUser,
+  [int]$PgPort = 5432,
+  [string]$PgBin = "C:\Program Files\PostgreSQL\18\bin",
+  [string]$PgSslRootCert,
+  [switch]$SkipStorage
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -45,9 +52,25 @@ $before = @{}
 Get-ChildItem -LiteralPath $localFull -Filter '*.dzoftbak' -File | ForEach-Object {
   $before[$_.FullName] = $true
 }
-Write-Host "DZOFT: creating an encrypted Supabase data + Storage archive."
-Write-Host "You will be asked for an encryption passphrase. Never send it to GitHub or DZOFT."
-& $python.Source $script 'backup' '--destination' $localFull
+Write-Host "DZOFT: creating an encrypted, locally verified application-data archive."
+Write-Host "You will be asked for your encryption passphrase on this computer. Never send it to GitHub or DZOFT."
+if ($NativePostgres) {
+  if (-not $PgHost -or -not $PgUser) {
+    throw "NativePostgres requires -PgHost and -PgUser from the Supabase Connect panel."
+  }
+  $native = Join-Path $PSScriptRoot 'backup_dzoft_native.py'
+  if (-not (Test-Path -LiteralPath $native -PathType Leaf)) {
+    throw "The native PostgreSQL backup program is missing."
+  }
+  $nativeArgs = @($native, '--host', $PgHost, '--user', $PgUser,
+      '--port', [string]$PgPort, '--pg-bin', $PgBin, '--destination', $localFull)
+  if ($PgSslRootCert) { $nativeArgs += @('--ssl-root-cert', $PgSslRootCert) }
+  if ($SkipStorage) { $nativeArgs += '--skip-storage' }
+  & $python.Source @nativeArgs
+} else {
+  if ($SkipStorage) { throw "-SkipStorage is only supported with -NativePostgres here." }
+  & $python.Source $script 'backup' '--destination' $localFull
+}
 if ($LASTEXITCODE -ne 0) { throw "The encrypted backup failed. No off-site copy was created." }
 
 $newFiles = @(Get-ChildItem -LiteralPath $localFull -Filter '*.dzoftbak' -File |
