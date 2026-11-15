@@ -1234,8 +1234,19 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     externalAdd.focus();
   }
   externalAdd.onclick = function(){
-    if (!externalForm.hidden) { closeExternalForm(); return; }
     if (externalForm.querySelector('button[type="submit"]').disabled) return;
+    if (!externalForm.hidden) { closeExternalForm(); return; }
+    // This admin page can be switched to English from Settings.
+    var labels = externalForm.querySelectorAll('.iv-external-grid label');
+    [['Libellé','Description'],['Numéro officiel externe','Existing external invoice number'],['Montant (€)','Amount (€)']].forEach(function(pair,i){
+      if (labels[i]) labels[i].firstChild.textContent = il(pair[0],pair[1]) + ' ';
+    });
+    externalForm.querySelector('.muted').textContent = il(
+      'Uniquement pour une facture déjà créée dans un autre outil. Cet ajout ne confirme aucun paiement et n’envoie aucun e-mail.',
+      'Only for an invoice already issued using another tool. Adding it does not record a payment or send an email.'
+    );
+    externalForm.querySelector('button[type="submit"]').textContent = il('Enregistrer la facture externe','Save external invoice');
+    externalCancel.textContent = il('Annuler','Cancel');
     externalForm.hidden = false;
     externalAdd.setAttribute('aria-expanded', 'true');
     externalForm.elements.description.focus();
