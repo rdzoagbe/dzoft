@@ -4,7 +4,7 @@ var main=document.getElementById('main');if(!main||!document.getElementById('c-s
 var en=function(){return document.documentElement.lang==='en';};
 var tr=function(fr,english){return en()?english:fr;};
 var shell=document.createElement('div');shell.className='workspace-shell';main.parentNode.insertBefore(shell,main);shell.appendChild(main);
-var intro=document.createElement('section');intro.className='workspace-intro';intro.innerHTML='<div class="workspace-overline">DZOFT · PROJECT WORKSPACE</div><div class="workspace-intro-row"><div><h1 id="workspace-title">Project workspace</h1><p id="workspace-subtitle"></p></div><span class="workspace-badge" id="workspace-badge"></span></div><div class="workspace-actions"><button type="button" class="btn main" data-workspace-action="payment"></button><button type="button" class="btn line" data-workspace-action="progress"></button><button type="button" class="btn line" data-workspace-action="message"></button></div><div class="workspace-glance"><div><span id="workspace-progress-label"></span><b id="workspace-progress-value">—</b><div class="workspace-meter"><span id="workspace-progress-bar"></span></div></div><div><span id="workspace-next-label"></span><b id="workspace-next-value">—</b></div><div><span id="workspace-access-label"></span><b id="workspace-access-value">—</b></div></div>';main.prepend(intro);
+var intro=document.createElement('section');intro.className='workspace-intro';intro.innerHTML='<div class="workspace-overline">DZOFT · PROJECT WORKSPACE</div><div class="workspace-intro-row"><div><h1 id="workspace-title">Project workspace</h1><p id="workspace-subtitle"></p></div><span class="workspace-badge" id="workspace-badge"></span></div><div class="workspace-actions"><button type="button" class="btn main" data-workspace-action="payment"></button><button type="button" class="btn line" data-workspace-action="progress"></button><button type="button" class="btn line" data-workspace-action="message"></button><button type="button" class="btn line" data-workspace-action="documents"></button><button type="button" class="btn line" data-workspace-action="history"></button></div><div class="workspace-glance"><div><span id="workspace-progress-label"></span><b id="workspace-progress-value">—</b><div class="workspace-meter"><span id="workspace-progress-bar"></span></div></div><div><span id="workspace-next-label"></span><b id="workspace-next-value">—</b></div><div><span id="workspace-access-label"></span><b id="workspace-access-value">—</b></div></div>';main.prepend(intro);
 var layout=document.createElement('div');layout.className='workspace-columns';main.appendChild(layout);
 var primary=document.createElement('div');primary.className='workspace-primary';var aside=document.createElement('aside');aside.className='workspace-aside';layout.appendChild(primary);layout.appendChild(aside);
 var extras=document.createElement('details');extras.className='workspace-advanced';extras.innerHTML='<summary></summary><div class="workspace-advanced-grid"></div>';main.appendChild(extras);
@@ -40,7 +40,7 @@ if(steps){
 // Do not hide invoice issuance or sending under a workspace-level fold.
 function openParents(node){for(var x=node;x&&x!==main;x=x.parentElement){if(x.tagName==='DETAILS')x.open=true;}}
 function jump(target){
- var id=target==='payment'?'tracking-admin':target==='progress'?'tracking-publish':'c-msg';
+ var id=target==='payment'?'tracking-admin':target==='progress'?'tracking-publish':target==='documents'?'c-docs':target==='history'?'c-activity':'c-msg';
  var element=document.getElementById(id)||(target==='payment'?document.getElementById('c-inv'):document.getElementById('c-steps'));
  if(!element)return;
  openParents(element);
@@ -73,9 +73,11 @@ function translate(){
  document.getElementById('workspace-progress-label').textContent=tr('Avancement','Progress');
  document.getElementById('workspace-next-label').textContent=tr('Prochaine étape','Next step');
  document.getElementById('workspace-access-label').textContent=tr('Espace client','Client access');
- intro.querySelector('[data-workspace-action=payment]').textContent=tr('＋ Gérer les paiements','＋ Manage payments');
- intro.querySelector('[data-workspace-action=progress]').textContent=tr('↗ Publier une avancée','↗ Publish progress');
+ intro.querySelector('[data-workspace-action=payment]').textContent=tr('€ Factures et paiements','€ Invoices & payments');
+ intro.querySelector('[data-workspace-action=progress]').textContent=tr('✓ Étapes et avancement','✓ Progress & milestones');
  intro.querySelector('[data-workspace-action=message]').textContent=tr('✉ Écrire au client','✉ Message client');
+ intro.querySelector('[data-workspace-action=documents]').textContent=tr('◧ Documents','◧ Documents');
+ intro.querySelector('[data-workspace-action=history]').textContent=tr('◷ Historique','◷ History');
  extras.querySelector('summary').textContent=tr('Accès, accord, environnement et historique','Access, agreement, environment & history');
  main.querySelectorAll('summary[data-fr]').forEach(function(s){s.textContent=s.dataset[en()?'en':'fr'];});
  refresh();
