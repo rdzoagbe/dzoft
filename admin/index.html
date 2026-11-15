@@ -527,7 +527,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261114-passkey-404-safe"></script>
+<script src="sb.js?v=20261115-session-concurrency"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
@@ -547,6 +547,20 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
   var PASSKEY_MFA = false; // Hosted WebAuthn MFA isn't enabled; passwordless passkeys are separate.
   var mfaFactor = null, mfaKey = null;
+  var activeOwnerId = null;
+  // A logout or account switch in another tab must immediately hide
+  // client/payment data and wipe this tab's rendered private DOM on reload.
+  window.addEventListener('storage', function(event){
+    if (event.key !== 'rd-admin-session' && event.key !== null) return;
+    if ($('app').hidden) return;
+    var next = null;
+    try { next = event.newValue ? JSON.parse(event.newValue) : null; } catch(_) {}
+    if (next && next.user && next.user.id === activeOwnerId) return;
+    $('app').hidden = true;
+    document.querySelectorAll('.modal').forEach(function(box){ box.hidden = true; });
+    activeOwnerId = null;
+    location.reload();
+  });
   function factorOf(u, type){ return (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === type; })[0]; }
   function askSecondFactor(u, msg){
     var t = factorOf(u, 'totp'), k = sb.mfa.passkey && sb.mfa.passkey.supported() ? factorOf(u, 'webauthn') : null;
@@ -693,6 +707,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           return sb.signOut().then(function(){ $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Ce compte n’a pas accès à cet espace.'); });
         }
         if (returnAfterAuth()) return;
+        activeOwnerId = u.id;
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
         fromHash(); loadAll(); loadSettings(); renderMfa(u); renderDevicePasskeys(u);

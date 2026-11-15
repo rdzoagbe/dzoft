@@ -348,7 +348,7 @@ footer{max-width:1180px}
 <footer>DZOFT · Roland Dzoagbe, entrepreneur individuel · <a href="mailto:roland.dzoagbe@hotmail.com">roland.dzoagbe@hotmail.com</a> · <a href="../cgv.html">CGV</a> · <a href="../confidentialite.html">Confidentialité</a> · Cet espace est personnel : ne partagez ni son lien ni votre mot de passe.</footer>
 
 <script>window.RD_STORE = 'rd-client-session';</script>
-<script src="../admin/sb.js?v=20261109-passkey"></script>
+<script src="../admin/sb.js?v=20261115-session-concurrency"></script>
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number">
 <script src="../assets/project-tracking.js?v=20261114-auto-number"></script>
@@ -415,7 +415,21 @@ footer{max-width:1180px}
     else if (!sb.session() && !requestedRoute) token = localStorage.getItem('rd-espace');
   } catch(e){}
   if (m) history.replaceState(null, '', location.pathname + '#/accueil');
-  var D = null;
+  var D = null, activeClientUserId = null;
+  // Client account sessions can also be open in several tabs. When another
+  // tab signs out or switches users, clear the private view immediately.
+  // Guest links are handled separately and do not share this login session.
+  window.addEventListener('storage', function(event){
+    if (token || (event.key !== 'rd-client-session' && event.key !== null)) return;
+    if ($('app').hidden) return;
+    var next = null;
+    try { next = event.newValue ? JSON.parse(event.newValue) : null; } catch(_) {}
+    var owner = activeClientUserId;
+    if (next && next.user && owner && next.user.id === owner) return;
+    D = null; activeClientUserId = null;
+    show('s-load');
+    location.replace(location.pathname);
+  });
 
   function show(id){ ['s-load', 's-auth', 's-bad', 's-err', 'app'].forEach(function(x){ $(x).hidden = x !== id; }); }
   function call(fn, args){
@@ -482,7 +496,8 @@ footer{max-width:1180px}
     return sb.routeOwner().then(function(owner){
       if (owner) return;
       return sb.rpc('my_space', {}, true).then(function(d){
-      D = d; $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
+      D = d; var current = sb.session(); activeClientUserId = current && current.user && current.user.id;
+      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
     }, function(err){
       if (/administrateur/.test(err.message)) { form('f-login', 'Impossible de vérifier votre accès administrateur. Réessayez.'); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', 'Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.'); return; }
