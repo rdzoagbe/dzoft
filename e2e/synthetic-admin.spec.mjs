@@ -288,9 +288,18 @@ test('Invoice creator shows editable server-approved amount and prevents an exce
  await amount.fill('1250');
  await expect(issue).toBeDisabled();
  await amount.fill('350.50');
- // Deliberately cancel confirmation: never invoke an actual issuing RPC.
- page.once('dialog',async dialog=>dialog.dismiss());
+ // Step 1 is a cancellable preview. No official number exists yet.
  await issue.click();
+ const preview=page.locator('[data-invoice-review]');
+ await expect(preview).toBeVisible();
+ await expect(preview).toContainText('350,50');
+ await preview.locator('[data-iv="cancel"]').click();
+ await expect(preview).toBeHidden();
+ await issue.click();
+ await expect(preview).toBeVisible();
+ // Step 2 is protected by an explicit final confirmation; dismiss it.
+ page.once('dialog',async dialog=>dialog.dismiss());
+ await preview.locator('[data-iv="confirm"]').click();
  await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(x=>x.includes('issue_')).length)).toBe(0);
  expect(await page.evaluate(()=>window.__syntheticUnhandled)).toEqual([]);
 });

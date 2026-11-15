@@ -1,0 +1,11 @@
+/* Clear what is and is not editable before official invoicing. */
+.invoice-amount-explanation{background:#f6f5ff;border:1px solid #dedbf8;border-radius:12px;padding:13px 15px;margin:11px 0 20px;color:#353355;font-size:12.5px;line-height:1.65}
+.invoice-draft-review{grid-column:1/-1;border:1px solid #d4c8fa;background:#f3f0ff;border-radius:12px;padding:14px 16px}
+.invoice-draft-review[hidden]{display:none!important}
+.invoice-draft-review p{font-size:13px;line-height:1.65;color:#353355;margin:0 0 12px}
+.invoice-draft-review-actions{display:flex;gap:8px;flex-wrap:wrap}
+.invoice-draft-review-actions .btn{min-height:42px}
+.invoice-issued-help{width:100%;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#fffaf0;border:1px solid #efe1b9;font-size:12.5px;line-height:1.5}
+.invoice-issued-help>summary{cursor:pointer;font-weight:750;color:#825600}
+.invoice-issued-help p{margin:10px 0 0;line-height:1.65;color:#55516a}
+@media(max-width:650px){.invoice-amount-explanation{padding:12px;font-size:12px}.invoice-draft-review-actions{display:grid;grid-template-columns:1fr}.invoice-draft-review-actions .btn{width:100%}}

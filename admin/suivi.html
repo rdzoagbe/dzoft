@@ -234,7 +234,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261113-tracking" defer></script>
 <link rel="stylesheet" href="project-workspace.css?v=20261113-weekly">
 <link rel="stylesheet" href="project-workspace-tabs.css?v=20261115-v2">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-quickfinder">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4">
+<link rel="stylesheet" href="invoice-workflow.css?v=20261115-update4">
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-github-auto">
 <script src="../assets/vendor/qrcode-generator.js?v=20261115-offline"></script>
 <script src="../assets/invoice-preview.js?v=20261115-pay-template"></script>
@@ -361,8 +362,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       <div><span>Déjà facturé</span><strong id="iv-billed">—</strong></div>
       <div><span>Reste à facturer</span><strong id="iv-remaining">—</strong></div>
     </div>
+    <p class="invoice-amount-explanation" id="iv-explanation" role="status">Vérification du calcul des factures…</p>
     <section class="invoice-stage" aria-labelledby="iv-create-title">
-      <div class="invoice-stage-heading"><span class="invoice-step">01</span><div><h3 id="iv-create-title">Créer une facture</h3><p>Le montant est modifiable <b>avant</b> l’émission. Le numéro sera attribué automatiquement.</p></div></div>
+      <div class="invoice-stage-heading"><span class="invoice-step">01</span><div><h3 id="iv-create-title">Créer une facture</h3><p>Préparez et vérifiez le montant <b>avant</b> de confirmer. Le numéro officiel n’est attribué qu’au dernier clic.</p></div></div>
       <div id="iv-actions" class="iv-actions-root"></div>
     </section>
     <section class="invoice-stage invoice-issued" aria-labelledby="iv-history-title">
@@ -451,7 +453,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
-  var draftPreviewToken = 0, draftMax = null;
+  var draftPreviewToken = 0, draftMax = null, draftInfo = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
@@ -851,6 +853,19 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (count) count.textContent = Q.invoices.length;
     if (billed) billed.textContent = eur((Q.invoices || []).filter(function(x){ return !x.care && !x.change; }).reduce(function(sum,x){ return sum + (Number(x.amt) || 0); },0));
     if (remaining) remaining.textContent = 'Vérification…';
+    var breakdown = $('iv-explanation');
+    if (breakdown) {
+      var signed = Number(Q.accepted_total || Q.total || 0);
+      var active = (Q.invoices || []).filter(function(x){ return !x.care && !x.change; });
+      var totalIssued = active.reduce(function(n,x){ return n + (Number(x.amt)||0); },0);
+      var finalInvoice = active.filter(function(x){ return x.basis === 'final'; })[0];
+      if (finalInvoice) {
+        var previous = active.filter(function(x){return x.id!==finalInvoice.id;}).reduce(function(n,x){return n+(Number(x.amt)||0);},0);
+        breakdown.textContent = 'Pourquoi cette facture fait ' + eur(finalInvoice.amt) + ' ? Devis accepté : ' + eur(signed) + ' − factures d’acompte / intermédiaires déjà émises : ' + eur(previous) + ' = facture de solde : ' + eur(finalInvoice.amt) + '. Aucun montant n’a été changé après émission.';
+      } else {
+        breakdown.textContent = 'Devis accepté : ' + eur(signed) + ' · Déjà facturé : ' + eur(totalIssued) + '. Le montant restant sera vérifié par le serveur avant toute émission.';
+      }
+    }
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
       var official = !!(x.generatedByDzoft || x.basis), number = String(x.num || '').trim();
       var caption = (x.issuedOn ? 'Émise le ' + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString('fr-FR') : 'Facture externe');
@@ -881,7 +896,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
                 (!official ? '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : '') :
                 (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF en attente</span>')) +
             '</div>'+
-            (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' : '')+
+            (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' :
+              '<details class="invoice-issued-help invoice-wide"><summary>Pourquoi je ne peux pas supprimer cette facture ?</summary><p>Cette facture a déjà reçu un numéro officiel et un PDF archivé. Elle doit rester traçable, même si vous ne l’avez pas encore envoyée. Avant paiement, une facture rectificative portant un nouveau numéro peut « annuler et remplacer » l’originale ; après paiement, il faut un avoir. Ne renumérotez pas et ne supprimez pas la facture directement.</p></details>')+
             (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '')+
           '</div>'+
         '</details>'+
@@ -935,7 +951,15 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var bar = $('iv-actions'), field = bar && bar.querySelector('[data-iv-amount]');
     var value = field && parseInvoiceAmount(field.value);
     if (value === null || draftMax === null || value > draftMax) { toast('Vérifiez le montant avant de créer la facture.'); return; }
-    issueAccepted(Math.round(value*100) === Math.round(draftMax*100) ? 'final' : 'interim', null, btn, value);
+    var review = bar.querySelector('[data-invoice-review]');
+    if (!review) return;
+    review.hidden = false;
+    review.dataset.amount = value.toFixed(2);
+    var kind = Math.round(value*100) === Math.round(draftMax*100) ? 'facture de solde' : 'facture intermédiaire';
+    var detail = review.querySelector('[data-invoice-review-text]');
+    if (detail) detail.textContent = 'Vous allez émettre une ' + kind + ' de ' + eur(value) + '. Devis accepté : ' + eur(draftInfo && draftInfo.base_total || 0) + ' · Déjà facturé : ' + eur(draftInfo && draftInfo.invoiced || 0) + ' · Montant maximal possible : ' + eur(draftMax) + '. Aucun numéro n’a été créé pour l’instant. Après confirmation, la facture officielle ne pourra plus être supprimée ou modifiée directement.';
+    var confirmButton = review.querySelector('[data-iv="confirm"]');
+    if (confirmButton) confirmButton.focus();
   }
   /* A single editable amount before issuance. Preview and numbering happen
      server-side. Already-issued invoices remain immutable. */
@@ -943,19 +967,20 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var bar = $('iv-actions'), h = '';
     if (!bar) return;
     ++draftPreviewToken;
-    draftMax = null;
+    draftMax = null; draftInfo = null;
     if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; })) {
       h += '<div class="iv-act iv-draft"><div class="iv-draft-copy"><b>Préparer une facture DZOFT</b><p class="muted">Montant proposé depuis le devis accepté. Modifiez-le avant l’émission ; le numéro sera créé automatiquement.</p>'+
         '<label for="iv-amount">Montant à facturer (€)</label><input id="iv-amount" data-iv-amount inputmode="decimal" autocomplete="off" placeholder="Chargement…" disabled aria-describedby="iv-amount-hint">'+
         '<p class="muted" id="iv-amount-hint" data-iv-hint>Chargement du solde…</p></div>'+
-        '<button class="btn main" type="button" data-iv="final" disabled>Créer et numéroter la facture</button></div>';
+        '<button class="btn main" type="button" data-iv="final" disabled>Vérifier le montant</button>' +
+        '<div class="invoice-draft-review" data-invoice-review hidden><p data-invoice-review-text></p><div class="invoice-draft-review-actions"><button class="btn main" type="button" data-iv="confirm">Confirmer et émettre officiellement</button><button class="btn line" type="button" data-iv="cancel">Annuler le brouillon</button></div></div></div>';
     }
     bar.innerHTML = h; bar.hidden = !h;
     if (!h && $('iv-remaining')) $('iv-remaining').textContent = '0 €';
     var draft = bar.querySelector('[data-iv-amount]');
     if (draft) {
       var token = draftPreviewToken;
-      draft.oninput = function(){ refreshDraftHint(bar); };
+      draft.oninput = function(){ var review = bar.querySelector('[data-invoice-review]'); if(review)review.hidden=true; refreshDraftHint(bar); };
       sb.rpc('invoice_draft_amount', { p_quote: QID }, true).then(function(info){
         if (token !== draftPreviewToken || !draft.isConnected) return;
         var max = Number(info && info.remaining);
@@ -966,6 +991,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
           return;
         }
         draftMax = Math.round(max*100)/100;
+        draftInfo = info;
+        if ($('iv-explanation')) $('iv-explanation').textContent =
+          'Calcul vérifié : devis accepté ' + eur(info.base_total || 0) + ' − factures précédentes ' + eur(info.invoiced || 0) + ' − paiements non encore facturés ' + eur(info.unbilled_receipts || 0) + ' = montant disponible ' + eur(draftMax) + '. Vous pouvez choisir un montant inférieur avant de créer le numéro officiel.';
         if ($('iv-billed')) $('iv-billed').textContent = eur(info.invoiced || 0);
         if ($('iv-remaining')) $('iv-remaining').textContent = eur(max);
         if ($('iv-total')) $('iv-total').textContent = eur(info.base_total || 0);
@@ -982,6 +1010,15 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     bar.onclick = function(e){
       var b = e.target.closest('button[data-iv]'); if (!b || b.disabled) return;
       if (b.dataset.iv === 'final') return issueDraft(b);
+      if (b.dataset.iv === 'cancel') { var rev = bar.querySelector('[data-invoice-review]');if(rev)rev.hidden=true;return; }
+      if (b.dataset.iv === 'confirm') {
+        var rev = bar.querySelector('[data-invoice-review]'), field = bar.querySelector('[data-iv-amount]');
+        var value = field && parseInvoiceAmount(field.value);
+        if (!rev || rev.hidden || !value || rev.dataset.amount !== value.toFixed(2) || !draftMax || value>draftMax) {
+          toast('Montant modifié : vérifiez à nouveau le brouillon.');if(rev)rev.hidden=true;return;
+        }
+        return issueAccepted(Math.round(value*100) === Math.round(draftMax*100) ? 'final' : 'interim', null, b, value);
+      }
       var x = Q.invoices[+b.dataset.i]; if (!x) return;
       if (b.dataset.iv === 'archive') { b.disabled = true; toast('Archivage du PDF…'); return archiveIssued(x).then(load).then(function(){ toast('PDF archivé et accessible au client.'); }, function(err){ b.disabled = false; fail(err); }); }
       if (!confirm('Envoyer le PDF de la facture ' + x.num + ' (' + eur(x.amt) + ') au client et une copie à votre adresse de suivi ?')) return;
@@ -1323,9 +1360,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="../assets/payment-reminder.js?v=20261104-2"></script>
 <script>
 /* Installable admin app: registers the background script (no private data is cached). */
-if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function(){}); });
 </script>
-<script src="project-workspace.js?v=20261115-workspaceflow" defer></script>
+<script src="project-workspace.js?v=20261115-update4" defer></script>
+<script src="update-notice.js?v=20261115-update4" defer></script>
 <script src="project-workspace-tabs.js?v=20261115-v2" defer></script>
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>

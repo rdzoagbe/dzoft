@@ -59,7 +59,7 @@ test('backup script uses documented remote link flags, explicit project and prot
 
 test('reviewed admin service worker uses network only for pages, never persists tokens or client records',()=>{
  const sw=read('admin/sw.js');
- assert.match(sw,/e\.request\.mode !== 'navigate'/);
- assert.match(sw,/e\.respondWith\(fetch\(e\.request\)\.catch/);
+ assert.match(sw,/e\.request\.mode==='navigate'/);
+ assert.match(sw,/e\.respondWith\(fetch\(new Request\(e\.request,\{cache:'no-store'\}\)\)\.catch/);
  assert.doesNotMatch(sw,/localStorage|supabase\.co\/rest\/v1|authorization.*cache|caches\.put/);
 });
