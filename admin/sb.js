@@ -99,8 +99,7 @@
       var current = getSession();
       if (current && current.access_token === s.access_token &&
           current.refresh_token === s.refresh_token &&
-          (err.status === 400 || err.status === 401 || err.status === 403 ||
-           err.code === 'invalid_grant' || err.code === 'refresh_token_not_found')) {
+          (err.status === 400 || err.status === 401 || err.status === 403)) {
         setSession(null);
       }
       // A temporary network/5xx failure is retryable: do not silently
