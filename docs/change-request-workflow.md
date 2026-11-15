@@ -40,4 +40,4 @@ This is an auditable acceptance record, **not the OTP-based electronic signature
 ## Future tasks
 - Notification emails for new requests and proposals, with recipient-specific delivery tracking.
 - Downloadable signed amendment PDF, archived privately and linked to the approval event.
-- A supplementary invoicing flow integrated with the existing sequential invoice numbering without conflating addendum billing with the original project total.
+- ~~Supplementary invoicing flow~~: done on 15 November 2026, see `docs/accepted-invoices.md` (invoice created from the approved amount once the work is completed; the original quote total is untouched).

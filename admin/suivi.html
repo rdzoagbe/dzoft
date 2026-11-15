@@ -50,6 +50,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .card>h2 .sp{flex:1}
 .muted{color:var(--mute);font-size:13.5px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.iv-act{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border:1px solid #dfe5f1;border-radius:12px;margin:10px 0;background:#f7f9fd}.iv-act p{margin:0;flex:1;min-width:200px;font-size:14px}
 .switch{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;margin:6px 0}
 .switch input{width:20px;height:20px}
 .link{display:flex;gap:8px;margin-top:8px}
@@ -153,8 +154,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-github-auto">
 <script src="../assets/vendor/qrcode-generator.js?v=20261115-offline"></script>
 <script src="../assets/invoice-preview.js?v=20261115-pay-template"></script>
-<script src="../assets/invoice-pdf.js?v=20261115-pay-template&multi=20261115"></script>
-<script src="../assets/project-tracking.js?v=20261115-pay-template"></script>
+<script src="../assets/invoice-pdf.js?v=20261115-pay-template&multi=20261115&accepted=20261115"></script>
+<script src="../assets/project-tracking.js?v=20261115-pay-template&accepted=20261115"></script>
 </head>
 <body class="dzoft-admin">
 <header class="top">
@@ -323,7 +324,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
-<script src="../assets/change-requests.js?v=20261114-1"></script>
+<script src="../assets/change-requests.js?v=20261114-1&invoice=20261115"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -420,7 +421,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     };
     $('note').value = Q.client_note || '';
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
-    if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en'});
+    if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en',invoices:Q.invoices||[],onInvoice:function(record,btn){ issueAccepted('supplement',record,btn); }});
     DzoftTracking.admin(Q, sb, load);
   }
 
@@ -737,16 +738,94 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     prepareInvoices();
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x, i){
       return '<div class="invr' + (x.paid ? ' paid' : '') + '" data-i="' + i + '"><input class="n" list="iv-kinds" value="' + esc(x.n) + '" placeholder="Libellé"' + (x.generatedByDzoft ? ' disabled title="Facture émise"' : '') + '>' +
-        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° Revolut (ex. INV-2)">' +
-        '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €">' +
+        '<input class="num" value="' + esc(x.num || '') + '" placeholder="N° Revolut (ex. INV-2)"' + (x.basis ? ' disabled title="Facture émise"' : '') + '>' +
+        '<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"' + (x.basis ? ' disabled title="Facture émise"' : '') + '>' +
         '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Confirmer la réception du paiement') + '</label>' + (x.payment_reported_at ? '<p class="muted">Le client a déclaré son paiement le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + (x.paid ? ' · Réception confirmée.' : ' · Vérifiez votre compte bancaire avant de confirmer.') + '</p>' : '') +
-        '<button class="rm" type="button" title="Retirer">×</button>' +
+        '<button class="rm" type="button" title="Retirer"' + (x.basis ? ' disabled' : '') + '>×</button>' +
       '<input class="u" value="' + esc(x.u || '') + '" placeholder="Lien de paiement Revolut (https://…)" inputmode="url">' +
-      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button>' + (x.generatedByDzoft ? '<span class="muted">PDF officiel archivé · non modifiable</span>' : '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>') : x.generatedByDzoft ? '<span class="muted">PDF en attente d’archivage : utilisez « Archiver le PDF » dans Paiements.</span>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') +
+      '<div class="invfile">' + (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + '</span><button class="btn sm line" type="button" data-a="pdf-get">Télécharger</button>' + (x.generatedByDzoft ? '<span class="muted">PDF officiel archivé · non modifiable</span>' : '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>') : x.basis ? '<span class="muted">PDF en attente d’archivage.</span><button class="btn sm main" type="button" data-a="pdf-archive">Archiver le PDF</button>' : x.generatedByDzoft ? '<span class="muted">PDF en attente d’archivage : utilisez « Archiver le PDF » dans Paiements.</span>' : C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre le PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF privé disponible après création du compte client.</span>') +
         '<label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" class="attach"' + (x.attachPdf ? ' checked' : '') + (!x.file ? ' disabled' : '') + '> Joindre le PDF officiel aux e-mails</label>' +
         '<button class="btn sm line" type="button" data-a="invoice-email">Envoyer par e-mail</button>' + (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm main" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '') + '</div></div>';
     }).join('') : '<p class="muted">Aucune facture pour l’instant. « + Facture » propose la facture d’acompte.</p>';
     DzoftTracking.lockInvoices(Q);
+    renderInvoiceActions();
+  }
+  /* Visible shortcuts above the folded invoice list: create the balance invoice, send an issued invoice. */
+  function renderInvoiceActions(){
+    var card = $('c-inv'), bar = $('iv-actions'), h = '';
+    if (!bar) { bar = document.createElement('div'); bar.id = 'iv-actions'; }
+    // Keep it directly in the card, above the folded list (the workspace layout folds the other children).
+    if (bar.parentNode !== card) card.insertBefore(bar, card.firstChild);
+    if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; }))
+      h += '<div class="iv-act"><p><b>Facture de solde</b><br><span class="muted">Créée automatiquement depuis le devis accepté, numérotée, puis proposée à l’envoi. À faire à la livraison.</span></p><button class="btn main" type="button" data-iv="final">Créer la facture de solde</button></div>';
+    Q.invoices.forEach(function(x, i){
+      if (!x.basis || x.paid) return;
+      h += '<div class="iv-act"><p><b>' + esc(x.n) + '</b><br><span class="muted">' + esc(x.num) + ' · ' + eur(x.amt) + (x.emailAt ? ' · envoyée le ' + esc(new Date(x.emailAt).toLocaleDateString('fr-FR')) : ' · pas encore envoyée au client') + '</span></p>' +
+        (x.file ? '<button class="btn ' + (x.emailAt ? 'line' : 'main') + '" type="button" data-iv="send" data-i="' + i + '">' + (x.emailAt ? 'Renvoyer au client' : 'Envoyer au client') + '</button>'
+                : '<button class="btn main" type="button" data-iv="archive" data-i="' + i + '">Archiver le PDF</button>') + '</div>';
+    });
+    bar.innerHTML = h; bar.hidden = !h;
+    bar.onclick = function(e){
+      var b = e.target.closest('button[data-iv]'); if (!b) return;
+      if (b.dataset.iv === 'final') return issueAccepted('final', null, b);
+      var x = Q.invoices[+b.dataset.i]; if (!x) return;
+      if (b.dataset.iv === 'archive') { b.disabled = true; toast('Archivage du PDF…'); return archiveIssued(x).then(load).then(function(){ toast('PDF archivé et accessible au client.'); }, function(err){ b.disabled = false; fail(err); }); }
+      if (!confirm('Envoyer la facture ' + x.num + ' (' + eur(x.amt) + ') au client par e-mail, avec le PDF joint ?')) return;
+      x.attachPdf = true; mailInvoice(x, b);
+    };
+  }
+  /* Invoices issued from what the client accepted: balance of the signed quote, or an approved change.
+     The server computes the amount and the official number; this page only archives the PDF and offers to send it. */
+  function invoiceExtras(x){
+    if (!x.change) return Promise.resolve({});
+    return sb.rpc('owner_list_change_requests', { p_quote: QID }, true).then(function(list){
+      var c = (list || []).filter(function(r){ return r.id === x.change; })[0];
+      if (!c) throw new Error('Demande de modification introuvable pour cette facture.');
+      return { detail: 'Complément : ' + c.title + '. ' + (c.proposed_scope || ''),
+        changeNote: 'Prestations complémentaires au devis ' + (Q.numero || '') + ', approuvées par ' + (c.decision_name || 'le client') + ' le ' + new Date(c.decided_at).toLocaleDateString('fr-FR') + ' (proposition n° ' + c.proposal_version + ').' };
+    });
+  }
+  function archiveIssued(x){
+    return invoiceExtras(x).then(function(extra){
+      return DzoftTracking.archive(Q, sb, null, { id: x.id, num: x.num, amt: x.amt, n: x.n, issuedOn: x.issuedOn, detail: extra.detail, changeNote: extra.changeNote });
+    });
+  }
+  function mailInvoice(x, b){
+    var label = b ? b.textContent : '';
+    if (!x.num) { toast('Ajoutez d’abord le numéro officiel de la facture.'); return Promise.resolve(false); }
+    if (!C || ![C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); })) { toast('Ajoutez une adresse e-mail valide dans la fiche client.'); return Promise.resolve(false); }
+    if (x.attachPdf && !x.file) { toast('Joignez d’abord le PDF officiel ou décochez « Joindre le PDF ».'); return Promise.resolve(false); }
+    if (x.attachPdf && x.fileSize > 7340032) { toast('Ce PDF dépasse la limite de 7 Mo par e-mail. Décochez « Joindre le PDF » : il restera accessible dans l’espace client.'); return Promise.resolve(false); }
+    x.emailAt = new Date().toISOString(); if (b) { b.disabled = true; b.textContent = 'Mise en file…'; } clearTimeout(timer);
+    return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){
+      if (!ok) { if (b) { b.disabled = false; b.textContent = label; } return false; }
+      return sb.fn('process-notification-outbox', {}).then(function(){ toast('Envoi de facture traité. Vérifiez le statut de chaque destinataire dans l’historique.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); }).then(function(){ return true; });
+    });
+  }
+  function issueAccepted(basis, change, btn){
+    var ask = basis === 'final'
+      ? 'Créer la facture de solde du devis accepté ?\n\nLe montant est calculé automatiquement : montant accepté, moins ce qui est déjà facturé ou reçu. La facture reçoit un numéro officiel définitif et devient visible dans l’espace du client.\n\nÀ faire une fois la prestation livrée.'
+      : 'Créer la facture complémentaire de « ' + change.title + ' » ?\n\nMontant approuvé par le client : ' + eur(change.extra_price) + '. La facture reçoit un numéro officiel définitif et devient visible dans son espace.';
+    if (!confirm(ask)) return;
+    clearTimeout(timer); if (btn) btn.disabled = true; toast('Création de la facture…');
+    var id;
+    sb.rpc('issue_accepted_invoice', { p_quote: QID, p_basis: basis, p_change: change ? change.id : null }, true).then(function(out){
+      id = out.invoice_id; return load();
+    }).then(function(){
+      var x = (Q.invoices || []).filter(function(i){ return i.id === id; })[0];
+      if (!x) throw new Error('Facture créée, mais introuvable après rechargement. Actualisez la page.');
+      if (x.file) return x;
+      return archiveIssued(x).then(load).then(function(){ return (Q.invoices || []).filter(function(i){ return i.id === id; })[0]; });
+    }).then(function(x){
+      if (btn) btn.disabled = false;
+      if (!x || !x.file) { toast('Facture émise. PDF à archiver depuis « Factures ».'); return; }
+      if (!confirm('Facture ' + x.num + ' créée (' + eur(x.amt) + ') et archivée.\n\nL’envoyer maintenant au client par e-mail, avec le PDF joint ?')) { toast('Facture ' + x.num + ' créée. Vous pourrez l’envoyer depuis « Factures ».'); return; }
+      x.attachPdf = true;
+      return mailInvoice(x, null);
+    }).catch(function(err){
+      if (btn) btn.disabled = false;
+      load().then(function(){ toast(id ? 'Facture émise, mais PDF non archivé : utilisez « Archiver le PDF » dans « Factures ». ' + (err && err.message || '') : 'Facture non créée : ' + (err && err.message || 'erreur')); });
+    });
   }
   function updateInvoice(e){
     var row = e.target.closest('.invr'); if (!row) return;
@@ -792,16 +871,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         clearTimeout(timer); b.disabled = true;
         return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){ b.disabled = false; if(ok) window.DzoftReminder.open(QID, x.id); });
       }
-      if (b.dataset.a === 'invoice-email') {
-        if (!x.num) { toast('Ajoutez d’abord le numéro officiel de la facture.'); return; }
-        if (!C || ![C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); })) { toast('Ajoutez une adresse e-mail valide dans la fiche client.'); return; }
-        if (x.attachPdf && !x.file) { toast('Joignez d’abord le PDF officiel ou décochez « Joindre le PDF ».'); return; }
-        if (x.attachPdf && x.fileSize > 7340032) { toast('Ce PDF dépasse la limite de 7 Mo par e-mail. Décochez « Joindre le PDF » : il restera accessible dans l’espace client.'); return; }
-        x.emailAt = new Date().toISOString(); b.disabled = true; b.textContent = 'Mise en file…'; clearTimeout(timer);
-        return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){
-          if (!ok) { b.disabled = false; b.textContent = 'Envoyer par e-mail'; return; }
-          sb.fn('process-notification-outbox', {}).then(function(){ toast('Envoi de facture traité. Vérifiez le statut de chaque destinataire dans l’historique.'); return load(); }, function(){ toast('E-mail de facture en file : il sera relancé automatiquement.'); return load(); });
-        });
+      if (b.dataset.a === 'invoice-email') return mailInvoice(x, b);
+      if (b.dataset.a === 'pdf-archive') {
+        b.disabled = true; toast('Archivage du PDF…');
+        return archiveIssued(x).then(load).then(function(){ toast('PDF archivé et accessible au client.'); }, function(err){ b.disabled = false; fail(err); });
       }
       if (b.dataset.a === 'pdf-get') { var w = window.open('about:blank', '_blank'); sb.files.link(x.file, true).then(function(u){ w.location = u; }, function(err){ w.close(); fail(err); }); return; }
       if (b.dataset.a === 'pdf-unlink') {
@@ -994,7 +1067,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* Installable admin app: registers the background script (no private data is cached). */
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
-<script src="project-workspace.js?v=20261113-payment-audit" defer></script>
+<script src="project-workspace.js?v=20261113-payment-audit&inv=20261115" defer></script>
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>
 <script src="weekly-review.js?v=20261114-summary" defer></script>

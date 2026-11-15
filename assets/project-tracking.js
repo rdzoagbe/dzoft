@@ -13,7 +13,7 @@
  var kinds=[['Facture d’acompte','Deposit invoice'],['Facture intermédiaire','Interim invoice'],['Facture de solde','Final invoice']];
  function label(map,key){return map[key]?map[key][en()?1:0]:key;}
  function options(map){return Object.keys(map).map(function(k){return '<option value="'+k+'">'+esc(label(map,k))+'</option>';}).join('');}
- function stats(d){return '<div class="tracking-stats">'+[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]].map(function(x){return '<div><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div><p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
+ function stats(d){return '<div class="tracking-stats">'+[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]].map(function(x){return '<div><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div>'+(Number(d.supplements)>0?'<p class="tracking-help">'+t('Montant convenu = devis accepté '+money(d.base_total)+' + compléments approuvés et facturés '+money(d.supplements)+'.','Agreed total = accepted quote '+money(d.base_total)+' + approved, invoiced additions '+money(d.supplements)+'.')+'</p>':'')+'<p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
  function invoiceArchiveAction(r,q){
    if(!r.invoice_id)return '<button class="btn sm main tracking-issue-btn" type="button" data-open-receipt-link="'+esc(r.id)+'">'+t('Générer une facture','Generate an invoice')+'</button>';
    var inv=(q&&q.invoices||[]).find(function(x){return x.id===r.invoice_id;});
@@ -380,7 +380,8 @@
  function archiveInvoice(q,sb,receipt,inv){
    if(!global.DzoftInvoicePdf)return Promise.reject(new Error('PDF generator unavailable; reload the page'));
    if(!q.client_id)return Promise.reject(new Error('Client account is missing'));
-   if(!receipt||!inv)return Promise.reject(new Error('Invoice receipt unavailable'));
+   // receipt is null for an invoice issued from the accepted quote or an approved change (no payment yet).
+   if(!inv)return Promise.reject(new Error('Invoice unavailable'));
    return Promise.all([
      sb.select('clients','select=user_id&id=eq.'+encodeURIComponent(q.client_id)),
      sb.select('settings','select=payment&id=eq.1').catch(function(){return [];})
@@ -405,5 +406,5 @@
  window.addEventListener('focus',refreshClient);setInterval(refreshClient,30000);
  // Language switch: redraw in the new language (the page dictionary skips this card).
  document.addEventListener('dzoft:locale-change',function(){if(last&&document.getElementById('tracking-admin'))admin.apply(null,last);refreshClient();});
- global.DzoftTracking={admin:admin,client:client,lockInvoices:lockInvoices};
+ global.DzoftTracking={admin:admin,client:client,lockInvoices:lockInvoices,archive:archiveInvoice};
 })(window);

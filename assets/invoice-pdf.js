@@ -16,12 +16,13 @@
  }
  function escapePDF(text){return asciiLine(text).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');}
  function build(data){
-   var q=data&&data.quote, r=data&&data.receipt, inv=data&&data.invoice;
+   // A receipt is optional: an invoice issued from the accepted quote or an approved change has no payment yet.
+   var q=data&&data.quote, r=(data&&data.receipt)||null, inv=data&&data.invoice;
    var f=q&&((q.accepted_data||q.data||{}).f)||{};
-   if(!q||!r||!inv||!/^F-[0-9]{4}-[0-9]+$/.test(String(inv.num||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(inv.issuedOn||'')))throw new Error('Missing issued invoice details');
+   if(!q||!inv||!/^F-[0-9]{4}-[0-9]+$/.test(String(inv.num||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(inv.issuedOn||'')))throw new Error('Missing issued invoice details');
    if(!f.myaddr||!f.cname||!f.caddr)throw new Error('Complete the billing addresses first');
-   var total=Number(inv.amt),paid=Number(r.amount);
-   if(!Number.isFinite(total)||!Number.isFinite(paid)||total<=0||paid<=0||paid>total||!r.received_on)throw new Error('Invalid invoiced/received amount');
+   var total=Number(inv.amt),paid=r?Number(r.amount):0;
+   if(!Number.isFinite(total)||!Number.isFinite(paid)||total<=0||paid>total||(r&&(paid<=0||!r.received_on)))throw new Error('Invalid invoiced/received amount');
    var payment=data&&data.payment||{};
    var commands=[],pages=[],y=778;
    function nextPage(){
@@ -39,7 +40,7 @@
    function wrap(value,max){var words=asciiLine(value).split(/\s+/),lines=[],line='';for(var word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line='';}while(word.length>max){lines.push(word.slice(0,max));word=word.slice(max);}line=(line?line+' ':'')+word;}if(line)lines.push(line);return lines;}
    function block(value,max){wrap(value,max||84).forEach(x=>text(x,10,false));}
    var taxable=f.novat===false||f.novat==='false', ht=taxable?Math.round(total/1.2*100)/100:total,vat=Math.round((total-ht)*100)/100;
-   var payLabel={transfer:'Virement bancaire',cash:'Espèces',card:'Carte bancaire',other:'Autre'}[r.method]||'Paiement';
+   var payLabel={transfer:'Virement bancaire',cash:'Espèces',card:'Carte bancaire',other:'Autre'}[r&&r.method]||'Paiement';
    text('DZOFT  |  FACTURE',21,true);
    commands.push('0.25 0.32 0.65 RG 1.6 w 46 718 m 548 718 l S 0 0 0 RG');
    text('Numéro : '+inv.num,12,true);
@@ -60,17 +61,23 @@
    y-=8;
    text('DÉSIGNATION',12,true);
    block(inv.n||'Prestation de services numériques',88);
-   if(f.desc)block(f.desc,88);
+   // A supplementary invoice describes the approved extra work, not the original brief.
+   if(inv.detail)block(inv.detail,88);else if(f.desc)block(f.desc,88);
    y-=10;
    if(taxable){text('Montant HT : '+money(ht),11);text('TVA 20 % : '+money(vat),11);}
    text('TOTAL TTC : '+money(total),14,true);
-   text('Paiement reçu : '+money(paid),11);
-   text('Reçu le '+frenchDate(r.received_on)+' - '+payLabel,10);
+   if(r){
+     text('Paiement reçu : '+money(paid),11);
+     text('Reçu le '+frenchDate(r.received_on)+' - '+payLabel,10);
+   }else{
+     text('Échéance : paiement à réception de la facture',10);
+   }
    text('Reste à payer sur cette facture : '+money(total-paid),11,true);
    y-=10;
    if(!taxable)block('TVA non applicable, article 293 B du CGI.',88);
    if(f.pay){text('Conditions de règlement :',10,true);block(f.pay,88);}
    block('Nature : prestation de services. Facture liée au devis '+safe(q.numero||'')+'.',88);
+   if(inv.changeNote)block(inv.changeNote,88);
    // Reminder, not a unilateral revision. Legacy signed agreements keep their original document wording.
    if(q.accepted_terms==='v2026-11'){
      y-=7;

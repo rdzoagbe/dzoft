@@ -92,6 +92,11 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   état Prévu / En cours / Construit / Testé) d’un coup via `publish_project_updates` (`batch_id`) :
   une seule mise à jour dans le portail et UN seul e-mail (`progress_digest`), pour ne pas noyer le client.
   « Testé » = vérifié par DZOFT, jamais « validé par le client ». Test : `tests/project-tracking.sql`.
+- Factures créées depuis ce que le client a accepté (15 nov. 2026, `docs/accepted-invoices.md`) : `issue_accepted_invoice` émet la
+  facture de solde du devis accepté (à la livraison) ou la facture complémentaire d’une demande de modification approuvée dont les
+  travaux sont terminés ; le serveur calcule montant et numéro (série F-AAAA-NNNN), la page archive le PDF puis propose l’envoi.
+  Les factures d’acompte restent émises à réception du paiement (CGI art. 289). `owner_create_change_proposal` : DZOFT ouvre
+  lui-même une proposition, que seul le client peut approuver. Tests `tests/issue-accepted-invoices.{test.cjs,sql}`.
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.

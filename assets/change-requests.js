@@ -38,7 +38,7 @@ function clientCard(r,en,name){
  if(['approved','in_progress','completed'].includes(r.status))h+='<p class="dzoft-change-confirm">'+tr(en,'Accord confirmé par ','Approved by ')+esc(r.decision_name||'')+' · '+esc(when(r.decided_at))+'. '+tr(en,'Le prix du devis d’origine reste inchangé ; cet accord autorise uniquement les prestations supplémentaires détaillées.','The original quote price remains unchanged; this approval covers only the additional work described.')+'</p>';
  return h+history(r,en)+'</article>';
 }
-function adminCard(r,en){
+function adminCard(r,en,invoice){
  var status=labels(en)[r.status]||r.status;
  var h='<article class="dzoft-change-item"><header><b>'+esc(r.title)+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header><p>'+esc(r.description)+'</p>'+
  '<p class="dzoft-change-meta">'+tr(en,'Demande du ','Requested on ')+esc(when(r.created_at))+'</p>';
@@ -62,7 +62,13 @@ function adminCard(r,en){
  '. '+tr(en,'Vous pouvez planifier ce travail. Facturez-le séparément conformément à cet accord, sans modifier la facture initiale.','You can schedule the additional work. Invoice it separately under this agreement; do not change the original invoice.')+'</p>';
  if(r.status==='approved')h+='<button class="btn main sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="in_progress">'+tr(en,'Démarrer les travaux complémentaires','Start approved additional work')+'</button>';
  if(r.status==='in_progress')h+='<button class="btn main sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="completed">'+tr(en,'Marquer les travaux terminés','Mark additional work completed')+'</button>';
- if(r.status==='completed')h+='<p class="dzoft-change-meta">'+tr(en,'Travaux complémentaires terminés. La facturation complémentaire doit être faite séparément, sans modifier le devis et les paiements d’origine.','Additional work complete. Supplementary billing must be handled separately without altering the original quote or payment ledger.')+'</p>';
+ if(r.status==='completed'){
+  // The invoice amount is the approved extra price; the original quote and its invoices stay untouched.
+  if(invoice)h+='<p class="dzoft-change-meta">'+tr(en,'Facture complémentaire ','Supplementary invoice ')+esc(invoice.num||'')+tr(en,' émise ('+cash(invoice.amt)+'). Retrouvez-la dans « Factures » pour l’envoyer ou enregistrer son paiement.',' issued ('+cash(invoice.amt)+'). Find it under “Invoices” to send it or record its payment.')+'</p>';
+  else if(Number(r.extra_price)>0)h+='<p class="dzoft-change-meta">'+tr(en,'Travaux complémentaires terminés. La facture reprend exactement le montant approuvé par le client, sans modifier le devis et les paiements d’origine.','Additional work complete. The invoice uses exactly the amount the client approved, without altering the original quote or payment ledger.')+'</p>'+
+   '<button class="btn main sm" type="button" data-change-invoice="'+esc(r.id)+'">'+tr(en,'Créer la facture complémentaire ('+cash(r.extra_price)+')','Create the supplementary invoice ('+cash(r.extra_price)+')')+'</button>';
+  else h+='<p class="dzoft-change-meta">'+tr(en,'Travaux complémentaires terminés, sans supplément : rien à facturer.','Additional work complete at no extra charge: nothing to invoice.')+'</p>';
+ }
  return h+history(r,en)+'</article>';
 }
 function bindClient(root,options){
@@ -86,18 +92,33 @@ function bindClient(root,options){
 }
 function bindOwner(root,options){
  var sb=options.sb,quoteId=options.quoteId,en=!!options.en,busy=false;
- if(root.__dzoftOwnerRefresh)return root.__dzoftOwnerRefresh();
+ // The project page calls this after every reload: keep one set of listeners, refresh the options.
+ root.__dzoftOwnerOptions=options;
+ if(root.__dzoftOwnerRefresh&&root.__dzoftOwnerQuote===quoteId)return root.__dzoftOwnerRefresh();
+ function invoiceOf(r){var list=(root.__dzoftOwnerOptions||{}).invoices||[];for(var i=0;i<list.length;i++)if(list[i]&&list[i].change===r.id)return list[i];return null;}
  root.innerHTML=rootMarkup(en);var records=[];
  function refresh(){return sb.rpc('owner_list_change_requests',{p_quote:quoteId},true).then(function(data){records=Array.isArray(data)?data:[];root.querySelector('.dzoft-change-content').innerHTML=
  '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Envoyez un montant et un délai proposés, puis attendez l’approbation explicite du client avant de commencer les travaux complémentaires.','A request is not an order. Propose a price and timeline, then await the client’s explicit approval before additional work begins.')+'</p>'+
- (records.length?records.map(function(r){return adminCard(r,en);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
+ '<details class="dzoft-change-new"><summary>'+tr(en,'＋ Proposer un complément au client','＋ Propose additional work to the client')+'</summary><form class="dzoft-change-form" data-change-offer>'+
+ '<label>'+tr(en,'Objet','Title')+'<input name="title" maxlength="120" minlength="3" required placeholder="'+tr(en,'Ex. : Ajouts réalisés depuis le devis','E.g. additions since the quote')+'"></label>'+
+ '<label>'+tr(en,'Prestations supplémentaires proposées','Additional work / scope')+'<textarea name="scope" minlength="10" maxlength="2000" rows="3" required></textarea></label>'+
+ '<label>'+tr(en,'Supplément (€)','Extra charge (€)')+'<input name="amount" type="number" min="0" max="1000000" step="0.01" required></label>'+
+ '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" placeholder="'+tr(en,'Ex. : aucun changement','E.g. no change')+'"></label>'+
+ '<p>'+tr(en,'Le client voit cette proposition dans son espace. Rien n’est dû tant qu’il ne l’a pas approuvée lui-même. Aucun e-mail n’est envoyé automatiquement : prévenez-le.','The client sees this proposal in their workspace. Nothing is owed until they approve it themselves. No e-mail is sent automatically: let them know.')+'</p>'+
+ '<button class="btn main" type="submit">'+tr(en,'Envoyer la proposition à l’espace client','Publish proposal to client workspace')+'</button></form></details>'+
+ (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r));}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p){if(busy)return;busy=true;p.then(function(){banner(root,tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
+ root.addEventListener('click',function(ev){var bill=ev.target.closest('[data-change-invoice]');if(!bill||busy)return;
+  var record=records.filter(function(r){return r.id===bill.dataset.changeInvoice;})[0],issue=(root.__dzoftOwnerOptions||{}).onInvoice;
+  if(record&&typeof issue==='function')issue(record,bill);});
  root.addEventListener('click',function(ev){var button=ev.target.closest('[data-change-progress]');if(!button||busy)return;var next=button.dataset.next;if(next!=='in_progress'&&next!=='completed')return;if(!global.confirm(tr(en,'Enregistrer cette progression des travaux complémentaires ?','Record additional-work progress?')))return;perform(sb.rpc('owner_progress_change',{p_request:button.dataset.changeProgress,p_status:next},true));});
- root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-propose],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
+ root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-propose],[data-change-reject],[data-change-offer]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
+  if(f.hasAttribute('data-change-offer')){perform(sb.rpc('owner_create_change_proposal',{p_quote:quoteId,p_title:f.elements.title.value.trim(),p_scope:f.elements.scope.value.trim(),p_extra_price:Number(f.elements.amount.value),p_timeline:f.elements.timeline.value.trim()},true));return;}
   if(f.dataset.changePropose){perform(sb.rpc('owner_propose_change',{p_request:f.dataset.changePropose,p_scope:f.elements.scope.value.trim(),p_extra_price:Number(f.elements.amount.value),p_timeline:f.elements.timeline.value.trim()},true));return;}
   if(f.dataset.changeReject){if(!global.confirm(tr(en,'Refuser cette demande ?','Reject this request?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
  });
+ root.__dzoftOwnerRefresh=refresh;root.__dzoftOwnerQuote=quoteId;
  return refresh();
 }
 api.client=bindClient;api.owner=bindOwner;
