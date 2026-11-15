@@ -167,3 +167,35 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
  #app .today-task-copy strong{font-size:12px}
  #app .today-task-copy span{font-size:11px}
 }
+
+
+/* One-button navigation in INSTALLED mobile DZOFT Admin only.
+   The ordinary mobile website, desktop layout, and client portal keep their existing menus. */
+#app .installed-app-menu{display:none}
+@media(max-width:980px){
+ body.dzoft-admin.dzoft-installed-mobile #app .top{position:sticky;top:0;z-index:50;background:#171622}
+ body.dzoft-admin.dzoft-installed-mobile #app .top .in{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;min-height:62px;padding:8px 12px;gap:0}
+ body.dzoft-admin.dzoft-installed-mobile #app .top .in>:not(.installed-app-menu){display:none!important}
+ body.dzoft-admin.dzoft-installed-mobile #app .side{display:none!important}
+ body.dzoft-admin.dzoft-installed-mobile #app .shell{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu{display:block;position:relative;margin-left:auto;color:#fff}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary{list-style:none;display:flex;justify-content:center;align-items:center;width:46px;height:46px;border:1px solid #57516e;border-radius:12px;background:#282438;color:#fff;cursor:pointer;touch-action:manipulation}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary::-webkit-details-marker{display:none}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu[open]>summary{background:#5137f0;border-color:#8a7bfc}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary:focus-visible{outline:3px solid #9b90ff;outline-offset:3px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu-panel{position:absolute;top:calc(100% + 9px);right:0;z-index:60;display:block;width:min(350px,calc(100vw - 24px));max-height:min(76dvh,680px);overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#16182b;border:1px solid #e6e4ef;border-radius:17px;box-shadow:0 16px 45px rgba(10,9,28,.3);padding:10px;scrollbar-width:thin}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-section+.installed-menu-section{border-top:1px solid #eceaf4;margin-top:9px;padding-top:9px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-heading{padding:8px 10px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#777289}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item{display:flex;align-items:center;gap:13px;min-height:47px;width:100%;padding:10px 11px;border:0;border-radius:10px;background:transparent;color:#202238;font:700 14px/1.35 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left;text-decoration:none;cursor:pointer;box-sizing:border-box}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item[aria-current=page]{background:#ede9ff;color:#4531c8}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:hover{background:#f2efff}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:focus-visible{outline:2px solid #5137f0;outline-offset:2px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-icon{display:inline-flex;flex:0 0 21px;width:21px;align-items:center;justify-content:center;color:#5c56a3;font-size:22px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-icon svg{width:20px;height:20px;stroke:currentColor}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-label{flex:1;min-width:0;overflow-wrap:anywhere}
+ body.dzoft-admin.dzoft-installed-mobile #app [data-app-action=logout]{color:#ae3441}
+ body.dzoft-admin.dzoft-installed-mobile #app [data-app-action=logout] .installed-menu-icon{color:#ae3441}
+}
+@media(max-width:420px){
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu-panel{max-height:calc(100dvh - 93px)}
+}
