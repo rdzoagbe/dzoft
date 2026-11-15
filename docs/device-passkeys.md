@@ -99,6 +99,12 @@ A real device/browser biometric ceremony cannot be safely simulated with a custo
 
 Sources: https://supabase.com/docs/guides/auth/passkeys and https://supabase.com/docs/guides/auth/auth-mfa
 
+## Server-side user verification caveat
+
+In Supabase Auth's implementation at the time of this review, the shared WebAuthn configuration uses `UserVerification: VerificationPreferred`. DZOFT's browser explicitly requests `userVerification: 'required'`, but this **does not independently guarantee that Supabase's server will reject every credential assertion lacking a local biometric/PIN user-verification flag** if a modified client makes the request. The server verifies that the passkey signature is valid; the Auth AMR record does **not** itself certify that the UV flag was required.
+
+Consequently, the proposed passwordless owner policy is **not AAL2**, is **not equivalent to password + independent TOTP**, and has a documented security tradeoff even when it is implemented correctly. Keep the migration un-applied until the owner accepts this assurance model or Supabase exposes a reliably enforced server-side UV / WebAuthn MFA policy. The existing production password + TOTP rule remains the safe fallback.
+
 ## Passkey-only Admin rollout and safety checks (15 November 2026)
 
 This change is **not live** until the SQL migration is applied to RD-Clients and the reviewed GitHub branch is merged/deployed. It should be staged deliberately because it changes the accepted assurance policy from mandatory AAL2 to either AAL2 **or** a verified owner passkey. A passkey is phishing-resistant but this is **not equivalent** to a separate MFA factor.
