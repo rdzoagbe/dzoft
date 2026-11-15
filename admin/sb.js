@@ -47,19 +47,38 @@
     if (refreshInFlight && refreshInFlight.access === s.access_token &&
         refreshInFlight.refresh === s.refresh_token) return refreshInFlight.promise;
     var generation = sessionGeneration;
-    var run = req('/auth/v1/token?grant_type=refresh_token', {
-      method: 'POST', body: { refresh_token: s.refresh_token }
-    }).then(function (response) {
-      var current = getSession();
-      if (generation !== sessionGeneration || !current ||
-          current.access_token !== s.access_token ||
-          current.refresh_token !== s.refresh_token) {
-        var changed = new Error('Session changed during refresh. Please sign in again.');
-        changed.code = 'session_changed';
-        throw changed;
+    function staleSession() {
+      var changed = new Error('Session changed during refresh. Please sign in again.');
+      changed.code = 'session_changed';
+      return changed;
+    }
+    function doRefresh() {
+      // A second DZOFT tab may have already rotated the shared token while
+      // this tab waited for the browser-wide exclusive lock.
+      var before = getSession();
+      if (generation !== sessionGeneration || !before) throw staleSession();
+      if (before.access_token !== s.access_token ||
+          before.refresh_token !== s.refresh_token) {
+        if (s.user && before.user && s.user.id !== before.user.id) throw staleSession();
+        if (before.access_token && before.expires_at - 60 > Date.now() / 1000) return before;
+        throw staleSession();
       }
-      return keep(response);
-    });
+      return req('/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST', body: { refresh_token: s.refresh_token }
+      }).then(function (response) {
+        var current = getSession();
+        if (generation !== sessionGeneration || !current ||
+            current.access_token !== s.access_token ||
+            current.refresh_token !== s.refresh_token) throw staleSession();
+        return keep(response);
+      });
+    }
+    // Web Locks serializes rotation across tabs on supported browsers.
+    // Other browsers still get the safe same-tab single-flight + stale guard.
+    var locks = global.navigator && global.navigator.locks;
+    var run = locks && typeof locks.request === 'function'
+      ? locks.request('dzoft-auth-refresh-' + STORE, { mode: 'exclusive' }, doRefresh)
+      : Promise.resolve().then(doRefresh);
     var pending = { access: s.access_token, refresh: s.refresh_token, promise: run };
     refreshInFlight = pending;
     // Handle both outcomes without creating an unhandled rejection.
