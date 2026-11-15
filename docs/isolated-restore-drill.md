@@ -1,6 +1,6 @@
 # DZOFT — Isolated recovery drill checklist
 
-**Status: NOT restore-tested.** One encrypted application-data archive was later uploaded to Google Drive and the downloaded copy successfully decrypted/validated. The full restore and Auth account re-association remain untested. See [Auth recovery plan](auth-recovery.md). This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
+**Status: NOT restore-tested.** One encrypted application-data archive was later uploaded to Google Drive and the downloaded copy successfully decrypted/validated. The full restore and Auth account re-association remain untested. The downloaded Auth recovery ledger has been independently SHA-256 matched, decrypted and validated on the owner's PC. See [Auth recovery plan](auth-recovery.md). This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
 
 ## Verified inventory snapshot — 15 November 2026
 
@@ -28,6 +28,33 @@ These are **point-in-time counts**, not a manifest of a particular backup; count
    - `verified_empty_by_cli` means the CLI listed no Storage objects **at the time of export**.
    - `skipped_by_operator` is a **partial database-only archive**; it cannot substantiate full application backup readiness.
 6. Retain multiple dated encrypted copies and protect the encryption passphrase separately.
+
+## Offline preflight on Windows (read-only, no Docker, no PostgreSQL server)
+
+**First run this before attempting any database restore.** The tool inspects the original native encrypted `.dzoftbak` using PostgreSQL 18's local `pg_restore.exe`. It never connects to Supabase or local PostgreSQL, never executes SQL, and never writes plaintext SQL or a dump file.
+
+From the existing local DZOFT checkout, on the Windows computer holding the encrypted archive:
+
+```powershell
+Set-Location "$HOME\DZOFT-Backup-Runner"
+git pull --ff-only
+
+python .\tools\preflight_dzoft_restore.py `
+  --archive "$HOME\DZOFT-Backups\dzoft-20261115-145839Z-b191cd.dzoftbak" `
+  --pg-bin "C:\Program Files\PostgreSQL\18\bin"
+```
+
+Enter the **database backup** encryption passphrase locally (not the separate `.dzoftauth` passphrase unless you deliberately chose them to be the same). No Supabase password is needed. Do not share a passphrase or plaintext SQL in chat.
+
+What preflight does:
+1. Fully decrypts and validates the DZOFT authenticated envelope, ZIP manifest, CRC and SHA-256 checks, all in memory.
+2. Runs local `pg_restore --list` over the in-memory custom PostgreSQL archive; counts application tables, data entries, functions, policies and FK constraints without printing names or data.
+3. Runs `pg_restore --schema-only --no-owner --no-privileges --file=-` to **render** schema SQL to memory and flags managed Auth and Storage dependencies.
+4. Runs `pg_restore --no-owner --no-privileges --file=-` to **render and decompress the full SQL** while immediately discarding stdout; it does not produce a file or run a database server.
+
+A `PASS` means the backup envelope, table of contents, schema rendering and full SQL rendering were readable. A `BLOCKER` or `DEPENDENCY` identifies work required before a standalone restore (most notably foreign keys to `auth.users` and `auth.uid()`). **Even if every preflight check passes, no actual database restore, row-count verification, Auth login, RLS or isolated project test has been performed.** Keep readiness marked **NOT VERIFIED**. This is a necessary but insufficient prerequisite to a restoration exercise.
+
+Any future **actual** local restore must be performed in a separately initialized PostgreSQL cluster with no production connection strings, or on a separately approved disposable target, after planning managed Auth schema and extension dependencies. Do **not** point `pg_restore -d`, `psql`, or a Supabase CLI restore command at the production project.
 
 ## Isolated restore drill: do not restore over production
 
