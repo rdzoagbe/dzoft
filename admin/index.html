@@ -1041,7 +1041,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var f = factorOf(u, 'totp'), box = $('mfa-box');
     var keys = (u.factors || []).filter(function(x){ return x.status === 'verified' && x.factor_type === 'webauthn'; });
     if (f || keys.length) {
-      box.innerHTML = (f ? '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : un code de votre application est demandé à chaque connexion.</p>' +
+      box.innerHTML = (f ? '<p style="font-size:14px;color:var(--ok);font-weight:700">✓ Activée : le code protège les connexions par mot de passe. Une clé d’accès vérifiée peut ouvrir Admin sans code.</p>' +
           '<div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn danger sm" id="mfa-off" type="button">Désactiver le code</button></div>' : '') +
         (PASSKEY_MFA || keys.length ? '<h4 style="margin-top:18px;font-size:15px">Clés d’accès</h4>' +
         '<p style="font-size:13.5px;color:var(--mute);margin-top:4px">Validez avec votre empreinte, Face ID ou Windows Hello au lieu de taper le code. Le code reste disponible en secours. Ajoutez une clé sur chaque appareil que vous utilisez.</p>' +
