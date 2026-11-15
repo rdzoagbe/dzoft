@@ -1,5 +1,5 @@
 // Sends a project e-mail to a client through Brevo. Only the owner of the private space can call it.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const PORTAL = "https://rdzoagbe.github.io/dzoft/espace/";
 const cors = {
