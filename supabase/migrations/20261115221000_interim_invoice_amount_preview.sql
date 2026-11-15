@@ -183,3 +183,35 @@ revoke all on function private.issue_interim_invoice(uuid,numeric,uuid),
   public.issue_interim_invoice(uuid,numeric,uuid) from public,anon,authenticated;
 grant execute on function private.issue_interim_invoice(uuid,numeric,uuid),
   public.issue_interim_invoice(uuid,numeric,uuid) to authenticated;
+
+-- Official invoices of EVERY basis (including receipt/deposit invoices) must
+-- keep their issued number and amount. The earlier guard covered only the
+-- final/supplement basis, unintentionally leaving receipt invoices editable.
+create or replace function private.guard_issued_invoice_amounts()
+returns trigger language plpgsql security definer set search_path='' as $fn$
+declare
+  rec record;
+  before_invoice jsonb;
+  after_invoice jsonb;
+begin
+  if new.invoices is not distinct from old.invoices then return new; end if;
+  for rec in
+    select invoice_id from private.dzoft_issued_invoice_registry where quote_id=new.id
+  loop
+    select value into before_invoice
+      from jsonb_array_elements(coalesce(old.invoices,'[]'::jsonb)) value
+      where value->>'id'=rec.invoice_id;
+    select value into after_invoice
+      from jsonb_array_elements(coalesce(new.invoices,'[]'::jsonb)) value
+      where value->>'id'=rec.invoice_id;
+    if before_invoice is null or after_invoice is null
+       or before_invoice->>'amt' is distinct from after_invoice->>'amt'
+       or before_invoice->>'num' is distinct from after_invoice->>'num'
+       or before_invoice->>'change' is distinct from after_invoice->>'change' then
+      raise exception 'Issued invoice number and amount cannot be changed or deleted';
+    end if;
+  end loop;
+  return new;
+end $fn$;
+revoke all on function private.guard_issued_invoice_amounts()
+  from public,anon,authenticated;
