@@ -212,8 +212,12 @@ def verified_archive(archive: bytes, passphrase: str) -> tuple[bytes, dict]:
             actual = set(names) - {"MANIFEST.json"}
             if actual != set(declared):
                 raise BackupError("Archive file list does not match its manifest.")
-            if not REQUIRED_DATABASE_FILES.issubset(actual):
-                raise BackupError("Database schema, data or roles are missing.")
+            sql_split = REQUIRED_DATABASE_FILES.issubset(actual)
+            native_custom = "database/application.dump" in actual
+            if sql_split == native_custom:
+                raise BackupError("Backup must contain either split SQL exports or one native PostgreSQL custom dump.")
+            if native_custom and not z.read("database/application.dump").startswith(b"PGDMP"):
+                raise BackupError("Native PostgreSQL custom dump header is invalid.")
             for name, item in declared.items():
                 if (not isinstance(item, dict) or type(item.get("size")) is not int or
                     item["size"] < 0 or
@@ -236,12 +240,13 @@ def verified_archive(archive: bytes, passphrase: str) -> tuple[bytes, dict]:
             if status == "exported":
                 if exported == 0 or storage_count != exported:
                     raise BackupError("Storage download count does not match manifest.")
-            elif status in ("verified_empty_by_cli", "skipped_by_operator"):
+            elif status in ("verified_empty_by_cli", "verified_empty_by_sql", "skipped_by_operator"):
                 if exported or storage_count:
                     raise BackupError("Unexpected Storage files in partial/empty backup.")
             else:
                 raise BackupError("Unknown Storage export state.")
-            if not z.read("database/schema.sql").strip() or not z.read("database/data.sql").strip():
+            if sql_split and (not z.read("database/schema.sql").strip() or
+                              not z.read("database/data.sql").strip()):
                 raise BackupError("Database schema or data export is empty.")
     except BackupError:
         raise
@@ -346,6 +351,7 @@ def do_verify(args: argparse.Namespace) -> None:
     print("PASS: encryption, archive CRC, file inventory and SHA-256 verified.")
     print("Created (UTC):", meta["captured_at_utc"])
     print("Files:", len(meta["files"]))
+    print("Database format:", "native PostgreSQL custom" if "database/application.dump" in meta["files"] else "split SQL")
     print("Storage:", meta["storage"]["status"])
     if meta["storage"]["status"] == "skipped_by_operator":
         print("WARNING: database-only archive; Storage objects were not exported.")
