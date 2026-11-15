@@ -395,6 +395,12 @@
     var unbilled=el.invoice.value==='unbilled';
     var payload={p_quote:q.id,p_id:key,p_amount:Number(el.amount.value),p_date:el.date.value,p_method:el.method.value,p_reference:el.reference.value.trim(),p_notify:el.notify.checked};
     if(!unbilled){payload.p_invoice=isNew?newKey:el.invoice.value;payload.p_new_invoice=isNew?{n:kinds[+el.kind.value][0],num:el.num.value.trim(),amt:Number(el.amt.value)}:null;}
+    // Explicit review before writing immutable payment history or queuing an email.
+    var review=t('Confirmer l’encaissement de ','Confirm received payment of ')+money(payload.p_amount)+
+      t(' reçu le ',' received on ')+day(payload.p_date)+' · '+esc(label(methods,payload.p_method))+
+      (payload.p_notify?t('. Un e-mail sera mis en file pour le client.','. A client email will be queued.'):t('. Aucun e-mail ne sera envoyé.','. No email will be sent.'))+
+      t('\\nCette confirmation sera enregistrée dans l’historique. Continuer ?','\\nThis confirmation will be recorded in the audit history. Continue?');
+    if(!confirm(review))return;
     b.disabled=true;status(msg,t('Enregistrement…','Saving…'));
     sb.rpc(unbilled?'record_project_payment_unbilled':'record_project_payment',payload,true).then(function(){
      key=crypto.randomUUID();newKey=crypto.randomUUID();status(msg,payload.p_notify?t('Paiement enregistré. E-mails mis en file d’envoi.','Payment recorded. Emails queued.'):t('Paiement enregistré, sans e-mail.','Payment recorded, no email sent.'));if(payload.p_notify)notify(sb);setTimeout(reload,1200);
