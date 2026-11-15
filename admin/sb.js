@@ -122,7 +122,7 @@
       return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4)));
     } catch (e) { return {}; }
   }
-  // Second factors accepted for the 8-hour check: authenticator-app code or a passkey (WebAuthn).
+  // Verified second factors accepted for the 12-hour owner MFA window.
   var SECOND_FACTORS = ['totp', 'mfa/totp', 'mfa/webauthn', 'webauthn'];
   function mfaFresh(maxAgeSeconds) {
     var p = claims(), now = Date.now() / 1000;
@@ -131,6 +131,23 @@
       var at = Number(entry && entry.timestamp);
       return entry && SECOND_FACTORS.indexOf(entry.method) >= 0 && Number.isFinite(at) && at <= now + 120 && now - at <= maxAgeSeconds;
     });
+  }
+
+  // A signed Supabase JWT records first-factor passkey login as amr.method='passkey'.
+  // This is UI guidance only: public.is_owner() independently checks the Auth
+  // session's server-created AMR record before releasing any private data.
+  // Do not use this for passkey enrollment/removal, which still requires AAL2.
+  function passkeyFresh(maxAgeSeconds) {
+    var p = claims(), now = Date.now() / 1000;
+    if (!getSession() || !p.session_id || !Array.isArray(p.amr)) return false;
+    return p.amr.some(function (entry) {
+      var at = Number(entry && entry.timestamp);
+      return entry && entry.method === 'passkey' &&
+        Number.isFinite(at) && at <= now + 120 && now - at <= maxAgeSeconds;
+    });
+  }
+  function ownerAccessFresh(maxAgeSeconds) {
+    return mfaFresh(maxAgeSeconds) || passkeyFresh(maxAgeSeconds);
   }
 
   /* WebAuthn helpers: Supabase sends and expects binary fields as base64url text. */
@@ -346,6 +363,8 @@
       return claims().aal || '';
     },
     mfaFresh: mfaFresh,
+    passkeyFresh: passkeyFresh,
+    ownerAccessFresh: ownerAccessFresh,
     mfa: {
       enroll: function () { return authenticatedToken().then(function (t) { return req('/auth/v1/factors', { method: 'POST', token: t, body: { factor_type: 'totp', friendly_name: 'DZOFT ' + Date.now() } }); }); },
       challenge: function (fid) { return authenticatedToken().then(function (t) { return req('/auth/v1/factors/' + fid + '/challenge', { method: 'POST', token: t, body: {} }); }); },
