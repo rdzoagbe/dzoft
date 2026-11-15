@@ -215,6 +215,14 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .invoice-more>summary small{font-size:11px;font-weight:400;color:#69738b}
 .invoice-more>#iv-payments-slot,.invoice-more>#payment-steps,.invoice-more>p,.invoice-more>button{margin:0 15px 14px}
 .invoice-more #tracking-admin{margin:0 0 12px}
+.iv-external-form{margin:0 15px 16px;padding:16px;border:1px solid #dadcf0;background:#fff;border-radius:12px}
+.iv-external-form[hidden]{display:none}
+.iv-external-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}
+.iv-external-grid label{display:grid;gap:6px;font-weight:650;font-size:12px}
+.iv-external-grid input{width:100%;min-width:0;padding:11px;border:1px solid #c5cbe0;border-radius:9px}
+.iv-external-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.iv-external-form [role=status]{min-height:18px;margin:9px 0 0}
+
 .invoice-more #tracking-admin .tracking-stats{margin-top:10px}
 .invoice-more #tracking-admin>h2{font-size:16px}
 .invoice-more #payment-steps:empty{display:none}
@@ -383,7 +391,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     <details class="invoice-more invoice-legacy">
       <summary><span><b>Options avancées</b><small>Factures externes et informations pratiques</small></span></summary>
       <p class="muted">Une facture créée ailleurs conserve son propre numéro. Pour une facture DZOFT, utilisez le formulaire « Créer une facture » ci-dessus.</p>
-      <button class="btn sm line" id="iv-add" type="button">+ Ajouter une facture externe</button>
+      <button class="btn sm line" id="iv-add" type="button" aria-expanded="false" aria-controls="iv-external-form">+ Ajouter une facture externe</button>
+      <form id="iv-external-form" class="iv-external-form" hidden>
+        <p class="muted">Uniquement pour une facture déjà créée dans un autre outil. Pour émettre une facture DZOFT, utilisez « Créer une facture » plus haut. L'ajout ne confirme aucun paiement et n'envoie aucun e-mail.</p>
+        <div class="iv-external-grid">
+          <label>Libellé <input name="description" maxlength="180" required placeholder="Facture d'acompte"></label>
+          <label>Numéro officiel externe <input name="number" maxlength="80" required placeholder="INV-2026-001"></label>
+          <label>Montant (€) <input name="amount" type="number" min="0.01" max="999999999" step="0.01" required placeholder="0,00"></label>
+        </div>
+        <p class="muted" role="status" aria-live="polite" id="iv-external-status"></p>
+        <div class="iv-external-actions"><button type="submit" class="btn main">Enregistrer la facture externe</button><button type="button" class="btn line" id="iv-external-cancel">Annuler</button></div>
+      </form>
       <p class="muted" id="iv-account-note" hidden>Pour archiver un PDF privé, le client doit avoir créé son compte.</p>
       <p class="muted">Pour rectifier une facture déjà émise, ne modifiez pas son montant ni son numéro : utilisez un document rectificatif traçable (avoir ou facture rectificative, selon le cas).</p>
     </details>
@@ -1205,12 +1223,64 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       if (removed.file) sb.files.remove(removed.file).catch(fail);
     });
   };
-  $('iv-add').onclick = function(){
+  // External invoices are existing third-party documents, not blank DZOFT invoice rows.
+  // Save an explicit validated draft once; never autosave an incomplete number or amount.
+  var externalForm = $('iv-external-form'), externalAdd = $('iv-add'), externalCancel = $('iv-external-cancel');
+  function closeExternalForm(){
+    externalForm.reset();
+    externalForm.hidden = true;
+    externalAdd.setAttribute('aria-expanded', 'false');
+    $('iv-external-status').textContent = '';
+    externalAdd.focus();
+  }
+  externalAdd.onclick = function(){
+    if (!externalForm.hidden) { closeExternalForm(); return; }
+    externalForm.hidden = false;
+    externalAdd.setAttribute('aria-expanded', 'true');
+    externalForm.elements.description.focus();
+  };
+  externalCancel.onclick = closeExternalForm;
+  externalForm.onsubmit = function(e){
+    e.preventDefault();
+    if (!externalForm.reportValidity()) return;
     prepareInvoices();
-    var first = !Q.invoices.length, t = +Q.accepted_total || +Q.total || 0;
-    Q.invoices.push(first ? { id: invoiceId(), n: 'Facture d’acompte', num: '', amt: deposit(), u: '', paid: false }
-      : { id: invoiceId(), n: 'Facture de solde', num: '', amt: Math.round((t - deposit()) * 100) / 100, u: '', paid: false });
-    renderInv(); later(); var r = $('invs').querySelectorAll('input.num'); r[r.length - 1].focus();
+    var name = externalForm.elements.description.value.trim();
+    var number = externalForm.elements.number.value.trim();
+    var amount = Number(externalForm.elements.amount.value);
+    var notice = $('iv-external-status');
+    if (!name || !number || !Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(Math.round(amount*100)) ||
+        Math.abs(amount*100 - Math.round(amount*100)) > 0.00001) {
+      notice.textContent = il('Vérifiez le libellé, le numéro et le montant (deux décimales maximum).','Check the description, number and amount (maximum two decimal places).');
+      return;
+    }
+    if ((Q.invoices || []).some(function(x){ return String(x.num || '').trim().toLowerCase() === number.toLowerCase(); })) {
+      notice.textContent = il('Une facture porte déjà ce numéro.','An invoice with this number already exists.');
+      return;
+    }
+    var submit = externalForm.querySelector('button[type="submit"]');
+    var record = {id: invoiceId(), n: name, num: number, amt: Math.round(amount*100)/100, u: '', paid: false};
+    // Keep existing records unchanged on failure. No email, receipt or numbered DZOFT invoice is generated.
+    var next = Q.invoices.concat([record]);
+    submit.disabled = true;
+    externalCancel.disabled = true;
+    notice.textContent = il('Enregistrement de la facture externe…','Saving external invoice…');
+    // Cancel pending autosaves before committing the completed invoice snapshot.
+    clearTimeout(timer);
+    save({invoices: next}).then(function(ok){
+      if (!ok) {
+        notice.textContent = il('Échec de l’enregistrement. La facture n’a pas été ajoutée.','Save failed. The invoice was not added.');
+        return;
+      }
+      Q.invoices = next;
+      closeExternalForm();
+      renderInv();
+      toast(il('Facture externe enregistrée. Aucun paiement ni e-mail créé.','External invoice saved. No payment or email created.'));
+    }).catch(function(err){
+      notice.textContent = il('Enregistrement impossible : ','Could not save: ') + (err && err.message || il('erreur','error'));
+    }).finally(function(){
+      submit.disabled = false;
+      externalCancel.disabled = false;
+    });
   };
 
   /* monthly care after delivery: { on, price, since, next, end } */
