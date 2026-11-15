@@ -35,7 +35,10 @@ These are **point-in-time counts**, not a manifest of a particular backup; count
 
 1. Create a disposable, separately authenticated PostgreSQL/Supabase **test** target. If this incurs charges, obtain approval first; do not assume development branches are free.
 2. Choose a separate, encrypted local extraction folder. Run `python tools/backup_dzoft.py verify <archive>` and then `python tools/backup_dzoft.py extract <archive> --destination <empty-folder>`. The extraction produces **sensitive plaintext**; never upload this folder or its contents to GitHub, a bug report, or a chat.
-3. Verify the extracted archive includes `database/schema.sql`, `database/data.sql`, `database/roles.sql` and any declared files from `storage/client-files/`. Cross-check the manifest's file count and hashes.
+3. Inspect the manifest and the selected export format:
+   - Supabase CLI split-SQL archives include `database/schema.sql`, `database/data.sql`, and `database/roles.sql`.
+   - Docker-free native PostgreSQL archives include `database/application.dump` (custom-format `PGDMP`). They **do not** include managed database roles, Auth, or Storage objects. Use `pg_restore --list` on the extracted custom archive to inspect contents before planning an isolated restore. Do not run `pg_restore --dbname` against the live project.
+   - In both cases, cross-check the manifest, hashes and exact Storage state (`verified_empty_by_cli`, `verified_empty_by_sql`, or explicitly partial `skipped_by_operator`).
 4. **Do not assume that the schema/data SQL will restore independently.** The Supabase CLI intentionally excludes the platform-managed `auth` and `storage` database schemas. Inspect and resolve dependencies (including foreign keys to `auth.users`, RLS, extensions, grants and Storage metadata) on the disposable target.
 5. Restore only after reviewing SQL content and the actual target. Validate expected application table counts and key project/receipt relationships without copying any production customer data into a public environment.
 6. Test representative role denial (anonymous/client cannot read other clients, invoices or banking settings), owner MFA authorization, email-based routing, quote/project retrieval, invoice archive access, and Storage object retrieval.
