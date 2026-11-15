@@ -85,6 +85,8 @@
     var detail=form.closest('details');
     if(form.querySelector('button[type="submit"]:disabled'))return; // Never hide an in-flight save.
     form.reset(); // Discards unsaved inputs only, never calls the backend.
+    // Re-apply conditional fields (invoice kind, pending date) after resetting.
+    form.querySelectorAll('select').forEach(function(select){select.dispatchEvent(new Event('change',{bubbles:true}));});
     if(detail)detail.open=false;
     var message=form.querySelector('[role="status"]');
     if(message)message.textContent='';
