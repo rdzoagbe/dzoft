@@ -9,11 +9,12 @@ var money=function(c,english){return new Intl.NumberFormat(english?'en-GB':'fr-F
 function build(input){
  var projects=Array.isArray(input.projects)?input.projects:[],unread=Array.isArray(input.unread)?input.unread:[];
  var ready=!!input.ready,failures=Number(input.failures)||0;
- var actions=[],received=0,pending=0,documents=0;
+ var actions=[],received=0,remaining=0,pending=0,documents=0;
  projects.forEach(function(p){
   var d=p.tracking;
   if(!d)return;
   received+=cents(d.received);
+  remaining+=cents(d.remaining);
   (d.payment_statuses||[]).forEach(function(t){
    if(t.status!=='pending'&&t.status!=='sent_by_client')return;
    pending+=cents(t.amount);
@@ -41,7 +42,7 @@ function build(input){
    name:g.name,amount:null,target:'thread:'+id});
  });
  actions.sort(function(a,b){return a.priority-b.priority||a.name.localeCompare(b.name);});
- return {ready:ready,failures:failures,received:received,pending:pending,
+ return {ready:ready,failures:failures,received:received,remaining:remaining,pending:pending,
   documents:documents,messages:unread.length,actions:actions,projects:projects.length};
 }
 function render(node,input){
@@ -66,10 +67,11 @@ function render(node,input){
  }).join('');
  var later=m.actions.length>5?'<p class="today-task-more">'+tr('+'+(m.actions.length-5)+' autres éléments à suivre dans les dossiers.','+'+(m.actions.length-5)+' additional items to review in cases.')+'</p>':'';
  node.innerHTML='<div class="today-title"><div><p class="simplified-eyebrow">DZOFT · '+tr('ACTIONS PRIORITAIRES','TOP PRIORITIES')+'</p>'+
- '<h3>'+tr('L’essentiel à traiter','What needs your attention')+'</h3><p>'+tr('Les virements annoncés ne sont pas des paiements reçus.','Client-reported transfers are not confirmed receipts.')+'</p></div>'+
+ '<h3>'+tr('L’essentiel à traiter','What needs your attention')+'</h3><p>'+tr('Montants reçus et sommes à recevoir, d’après les encaissements confirmés.','Received and outstanding amounts based on verified payments.')+'</p></div>'+
  '<span class="today-count">'+(m.ready?m.actions.length:'…')+' '+tr('à suivre','to review')+'</span></div>'+
  '<div class="today-stats">'+
  card(tr('Reçu et confirmé','Received and verified'),fmt(m.received),'received')+
+ card(tr('Reste à encaisser','Still outstanding'),fmt(m.remaining),'remaining')+
  card(tr('À vérifier (non reçu)','To verify (not received)'),fmt(m.pending),'pending')+
  card(tr('Factures à traiter','Invoices to address'),m.ready&&m.projects>0&&m.failures===m.projects?'—':m.ready?String(m.documents):'—','invoices')+
  card(tr('Messages à traiter','Messages to reply'),String(m.messages),'messages')+

@@ -67,7 +67,7 @@ var hero=document.createElement('div');hero.className='project-overview-focus';
 hero.innerHTML='<div class="project-overview-head"><div><p class="project-overview-kicker" data-fr="EN UN COUP D’ŒIL" data-en="AT A GLANCE"></p><h2 data-fr="Que souhaitez-vous faire ?" data-en="What would you like to do?"></h2></div><p data-fr="L’essentiel d’abord. Les informations détaillées restent accessibles dans chaque rubrique." data-en="The essentials first. Detailed information stays available in every section."></p></div>'+
   '<div class="project-overview-grid">'+
   '<button type="button" class="project-overview-card" data-open-project="work"><span class="project-overview-symbol" aria-hidden="true">✓</span><span class="project-overview-label" data-fr="Suivre le travail" data-en="Track work"></span><strong id="project-overview-next">—</strong><small data-fr="Étapes, validations et modifications" data-en="Milestones, approvals and changes"></small></button>'+
-  '<button type="button" class="project-overview-card" data-open-project="billing"><span class="project-overview-symbol" aria-hidden="true">€</span><span class="project-overview-label" data-fr="Gérer la facturation" data-en="Manage billing"></span><strong id="project-overview-balance">—</strong><small data-fr="Factures, paiements et solde" data-en="Invoices, payments and balance"></small></button>'+
+  '<button type="button" class="project-overview-card" data-open-project="billing"><span class="project-overview-symbol" aria-hidden="true">€</span><span class="project-overview-label" data-fr="Reste à encaisser" data-en="Still to receive"></span><strong id="project-overview-balance">—</strong><small data-fr="Paiements confirmés, factures et solde" data-en="Confirmed receipts, invoices and balance"></small></button>'+
   '<button type="button" class="project-overview-card" data-open-project="messages"><span class="project-overview-symbol" aria-hidden="true">✉</span><span class="project-overview-label" data-fr="Contacter le client" data-en="Contact the client"></span><strong data-fr="Ouvrir les échanges" data-en="Open conversation"></strong><small data-fr="Messages et e-mails envoyés" data-en="Messages and sent emails"></small></button>'+
   '</div>';
 overview.appendChild(hero);
@@ -170,13 +170,13 @@ function updateOverview(){
  var next=document.getElementById('workspace-next-value');
  var value=next&&next.textContent.trim();
  document.getElementById('project-overview-next').textContent=value||'—';
- var remaining=document.getElementById('iv-remaining');
- var amount=remaining&&remaining.textContent.trim();
- document.getElementById('project-overview-balance').textContent=amount||'—';
+ var outstanding=document.getElementById('iv-payment-outstanding');
+ var value=outstanding&&outstanding.textContent.trim();
+ document.getElementById('project-overview-balance').textContent=value||'—';
 }
 var updating=false;
 function updateSoon(){if(updating)return;updating=true;setTimeout(function(){updating=false;updateOverview();},100);}
-['workspace-next-value','iv-remaining'].forEach(function(id){
+['workspace-next-value','iv-payment-truth'].forEach(function(id){
  var el=document.getElementById(id);
  if(el)new MutationObserver(updateSoon).observe(el,{childList:true,subtree:true,characterData:true});
 });

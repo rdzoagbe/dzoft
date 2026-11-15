@@ -36,12 +36,15 @@ test('language selector remains first and uses accessible, full-size two-card op
  assert.match(css,/@media\(max-width:650px\)/);
 });
 
-test('language selection still works before sign-in and persists on this device',()=>{
+test('language selection exists only in Settings and persists across private pages',()=>{
  const auth=html.match(/<section class="auth" id="auth" hidden>([\s\S]*?)<\/section>/);
  assert.ok(auth);
- assert.match(auth[1],/lang-switch-app auth-language/);
- assert.match(auth[1],/data-dzoft-lang="fr"/);
- assert.match(auth[1],/data-dzoft-lang="en"/);
+ assert.doesNotMatch(auth[1],/lang-switch-app|data-dzoft-lang/);
+ const project=read('admin/suivi.html');
+ const projectHeader=project.match(/<header class="top">([\s\S]*?)<\/header>/);
+ assert.ok(projectHeader);
+ assert.doesNotMatch(projectHeader[1],/lang-switch-app|data-dzoft-lang/);
+ assert.match(project,/dzoft-language\.js\?v=/);
  assert.match(lang,/storageKey='dzoft-ui-locale'/);
  assert.match(lang,/localStorage\.setItem\(storageKey,locale\)/);
  assert.match(lang,/saved=localStorage\.getItem\(storageKey\)/);

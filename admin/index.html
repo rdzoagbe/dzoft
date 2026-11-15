@@ -214,6 +214,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="simplified-ui.css?v=20261115-one-menu">
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
+<link rel="stylesheet" href="workspace-epuree.css?v=20261115-clean3">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4">
 </head>
 <body class="dzoft-admin">
@@ -221,8 +222,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <!-- ============ sign in ============ -->
 <section class="auth" id="auth" hidden>
   <div class="card">
-    <div class="lang-switch-app auth-language" role="group" aria-label="Langue"><button type="button" data-dzoft-lang="fr" aria-pressed="true">FR</button><button type="button" data-dzoft-lang="en" aria-pressed="false">EN</button></div>
-    <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · espace privé</b><span>Clients, demandes et devis</span></div></div>
+    
+    <div class="brand"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT · gestion</b><span>Clients, projets et facturation</span></div></div>
 
     <form id="f-login">
       <h1>Welcome back</h1>
@@ -240,7 +241,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           <div class="row"><a id="go-forgot">Forgot password?</a><a id="go-first" hidden>First sign-in</a></div>
         </div>
       </details>
-      <button class="btn line" id="l-install" type="button" hidden style="width:100%;margin-top:14px">Install the app on this device</button>
+      <button class="btn line" id="l-install" type="button" hidden aria-hidden="true" tabindex="-1" style="display:none">Install the app on this device</button>
     </form>
 
     <form id="f-first" hidden>
@@ -290,10 +291,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="app" hidden>
   <header class="top">
     <div class="in">
-      <a class="brand" href="#/tableau-de-bord" aria-label="DZOFT · revenir au tableau de bord"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Espace privé</span></div></a>
+      <a class="brand" href="#/tableau-de-bord" aria-label="DZOFT · revenir au tableau de bord"><img class="logo" src="../assets/dzoft-mark.svg" alt="" width="34" height="34"><div><b>DZOFT</b><span>Gestion</span></div></a>
       <div class="sp"></div>
       <span class="who hide-m" id="who"></span>
-      <button class="btn sm line" id="b-install" type="button" hidden>Installer l’app</button>
+      <button class="btn sm line" id="b-install" type="button" hidden aria-hidden="true" tabindex="-1">Installer l’app</button>
       <a class="btn sm line" href="../?workspace=admin">Voir le site</a>
       <button class="btn sm ghost" style="color:#c4d2e1" id="b-out" type="button">Déconnexion</button>
     </div>
@@ -315,12 +316,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   <main>
     <section id="v-dash">
       <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
-      <div class="dashboard-focus" id="dash-focus"></div>
       <section class="today-action-center" id="today-action-center" aria-label="Actions prioritaires" aria-live="polite"><p class="today-data-note">Chargement des priorités…</p></section>
-      <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
-      <details class="today-advanced"><summary data-fr="Autres indicateurs d’activité" data-en="Other business indicators">Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
+       <details class="clean-dashboard-more"><summary data-fr="Plus d’actions et raccourcis" data-en="More actions and shortcuts">Plus d’actions et raccourcis</summary>
+         <div class="dashboard-focus" id="dash-focus"></div>
+         <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
+       </details>
+       <details class="today-advanced"><summary data-fr="Autres indicateurs d’activité" data-en="Other business indicators">Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
       <details class="today-advanced today-followups"><summary data-fr="Autres rappels et suivis" data-en="Other reminders and follow-ups">Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
-      <div class="panel"><h3>Projets en cours</h3><div id="dash-projects"></div></div>
+      <div class="panel clean-project-list"><h3 data-fr="Projets actifs" data-en="Active projects">Projets actifs</h3><div id="dash-projects"></div></div>
       <div class="panel"><h3>Email delivery history</h3><p style="font-size:13px;color:var(--mute)">Brevo acceptance, verified delivery, bounces and tracked opens appear here. An open-tracking signal is not proof of reading.</p><p id="email-delivery-health" style="font-size:12px;color:var(--mute)" role="status">Checking Brevo tracking…</p><div id="email-log"></div></div>
     </section>
     <section id="v-leads" hidden>
@@ -1626,8 +1629,8 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 (function(){
   var ask = null, btns = ['b-install', 'l-install'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
   var installed = function(){ return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; };
-  var show = function(on){ btns.forEach(function(b){ b.hidden = !on; }); };
-  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); ask = e; show(!installed()); });
+  var show = function(){ btns.forEach(function(b){ b.hidden = true; }); };
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); ask = e; show(false); });
   window.addEventListener('appinstalled', function(){ ask = null; show(false); });
   btns.forEach(function(b){ b.onclick = function(){
     if (!ask) return;
@@ -1635,11 +1638,11 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
   }; });
 })();
 </script>
-<script src="simplified-ui.js?v=20261115-update4"></script>
+<script src="simplified-ui.js?v=20261115-clean3"></script>
 <script src="case-finder.js?v=20261115-update4"></script>
 <script src="installed-app-menu.js?v=20261115-one-menu"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
-<script src="today-actions.js?v=20261113-action-center"></script>
+<script src="today-actions.js?v=20261115-clean3"></script>
 <script src="workspace-home.js?v=20261115-v2"></script>
 </body>
 </html>
