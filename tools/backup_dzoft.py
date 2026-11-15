@@ -243,6 +243,8 @@ def verified_archive(archive: bytes, passphrase: str) -> tuple[bytes, dict]:
                 raise BackupError("Unknown Storage export state.")
             if not z.read("database/schema.sql").strip() or not z.read("database/data.sql").strip():
                 raise BackupError("Database schema or data export is empty.")
+    except BackupError:
+        raise
     except (KeyError, TypeError, zipfile.BadZipFile, zipfile.LargeZipFile, RuntimeError) as exc:
         raise BackupError("Malformed or incomplete DZOFT archive.") from exc
     return plain, manifest
