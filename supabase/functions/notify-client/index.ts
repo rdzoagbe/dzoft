@@ -72,15 +72,30 @@ Deno.serve(async (req) => {
   const kind = String(b.kind || "");
   if (!["quote", "message", "step", "validate"].includes(kind)) return json({ error: "type d’e-mail inconnu" }, 400);
 
+  // A project notification must use the client associated with that exact quote.
+  // Never let a caller mix a valid quote_id with an unrelated client_id.
+  const quoteId = typeof b.quote_id === "string" ? b.quote_id : "";
+  const suppliedClientId = typeof b.client_id === "string" ? b.client_id : "";
+  if (b.quote_id && !quoteId) return json({ error: "identifiant de devis invalide" }, 400);
+  if (b.client_id && !suppliedClientId) return json({ error: "identifiant client invalide" }, 400);
+  if (kind !== "message" && !quoteId) return json({ error: "devis requis pour cette notification" }, 400);
   let q: any = null;
-  if (b.quote_id) {
-    const r = await db.from("quotes").select("id,numero,client_id,total,accepted_at,accepted_total,shared,data").eq("id", b.quote_id).maybeSingle();
-    q = r.data;
+  if (quoteId) {
+    const { data, error } = await db.from("quotes")
+      .select("id,numero,client_id,total,accepted_at,accepted_total,shared,data")
+      .eq("id", quoteId).is("deleted_at", null).maybeSingle();
+    if (error) return json({ error: "vérification du devis indisponible" }, 503);
+    if (!data) return json({ error: "devis introuvable" }, 404);
+    q = data;
   }
-  const clientId = b.client_id || q?.client_id;
+  if (q && suppliedClientId && q.client_id !== suppliedClientId) {
+    return json({ error: "ce devis n’appartient pas au client indiqué" }, 400);
+  }
+  const clientId = q ? q.client_id : suppliedClientId;
   if (!clientId) return json({ error: "client introuvable" }, 400);
-  const { data: c } = await db.from("clients").select("id,nom,email,contact,user_id,portal_token").eq("id", clientId).maybeSingle();
-  if (!c) return json({ error: "client introuvable" }, 400);
+  const { data: c, error: clientError } = await db.from("clients").select("id,nom,email,contact,user_id,portal_token").eq("id", clientId).maybeSingle();
+  if (clientError) return json({ error: "vérification du client indisponible" }, 503);
+  if (!c) return json({ error: "client introuvable" }, 404);
 
   const to = [c.email, c.contact].map((x: string) => (x || "").trim()).find((x: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));
   const ref = [kind, q?.id || "", String(b.step || "").slice(0, 80)].join(":");
