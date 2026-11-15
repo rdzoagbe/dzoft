@@ -296,8 +296,10 @@ test('Invoice creator shows editable server-approved amount and prevents an exce
 test('One search finds clients, quotes and projects without leaving the private workspace',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/#/clients',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
+ await page.locator('#app .side [data-tab="dossiers"]').click();
+ await expect(page.locator('#v-dossiers')).toBeVisible();
  const field=page.locator('#dossier-search');
  await expect(field).toBeVisible();
  await field.fill('Synthetic');
