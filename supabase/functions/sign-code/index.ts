@@ -1,6 +1,6 @@
 // Sends the 6-digit code a client types back to sign a quote, by e-mail (Brevo).
 // Reached with the client's account session, or with the client's secret link (portal token).
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
