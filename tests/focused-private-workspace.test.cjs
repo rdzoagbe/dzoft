@@ -13,7 +13,7 @@ test('project overview presents exactly four navigable sections and retains all 
  const base=read('admin/project-workspace.js');
  const css=read('admin/project-workspace-tabs.css');
  assert.match(html,/project-workspace\.js\?v=.*" defer/);
- assert.match(html,/project-workspace-tabs\.js\?v=20261115-v2" defer/);
+ assert.match(html,/project-workspace-tabs\.js\?v=20261115-clean3" defer/);
  assert.match(html,/project-workspace-tabs\.css\?v=20261115-v2/);
  for(const key of ["overview","work","billing","messages"])
   assert.match(js,new RegExp("id:'"+key+"'"));
