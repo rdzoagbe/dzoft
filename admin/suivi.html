@@ -459,7 +459,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
   var draftPreviewToken = 0, draftMax = null, draftInfo = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-  var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
+  var il = function(fr,en){return document.documentElement.lang==='en'?en:fr;};
+  var eur = function(n){return new Intl.NumberFormat(document.documentElement.lang==='en'?'en-GB':'fr-FR',{style:'currency',currency:'EUR'}).format(Math.round((+n||0)*100)/100);};
   var when = function(d){ return new Date(d).toLocaleString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
   var today = function(){ var d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
   function toast(t){ var e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function(){ e.hidden = true; }, 2600); }
@@ -872,45 +873,45 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     }
     $('invs').innerHTML = Q.invoices.length ? Q.invoices.map(function(x,i){
       var official = !!(x.generatedByDzoft || x.basis), number = String(x.num || '').trim();
-      var caption = (x.issuedOn ? 'Émise le ' + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString('fr-FR') : 'Facture externe');
-      var status = x.paid ? 'Paiement marqué comme reçu' : 'Paiement à confirmer';
-      var pdfStatus = x.file ? 'PDF archivé' : 'PDF à archiver';
+      var caption = (x.issuedOn ? il('Émise le ','Issued on ') + new Date(x.issuedOn + 'T12:00:00').toLocaleDateString(document.documentElement.lang==='en'?'en-GB':'fr-FR') : il('Facture externe','External invoice'));
+      var status = il('Vérification des paiements confirmés…','Checking confirmed payments…');
+      var pdfStatus = x.file ? il('PDF archivé','PDF archived') : il('PDF à archiver','PDF needs archiving');
       return '<article class="invr invoice-record' + (x.paid ? ' paid' : '') + '" data-i="' + i + '">' +
-        '<div class="invoice-record-head"><div><b>' + esc(number || 'Facture externe · numéro à saisir') + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
+        '<div class="invoice-record-head"><div><b>' + esc(number || il('Facture externe · numéro à saisir','External invoice · enter a number')) + '</b><p>' + esc(x.n || 'Facture') + ' · ' + esc(caption) + '</p></div><strong>' + eur(x.amt) + '</strong></div>'+
         '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
         '<span class="invoice-document-status">' + esc(pdfStatus) + '</span>'+
         (official ? '<p class="invoice-record-delivery">' + esc(invoiceDeliverySummary(x)) + '</p>' : '')+
         '<div class="invoice-record-actions">' +
-          (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">Télécharger le PDF</button>' : '')+
-          (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">Archiver le PDF</button>' : '')+
-          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-email">' + (x.emailAt ? 'Renvoyer le PDF + ma copie' : 'Envoyer le PDF + ma copie') + '</button>' : '')+
+          (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">'+il('Télécharger le PDF','Download PDF')+'</button>' : '')+
+          (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">'+il('Archiver le PDF','Archive PDF')+'</button>' : '')+
+          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-email">' + (x.emailAt ? il('Renvoyer le PDF + ma copie','Resend PDF + my copy') : il('Envoyer le PDF + ma copie','Send PDF + my copy')) + '</button>' : '')+
           (!x.file && !official ? '<span class="muted">Ajoutez le PDF dans les détails pour activer l’envoi.</span>' : '')+
         '</div>'+
-        '<details class="invoice-record-more"><summary>' + (official ? 'Informations de la facture' : 'Modifier la facture externe') + '</summary>'+
+        '<details class="invoice-record-more"><summary>' + (official ? il('Informations de la facture','Invoice details') : il('Modifier la facture externe','Edit external invoice')) + '</summary>'+
           '<div class="invoice-record-fields">'+
             (official ?
               '<div class="invoice-fixed-values invoice-wide" role="group" aria-label="Informations définitives de la facture">'+
-                '<div><small>Libellé</small><strong>' + esc(x.n || 'Facture') + '</strong></div>'+
-                '<div><small>Numéro officiel</small><strong>' + esc(number) + '</strong></div>'+
-                '<div><small>Montant émis</small><strong>' + eur(x.amt) + '</strong></div>'+
+                '<div><small>'+il('Libellé','Description')+'</small><strong>' + esc(x.n || 'Facture') + '</strong></div>'+
+                '<div><small>'+il('Numéro officiel','Official invoice number')+'</small><strong>' + esc(number) + '</strong></div>'+
+                '<div><small>'+il('Montant émis','Issued amount')+'</small><strong>' + eur(x.amt) + '</strong></div>'+
               '</div>' :
-              '<label>Libellé<input class="n" list="iv-kinds" value="' + esc(x.n || '') + '" placeholder="Libellé"></label>'+
-              '<label>Numéro<input class="num" value="' + esc(x.num || '') + '" placeholder="Numéro officiel"></label>'+
-              '<label>Montant (€)<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"></label>')+
-            '<label class="invoice-wide">Lien de paiement (facultatif)<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
+              '<label>'+il('Libellé','Description')+'<input class="n" list="iv-kinds" value="' + esc(x.n || '') + '" placeholder="Libellé"></label>'+
+              '<label>'+il('Numéro','Number')+'<input class="num" value="' + esc(x.num || '') + '" placeholder="Numéro officiel"></label>'+
+              '<label>'+il('Montant (€)','Amount (€)')+'<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"></label>')+
+            '<label class="invoice-wide">'+il('Lien de paiement (facultatif)','Payment link (optional)')+'<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
             '<div class="invoice-wide">' +
-              (official ? '<span class="invoice-record-note">Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».</span>' :
+              (official ? '<span class="invoice-record-note">'+il('Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».','Issued invoice amount and number are locked. Record confirmed payments in Payment history.')+'</span>' :
               '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Marquer comme payée') + '</label>') +
               (x.payment_reported_at ? '<p class="muted">Paiement déclaré le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + '</p>' : '') +
             '</div>'+
             '<div class="invfile">' +
               (x.file ? '<span class="muted">PDF : ' + esc(x.fileName || 'facture jointe') + ' · ' + (official ? 'PDF officiel archivé · non modifiable' : 'pièce jointe') + '</span>' +
                 (!official ? '<button class="btn sm ghost" type="button" data-a="pdf-unlink">Supprimer le PDF</button>' : '') :
-                (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">PDF en attente</span>')) +
+                (!official && C && C.user_id ? '<label class="btn sm line" style="cursor:pointer">Joindre un PDF<input class="pdf" type="file" accept=".pdf,application/pdf" hidden></label>' : '<span class="muted">'+il('PDF en attente','PDF pending')+'</span>')) +
             '</div>'+
             (!official ? '<button class="rm" type="button" title="Supprimer cette facture externe">Supprimer</button>' :
-              '<details class="invoice-issued-help invoice-wide"><summary>Corriger ou annuler une facture émise</summary><p>Le numéro et le PDF officiels doivent rester dans l’historique. Si une correction est nécessaire, établissez un document rectificatif ou un avoir adapté à la situation, avec traçabilité. Aucune suppression automatique ne sera effectuée.</p></details>')+
-            (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">Relancer le paiement</button>' : '')+
+              '<details class="invoice-issued-help invoice-wide"><summary>'+il('Corriger ou annuler une facture émise','Correct or cancel an issued invoice')+'</summary><p>'+il('Le numéro et le PDF officiels doivent rester dans l’historique. Si une correction est nécessaire, établissez un document rectificatif ou un avoir adapté à la situation, avec traçabilité. Aucune suppression automatique ne sera effectuée.','Issued invoice numbers and PDFs must remain in the audit history. If needed, issue a traceable correction or credit note. Nothing is deleted automatically.')+'</p></details>')+
+            (!x.paid && !x.payment_reported_at && Q.accepted_at ? '<button class="btn sm line" type="button" data-a="payment-reminder">'+il('Relancer le paiement','Send payment reminder')+'</button>' : '')+
           '</div>'+
         '</details>'+
         '</article>';
