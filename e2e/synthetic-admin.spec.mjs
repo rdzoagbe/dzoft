@@ -267,3 +267,40 @@ test('Installed mobile one-menu navigates to clean accordion Settings',async({pa
  await page.locator('#settings-payment>summary').click();
  await expect(page.locator('#p-iban')).toBeVisible();
 });
+
+
+test('One search finds clients, quotes and projects without leaving the private workspace',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/#/clients',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ const field=page.locator('#dossier-search');
+ await expect(field).toBeVisible();
+ await field.fill('Synthetic');
+ await expect(page.locator('#dzoft-case-finder')).toBeVisible();
+ await expect(page.locator('#dzoft-case-finder-count')).toContainText(/résultat|result/);
+ await expect(page.locator('.dzoft-case-result').first()).toBeVisible();
+ await page.locator('.dzoft-case-result').filter({hasText:/Projet|Project/}).first().click();
+ await expect(page.locator('#v-projects')).toBeVisible();
+ await field.fill('xyz-no-customer-exists');
+ await expect(page.locator('.dzoft-case-empty')).toContainText(/Aucun résultat|No matching/);
+ await field.press('Escape');
+ await expect(page.locator('#dzoft-case-finder')).toBeHidden();
+ expect(errors).toEqual([]);
+});
+
+test('Project quick links reveal real invoices, documents and activity without new backend calls',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ const docs=page.locator('[data-workspace-action="documents"]');
+ await expect(docs).toBeVisible();
+ await docs.click();
+ await expect(page.locator('#c-docs')).toBeVisible();
+ const history=page.locator('[data-workspace-action="history"]');
+ await history.click();
+ await expect(page.locator('#c-activity')).toBeVisible();
+ await page.locator('[data-workspace-action="payment"]').click();
+ await expect(page.locator('#c-inv')).toBeVisible();
+ expect(errors).toEqual([]);
+});
