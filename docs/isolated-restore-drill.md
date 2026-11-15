@@ -56,6 +56,19 @@ A `PASS` means the backup envelope, table of contents, schema rendering and full
 
 Any future **actual** local restore must be performed in a separately initialized PostgreSQL cluster with no production connection strings, or on a separately approved disposable target, after planning managed Auth schema and extension dependencies. Do **not** point `pg_restore -d`, `psql`, or a Supabase CLI restore command at the production project.
 
+## Simplified Windows one-click local check (preferred for this owner)
+
+Use the reviewed \`Start-DZOFT-Recovery.cmd\` at the repository root, or the identical file supplied in the conversation as a downloadable single-click helper. This is a Windows Command Script for the **existing, initialized** Recovery Lab and the **existing** 15 November 2026 native encrypted backup. It does not create a new lab or perform a complete disaster restore.
+
+1. Save the script from the trusted DZOFT repository (or conversation attachment) on the owner's Windows computer.
+2. Review it before running, then **double-click** it. Do not use Run as Administrator.
+3. It checks that the local backup, lab data directory, PostgreSQL 18, Git and Python exist. It requires the local DZOFT working copy to be on \`main\`.
+4. It fast-forward-updates the local checkout from the **exact official GitHub repository URL** and launches \`tools/restore_dzoft_lab_schema.py\`. GitHub gets no backup data or passwords.
+5. Enter the two secrets **on the local computer only**: (a) the locally created recovery lab administrator password; and (b) the encrypted \`.dzoftbak\` **database** archive passphrase. Neither is the Supabase DB password, nor should either be shared through chat.
+6. Read the final message: **schema stage complete**, or **needs review / blocked**. The helper pauses so that the window stays visible. In either case **full recovery is NOT verified**; additional application data, Auth, FK, Storage and RLS tests are required.
+
+On a blocker, the Python tool runs the schema in a single transaction so it rolls back failed schema modifications; it does not retry or silently create fake Supabase users. Do not override SmartScreen/Windows security warnings casually: inspect the script and confirm the copy came from the official repository. Do not turn off antivirus or device protection.
+
 ## Verified local lab prerequisite and schema-stage rehearsal
 
 On 15 November 2026, the operator provisioned PostgreSQL 18 on Windows with a second server bound to 127.0.0.1:55439 and database dzoft_restore_test. Both the database path and empty app-table count were independently checked via psql. BitLocker reports 100% used-space encryption and Protection On. Locally, pgcrypto and uuid-ossp were installed into extensions; anon, authenticated and service_role exist as NOLOGIN NOBYPASSRLS roles. These are **local-only compatibility roles, not a complete Supabase role/security implementation**.
