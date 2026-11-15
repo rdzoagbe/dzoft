@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
+import warnings
+import zipfile
+from unittest.mock import patch
 import os
 from pathlib import Path
 import subprocess
@@ -49,6 +53,78 @@ class BackupTests(unittest.TestCase):
         restored, manifest = mod.verified_archive(encrypted, PASSWORD)
         self.assertEqual(restored, zipped)
         self.assertEqual(len(manifest["files"]), 3)
+
+    def test_partial_storage_and_required_database_members_rejected(self):
+        db = {
+            "database/schema.sql": b"CREATE TABLE fake(id int);",
+            "database/data.sql": b"INSERT INTO fake VALUES (1);",
+            "database/roles.sql": b"-- role definitions",
+        }
+        partial = mod.build_zip(db, mod.PROJECT_REF, {
+            "bucket": mod.BUCKET, "status": "skipped_by_operator", "files": 0})
+        _, info = mod.verified_archive(mod.seal(partial, PASSWORD), PASSWORD)
+        self.assertEqual(info["storage"]["status"], "skipped_by_operator")
+
+        incomplete = dict(db)
+        incomplete.pop("database/roles.sql")
+        blob = mod.build_zip(incomplete, mod.PROJECT_REF, {
+            "bucket": mod.BUCKET, "status": "verified_empty_by_cli", "files": 0})
+        with self.assertRaisesRegex(mod.BackupError, "Database schema, data or roles"):
+            mod.verified_archive(mod.seal(blob, PASSWORD), PASSWORD)
+
+        wrong_count = mod.build_zip({**db, "storage/client-files/example.pdf": b"fictional"}, mod.PROJECT_REF, {
+            "bucket": mod.BUCKET, "status": "exported", "files": 2})
+        with self.assertRaisesRegex(mod.BackupError, "Storage download count"):
+            mod.verified_archive(mod.seal(wrong_count, PASSWORD), PASSWORD)
+
+        wrong_ref = mod.build_zip(db, "not-the-DZOFT-project", {
+            "bucket": mod.BUCKET, "status": "verified_empty_by_cli", "files": 0})
+        with self.assertRaisesRegex(mod.BackupError, "does not match"):
+            mod.verified_archive(mod.seal(wrong_ref, PASSWORD), PASSWORD)
+
+    def test_rejects_traversal_duplicates_symlinks_and_zip_bomb(self):
+        db = {
+            "database/schema.sql": b"CREATE TABLE fake(id int);",
+            "database/data.sql": b"INSERT INTO fake VALUES (1);",
+            "database/roles.sql": b"-- role definitions",
+        }
+        storage = {"bucket": mod.BUCKET, "status": "verified_empty_by_cli", "files": 0}
+        with self.assertRaisesRegex(mod.BackupError, "Unsafe archive entry"):
+            blob = mod.build_zip({**db, "storage/../../escape.txt": b"outside"}, mod.PROJECT_REF, storage)
+            mod.verified_archive(mod.seal(blob, PASSWORD), PASSWORD)
+
+        original = mod.build_zip(db, mod.PROJECT_REF, storage)
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            with zipfile.ZipFile(io.BytesIO(original)) as original_zip:
+                for entry in original_zip.infolist():
+                    z.writestr(entry.filename, original_zip.read(entry.filename))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                z.writestr("database/schema.sql", b"duplicate")
+        with self.assertRaisesRegex(mod.BackupError, "Duplicate archive"):
+            mod.verified_archive(mod.seal(buf.getvalue(), PASSWORD), PASSWORD)
+
+        bomb = mod.build_zip({**db, "database/big.sql": b"x" * 5000}, mod.PROJECT_REF, storage)
+        with patch.object(mod, "MAX_UNCOMPRESSED_BYTES", 1000):
+            with self.assertRaisesRegex(mod.BackupError, "expands beyond"):
+                mod.verified_archive(mod.seal(bomb, PASSWORD), PASSWORD)
+
+        with patch.object(mod, "MAX_ARCHIVE_ENTRIES", 2):
+            with self.assertRaisesRegex(mod.BackupError, "too many entries"):
+                mod.verified_archive(mod.seal(original, PASSWORD), PASSWORD)
+
+    def test_invalid_storage_manifest_never_counts_as_complete(self):
+        db = {
+            "database/schema.sql": b"CREATE TABLE fake(id int);",
+            "database/data.sql": b"INSERT INTO fake VALUES (1);",
+            "database/roles.sql": b"-- fake roles",
+        }
+        for status in ("exported", "unknown", "verified_empty_by_cli"):
+            blob = mod.build_zip(db, mod.PROJECT_REF, {
+                "bucket": mod.BUCKET, "status": status, "files": 1})
+            with self.subTest(status=status), self.assertRaises(mod.BackupError):
+                mod.verified_archive(mod.seal(blob, PASSWORD), PASSWORD)
 
     def test_fake_cli_success_storage_and_failure(self):
         with tempfile.TemporaryDirectory() as scratch:
