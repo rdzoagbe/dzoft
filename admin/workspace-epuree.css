@@ -16,6 +16,14 @@ body.dzoft-admin #app .top .workspace-more-menu a:hover{background:#f4f4f9;color
 body.dzoft-admin #app .top .workspace-more-menu [data-extra="logout"]{border-top:1px solid #ececf1;border-radius:0;color:#893b48;margin-top:5px;padding-top:13px}
 body.dzoft-admin #app .top .workspace-more:focus-within>summary{outline:2px solid #a99bf8;outline-offset:2px}
 
+/* Desktop has the persistent sidebar: do not repeat its navigation in a header hamburger.
+   Keep one direct sign-out action; narrow browser layouts retain their account menu.
+   The installed mobile PWA keeps the separate, single installed-app menu. */
+@media (min-width:981px){
+ body.dzoft-admin #app .top .workspace-more{display:none!important}
+ body.dzoft-admin #app .top .in #b-out{display:inline-flex!important;align-items:center;justify-content:center}
+}
+
 /* Quiet dashboard: one search, one action area and active projects. */
 body.dzoft-admin #app #v-dash{max-width:1280px;margin:0 auto}
 body.dzoft-admin #app #v-dash>.bar{margin:2px 0 12px;padding:0;border:0;background:transparent}

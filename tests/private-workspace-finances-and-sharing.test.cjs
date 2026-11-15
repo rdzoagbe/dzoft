@@ -92,7 +92,7 @@ test('clean overview preserves all records, security policies and actual billing
  assert.match(home,/id="dash-focus"/);
  assert.match(home,/id="today-action-center"/);
  assert.match(home,/id="dash-projects"/);
- assert.match(home,/workspace-epuree\.css\?v=20261115-clean3/);
+ assert.match(home,/workspace-epuree\.css\?v=20261115-single-desktop-nav/);
  assert.match(project,/workspace-epuree\.css\?v=20261115-clean3/);
  assert.match(project,/id="tracking-publish"|DzoftTracking\.admin/);
  assert.match(project,/id="iv-payment-truth"/);

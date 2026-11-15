@@ -407,7 +407,7 @@ test('Owner home offers a single workspace search and safe quick actions',async(
  expect(errors).toEqual([]);
 });
 
-test('Financial dashboard shows actual receipts and outstanding money separately',async({page})=>{
+test('Financial dashboard shows actual receipts and outstanding money separately',async({page},testInfo)=>{
  await syntheticOwner(page);
  await page.goto('admin/',{waitUntil:'domcontentloaded'});
  const panel=page.locator('#today-action-center');
@@ -415,9 +415,14 @@ test('Financial dashboard shows actual receipts and outstanding money separately
  await expect(panel).toContainText(/Reste à encaisser|Still outstanding/);
  await expect(panel).toContainText('450');
  await expect(page.locator('#app .top #b-install')).toBeHidden();
- await expect(page.locator('#app .top #b-out')).toBeHidden();
- await page.locator('#app .workspace-more>summary').click();
- await expect(page.locator('#app .workspace-more [data-extra="logout"]')).toBeVisible();
+ if(testInfo.project.name.includes('desktop')){
+   await expect(page.locator('#app .top #b-out')).toBeVisible();
+   await expect(page.locator('#app .workspace-more')).toBeHidden();
+ }else{
+   await expect(page.locator('#app .top #b-out')).toBeHidden();
+   await page.locator('#app .workspace-more>summary').click();
+   await expect(page.locator('#app .workspace-more [data-extra="logout"]')).toBeVisible();
+ }
 });
 
 test('Keeping progress private cannot publish or email the client',async({page})=>{
@@ -490,4 +495,24 @@ test.describe('Populated invoice layout and bilingual receipts',()=>{
  await expect(page.locator('.invoice-record').nth(2).locator('.invoice-record-status')).toContainText('No payment confirmed');
  expect(errors).toEqual([]);
 });
+});
+
+
+test('Desktop shows sidebar navigation once and keeps direct logout; mobile retains account menu',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#app')).toBeVisible();
+ const side=page.locator('#app .side');
+ const headerMenu=page.locator('#app .top .workspace-more');
+ const logout=page.locator('#app .top #b-out');
+ if(testInfo.project.name.includes('desktop')){
+   await expect(side).toBeVisible();
+   await expect(side.locator('[data-tab="settings"]')).toBeVisible();
+   await expect(headerMenu).toBeHidden();
+   await expect(logout).toBeVisible();
+   await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
+ }else{
+   await expect(headerMenu).toBeVisible();
+   await expect(logout).toBeHidden();
+ }
 });
