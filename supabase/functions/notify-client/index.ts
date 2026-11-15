@@ -118,7 +118,8 @@ Deno.serve(async (req) => {
     html = mail("Votre avis est attendu", [hello, `L’étape <b>« ${step} »</b> de votre projet « ${esc(title)} » est prête.`, "Merci de la vérifier puis de la valider dans votre espace client, ou de me dire ce qu’il faut changer."], "Voir et valider", link);
   }
 
-  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+  let r: Response;
+  try { r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     signal: AbortSignal.timeout(12000),
     headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
@@ -128,11 +129,14 @@ Deno.serve(async (req) => {
       replyTo: { email: sender, name: "Roland Dzoagbe" },
       subject, htmlContent: html,
     }),
-  });
+  }); } catch {
+    await log(false, "Brevo transport temporarily unavailable");
+    return json({ error: "L’envoi n’a pas pu être confirmé. Vérifiez l’historique avant de réessayer." }, 502);
+  }
   if (!r.ok) {
-    const t = await r.text();
-    await log(false, ("Brevo " + r.status + " " + t).slice(0, 300));
-    return json({ error: "Brevo a refusé l’envoi (" + r.status + ") : " + t.slice(0, 200) }, 502);
+    // A provider error body may disclose client or API data; do not log or echo it.
+    await log(false, "Brevo HTTP " + r.status);
+    return json({ error: "Service d’envoi indisponible (" + r.status + ")." }, 502);
   }
   await log(true);
   return json({ ok: true, to });
