@@ -36,7 +36,7 @@ test('invoice print UI is limited to the signed-in admin and not included in cli
  const admin=read('admin/suivi.html'),client=read('espace/index.html'),css=read('assets/project-tracking.css');
  assert.match(admin,/invoice-preview\.js\?v=20261114/);
  assert.doesNotMatch(client,/invoice-preview\.js/);
- assert.match(admin,/project-tracking\.js\?v=20261114-(?:auto-number|archive|github-auto)/);
+ assert.match(admin,/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template)/);
  assert.match(css,/tracking-issue-btn/);
  assert.match(css,/tracking-invoice-actions/);
 });
