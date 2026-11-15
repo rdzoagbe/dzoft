@@ -36,7 +36,7 @@ test('auto publication is owner-approved, single-batch, deduplicated and atomic'
 
 test('project refresh imports only date/category data and pre-fills only private owner form',()=>{
  const html=read('admin/suivi.html'),tracking=read('assets/project-tracking.js'),journal=read('admin/github-journal.js');
- assert.match(html,/project-tracking\.js\?v=20261114-github-auto/);
+ assert.match(html,/project-tracking\.js\?v=(?:20261114-github-auto|20261115-pay-template)/);
  assert.match(html,/github-journal\.js\?v=20261114-github-auto/);
  assert.match(tracking,/owner_refresh_github_progress_draft/);
  assert.match(tracking,/owner_publish_github_progress_draft/);
