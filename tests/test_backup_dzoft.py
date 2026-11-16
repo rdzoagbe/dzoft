@@ -188,7 +188,8 @@ class BackupTests(unittest.TestCase):
                 env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli),
                            WITH_STORAGE="1" if with_storage else "0")
                 result = subprocess.run(
-                    [sys.executable, str(SCRIPT), "backup", "--destination", str(target)],
+                    [sys.executable, str(SCRIPT), "backup", "--destination", str(target)]
+                    + (["--expected-storage-count", "1"] if with_storage else []),
                     input=PASSWORD + "\n" + PASSWORD + "\n",
                     text=True, capture_output=True, env=env, timeout=40)
                 self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
@@ -204,7 +205,8 @@ class BackupTests(unittest.TestCase):
                 env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), CLI_MODE="v3",
                            WITH_STORAGE="1" if with_storage else "0")
                 result = subprocess.run(
-                    [sys.executable, str(SCRIPT), "backup", "--destination", str(target)],
+                    [sys.executable, str(SCRIPT), "backup", "--destination", str(target)]
+                    + (["--expected-storage-count", "1"] if with_storage else []),
                     input=PASSWORD + "\n" + PASSWORD + "\n",
                     text=True, capture_output=True, env=env, timeout=40)
                 self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
@@ -213,6 +215,36 @@ class BackupTests(unittest.TestCase):
                 _, info = mod.verified_archive(files[0].read_bytes(), PASSWORD)
                 expected = "exported" if with_storage else "verified_empty_by_cli"
                 self.assertEqual(info["storage"]["status"], expected)
+
+            # A nonempty Storage set must never be called complete without an
+            # independently verified object count from a current SQL inventory.
+            for label, count in (("missing-count", None),
+                                 ("under-count", "0"),
+                                 ("over-count", "2")):
+                target = root / label
+                args = [sys.executable, str(SCRIPT), "backup", "--destination", str(target)]
+                if count is not None:
+                    args += ["--expected-storage-count", count]
+                result = subprocess.run(
+                    args, input=PASSWORD + "\n" + PASSWORD + "\n",
+                    capture_output=True, text=True,
+                    env=dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), WITH_STORAGE="1"),
+                    timeout=40)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(list(target.glob("*.dzoftbak")), [])
+
+            # Stale SQL inventory (e.g., three new documents while CLI sees none)
+            # cannot masquerade as a verified empty Storage bucket.
+            target = root / "unexpected-empty"
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "backup", "--destination",
+                 str(target), "--expected-storage-count", "3"],
+                input=PASSWORD + "\n" + PASSWORD + "\n",
+                capture_output=True, text=True,
+                env=dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), WITH_STORAGE="0"),
+                timeout=40)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(target.glob("*.dzoftbak")), [])
 
             # With no recognized remote flag, never dump local data by accident.
             unknown = root / "unknown-cli"

@@ -278,6 +278,12 @@ def do_backup(args: argparse.Namespace) -> None:
     if not exports["database/schema.sql"] or not exports["database/data.sql"]:
         raise BackupError("Supabase returned an empty SQL dump; backup aborted.")
 
+    expected_storage_count = args.expected_storage_count
+    if expected_storage_count is not None:
+        if expected_storage_count < 0:
+            raise BackupError("Expected Storage count must be non-negative.")
+        if args.skip_storage:
+            raise BackupError("Do not specify expected Storage count with --skip-storage.")
     storage_metadata = {"bucket": BUCKET, "status": "not_exported", "files": 0}
     if not args.skip_storage:
         print("Checking Supabase Storage for client documents…")
@@ -288,6 +294,12 @@ def do_backup(args: argparse.Namespace) -> None:
         exports["storage/remote-listing.txt"] = listing
         storage_metadata["listing_sha256"] = sha(listing)
         if listing.strip():
+            if expected_storage_count is None:
+                raise BackupError(
+                    "Non-empty Storage requires --expected-storage-count from a "
+                    "fresh read-only database inventory before exporting.")
+            if expected_storage_count == 0:
+                raise BackupError("Storage listing is non-empty but expected object count is zero.")
             print("Downloading Storage objects into temporary local directory…")
             print("CAUTION: temporary downloaded files are plaintext; use an encrypted disk.")
             with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
@@ -295,10 +307,16 @@ def do_backup(args: argparse.Namespace) -> None:
                          "--experimental"] + storage_cp_flags)
                 base = Path(scratch)
                 files = [p for p in base.rglob("*") if p.is_file()]
-                if not files:
+                if len(files) != expected_storage_count:
                     raise BackupError(
-                        "Storage listing was not empty, but no files were downloaded. "
-                        "Aborting to avoid an incomplete backup.")
+                        "Storage download count differs from the independently verified "
+                        "database object count. No complete archive will be created.")
+                # Detect objects added, deleted or renamed during the download.
+                listing_after = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
+                                         "--experimental"] + storage_ls_flags)
+                if listing_after != listing:
+                    raise BackupError(
+                        "Storage listing changed during export. Retry with a fresh inventory.")
                 for p in files:
                     if p.is_symlink():
                         raise BackupError("Refusing to read a symlink from downloaded Storage.")
@@ -312,6 +330,12 @@ def do_backup(args: argparse.Namespace) -> None:
                 storage_metadata.update({"status": "exported",
                                          "files": len(files)})
         else:
+            if expected_storage_count not in (None, 0):
+                raise BackupError("Storage listing is empty but database inventory has objects.")
+            listing_after = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
+                                     "--experimental"] + storage_ls_flags)
+            if listing_after != listing:
+                raise BackupError("Storage listing changed during export. Retry the backup.")
             storage_metadata.update({"status": "verified_empty_by_cli", "files": 0})
     else:
         storage_metadata.update({"status": "skipped_by_operator", "files": 0})
@@ -414,6 +438,8 @@ def main() -> int:
                         default=Path.home() / "DZOFT-Backups")
     backup.add_argument("--skip-storage", action="store_true",
                         help="Only for conscious database-only backups")
+    backup.add_argument("--expected-storage-count", type=int, default=None,
+                        help="Read-only SQL object count for client-files; required when non-empty")
     verify = cmds.add_parser("verify", help="Verify encrypted archive")
     verify.add_argument("archive", type=Path)
     extract = cmds.add_parser("extract", help="Extract SQL for an isolated restore test")
