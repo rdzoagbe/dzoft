@@ -59,7 +59,7 @@ function renderHeader(){
  setText("pf-project-status",q.accepted_at?tr("En cours","In progress"):tr("Devis","Quote"));
  setText("pf-client-sub",[c.entreprise,c.email].filter(Boolean).join(" · ")||tr("Fiche client privée","Private client record"));
  setText("pf-avatar",clientName().trim().split(/\s+/).slice(0,2).map(function(x){return x.slice(0,1);}).join("").toUpperCase());
- setHref("pf-side-dashboard",projectUrl());
+ setHref("pf-side-dashboard","./#/tableau-de-bord");
  setHref("pf-project-tools",projectUrl());
  setHref("pf-side-journal",projectUrl("work/c-journal"));
  setHref("pf-side-documents",projectUrl("work/c-docs"));
