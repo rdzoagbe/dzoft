@@ -92,14 +92,15 @@ def password_prompt(confirm: bool) -> str:
     return password
 
 
-def run_cli(arguments: list[str], *, binary: bool = False) -> bytes:
+def run_cli(arguments: list[str], *, binary: bool = False,
+            cwd: Path | None = None) -> bytes:
     executable = shutil.which(os.environ.get("DZOFT_SUPABASE_CLI", "supabase"))
     if not executable:
         raise BackupError("Supabase CLI not installed. See docs/backup-recovery.md.")
     command = [executable] + arguments
     # Keep Supabase's interactive login/password prompts visible on the owner's PC.
     # Only the SQL payload on stdout is captured; never print it to the terminal.
-    result = subprocess.run(command, cwd=PROJECT_ROOT, stdin=sys.stdin,
+    result = subprocess.run(command, cwd=cwd if cwd is not None else PROJECT_ROOT, stdin=sys.stdin,
                             stdout=subprocess.PIPE, stderr=None, check=False)
     if result.returncode != 0:
         # Do not echo full stderr: CLI logs may include connection details.
@@ -303,9 +304,14 @@ def do_backup(args: argparse.Namespace) -> None:
             print("Downloading Storage objects into temporary local directory…")
             print("CAUTION: temporary downloaded files are plaintext; use an encrypted disk.")
             with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
-                run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, scratch,
-                         "--experimental"] + storage_cp_flags)
+                # Supabase CLI v3 can interpret an absolute Windows destination
+                # (e.g. C:\\Users\\...\\dzoft-storage-...) as an unsupported local
+                # copy operation. Follow the documented remote-download syntax
+                # with a relative "." destination inside the private temp folder.
+                # NEVER change the remote bucket or run storage mv/rm here.
                 base = Path(scratch)
+                run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, ".",
+                         "--experimental"] + storage_cp_flags, cwd=base)
                 files = [p for p in base.rglob("*") if p.is_file()]
                 if len(files) != expected_storage_count:
                     raise BackupError(
