@@ -516,3 +516,28 @@ test('Desktop shows sidebar navigation once and keeps direct logout; mobile reta
    await expect(logout).toBeHidden();
  }
 });
+
+
+test('Unpaid official invoice routes to verified receipt editor without recording money',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="billing"]').click();
+ const invoices=page.locator('#invs .invr');
+ await expect(invoices).toHaveCount(3);
+ await expect(invoices.locator('input.paid')).toHaveCount(0);
+ const final=invoices.filter({hasText:'F-2026-0003'});
+ await final.locator('details.invoice-record-more>summary').click();
+ const start=final.locator('[data-a="record-payment"]');
+ await expect(start).toBeVisible();
+ const initial=await page.evaluate(()=>window.__syntheticCalls.filter(v=>v.startsWith('rpc:record_project_payment')).length);
+ await start.click();
+ await expect(page.locator('#iv-payments-advanced')).toHaveAttribute('open','');
+ const receiptForm=page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)>form');
+ await expect(receiptForm).toBeVisible();
+ await expect(receiptForm.locator('select[name="invoice"]')).toHaveValue('unpaid-final');
+ await expect(receiptForm.locator('input[name="amount"]')).toHaveValue('700');
+ const after=await page.evaluate(()=>window.__syntheticCalls.filter(v=>v.startsWith('rpc:record_project_payment')).length);
+ expect(after).toBe(initial);
+ expect(errors).toEqual([]);
+});
