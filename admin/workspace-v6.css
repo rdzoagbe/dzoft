@@ -54,3 +54,11 @@ body.dzoft-admin #app .v6-warning{font-size:12px;line-height:1.6;background:#fff
  body.dzoft-admin:not(.dzoft-installed-mobile) #app .side .dzoft-v6-link{min-width:75px;flex:0 0 auto}
 }
 @media(max-width:420px){body.dzoft-admin #app .v6-report-grid{gap:8px}body.dzoft-admin #app .v6-report-stat{padding:12px}}
+
+/* Global dashboard is a business overview, not a second project detail screen.
+   Project totals and extras belong to their selected project dossier. */
+body.dzoft-admin #app #v-dash .sd-selected{display:none!important}
+body.dzoft-admin #app #v-dash .sd-bottom{display:block}
+body.dzoft-admin #app #v-dash .sd-activity{width:100%}
+body.dzoft-admin #app #v-dash .sd-shortcuts{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){body.dzoft-admin #app #v-dash .sd-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
