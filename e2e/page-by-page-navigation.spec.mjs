@@ -71,3 +71,37 @@ test('project page navigation retains the selected project ID on contextual sect
  }
  await expect(page.locator('#pf-sidebar [data-route="catalogue"]')).toHaveAttribute('href','./#/catalogue');
 });
+
+test('data-backed operational indexes show invoices, journal, documents and quoted services',async({page},info)=>{
+ test.skip(info.project.name.includes('mobile'),'Desktop synthetic data verification');
+ await reveal(page);
+ const id='12345678-1234-4234-9234-123456789abc';
+ await page.evaluate((id)=>{
+  const quote={id,numero:'D-TEST-042',client_id:'cli1',accepted_at:'2026-11-01',invoices:[{num:'FAC-TEST-001',amt:1500,date:'2026-11-02'}]};
+  window.DzoftWorkspacePanelsV6.setData({
+   projects:[{id,numero:quote.numero,clientName:'Client test'}],
+   quotes:[quote],clients:[{id:'cli1',nom:'Client test'}],
+   trackings:{[id]:{total:1500,received:800,remaining:700}},ready:true
+  });
+  window.DzoftWorkspacePanelsV6.setDetails([
+   {...quote,journal:[{d:'2026-11-05',k:'fait',t:'Journal synthetic entry'}],
+   docs:[{n:'Document synthetic reference',u:'https://example.org'}],
+   accepted_data:{lines:[{l:'Synthetic service line',u:'forfait',p:350}]}}
+  ],false);
+ },id);
+ for(const [slug,text] of [['factures','FAC-TEST-001'],['journal','Journal synthetic entry'],['documents','Document synthetic reference'],['catalogue','Synthetic service line']]){
+  await page.locator('#app .side [data-route="'+slug+'"]').click();
+  await expect(page.locator('#v-'+({factures:'invoices'}[slug]||slug)+' .v6-page-body')).toContainText(text);
+ }
+ await page.locator('#app .side [data-route="rapports"]').click();
+ await expect(page.locator('#v-reports')).toContainText('1 500');
+ await expect(page.locator('#v-reports')).toContainText('800');
+ await expect(page.locator('#v-reports')).toContainText('700');
+});
+test('failed authorized detail load is explicit, not an empty-client claim',async({page},info)=>{
+ test.skip(info.project.name.includes('mobile'),'Desktop');
+ await reveal(page);
+ await page.evaluate(()=>window.DzoftWorkspacePanelsV6.setDetails([],true));
+ await page.locator('#app .side [data-route="documents"]').click();
+ await expect(page.locator('#v-documents .v6-warning')).toBeVisible();
+});
