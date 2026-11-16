@@ -1,0 +1,55 @@
+/* DZOFT unified owner workspace — same dark navigation and pale content surfaces as project finance.
+   Auth, data writes, and the PWA's existing single-menu mode are deliberately untouched. */
+body.dzoft-admin{--ink:#1c2036;--ink2:#535a70;--mute:#70778c;--line:#e3e6ef;--soft:#f6f7fb;--blue:#6353d6;--blue2:#5342c3;--navy:#171b30;--navy2:#252945;background:#f8f8ff;color:var(--ink)}
+body.dzoft-admin #app .top{background:#171b30;box-shadow:none}
+body.dzoft-admin #app .top .in{max-width:1520px;min-height:64px}
+body.dzoft-admin #app .shell{max-width:1520px;grid-template-columns:238px minmax(0,1fr);gap:24px;padding:22px 22px 72px}
+body.dzoft-admin #app .side{position:sticky;top:80px;display:flex;flex-direction:column;align-items:stretch;min-height:460px;border:0;background:#171b30;color:#e4e5f7;border-radius:15px;padding:16px 11px;box-shadow:0 8px 24px rgba(27,20,76,.07)}
+body.dzoft-admin #app .side .tab{border-radius:10px;min-height:45px;padding:11px 13px;color:#e4e5f7;font-size:13px;transition:background .15s,color .15s}
+body.dzoft-admin #app .side .tab:hover{background:#2b2c4d;color:white}
+body.dzoft-admin #app .side .tab[aria-selected=true]{background:linear-gradient(105deg,#7543f7,#5116cf);color:#fff;box-shadow:0 5px 14px rgba(74,27,176,.2)}
+body.dzoft-admin #app .side .tab svg{stroke:currentColor}
+body.dzoft-admin #app .side hr{border-color:#3b3d58}
+body.dzoft-admin #app main{min-width:0}
+body.dzoft-admin #app #v-dash>.bar{margin-bottom:18px}
+body.dzoft-admin #app h2,body.dzoft-admin #app h3{letter-spacing:-.025em}
+body.dzoft-admin #app .panel,body.dzoft-admin #app .dzoft-case-finder,body.dzoft-admin #app .owner-command-bar{background:#fff;border:1px solid #e6e4f3;border-radius:16px;box-shadow:0 7px 22px rgba(27,20,76,.045)}
+body.dzoft-admin #app .btn.main,body.dzoft-admin #app .btn.sm.main{background:linear-gradient(125deg,#652cf3,#4d12d9);color:#fff;border-color:transparent;box-shadow:0 4px 11px rgba(98,49,218,.14)}
+body.dzoft-admin #app .btn.main:hover,body.dzoft-admin #app .btn.sm.main:hover{filter:brightness(1.08)}
+body.dzoft-admin #app .btn.line{border-color:#d9d8ee;color:#252444;background:#fff}
+body.dzoft-admin #app .btn.line:hover{background:#f8f6ff;border-color:#9886e3}
+body.dzoft-admin #app :is(button,a,input,select,textarea):focus-visible{outline:3px solid #a99bfa;outline-offset:2px}
+body.dzoft-admin #app table{width:100%;border-collapse:collapse}
+body.dzoft-admin #app th{background:#fafaff;color:#74768c;font-size:12px;text-transform:none;font-weight:750}
+body.dzoft-admin #app tr:hover td{background:#fcfbff}
+body.dzoft-admin #app #v-dash .bar h2{font-size:clamp(22px,2.5vw,29px)}
+body.dzoft-admin #app #v-dash .clean-project-list{margin-top:16px}
+body.dzoft-admin #app .finance-kpis>div,body.dzoft-admin #app .kpi{border:1px solid #e6e4f3;background:#fff;border-radius:15px}
+body.dzoft-admin #app .finance-line{border:1px solid #e5e3f3;border-radius:15px;background:#fff}
+body.dzoft-admin #app .dossier-pill[aria-pressed=true]{background:#eeeaff;color:#5542c5;border-color:#b7aaed}
+body.dzoft-admin #app .dossier-pill:hover{background:#f5f2ff}
+body.dzoft-admin #app #v-dash .owner-command-bar{border:1px solid #e6e4f3}
+body.dzoft-admin #app .owner-command-eyebrow{color:#6226de}
+body.dzoft-admin #app .owner-command-actions button{border-color:#e8ddff;color:#5320d8;background:#f5f0ff}
+body.dzoft-admin #app .owner-command-actions button:hover{background:#ede5ff}
+body.dzoft-admin #app .today-stats>*,body.dzoft-admin #app .today-task{border-color:#e9e5f3}
+@media(max-width:980px){
+ body.dzoft-admin #app .shell{display:block;padding:10px 14px 98px}
+ /* Ordinary mobile browser retains its compact bottom bar. Installed PWA
+    uses the one top menu already provided by installed-app-menu.js. */
+ body.dzoft-admin #app .side{position:fixed;top:auto;left:8px;right:8px;bottom:8px;z-index:19;display:flex;flex-direction:row;align-items:stretch;justify-content:space-around;min-height:0;padding:6px 8px;border-radius:18px;box-shadow:0 11px 40px rgba(13,14,32,.25)}
+ body.dzoft-admin #app .side .tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;padding:9px 5px;white-space:nowrap}
+ body.dzoft-admin #app .side .tab[hidden]{display:none!important}
+ body.dzoft-admin #app .side .tab[data-tab=settings],body.dzoft-admin #app .side .tab[data-tab=trash],body.dzoft-admin #app .side hr{display:none}
+ body.dzoft-admin #app main{margin-top:12px}
+ body.dzoft-admin.dzoft-installed-mobile #app .side{display:none!important}
+ body.dzoft-admin.dzoft-installed-mobile #app .shell{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:600px){
+ body.dzoft-admin #app .shell{padding:10px 10px 100px}
+ body.dzoft-admin #app .panel{border-radius:14px}
+ body.dzoft-admin #app .owner-command-bar{padding:17px 14px}
+ body.dzoft-admin #app #v-dash .bar h2{font-size:21px}
+ body.dzoft-admin #app .finance-line{padding:13px}
+ body.dzoft-admin #app .dzoft-case-results{grid-template-columns:1fr}
+}
