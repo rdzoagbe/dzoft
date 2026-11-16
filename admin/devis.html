@@ -32,6 +32,9 @@ button{font:inherit;cursor:pointer}
 .tb{border:0;border-radius:9px;padding:9px 13px;font-weight:700;font-size:14px;background:rgba(255,255,255,.12);color:#fff}
 .tb:hover{background:rgba(255,255,255,.2)}
 .tb.main{background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff}
+.tb.sync-retry{background:#fff4db;color:#402b0c;border:1px solid #edcb86}
+.tb.sync-retry[hidden]{display:none!important}
+@media(max-width:700px){.tools{gap:6px;padding:8px}.tools b{flex-basis:100%;order:-1}.tools .tb{font-size:12px;padding:9px}.tools .sync-retry{flex:1 1 100%}}
 .importbox{max-width:820px;margin:16px auto 0;background:#fff;border-radius:14px;padding:16px;display:none}
 .importbox.open{display:block}
 .importbox p{font-size:14px;color:var(--mute);margin-bottom:8px}
@@ -154,7 +157,8 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 <body class="dzoft-admin">
 <div class="tools">
   <a class="tb" href="./">← Espace privé</a>
-  <b>Devis <span id="sync" style="font-weight:400;font-size:12.5px;color:#9fb3c8;margin-left:6px"></span></b>
+  <b>Devis <span id="sync" role="status" aria-live="polite" style="font-weight:400;font-size:12.5px;color:#9fb3c8;margin-left:6px"></span></b>
+  <button class="tb sync-retry" type="button" id="b-retry" hidden>Réessayer l’enregistrement</button>
   <button class="tb" type="button" id="b-import">Importer une demande</button>
   <button class="tb" type="button" id="b-new">Nouveau devis</button>
   <a class="tb" id="b-follow" href="#" hidden>Fiche projet</a>
@@ -336,19 +340,62 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   var eur = function(n){ return (Math.round(n * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
   function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ return null; } }
-  function save(){
-    var d = {lines: state.lines, host: state.host, f: {}};
-    [].forEach.call(document.querySelectorAll('[data-k]'), function(el){
-      d.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : (el.isContentEditable ? el.innerText : el.value);
-    });
-    if (!QID) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} return; }
-    $('sync').textContent = 'modifications non enregistrées…';
-    clearTimeout(remoteTimer);
-    remoteTimer = setTimeout(function(){
-      sb.update('quotes', QID, { data: d, numero: d.f.num || '', total: lastTotal })
-        .then(function(){ $('sync').textContent = 'enregistré ✓'; }, function(){ $('sync').textContent = 'non enregistré : vérifiez la connexion'; });
-    }, 700);
+  // Serialize owner quote saves. A slower previous response must never
+  // overwrite a newer edit or falsely mark the editor as saved.
+  var remoteInFlight = false, remotePending = null, remoteSaveFailed = false;
+  function showSync(text, retry){
+    $('sync').textContent = text;
+    $('b-retry').hidden = !retry;
   }
+  function flushRemote(){
+    if(!QID || remoteInFlight || !remotePending || remoteSaveFailed)return;
+    var snapshot = remotePending;
+    remotePending = null;
+    remoteInFlight = true;
+    showSync('enregistrement…',false);
+    Promise.resolve().then(function(){
+      return sb.update('quotes',QID,{data:snapshot.data,numero:snapshot.data.f.num||'',total:snapshot.total});
+    }).then(function(){
+      if(remotePending)showSync('modifications non enregistrées…',false);
+      else showSync('enregistré ✓',false);
+    },function(){
+      // Keep the newest unsaved snapshot: never silently lose a failed write.
+      if(!remotePending)remotePending=snapshot;
+      remoteSaveFailed=true;
+      showSync('échec : modifications non enregistrées',true);
+    }).finally(function(){
+      remoteInFlight=false;
+      if(remotePending && !remoteSaveFailed)flushRemote();
+    });
+  }
+  function save(){
+    var d={lines:state.lines,host:state.host,f:{}};
+    [].forEach.call(document.querySelectorAll('[data-k]'),function(el){
+      d.f[el.dataset.k]=el.type==='checkbox'?el.checked:(el.isContentEditable?el.innerText:el.value);
+    });
+    if(!QID){
+      try{localStorage.setItem(KEY,JSON.stringify(d));}
+      catch(e){showSync('brouillon local non enregistré',false);}
+      return;
+    }
+    remotePending={data:JSON.parse(JSON.stringify(d)),total:lastTotal};
+    remoteSaveFailed=false;
+    showSync('modifications non enregistrées…',false);
+    clearTimeout(remoteTimer);
+    remoteTimer=setTimeout(flushRemote,700);
+  }
+  $('b-retry').onclick=function(){
+    if(!QID || !remotePending || remoteInFlight)return;
+    remoteSaveFailed=false;
+    clearTimeout(remoteTimer);
+    flushRemote();
+  };
+  window.addEventListener('beforeunload',function(event){
+    if(QID&&(remotePending||remoteInFlight)){
+      event.preventDefault();
+      event.returnValue='';
+    }
+  });
   function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
   function nextNum(){
     var y = new Date().getFullYear(), n = 1;
@@ -634,7 +681,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     if (confirm('Commencer un nouveau devis ? Le devis en cours sera effacé de cette page.')) fresh();
   };
   $('b-import').onclick = function(){ $('importbox').classList.add('open'); $('importtext').focus(); };
-  $('b-cancel').onclick = function(){ $('importbox').classList.remove('open'); };
+  $('b-cancel').onclick = function(){ $('importbox').classList.remove('open'); $('importtext').value=''; $('b-import').focus(); };
   $('b-doimport').onclick = doImport;
   function looksLikeRequest(t){ return /pr[ée]nom\s*:/i.test(t.normalize('NFC')) || /je souhaite un devis/i.test(t); }
   $('desc').addEventListener('paste', function(e){
