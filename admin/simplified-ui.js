@@ -40,7 +40,7 @@ var search=document.getElementById('dossier-search');
 function applySearch(){
  var term=search.value.toLocaleLowerCase().trim();
  [['c-search','clients'],['q-search','quotes']].forEach(function(item){var input=document.getElementById(item[0]);if(input&&input.value!==search.value){input.value=search.value;input.dispatchEvent(new Event('input',{bubbles:true}));}});
- document.querySelectorAll('#leads .lead,#projects tbody tr').forEach(function(el){el.hidden=!!term&&!el.textContent.toLocaleLowerCase().includes(term);});
+ document.querySelectorAll('#leads .lead,#projects .v4-project-card,#projects tbody tr').forEach(function(el){el.hidden=!!term&&!el.textContent.toLocaleLowerCase().includes(term);});
 }
 search.addEventListener('input',applySearch);
 window.addEventListener('dzoft:data-refreshed',applySearch);
