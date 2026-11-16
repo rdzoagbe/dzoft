@@ -28,3 +28,11 @@ test('financial form labels are translated explicitly, not client-created invoic
  assert.match(lang,/'Enregistrer la facture externe':'Save external invoice'/);
  assert.match(lang,/'Enregistrer un encaissement vérifié':'Record verified payment'/);
 });
+
+
+test('French fallback translates English-source authentication help',()=>{
+ assert.match(lang,/dzoftFrenchMap\[core\]\|\|core/);
+ assert.match(lang,/Saisissez le code à six chiffres de votre application d’authentification/);
+ assert.match(lang,/'Mot de passe \(10 caractères minimum\)':'Password \(at least 10 characters\)'/);
+ assert.match(lang,/'Pour rectifier une facture déjà émise/);
+});
