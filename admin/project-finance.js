@@ -281,10 +281,25 @@ function readData(){
    q.client_id?sb.select("clients","select=*&id=eq."+encodeURIComponent(q.client_id)).then(function(x){return x&&x[0]||null;}):Promise.resolve(null),
    sb.rpc("owner_list_change_requests",{p_quote:id},true),
    sb.rpc("project_tracking",{p_quote:id},true)
-  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();loadProjectSwitcher();},
+  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();loadProjectSwitcher();loadMenuCounts();},
    function(err){state.readError=err;state.changes=null;state.tracking=null;render();setText("pf-finance-note",tr("Certaines données financières sont indisponibles. Aucun total non vérifié n'est présenté.","Some financial data is unavailable. Unverified totals are hidden."));});
  }).catch(function(){state.readError=true;conceal();showError(tr("Accès impossible au projet. Vérifiez votre session administrateur.","Unable to access project. Check your admin session."));})
  .finally(function(){state.busy=false;});
+}
+/* Menu counters, same rules as the dashboard: new requests, unread client messages, trash.
+   Light reads (ids and status only); a failure only leaves the counters hidden. */
+function loadMenuCounts(){
+ if(!window.DzoftNavigationV6||!window.DzoftNavigationV6.setCount)return;
+ Promise.all([
+  sb.select("leads","select=id,status,deleted_at"),
+  sb.select("messages","select=id&author=eq.client&read_at=is.null"),
+  sb.select("quotes","select=id&deleted_at=not.is.null")
+ ]).then(function(r){
+  var leads=Array.isArray(r[0])?r[0]:[];
+  window.DzoftNavigationV6.setCount("clients",leads.filter(function(l){return !l.deleted_at&&l.status==="nouvelle";}).length);
+  window.DzoftNavigationV6.setCount("messages",Array.isArray(r[1])?r[1].length:0);
+  window.DzoftNavigationV6.setCount("parametres",leads.filter(function(l){return !!l.deleted_at;}).length+(Array.isArray(r[2])?r[2].length:0));
+ }).catch(function(){});
 }
 function conceal(){
  $("pf-shell").hidden=true;
@@ -317,7 +332,7 @@ function openExtra(){
   observer.observe(root,{subtree:true,childList:true});
   Promise.resolve(window.DzoftChanges.owner(root,{
     sb:sb,quoteId:id,en:en(),invoices:state.quote.invoices||[],
-    onInvoice:function(){dialog.close();location.href=projectUrl("billing");}
+    onInvoice:function(record){dialog.close();location.href="suivi.html?q="+encodeURIComponent(id)+"&issue_change="+encodeURIComponent(record.id)+"#billing";}
   })).then(function(){
     if(!dialog.open)return;
     var form=root.querySelector("[data-change-offer]");

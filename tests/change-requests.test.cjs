@@ -10,10 +10,10 @@ test('both client and admin render live change-request workflows',()=>{
  const owner=read('admin/suivi.html'),workspace=read('admin/project-workspace.js');
  assert.match(client,/dzoft-client-changes/);
  assert.match(client,/DzoftChanges\.client/);
- assert.match(client,/change-requests\.js\?v=20261114-1/);
+ assert.match(client,/change-requests\.js\?v=20261117-priced/);
  assert.match(owner,/dzoft-owner-changes/);
  assert.match(owner,/DzoftChanges\.owner/);
- assert.match(owner,/change-requests\.js\?v=20261114-1/);
+ assert.match(owner,/change-requests\.js\?v=20261117-priced/);
  assert.match(workspace,/move\('c-changes',primary\)/);
  for(const html of [client,owner]){
   for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
@@ -23,13 +23,15 @@ test('both client and admin render live change-request workflows',()=>{
  new vm.Script(read('assets/change-requests.js'));
 });
 
-test('client can submit, expressly approve or decline versioned proposals, and withdraw requests',()=>{
+test('client can submit, sign with an e-mail code or decline versioned proposals, and withdraw requests',()=>{
  const js=read('assets/change-requests.js');
- for(const name of ['list_change_requests','create_change_request','decide_change_request','withdraw_change_request']){
+ for(const name of ['list_change_requests','create_change_request','sign_change_request','decide_change_request','withdraw_change_request']){
   assert.match(js,new RegExp(name));
  }
  assert.match(js,/p_version:Number\(form\.dataset\.version\)/);
- assert.match(js,/p_approve:true/);
+ // Approval is a signature with the code received by e-mail; declining needs no code.
+ assert.doesNotMatch(js,/p_approve:true/);
+ assert.match(js,/p_code:code/);
  assert.match(js,/p_approve:false/);
  assert.match(js,/name="consent" required/);
  assert.match(js,/No extra charge without your agreement/);
@@ -37,14 +39,15 @@ test('client can submit, expressly approve or decline versioned proposals, and w
  assert.doesNotMatch(js,/record_project_payment|auto_issue_project_receipt_invoice|sb\.update\('quotes'/);
 });
 
-test('owner proposes extra price and timeline; approval controls the work',()=>{
+test('owner prices the extra work and its timeline; the signature controls the work',()=>{
  const js=read('assets/change-requests.js');
  assert.match(js,/owner_list_change_requests/);
- assert.match(js,/owner_propose_change/);
+ assert.match(js,/owner_create_priced_proposal/);
+ assert.match(js,/owner_price_change_request/);
  assert.match(js,/owner_reject_change/);
  assert.match(js,/owner_progress_change/);
  assert.match(js,/data-change-progress/);
- assert.match(js,/p_extra_price:Number\(f\.elements\.amount\.value\)/);
+ assert.doesNotMatch(js,/p_extra_price:/,'the server computes the price from the lines');
  assert.match(js,/p_timeline:f\.elements\.timeline\.value\.trim\(\)/);
  assert.match(js,/the original invoice/i);
 });

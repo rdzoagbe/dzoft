@@ -353,8 +353,8 @@ footer{max-width:1180px}
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
 <script src="../assets/project-tracking.js?v=20261114-auto-number&accepted=20261115&cancel=20261115"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261113">
-<link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
-<script src="../assets/change-requests.js?v=20261114-1"></script>
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261117-priced">
+<script src="../assets/change-requests.js?v=20261117-priced"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -881,7 +881,7 @@ footer{max-width:1180px}
   WIRE.projets = function(id){
     var q = id && byId(id); if (!q) return;
     wireReview(q);
-    if (typeof window !== 'undefined' && window.DzoftChanges) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:false});
+    if (typeof window !== 'undefined' && window.DzoftChanges) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:false,sendCode:function(changeId){ return sb.fn('change-sign-code', { change_id: changeId, token: token || undefined }); }});
     if (/\/avis$/.test(location.hash) && $('avis')) $('avis').scrollIntoView();
     [].forEach.call(document.querySelectorAll('.valid'), function(box){
       var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;

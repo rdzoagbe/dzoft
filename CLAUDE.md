@@ -97,6 +97,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   travaux sont terminés ; le serveur calcule montant et numéro (série F-AAAA-NNNN), la page archive le PDF puis propose l’envoi.
   Les factures d’acompte restent émises à réception du paiement (CGI art. 289). `owner_create_change_proposal` : DZOFT ouvre
   lui-même une proposition, que seul le client peut approuver. Tests `tests/issue-accepted-invoices.{test.cjs,sql}`.
+- Compléments chiffrés (17 nov. 2026, `docs/accepted-invoices.md`) : calculateur dans « Créer un supplément » (lignes ×
+  prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »
+  (e-mail `change_proposed`), signature du client par code e-mail (fonction Edge `change-sign-code`, aucune approbation sans
+  code), puis facture complémentaire du montant signé. Test `tests/priced-change-proposals.sql`.
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.

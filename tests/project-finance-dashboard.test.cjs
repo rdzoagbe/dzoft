@@ -48,7 +48,8 @@ test('financial figures use accepted contract, server receipts, and client-appro
 
 test('extra work is delegated to audited existing workflow; no direct invoice or client mutation',()=>{
  assert.match(js,/DzoftChanges\.owner\(root,/);
- assert.match(js,/onInvoice:function\(\)\{dialog\.close\(\);location\.href=projectUrl\("billing"\)/);
+ // Invoicing is handed to suivi.html, which issues it under its server guard after a confirmation.
+ assert.match(js,/onInvoice:function\(record\)\{dialog\.close\(\);location\.href="suivi\.html\?q="\+encodeURIComponent\(id\)\+"&issue_change="\+encodeURIComponent\(record\.id\)\+"#billing";\}/);
  assert.match(html,/Aucune nouvelle facture n'est émise par cette fenêtre/);
  assert.doesNotMatch(js,/sb\.(?:insert|update|remove)\(/);
  assert.doesNotMatch(js,/sb\.rpc\("(?:owner_create_change_proposal|owner_propose_change|issue_accepted_invoice|record_project_receipt)"/);

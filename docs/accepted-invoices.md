@@ -66,3 +66,25 @@ Le bouton **Envoyer le PDF + ma copie** enfile un e-mail pour le client **et un 
 ### Mise en service
 
 Ne pas livrer l'interface révisée avant application de la migration `20261115221000_interim_invoice_amount_preview.sql`, validation du schéma, des droits des RPC, des tests de non-régression, et contrôle des configurations d'envoi et de l'adresse de notification du propriétaire. La migration ne crée aucune facture, ne modifie aucun prix accepté et n'expédie aucun e-mail.
+
+## Compléments chiffrés et signés (17 novembre 2026)
+
+Migration `20261117090000_priced_change_proposals.sql`, fonction Edge `change-sign-code`.
+
+1. **Chiffrer** : fiche projet → « ＋ Créer un supplément » → « ＋ Proposer un complément chiffré ».
+   Lignes depuis « Ma liste de prix » (avec repérage dans le texte de la demande) ou lignes libres ;
+   quantité × prix unitaire, total affiché. Le serveur recalcule le total (`private.change_lines_total`)
+   et numérote la proposition `<n° du devis>-C1`, `-C2`… Une demande envoyée par le client se chiffre
+   de la même façon (`owner_price_change_request`, nouvelle version : un ancien code ne vaut plus).
+2. **Envoyer** : « Envoyer au client par e-mail » (`owner_send_change_proposal`) met un e-mail en file
+   (`change_proposed`, lien vers l’espace client). Chaque clic envoie un e-mail.
+3. **Signer** : dans son espace, le client lit les lignes, coche son accord, reçoit un code à 6 chiffres
+   par e-mail (`change-sign-code`, même règles que la signature du devis : adresse de sa fiche, 10 min,
+   5 essais, 3 codes / 15 min) et signe (`my_sign_change_request` / `portal_sign_change_request`).
+   Sans code, l’approbation est refusée par le serveur ; le refus reste possible sans code.
+   DZOFT reçoit un e-mail `change_signed`.
+4. **Facturer** : « Marquer les travaux terminés » (directement si « travaux déjà réalisés »), puis
+   « Créer la facture complémentaire » : la page de facturation s’ouvre et émet la facture du montant
+   signé, avec les lignes et la mention de la signature par code sur le PDF, puis propose l’envoi.
+
+Liste de prix : `settings.price_blocks` (propriétaire seulement). Tests : `tests/priced-change-proposals.sql`.

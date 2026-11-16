@@ -461,8 +461,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="sb.js?v=20261109-passkey"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
-<link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
-<script src="../assets/change-requests.js?v=20261114-1&invoice=20261115"></script>
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261117-priced">
+<script src="../assets/change-requests.js?v=20261117-priced"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -566,6 +566,17 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
     if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en',invoices:Q.invoices||[],onInvoice:function(record,btn){ issueAccepted('supplement',record,btn); }});
     DzoftTracking.admin(Q, sb, load);
+    // Arriving from the project page with « Créer la facture complémentaire »: start that invoice once.
+    var wanted = new URLSearchParams(location.search).get('issue_change');
+    if (wanted && /^[0-9a-f-]{36}$/i.test(wanted) && !load.issuedFromLink) {
+      load.issuedFromLink = true;
+      history.replaceState(null, '', location.pathname + '?q=' + encodeURIComponent(QID) + location.hash);
+      sb.rpc('owner_list_change_requests', { p_quote: QID }, true).then(function(list){
+        var c = (list || []).filter(function(r){ return r.id === wanted; })[0];
+        if (c && c.status === 'completed' && !(Q.invoices || []).some(function(i){ return i.change === c.id; })) issueAccepted('supplement', c, null);
+        else if (c) toast('Cette facture complémentaire existe déjà ou les travaux ne sont pas marqués terminés.');
+      }, fail);
+    }
   }
 
   function save(row, reload){
@@ -1081,8 +1092,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     return sb.rpc('owner_list_change_requests', { p_quote: QID }, true).then(function(list){
       var c = (list || []).filter(function(r){ return r.id === x.change; })[0];
       if (!c) throw new Error('Demande de modification introuvable pour cette facture.');
-      return { detail: 'Complément : ' + c.title + '. ' + (c.proposed_scope || ''),
-        changeNote: 'Prestations complémentaires au devis ' + (Q.numero || '') + ', approuvées par ' + (c.decision_name || 'le client') + ' le ' + new Date(c.decided_at).toLocaleDateString('fr-FR') + ' (proposition n° ' + c.proposal_version + ').' };
+      var money = function(v){ return (Math.round(Number(v) * 100) / 100).toFixed(2).replace('.', ',') + ' EUR'; };
+      // A priced proposal lists its signed lines on the invoice; older proposals keep their text.
+      var lines = Array.isArray(c.lines) ? c.lines.map(function(l){ return '- ' + l.label + ' : ' + String(l.qty).replace('.', ',') + ' x ' + money(l.price) + ' = ' + money(Number(l.qty) * Number(l.price)); }).join(' ') : (c.proposed_scope || '');
+      return { detail: 'Complément : ' + c.title + (c.proposal_number ? ' (proposition ' + c.proposal_number + ')' : '') + '. ' + lines,
+        changeNote: 'Prestations complémentaires au devis ' + (Q.numero || '') + ', ' + (c.decision_method === 'email' ? 'signées avec un code reçu par e-mail' : 'approuvées') + ' par ' + (c.decision_name || 'le client') + ' le ' + new Date(c.decided_at).toLocaleDateString('fr-FR') + (c.proposal_number ? ' (proposition ' + c.proposal_number + ', version ' + c.proposal_version + ').' : ' (proposition n° ' + c.proposal_version + ').') };
     });
   }
   function archiveIssued(x){

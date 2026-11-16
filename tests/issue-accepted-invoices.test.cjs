@@ -68,19 +68,21 @@ test('the page asks before issuing and before sending, and sending reuses the ex
 
 test('change card offers the invoice only for completed work with a price, and shows it once issued',()=>{
  const ctx={window:{}};vm.runInNewContext(changes,ctx);
- const root={listeners:[],addEventListener(t,f){this.listeners.push(f);},querySelector(){return holder;},innerHTML:''};
+ const root={listeners:[],addEventListener(t,f){this.listeners.push(f);},querySelector(){return holder;},querySelectorAll(){return [];},innerHTML:''};
  const holder={innerHTML:'',textContent:'',style:{},setAttribute(){}};
  const base={id:'c1',title:'Ajouts',description:'x',created_at:'2026-11-15T10:00:00Z',history:[],proposal_version:1,proposed_scope:'Périmètre',decision_name:'Client',decided_at:'2026-11-15T11:00:00Z'};
  const rows=[Object.assign({},base,{status:'completed',extra_price:500})];
- const sb={rpc:()=>Promise.resolve(rows)};
+ const sb={rpc:()=>Promise.resolve(rows),select:()=>Promise.resolve([{price_blocks:[]}]),update:()=>Promise.resolve([])};
+ let bound=0;
  return ctx.window.DzoftChanges.owner(root,{sb,quoteId:'q',en:false,invoices:[]}).then(()=>{
+  bound=root.listeners.length;
   assert.match(holder.innerHTML,/data-change-invoice="c1"/);
   assert.match(holder.innerHTML,/Créer la facture complémentaire/);
   return ctx.window.DzoftChanges.owner(root,{sb,quoteId:'q',en:false,invoices:[{change:'c1',num:'F-2026-0003',amt:500}]});
  }).then(()=>{
   assert.doesNotMatch(holder.innerHTML,/data-change-invoice=/);
   assert.match(holder.innerHTML,/F-2026-0003/);
-  assert.equal(root.listeners.length,3,'listeners are bound once, not at every reload');
+  assert.equal(root.listeners.length,bound,'listeners are bound once, not at every reload');
   rows[0]=Object.assign({},base,{status:'approved',extra_price:500});
   return ctx.window.DzoftChanges.owner(root,{sb,quoteId:'q',en:false,invoices:[]});
  }).then(()=>{assert.doesNotMatch(holder.innerHTML,/data-change-invoice=/);});
@@ -108,4 +110,33 @@ test('the owner can open a proposal, but only the client approval makes it billa
  assert.doesNotMatch(fn,/'approved'|decided_at\s*[,=]|decision_name\s*[,=]/);
  assert.match(changes,/data-change-offer/);
  assert.match(changes,/Rien n’est dû tant qu’il ne l’a pas approuvée lui-même/);
+ assert.match(changes,/owner_create_priced_proposal/);
+});
+
+test('priced proposals: server totals and numbers the lines, client signs with an e-mail code',()=>{
+ const mig=read('supabase/migrations/20261117090000_priced_change_proposals.sql');
+ const fn=read('supabase/functions/change-sign-code/index.ts');
+ const espace=read('espace/index.html');
+ // The server computes the total from the lines; the browser never sends an amount.
+ assert.match(mig,/t:=private\.change_lines_total\(p_lines\);/);
+ assert.match(mig,/num:=coalesce\(nullif\(btrim\(q\.numero\),''\),'DEVIS'\)\|\|'-C'\|\|n;/);
+ assert.doesNotMatch(changes,/p_extra_price:/);
+ // Approval only through a valid, unused, unexpired code for that proposal.
+ assert.match(mig,/raise exception ''Approval requires the code sent by e-mail'';/);
+ assert.match(mig,/where change_id=p_request and client_id=p_client and used_at is null/);
+ assert.match(mig,/if sc\.attempts>=5 then/);
+ assert.match(mig,/update public\.sign_codes set used_at=now\(\) where change_id=c\.id and used_at is null;/);
+ // Quote signature ignores proposal codes.
+ assert.match(mig,/used_at is null and change_id is null/);
+ // The code goes only to the address of the client's own file, never the owner.
+ assert.match(fn,/c\.client_id !== client\.id/);
+ assert.match(fn,/u\.app_metadata\?\.dzoft_owner !== true/);
+ assert.match(fn,/reserve_change_sign_code/);
+ assert.match(espace,/sb\.fn\('change-sign-code', \{ change_id: changeId, token: token \|\| undefined \}\)/);
+ // Sending is an explicit owner action and goes through the outbox.
+ assert.match(mig,/'change_proposed',/);
+ assert.match(changes,/owner_send_change_proposal/);
+ // Signed and completed work is invoiced from the project page through the existing invoice tool.
+ assert.match(read('admin/project-finance.js'),/issue_change=/);
+ assert.match(admin,/issueAccepted\('supplement', c, null\)/);
 });
