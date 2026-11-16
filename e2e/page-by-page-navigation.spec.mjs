@@ -23,6 +23,9 @@ test('all 11 global destinations open exactly one page within the new shell',asy
   await item.click();
   await expect(page).toHaveURL(new RegExp('#/'+slug+'$'));
   await expect(page.locator('#'+panel),'Destination not visible: '+slug).toBeVisible();
+  if(slug==='clients')await expect(page.locator('#v-clients'),'Clients content is hidden inside the grouped dossier').toBeVisible();
+  if(slug==='devis')await expect(page.locator('#v-quotes'),'Quotation content is hidden inside the grouped dossier').toBeVisible();
+  if(slug==='projets')await expect(page.locator('#v-projects'),'Project content is hidden inside the grouped dossier').toBeVisible();
   await expect(item).toHaveAttribute('aria-current','page');
   expect(await page.locator('#app .side .dzoft-v6-link[aria-current="page"]').count()).toBe(1);
  }
