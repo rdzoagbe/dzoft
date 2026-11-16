@@ -11,6 +11,12 @@ async function revealShell(page){
   document.querySelector('#app').hidden=false;
   location.hash='#/vue-globale';
   window.dispatchEvent(new Event('hashchange'));
+  // Initialise the presentation layer with synthetic, empty authorised data:
+  // no credentials, private clients, receipts or network mutations.
+  window.DzoftWorkspaceDashboard.render({
+   projects:[],ready:true,failures:0,unread:[],newLeads:0,
+   waitingQuotes:0,activeProjects:0,english:false
+  });
  });
 }
 test('Vue globale has one selected destination and no duplicated client summary',async({page},testInfo)=>{
