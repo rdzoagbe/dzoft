@@ -8,7 +8,8 @@ const html=read('admin/projet.html'), js=read('admin/project-finance.js'), css=r
 const admin=read('admin/index.html');
 
 test('project dashboard is reachable from existing client and projects navigation',()=>{
- assert.match(admin,/function openFollow\(id\)\{\s*location\.href = 'projet\.html\?q='/);
+ assert.match(admin,/function openFollow\(id\)\{/);
+ assert.match(admin,/q&&q\.accepted_at\?'projet\.html\?q=':'suivi\.html\?q='/);
  assert.match(admin,/q\.accepted_at \? 'projet\.html\?q=' : 'suivi\.html\?q='/);
  assert.match(html,/project-finance\.js\?v=/);
  assert.match(html,/project-finance\.css\?v=/);
@@ -66,4 +67,23 @@ test('client-supplied text is encoded before DOM injection',()=>{
  assert.match(js,/esc\(r\.number\)/);
  assert.match(js,/esc\(x\.method/);
  assert.match(js,/textContent=value/);
+});
+
+test('Admin routes and MFA return whitelist include the new project workflow',()=>{
+ const quote=read('admin/devis.html');
+ const detail=read('admin/suivi.html');
+ const tabs=read('admin/project-workspace-tabs.js');
+ assert.match(admin,/\(\?:devis\|suivi\|projet\)/);
+ assert.match(quote,/q\.accepted_at \? 'projet\.html\?q=' : 'suivi\.html\?q='/);
+ assert.match(detail,/id="suivi-back"/);
+ assert.match(detail,/Q\.accepted_at \? 'projet\.html\?q='/);
+ assert.match(js,/projectUrl\("work\/c-journal"\)/);
+ assert.match(js,/projectUrl\("work\/c-docs"\)/);
+ assert.match(js,/projectUrl\("billing"\)/);
+ assert.match(tabs,/'work\/c-docs':\{pane:'work',target:'c-docs'\}/);
+ assert.match(tabs,/'work\/c-journal':\{pane:'work',target:'c-journal'\}/);
+ assert.match(tabs,/'billing\/c-inv':\{pane:'billing',target:'c-inv'\}/);
+ assert.match(js,/function mfaExpired\(\)/);
+ assert.match(js,/encodeURIComponent\("projet\.html\?q="\+id\)/);
+ assert.doesNotMatch(html,/Devis & chiffrage/);
 });
