@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -845,8 +845,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash'];
   var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille'};
   var dashboardDataLoaded = false;
-  // The dashboard is a cross-client overview. Project details open only on
-  // explicit selection (never by silently picking the newest accepted quote).
+  // Cross-client dashboard remains global; a client project is opened explicitly.
   function showView(v){
     if(VIEWS.indexOf(v)<0)v='dash';
     var grouped=['dossiers','leads','clients','quotes','projects'].indexOf(v)!==-1;
@@ -1712,6 +1711,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261116-1"></script>
+<script src="unified-app-shell.js?v=20261116-1"></script>
 </body>
 </html>
 

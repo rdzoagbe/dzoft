@@ -67,3 +67,29 @@ test('project detail uses the same primary destinations as main workspace', () =
   assert.match(project, /id="pf-side-project"/);
   assert.match(project, /id="pf-side-invoices"/);
 });
+
+test('every primary admin route shares the new DZOFT shell', () => {
+  const shellCss=readFileSync(new URL('../admin/unified-app-shell.css',import.meta.url),'utf8');
+  const shellJs=readFileSync(new URL('../admin/unified-app-shell.js',import.meta.url),'utf8');
+  assert.match(admin,/unified-app-shell\.css/);
+  assert.match(admin,/unified-app-shell\.js/);
+  assert.match(shellCss,/grid-template-columns:238px minmax\(0,1fr\)/);
+  assert.match(shellCss,/\.side/);
+  assert.match(shellJs,/dzoft-side-brand/);
+  for(const slug of ['tableau-de-bord','dossiers','messages','paiements','parametres']){
+    assert.ok(admin.includes("'"+slug+"'"), 'missing route '+slug);
+  }
+});
+test('specialized quote and project editors share nav without replacing secure workflows', () => {
+  const quoteEditor=readFileSync(new URL('../admin/devis.html',import.meta.url),'utf8');
+  const tracking=readFileSync(new URL('../admin/suivi.html',import.meta.url),'utf8');
+  const editorNav=readFileSync(new URL('../admin/editor-navigation.js',import.meta.url),'utf8');
+  for(const html of [quoteEditor,tracking]){
+    assert.match(html,/editor-navigation\.css/);
+    assert.match(html,/editor-navigation\.js/);
+  }
+  for(const path of ['./#/tableau-de-bord','./#/dossiers','./#/messages','./#/paiements','./#/parametres'])
+    assert.ok(editorNav.includes(path),'missing route '+path);
+  assert.doesNotMatch(editorNav,/\bsb\.(?:update|insert|remove|rpc)\(/);
+  assert.match(editorNav,/valid=/);
+});

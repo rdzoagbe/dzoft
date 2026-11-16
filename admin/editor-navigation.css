@@ -1,0 +1,42 @@
+/* Consistent DZOFT shell around existing authenticated editors.
+   Print output stays unchanged and free of navigation. */
+@media screen {
+ body.dzoft-admin.dzoft-editor{--navy:#171b30;--blue:#5c24df;--blue2:#4d18c2;background:#f7f7fd}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar{position:fixed;z-index:22;inset:0 auto 0 0;width:238px;display:flex;flex-direction:column;overflow-y:auto;background:#171b30;color:#fff;padding:24px 12px 18px}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-logo{display:flex;gap:12px;align-items:center;padding:2px 12px 28px;color:#fff;font-size:23px;text-decoration:none;letter-spacing:-.04em}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-logo img{width:35px;height:35px}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar nav{display:flex;flex-direction:column;gap:4px}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar nav>a{display:flex;align-items:center;gap:13px;min-height:45px;padding:9px 12px;border-radius:10px;color:#e4e5f7;font-size:13px;font-weight:650;text-decoration:none}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar nav>a:hover{background:#2b2c4d;color:#fff}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar nav>a[aria-current=page]{background:linear-gradient(105deg,#7543f7,#5116cf);color:#fff}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar nav>a>span:first-child{display:inline-flex;align-items:center;justify-content:center;flex:0 0 23px;font-size:19px}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-divider{height:1px;margin:12px 10px;background:#3b3d58}
+ body.dzoft-admin.dzoft-editor>.tools,body.dzoft-admin.dzoft-editor>header.top{margin-left:238px;background:#fff;color:#242240;min-height:64px;display:flex;align-items:center;border-bottom:1px solid #e9e7f3;box-shadow:none}
+ body.dzoft-admin.dzoft-editor>.tools .tb{color:#5b24ce;background:#f7f4ff;border:1px solid #e7e0fa}
+ body.dzoft-admin.dzoft-editor>.tools .tb:hover{background:#efe8ff;color:#4211ae}
+ body.dzoft-admin.dzoft-editor>.tools .tb.main{background:linear-gradient(125deg,#652cf3,#4d12d9);color:#fff}
+ body.dzoft-admin.dzoft-editor>header.top .back{color:#5b24ce!important}
+ body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{position:relative;margin-left:max(254px,calc(238px + max(16px,(100vw - 238px - 1160px)/2)))}
+ body.dzoft-admin.dzoft-editor>.sheet{margin-right:auto}
+ body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 238px - 36px);max-width:1250px;margin-right:18px}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle{display:none;align-items:center;justify-content:center;min-width:41px;min-height:41px;border:1px solid #e4ddf6;border-radius:10px;background:#f5f1ff;color:#5421ce;font-size:21px;cursor:pointer}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-overlay{display:none}
+}
+@media screen and (max-width:950px){
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar{width:min(280px,88vw);transform:translateX(-105%);transition:transform .2s ease;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+ body.dzoft-admin.dzoft-editor.dzoft-editor-menu-open .dzoft-editor-sidebar{transform:translateX(0)}
+ body.dzoft-admin.dzoft-editor>.tools,body.dzoft-admin.dzoft-editor>header.top{margin-left:0}
+ body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{margin-left:auto;margin-right:auto}
+ body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 24px);max-width:1250px;margin:14px auto}
+ body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle{display:inline-flex}
+ body.dzoft-admin.dzoft-editor.dzoft-editor-menu-open .dzoft-editor-overlay{display:block;position:fixed;inset:0;z-index:21;border:0;background:rgba(11,16,32,.5)}
+}
+@media screen and (max-width:600px){
+ body.dzoft-admin.dzoft-editor>.tools{gap:6px;padding:10px;flex-wrap:wrap}
+ body.dzoft-admin.dzoft-editor>.tools b{flex:0 1 auto;order:0}
+ body.dzoft-admin.dzoft-editor>.tools .tb{font-size:12px;padding:8px}
+ body.dzoft-admin.dzoft-editor>.sheet{width:calc(100% - 18px);padding:18px 14px}
+}
+@media print{
+ body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar,body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle,body.dzoft-admin.dzoft-editor .dzoft-editor-overlay{display:none!important}
+}
