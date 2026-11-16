@@ -44,13 +44,41 @@ var firstHr=side.querySelector('hr');
 if(firstHr)side.insertBefore(group,firstHr);else side.appendChild(group);
 function refresh(){
  var selected=switcher&&switcher.value||'';
- if(!uuid.test(selected)){group.hidden=true;return;}
+ if(!uuid.test(selected)){group.hidden=true;refreshMobile('');return;}
  group.hidden=false;
  group.querySelectorAll('[data-project-target]').forEach(function(a){
   var slug=a.dataset.projectTarget;
   a.href=slug.startsWith('suivi:')?'suivi.html?q='+encodeURIComponent(selected)+'#'+slug.slice(6):
    'projet.html?q='+encodeURIComponent(selected)+slug;
  });
+ refreshMobile(selected);
+}
+function refreshMobile(selected){
+ var panel=document.getElementById('dzoft-installed-menu-panel');
+ if(!panel)return;
+ var existing=panel.querySelector('.dzoft-mobile-project');
+ if(!uuid.test(selected)){if(existing)existing.remove();return;}
+ if(!existing){
+  existing=document.createElement('div');
+  existing.className='installed-menu-section dzoft-mobile-project';
+  var title=document.createElement('p');
+  title.className='installed-menu-heading';title.dataset.fr='Projet sélectionné';title.dataset.en='Selected project';
+  existing.appendChild(title);
+  items.forEach(function(item){
+   var a=document.createElement('a');a.className='installed-menu-item';
+   a.dataset.projectTarget=item.slug;
+   var ico=document.createElement('span');ico.className='installed-menu-icon';ico.setAttribute('aria-hidden','true');ico.textContent=item.symbol;
+   var label=document.createElement('span');label.className='installed-menu-label';label.dataset.fr=item.fr;label.dataset.en=item.en;
+   a.append(ico,label);existing.appendChild(a);
+  });
+  panel.appendChild(existing);
+ }
+ existing.querySelectorAll('[data-project-target]').forEach(function(a){
+   var slug=a.dataset.projectTarget;
+   a.href=slug.startsWith('suivi:')?'suivi.html?q='+encodeURIComponent(selected)+'#'+slug.slice(6):
+    'projet.html?q='+encodeURIComponent(selected)+slug;
+ });
+ existing.querySelectorAll('[data-fr][data-en]').forEach(function(node){node.textContent=node.dataset[english()?'en':'fr'];});
 }
 function translate(){
  var en=english();
@@ -59,6 +87,7 @@ function translate(){
  group.querySelectorAll('[data-project-target]').forEach(function(a){
    a.querySelector('.dzoft-nav-text').textContent=a.dataset[en?'en':'fr'];
  });
+ var mobile=document.querySelector('.dzoft-mobile-project');if(mobile)mobile.querySelectorAll('[data-fr][data-en]').forEach(function(node){node.textContent=node.dataset[en?'en':'fr'];});
 }
 function selection(){
  var current=location.hash.slice(1).replace(/^\//,'');
