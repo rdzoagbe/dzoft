@@ -785,6 +785,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
+      richDetailsLoaded=false;richDetailsLoading=false;richRequest++;
+      if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();
       // The owner dashboard remains stable after fresh data arrives.
     }, fail);
   }
@@ -846,6 +848,26 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
   var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash','invoices','journal','documents','catalogue','reports'];
   var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille',invoices:'factures',journal:'journal',documents:'documents',catalogue:'catalogue',reports:'rapports'};
+  var richDetailsLoaded=false,richDetailsLoading=false,richRequest=0;
+  function loadRichPanels(){
+    if(!dashboardDataLoaded||richDetailsLoaded||richDetailsLoading||!window.DzoftWorkspacePanelsV6)return;
+    if(!data.quotes.length){richDetailsLoaded=true;window.DzoftWorkspacePanelsV6.setDetails([],false);return;}
+    richDetailsLoading=true;window.DzoftWorkspacePanelsV6.loadingDetails();
+    var token=++richRequest;
+    // Fetch details through the existing authenticated owner sb client and RLS,
+    // only when entering Journal, Documents or Catalogue.
+    sb.select('quotes','select=id,numero,client_id,accepted_at,journal,docs,data,accepted_data&deleted_at=is.null&order=created_at.desc')
+     .then(function(rows){
+       if(token!==richRequest)return;
+       richDetailsLoading=false;richDetailsLoaded=true;
+       window.DzoftWorkspacePanelsV6.setDetails(rows||[],false);
+     },function(err){
+       if(token!==richRequest)return;
+       richDetailsLoading=false;
+       console.warn('DZOFT authorised detail read unavailable:',err&&err.code||'error');
+       window.DzoftWorkspacePanelsV6.setDetails([],true);
+     });
+  }
   var dashboardDataLoaded = false;
   // DZOFT main dashboard is the new project workspace when there is exactly
   // one accepted project. Multiple projects use an explicit global overview;
@@ -885,6 +907,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       node.setAttribute('aria-pressed',String(grouped&&node.dataset.dossier===activeGroup));
     });
     if(v==='finance')renderFinance();
+    if(['journal','documents','catalogue'].includes(v))loadRichPanels();
   }
   function fromHash(){
     var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
@@ -1759,7 +1782,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261116-global-v5"></script>
 <script src="unified-app-shell.js?v=20261116-v6"></script>
-<script src="workspace-panels-v6.js?v=20261116-1"></script>
+<script src="workspace-panels-v7.js?v=20261116-data1"></script>
 <script src="workspace-nav-v6.js?v=20261116-1"></script>
 </body>
 </html>
