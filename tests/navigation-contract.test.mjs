@@ -130,3 +130,9 @@ test('new card actions keep existing client and quote handlers',()=>{
  assert.match(admin,/data-go="thread:/);
  assert.match(admin,/href="projet\.html\?q=/);
 });
+
+test('accepted quote links open the new project quote section, drafts remain editable', () => {
+ assert.match(admin,/q&&q\.accepted_at\?'projet\.html\?q=':'devis\.html\?q='/);
+ assert.match(admin,/q&&q\.accepted_at\?'#quotes':''/);
+ assert.match(admin,/q\.accepted_at\?'#quotes':''/);
+});
