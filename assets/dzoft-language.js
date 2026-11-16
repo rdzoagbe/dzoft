@@ -120,6 +120,25 @@ Object.assign(dzoftEnglish,{
  'Pas encore envoyée':'Not sent yet',
  'Émise le':'Issued on'
 });
+// New payment and external-invoice actions introduced in the project workspace.
+// Translation here is for UI chrome only, never for client-authored invoices.
+Object.assign(dzoftEnglish,{
+ 'Numéro officiel externe':'Existing external invoice number',
+ 'Enregistrer la facture externe':'Save external invoice',
+ 'Uniquement pour une facture déjà créée dans un autre outil. Pour émettre une facture DZOFT, utilisez « Créer une facture » plus haut. L\'ajout ne confirme aucun paiement et n\'envoie aucun e-mail.':'Only for an invoice already created in another tool. To issue a DZOFT invoice use Create invoice above. Adding this record does not confirm payment or send an email.',
+ 'Vérifiez le libellé, le numéro et le montant (deux décimales maximum).':'Check the description, number and amount (up to two decimal places).',
+ 'Une facture porte déjà ce numéro.':'An invoice with this number already exists.',
+ 'Enregistrement de la facture externe…':'Saving external invoice…',
+ 'Échec de l’enregistrement. La facture n’a pas été ajoutée.':'Save failed. The invoice was not added.',
+ 'Facture externe enregistrée. Aucun paiement ni e-mail créé.':'External invoice saved. No payment or email created.',
+ 'Enregistrer un encaissement vérifié':'Record verified payment',
+ 'Cette facture n’est pas disponible pour un nouvel encaissement. Vérifiez les paiements déjà associés.':'This invoice is not available for another receipt. Check its existing payment links.',
+ 'Suivi des paiements indisponible. Actualisez le projet.':'Payment history unavailable. Refresh this project.',
+ 'Déjà déclarée payée dans l’historique. Vérifiez le détail des encaissements avant toute correction.':'Previously marked paid in the historical records. Check the verified payment history before correcting anything.',
+ 'Une facture émise ne prouve pas un paiement. Indiquez la date, le montant et le mode de réception dans le suivi des paiements.':'An issued invoice is not proof of payment. Record the date, amount and method in Payment history.',
+ 'Enregistrer un paiement reçu':'Record a received payment',
+ 'Annuler':'Cancel'
+});
 function dzoftDynamicEnglish(text){
  return text.replace(/^Confirmé par Roland le /,'Confirmed by Roland on ').replace(/^Merci ! Votre déclaration du (.+) a été transmise\. Roland confirmera la réception après vérification\.$/,'Thank you! Your payment notification from $1 has been sent. Roland will confirm receipt after checking.').replace(/^Le client a déclaré son paiement le /,'The client reported their payment on ').replace(' · Réception confirmée.',' · Receipt confirmed.').replace(' · Vérifiez votre compte bancaire avant de confirmer.',' · Check your bank account before confirming.').replace(/^Paiement déclaré envoyé par le client · /,'Payment reported as sent by the client · ').replace(/^Paiement déclaré envoyé · /,'Payment reported as sent · ').replace(/^Paiement reçu et confirmé par Roland · /,'Payment received and confirmed by Roland · ').replace(/^Confirmation de paiement corrigée : vérification en cours · /,'Payment confirmation corrected: verification in progress · ').replace(/^Paiement à vérifier · /,'Payment to check · ').replace(/^Signé électroniquement le /,'Electronically signed on ').replace(' · code reçu par e-mail à ',' · email code sent to ').replace(' · adresse IP ',' · IP address ').replace(' · montant accepté : ',' · accepted amount: ').replace(/^CGV (\S+) acceptées\. Le client a demandé un$/, 'Terms $1 accepted. The client requested an').replace(/^démarrage immédiat$/, 'immediate start').replace(/^: vous pouvez commencer dès réception de l’acompte\.$/, ': work can start once the deposit is received.').replace('(compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)','(active client account: use the sign-in link; the old private link is revoked)').replace(/^E-mail envoyé au client le /,'Client email sent on ').replace(/^Envoyé le /,'Sent on ').replace(/^Fiche projet · /,'Project record · ').replace(/^Devis accepté · /,'Quote accepted · ').replace(/^E-mail du devis renvoyé · /,'Quote email resent · ').replace(/Client : envoyé/g,'Client: sent').replace(/Vous : envoyé/g,'You: sent').replace(/^(\d+) \/ (\d+) étapes terminées$/, '$1 / $2 stages completed').replace(/^Acompte à recevoir · /,'Deposit pending · ').replace(/^(\d+) nouvelles? demandes?$/, '$1 new requests').replace(/^(\d+) messages? non lus?$/, '$1 unread messages').replace(/^(\d+) devis en attente d’accord$/, '$1 quotes awaiting acceptance').replace(/^(\d+) projets? en cours$/, '$1 active projects').replace(/^signés en (\d{4})$/, 'signed in $1').replace(/^de suivi mensuel$/, 'monthly maintenance').replace(/^accepté le /,'accepted on ');
 }
