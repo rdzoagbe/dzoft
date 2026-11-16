@@ -70,3 +70,4 @@ test('Mobile 390px: single menu, stacked finance sections and real supplementary
  await expect(page.locator('#pf-extra-dialog')).toBeHidden();
  expect(errors).toEqual([]);
 });
+
