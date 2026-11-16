@@ -62,3 +62,15 @@ body.dzoft-admin #app #v-dash .sd-bottom{display:block}
 body.dzoft-admin #app #v-dash .sd-activity{width:100%}
 body.dzoft-admin #app #v-dash .sd-shortcuts{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:900px){body.dzoft-admin #app #v-dash .sd-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Data-backed record rows: separate amount from the safe case-opening action. */
+body.dzoft-admin #app .v6-record-amount{flex:0 0 auto;text-align:right;color:#241d4a;font:800 clamp(13px,1.5vw,17px) Sora,system-ui,sans-serif;overflow-wrap:anywhere}
+body.dzoft-admin #app .v6-project-info strong{white-space:normal;overflow-wrap:anywhere}
+body.dzoft-admin #app #v-journal .v6-project-info strong{font-weight:650;white-space:pre-wrap;line-height:1.5}
+body.dzoft-admin #app :is(#v-invoices,#v-journal,#v-documents,#v-catalogue) .v6-page-body>.v6-note{margin-bottom:16px}
+@media(max-width:600px){
+ body.dzoft-admin #app .v6-record-amount{font-size:13px;max-width:100px}
+ body.dzoft-admin #app .v6-project-row{flex-wrap:wrap}
+ body.dzoft-admin #app .v6-project-info{min-width:140px}
+ body.dzoft-admin #app .v6-project-open{margin-left:auto}
+}
