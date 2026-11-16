@@ -216,7 +216,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-2">
-<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -785,7 +785,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
-      routeToPrimaryWorkspace();
+      // The owner dashboard remains stable after fresh data arrives.
     }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
@@ -844,8 +844,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
 
   /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
-  var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash'];
-  var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille'};
+  var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash','invoices','journal','documents','catalogue','reports'];
+  var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille',invoices:'factures',journal:'journal',documents:'documents',catalogue:'catalogue',reports:'rapports'};
   var dashboardDataLoaded = false;
   // DZOFT main dashboard is the new project workspace when there is exactly
   // one accepted project. Multiple projects use an explicit global overview;
@@ -875,7 +875,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if(isGlobal)overview.setAttribute('aria-current','page');
       else overview.removeAttribute('aria-current');
     }
-    ['dash','dossiers','inbox','finance','settings','trash'].forEach(function(k){
+    ['dash','dossiers','inbox','finance','settings','trash','invoices','journal','documents','catalogue','reports'].forEach(function(k){
       var node=$('v-'+k);if(node)node.hidden=grouped?k!=='dossiers':k!==v;
     });
     ['leads','clients','quotes','projects'].forEach(function(k){
@@ -890,7 +890,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
     if(h==='vue-classique'){location.replace('#/vue-globale');return;}
     if(h==='vue-globale'){showView('dash');return;}
-    if((!h||h==='tableau-de-bord')&&routeToPrimaryWorkspace())return;
+    // Dashboard is always the global owner workspace; project selection is explicit.
+    // Never redirect the whole app into the last accepted client project.
     Object.keys(SLUG).forEach(function(k){ if (SLUG[k] === h) v = k; });
     showView(v);
   }
@@ -988,6 +989,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       unread:data.unread.map(function(m){return {client_id:m.client_id,clientName:(client(m.client_id)||{}).nom||"Client"};}),
       newLeads:nNew,waitingQuotes:waiting().length,activeProjects:running.length,
       english:document.documentElement.lang==="en"
+    });
+    if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.setData({
+      projects:ps.map(function(q){return {id:q.id,numero:q.numero||'',clientName:(client(q.client_id)||{}).nom||'Client'};}),
+      clients:data.clients,quotes:data.quotes,trackings:dashboardReceiptStates,ready:dashboardReceiptReady
     });
   }
   function renderEmailLog(){
@@ -1754,6 +1759,8 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261116-global-v5"></script>
 <script src="unified-app-shell.js?v=20261116-2"></script>
+<script src="workspace-panels-v6.js?v=20261116-1"></script>
+<script src="workspace-nav-v6.js?v=20261116-1"></script>
 </body>
 </html>
 
