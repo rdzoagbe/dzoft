@@ -6,7 +6,7 @@ declare
   owner_id uuid:=gen_random_uuid();
   client_id uuid:=gen_random_uuid();
   q_key uuid:=gen_random_uuid();
-  p jsonb; p2 jsonb; inv jsonb; st jsonb;
+  p jsonb; p2 jsonb; inv jsonb; st jsonb; req jsonb;
   ch uuid; failed boolean; msg text;
   salt text:='00112233445566778899aabbccddeeff';
 begin
@@ -85,6 +85,21 @@ begin
   perform set_config('dzoft.change_signed','no',true);
   p:=private.dzoft_decide_change(client_id,(p2->>'id')::uuid,1,false,'Test client');
   if p->>'status'<>'declined' then raise exception 'Decline failed: %',p; end if;
+
+  -- 7. A request sent by the client is priced with the same calculator; re-pricing voids older codes.
+  update public.dzoft_change_requests set created_at=now()-interval '2 minutes' where quote_id=q_key; -- client anti-spam window
+  req:=private.dzoft_create_change(client_id,q_key,'Nouvelle page','Le client veut une page de plus.');
+  p:=public.owner_price_change_request((req->>'id')::uuid,'[{"label":"Page supplémentaire","qty":1,"price":120}]','+2 jours',false);
+  if p->>'proposal_number'<>'TEST-PRICED-001-C3' or (p->>'extra_price')::numeric<>120 or (p->>'proposal_version')::int<>1 then raise exception 'Priced request wrong: %',p; end if;
+  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+  st:=public.reserve_change_sign_code((req->>'id')::uuid,client_id,salt,encode(extensions.digest(salt||'222222','sha256'),'hex'),'p•••',now()+interval '10 minutes');
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated','app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
+  p:=public.owner_price_change_request((req->>'id')::uuid,'[{"label":"Page supplémentaire","qty":1,"price":150}]','+2 jours',false);
+  if (p->>'proposal_version')::int<>2 or p->>'proposal_number'<>'TEST-PRICED-001-C3' then raise exception 'Re-pricing wrong: %',p; end if;
+  failed:=false;
+  begin perform private.dzoft_sign_change(client_id,(req->>'id')::uuid,2,'Test client','222222');
+  exception when others then failed:=true; end;
+  if not failed then raise exception 'A code from an older version signed the new price'; end if;
 end
 $test$;
 rollback;
