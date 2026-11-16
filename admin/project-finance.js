@@ -59,9 +59,33 @@ function renderHeader(){
  setText("pf-project-status",q.accepted_at?tr("En cours","In progress"):tr("Devis","Quote"));
  setText("pf-client-sub",[c.entreprise,c.email].filter(Boolean).join(" · ")||tr("Fiche client privée","Private client record"));
  setText("pf-avatar",clientName().trim().split(/\s+/).slice(0,2).map(function(x){return x.slice(0,1);}).join("").toUpperCase());
+ setHref("pf-side-dashboard",projectUrl());
  ["pf-project-tools","pf-side-journal","pf-side-documents"].forEach(function(el){setHref(el,projectUrl());});
  setHref("pf-side-invoices",projectUrl("billing"));
  setHref("pf-open-billing",projectUrl("billing"));
+}
+function loadProjectSwitcher(){
+ // This is a project-centric dashboard, not a sum across unrelated clients.
+ // Offer an explicit selector; never mistake one client's totals for all clients.
+ return sb.select("quotes","select=id,numero,client_id,accepted_at&accepted_at=not.is.null&deleted_at=is.null&order=accepted_at.desc").then(function(quotes){
+  var rows=Array.isArray(quotes)?quotes.filter(function(q){return q.id&&q.accepted_at;}):[];
+  var picker=$("pf-project-switch");if(!picker)return;
+  picker.replaceChildren();
+  rows.forEach(function(q){
+   var opt=document.createElement("option");
+   opt.value=q.id;opt.textContent=q.numero||tr("Projet","Project");
+   if(q.id===id)opt.selected=true;
+   picker.appendChild(opt);
+  });
+  if(!rows.some(function(q){return q.id===id;})){
+   var self=document.createElement("option");self.value=id;
+   self.textContent=state.quote&&state.quote.numero||tr("Ce projet","This project");
+   self.selected=true;picker.prepend(self);
+  }
+  picker.disabled=picker.options.length<2;
+ }).catch(function(){
+  var picker=$("pf-project-switch");if(picker){picker.disabled=true;picker.replaceChildren();}
+ });
 }
 function renderKpis(){
  var x=totals();
@@ -202,7 +226,7 @@ function readData(){
    q.client_id?sb.select("clients","select=*&id=eq."+encodeURIComponent(q.client_id)).then(function(x){return x&&x[0]||null;}):Promise.resolve(null),
    sb.rpc("owner_list_change_requests",{p_quote:id},true),
    sb.rpc("project_tracking",{p_quote:id},true)
-  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();},
+  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();loadProjectSwitcher();},
    function(err){state.readError=err;state.changes=null;state.tracking=null;render();setText("pf-finance-note",tr("Certaines données financières sont indisponibles. Aucun total non vérifié n'est présenté.","Some financial data is unavailable. Unverified totals are hidden."));});
  }).catch(function(){state.readError=true;conceal();showError(tr("Accès impossible au projet. Vérifiez votre session administrateur.","Unable to access project. Check your admin session."));})
  .finally(function(){state.busy=false;});
@@ -252,6 +276,10 @@ $("pf-dialog-close").addEventListener("click",function(){$("pf-extra-dialog").cl
 $("pf-extra-dialog").addEventListener("click",function(e){if(e.target===$("pf-extra-dialog"))e.target.close();});
 document.querySelectorAll("[data-new-extra]").forEach(function(b){b.addEventListener("click",openExtra);});
 $("pf-tabs").addEventListener("click",function(e){var b=e.target.closest("[data-panel]");if(!b)return;state.section=b.dataset.panel;renderSection();});
+$("pf-project-switch").addEventListener("change",function(){
+ var next=this.value;
+ if(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(next)&&next!==id){conceal();location.assign("projet.html?q="+encodeURIComponent(next));}
+});
 $("pf-menu").addEventListener("click",function(){var open=!$("pf-shell").classList.contains("pf-menu-open");$("pf-shell").classList.toggle("pf-menu-open",open);$("pf-menu").setAttribute("aria-expanded",String(open));$("pf-overlay").hidden=!open;});
 $("pf-overlay").addEventListener("click",function(){$("pf-shell").classList.remove("pf-menu-open");$("pf-menu").setAttribute("aria-expanded","false");$("pf-overlay").hidden=true;});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("pf-shell").classList.contains("pf-menu-open"))$("pf-overlay").click();});
