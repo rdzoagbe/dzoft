@@ -94,8 +94,8 @@ test('journal and documents stay inside new project workspace navigation',()=>{
  assert.match(html,/id="pf-side-documents"/);
  assert.match(js,/state\.section==="journal"\?privateJournal\(\)/);
  assert.match(js,/state\.section==="documents"\?documents\(\)/);
- assert.match(js,/setHref\("pf-side-journal","projet\.html\?q="/);
- assert.match(js,/setHref\("pf-side-documents","projet\.html\?q="/);
+ assert.match(js,/setHref\("pf-side-journal","#journal"\)/);
+ assert.match(js,/setHref\("pf-side-documents","#documents"\)/);
  assert.match(js,/state\.quote&&state\.quote\.journal/);
  assert.match(js,/state\.quote&&state\.quote\.docs/);
  assert.match(js,/rel="noopener noreferrer"/);

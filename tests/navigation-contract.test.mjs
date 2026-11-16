@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 const admin = readFileSync(new URL('../admin/index.html', import.meta.url), 'utf8');
 const project = readFileSync(new URL('../admin/projet.html', import.meta.url), 'utf8');
 
-test('owner dashboard opens one accepted project without arbitrary selection', () => {
+test('owner dashboard preserves the global workspace without forced project redirects', () => {
   assert.doesNotMatch(admin, /openFinanceDashboard\s*\(/);
-  assert.match(admin, /accepted\.length!==1/);
-  assert.match(admin, /routeToPrimaryWorkspace\(\)/);
+  assert.doesNotMatch(admin, /&&routeToPrimaryWorkspace\(\)/);
+  assert.match(admin, /Never redirect the whole app into the last accepted client project/);
   assert.match(admin, /if\(h==='vue-globale'\)/);
   assert.match(admin, /function fromHash\(\)/);
   assert.match(admin, /dash:'tableau-de-bord'/);
@@ -96,16 +96,17 @@ test('specialized quote and project editors share nav without replacing secure w
   assert.match(editorNav,/valid=/);
 });
 
-test('all global sections retain selected-project navigation and global overview', () => {
-  const js=readFileSync(new URL('../admin/unified-app-shell.js', import.meta.url),'utf8');
-  const styles=readFileSync(new URL('../admin/unified-app-shell.css', import.meta.url),'utf8');
-  assert.match(js, /dzoft-global-overview/);
-  assert.match(js, /data-project-target/);
-  assert.match(js, /dzoft-mobile-project/);
-  assert.match(js, /uuid\.test\(selected\)/);
-  assert.match(js, /dzoft:data-refreshed/);
-  assert.match(styles, /dzoft-project-nav/);
-  assert.doesNotMatch(js, /\bsb\.(?:insert|update|remove|rpc)\(/);
+test('one navigation owner with a separate chrome-only shell', () => {
+  const chrome=readFileSync(new URL('../admin/unified-app-shell.js', import.meta.url),'utf8');
+  const nav=readFileSync(new URL('../admin/workspace-nav-v6.js', import.meta.url),'utf8');
+  assert.match(chrome, /dzoft-side-brand/);
+  assert.match(chrome, /dzoft-header-section/);
+  assert.match(chrome, /#\/tableau-de-bord/);
+  assert.doesNotMatch(chrome, /dzoft-global-overview|dzoft-project-nav|dzoft-mobile-project/);
+  assert.match(nav, /nav\.replaceChildren\(\)/);
+  assert.match(nav, /dzoft-v6-link/);
+  assert.match(nav, /aria-current/);
+  assert.doesNotMatch(chrome, /\bsb\.(?:insert|update|remove|rpc)\(/);
 });
 
 test('all primary operational views use new DZOFT components instead of legacy tables',()=>{

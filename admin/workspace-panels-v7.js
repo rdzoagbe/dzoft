@@ -34,7 +34,7 @@ function invoices(){
  var rows=[];quotes.forEach(q=>(Array.isArray(q.invoices)?q.invoices:[]).forEach(i=>{if(i&&(i.num||i.numero))rows.push({q,i});}));
  if(!rows.length)return empty('Aucune facture enregistrée dans les devis accessibles.','No recorded invoices in accessible quotes.');
  return '<p class="v6-note">'+tr('Factures enregistrées, sans présumer des encaissements.','Recorded invoices. Issuance does not prove payment.')+'</p><div class="v6-card-list">'+rows.map(({q,i})=>
-  card(link(q,'invoices'),'▧',i.num||i.numero,esc(clientName(q.client_id))+' · '+esc(q.numero||'')+' · '+when(i.date||i.issued_at||i.created_at),money(i.amt))).join('')+'</div>';
+  card(link(q,'invoices'),'▧',i.num||i.numero,esc(clientName(q.client_id))+' · '+esc(q.numero||'')+' · '+when(i.issuedOn||i.date||i.issued_at||i.created_at),money(i.amt))).join('')+'</div>';
 }
 function detailed(field){
  if(detailState!=='ready')return detailNotice();

@@ -784,8 +784,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
       data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
-      render();
+      // Cancel pending detail reads before rendering a newly refreshed client set.
       richDetailsLoaded=false;richDetailsLoading=false;richRequest++;
+      if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.loadingDetails();
+      render();
       if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();
       // The owner dashboard remains stable after fresh data arrives.
     }, fail);
