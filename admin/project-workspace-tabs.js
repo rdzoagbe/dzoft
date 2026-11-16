@@ -110,7 +110,7 @@ function focusPane(id,target){
  if(!pane)return;
  if(target){
   var element=document.getElementById(target);
-  if(element){
+  if(element&&pane.contains(element)){
    for(var node=element;node&&node!==pane;node=node.parentElement)
     if(node.tagName==='DETAILS')node.open=true;
    element.scrollIntoView({behavior:'smooth',block:'start'});
@@ -187,12 +187,26 @@ function translate(){
  updateOverview();
 }
 document.addEventListener('dzoft:locale-change',translate);
-window.addEventListener('hashchange',function(){
- var id=location.hash.replace(/^#/,'');
- if(panes[id])select(id,{replaceHash:false});
-});
+// Deep links open the correct tab before navigating to the target control.
+ // Explicitly allow only known project sections: never interpret a URL hash
+ // as an arbitrary DOM ID or HTML selector.
+var deepLinks={
+ 'work/c-docs':{pane:'work',target:'c-docs'},
+ 'work/c-journal':{pane:'work',target:'c-journal'},
+ 'work/c-changes':{pane:'work',target:'c-changes'},
+ 'billing/c-inv':{pane:'billing',target:'c-inv'},
+ 'messages/c-msg':{pane:'messages',target:'c-msg'}
+};
+function applyLocationHash(){
+ var value=location.hash.replace(/^#/,'');
+ var deep=deepLinks[value];
+ if(deep){select(deep.pane,{replaceHash:false,scroll:true,target:deep.target});return;}
+ if(panes[value])select(value,{replaceHash:false});
+}
+window.addEventListener('hashchange',applyLocationHash);
 translate();
 var initial=location.hash.replace(/^#/,'');
-select(panes[initial]?initial:'overview',{replaceHash:false});
+if(deepLinks[initial])applyLocationHash();
+else select(panes[initial]?initial:'overview',{replaceHash:false});
 updateSoon();
 })();

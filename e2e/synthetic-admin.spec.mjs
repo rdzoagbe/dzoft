@@ -614,3 +614,32 @@ test('Dashboard now resolves to the redesigned finance page, not the legacy home
  await expect(page.locator('#pf-side-dashboard')).toHaveAttribute('aria-current','page');
  expect(errors).toEqual([]);
 });
+
+test.describe('Cross-page synthetic finance navigation',()=>{
+ test.use({serviceWorkers:'block'}); // Prevent registered PWA SW intercepting mocked sb.js on the next page.
+ test('New Admin links open the precise existing work, documents and billing tabs',async({page})=>{
+ await syntheticOwner(page);
+ const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
+ const base='admin/projet.html?q='+q;
+ for(const entry of [
+  {link:'pf-side-documents',fragment:'#work/c-docs',panel:'work',node:'#c-docs'},
+  {link:'pf-side-journal',fragment:'#work/c-journal',panel:'work',node:'#c-journal'},
+  {link:'pf-side-invoices',fragment:'#billing',panel:'billing',node:'#c-inv'}
+ ]){
+  await page.goto(base,{waitUntil:'domcontentloaded'});
+  try { await expect(page.locator('#pf-shell')).toBeVisible({timeout:5000}); }
+  catch(error){
+    throw new Error('Finance page navigation failed for '+entry.link+' at URL '+page.url()+
+      ' — '+JSON.stringify(await page.evaluate(()=>({title:document.title,body:document.body?.textContent?.slice(0,140),owner:!!window.RDsb?.session?.()})))+
+      ' — '+error.message);
+  }
+  const target=await page.locator('#'+entry.link).getAttribute('href');
+  expect(target).toContain(entry.fragment);
+  if(await page.locator('#pf-menu').isVisible())await page.locator('#pf-menu').click();
+  await page.locator('#'+entry.link).click();
+  await expect(page.locator('[data-project-tab="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
+  expect(new URL(page.url()).hash).toBe(entry.fragment);
+  await expect(page.locator(entry.node)).toBeVisible();
+ }
+ });
+});

@@ -258,7 +258,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <body class="dzoft-admin">
 <header class="top">
   <div class="in">
-    <a class="back" href="./">← Espace de gestion</a>
+    <a class="back" id="suivi-back" href="./#/projets">← Espace de gestion</a>
     <b id="ttl">Fiche projet</b>
     <span id="sync"></span>
     <span class="sp"></span>
@@ -492,6 +492,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     return sb.select('quotes', 'select=*&id=eq.' + encodeURIComponent(QID)).then(function(r){
       Q = r && r[0];
       if (!Q) { $('loading').textContent = 'Devis introuvable.'; return; }
+      $('suivi-back').href=Q.accepted_at ? 'projet.html?q='+encodeURIComponent(QID) : './#/devis';
+      $('suivi-back').textContent=Q.accepted_at ? '← Tableau de bord du projet' : '← Liste des devis';
+      $('to-devis').textContent=Q.accepted_at ? 'Consulter le devis' : 'Modifier le devis';
       return Promise.all([
         Q.client_id ? sb.select('clients', 'select=*&id=eq.' + Q.client_id) : Promise.resolve([]),
         sb.select('clients', 'select=id,nom,entreprise&order=nom.asc'),
