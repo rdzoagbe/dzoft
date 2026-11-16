@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#15182c">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Projet · DZOFT Admin</title>
+<link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="project-finance.css?v=20261116-1">
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261114-1">
+<script src="../assets/dzoft-language.js?v=20261115-billing-fr-en&reactive=20261116" defer></script>
+<script src="sb.js?v=20261109-passkey" defer></script>
+<script src="../assets/change-requests.js?v=20261114-1&invoice=20261115" defer></script>
+<script src="project-finance.js?v=20261116-1" defer></script>
+</head>
+<body class="pf-page">
+<div class="pf-shell" id="pf-shell" hidden>
+  <aside class="pf-sidebar" id="pf-sidebar" aria-label="Navigation DZOFT">
+    <a class="pf-logo" href="./#/tableau-de-bord" aria-label="DZOFT accueil"><img src="../assets/dzoft-favicon.svg" alt=""><span>DZOFT</span></a>
+    <nav class="pf-side-links" aria-label="Navigation principale">
+      <a href="./#/tableau-de-bord"><span aria-hidden="true">⌂</span><span data-fr="Tableau de bord" data-en="Dashboard">Tableau de bord</span></a>
+      <a href="./#/clients" class="pf-active" aria-current="page"><span aria-hidden="true">♧</span><span data-fr="Clients" data-en="Clients">Clients</span></a>
+      <a href="./#/projets"><span aria-hidden="true">▱</span><span data-fr="Projets" data-en="Projects">Projets</span></a>
+      <a href="./#/devis"><span aria-hidden="true">▤</span><span data-fr="Devis & chiffrage" data-en="Quotes & pricing">Devis & chiffrage</span></a>
+      <a href="./#/paiements"><span aria-hidden="true">▣</span><span data-fr="Paiements" data-en="Payments">Paiements</span></a>
+      <a id="pf-side-invoices" href="#"><span aria-hidden="true">▧</span><span data-fr="Factures" data-en="Invoices">Factures</span></a>
+      <a id="pf-side-journal" href="#"><span aria-hidden="true">☷</span><span data-fr="Journal & suivi" data-en="Journal & tracking">Journal & suivi</span></a>
+      <a id="pf-side-documents" href="#"><span aria-hidden="true">▢</span><span data-fr="Documents" data-en="Documents">Documents</span></a>
+      <a href="./#/parametres" class="pf-settings"><span aria-hidden="true">⚙</span><span data-fr="Paramètres" data-en="Settings">Paramètres</span></a>
+    </nav>
+    <div class="pf-tip"><span aria-hidden="true">✦</span><strong data-fr="Astuce DZOFT" data-en="DZOFT tip">Astuce DZOFT</strong><p data-fr="Un supplément ne devient facturable qu'après l'accord du client." data-en="An extra becomes billable only after the client approves it.">Un supplément ne devient facturable qu'après l'accord du client.</p></div>
+  </aside>
+  <div class="pf-main-wrap">
+    <header class="pf-topbar">
+      <button type="button" class="pf-menu" id="pf-menu" aria-label="Ouvrir le menu" aria-controls="pf-sidebar" aria-expanded="false">☰</button>
+      <div class="pf-crumb"><a href="./#/clients">Clients</a><span>›</span><span id="pf-crumb-client">—</span><span>›</span><strong id="pf-crumb-project">Projet</strong></div>
+      <div class="pf-top-right"><span class="pf-private" data-fr="Espace privé" data-en="Private workspace">Espace privé</span><span class="pf-user">RD</span><a class="pf-admin-home" href="./" data-fr="Administration" data-en="Admin">Administration</a></div>
+    </header>
+    <main class="pf-main" id="pf-main" aria-live="off">
+      <div class="pf-ident">
+        <div class="pf-client-ident"><span class="pf-avatar" id="pf-avatar">—</span><div><h1 id="pf-client-name">—</h1><div class="pf-id-sub" id="pf-client-sub">—</div></div></div>
+        <div class="pf-project-ident"><span class="pf-project-icon" aria-hidden="true">▱</span><div><h2 id="pf-project-name">—</h2><p id="pf-project-meta"></p></div><span class="pf-status" id="pf-project-status">—</span></div>
+        <div class="pf-action"><a class="pf-btn pf-btn-outline" id="pf-project-tools" href="#" data-fr="⋯ Gestion du projet" data-en="⋯ Project tools">⋯ Gestion du projet</a></div>
+      </div>
+      <div class="pf-kpis" aria-label="Indicateurs financiers">
+        <article class="pf-kpi"><span class="pf-kicon purple" aria-hidden="true">◇</span><div><span data-fr="Contrat initial" data-en="Original contract">Contrat initial</span><strong id="pf-base">—</strong></div></article>
+        <article class="pf-kpi"><span class="pf-kicon lavender" aria-hidden="true">＋</span><div><span data-fr="Suppléments acceptés" data-en="Approved extras">Suppléments acceptés</span><strong id="pf-extras">—</strong></div></article>
+        <article class="pf-kpi green"><span class="pf-kicon mint" aria-hidden="true">▣</span><div><span data-fr="Déjà encaissé" data-en="Received">Déjà encaissé</span><strong id="pf-received">—</strong></div></article>
+        <article class="pf-kpi peach"><span class="pf-kicon orange" aria-hidden="true">⌛</span><div><span data-fr="Reste sur engagements" data-en="Remaining commitment">Reste sur engagements</span><strong id="pf-remaining">—</strong></div></article>
+        <article class="pf-kpi violet"><span class="pf-kicon violet" aria-hidden="true">▦</span><div><span data-fr="Total engagé" data-en="Total committed">Total engagé</span><strong id="pf-committed">—</strong></div></article>
+      </div>
+      <p class="pf-finance-note" id="pf-finance-note" role="status"></p>
+      <nav class="pf-tabs" id="pf-tabs" role="tablist" aria-label="Sections du projet">
+        <button type="button" class="pf-tab active" role="tab" aria-selected="true" data-panel="overview" data-fr="◫ Vue d'ensemble" data-en="◫ Overview">◫ Vue d'ensemble</button>
+        <button type="button" class="pf-tab" role="tab" aria-selected="false" data-panel="quotes" data-fr="▤ Devis" data-en="▤ Quotes">▤ Devis</button>
+        <button type="button" class="pf-tab" role="tab" aria-selected="false" data-panel="invoices" data-fr="▧ Factures" data-en="▧ Invoices">▧ Factures</button>
+        <button type="button" class="pf-tab" role="tab" aria-selected="false" data-panel="payments" data-fr="▣ Paiements" data-en="▣ Payments">▣ Paiements</button>
+        <button type="button" class="pf-tab" role="tab" aria-selected="false" data-panel="extras" data-fr="◇ Suppléments" data-en="◇ Extras">◇ Suppléments</button>
+        <button type="button" class="pf-tab" role="tab" aria-selected="false" data-panel="activity" data-fr="⌁ Activité" data-en="⌁ Activity">⌁ Activité</button>
+      </nav>
+      <div class="pf-content-grid">
+        <section class="pf-panel pf-scope" aria-labelledby="pf-panel-title">
+          <div class="pf-panel-head"><div><h2 id="pf-panel-title" data-fr="◉ Périmètre du projet" data-en="◉ Project scope">◉ Périmètre du projet</h2><p id="pf-panel-sub" data-fr="Prestations, statut et montants associés." data-en="Services, statuses and amounts.">Prestations, statut et montants associés.</p></div><button class="pf-btn pf-btn-primary pf-new" type="button" data-new-extra data-fr="＋ Ajouter un supplément" data-en="＋ Add extra work">＋ Ajouter un supplément</button></div>
+          <div id="pf-panel-content" aria-live="polite"><p class="pf-muted" data-fr="Chargement du projet…" data-en="Loading project…">Chargement du projet…</p></div>
+        </section>
+        <div class="pf-right">
+          <section class="pf-panel pf-finance" aria-labelledby="pf-finance-title">
+            <div class="pf-panel-head"><div><h2 id="pf-finance-title" data-fr="▥ Situation financière" data-en="▥ Financial overview">▥ Situation financière</h2><p data-fr="Récapitulatif global du projet." data-en="Project financial summary.">Récapitulatif global du projet.</p></div></div>
+            <div class="pf-chart-area"><div class="pf-donut" id="pf-donut" role="img" aria-label="Part des montants encaissés"><div><strong id="pf-percent">—</strong><span data-fr="encaissé" data-en="received">encaissé</span></div></div><div class="pf-legend">
+              <div><i class="pf-dot paid"></i><span data-fr="Déjà encaissé" data-en="Received">Déjà encaissé</span><strong id="pf-legend-paid">—</strong></div>
+              <div><i class="pf-dot initial"></i><span data-fr="Solde initial" data-en="Original balance">Solde initial</span><strong id="pf-legend-initial">—</strong></div>
+              <div><i class="pf-dot extra"></i><span data-fr="Suppléments à encaisser" data-en="Extra balances">Suppléments à encaisser</span><strong id="pf-legend-extra">—</strong></div>
+              <div class="pf-legend-total"><strong data-fr="Total engagé" data-en="Total committed">Total engagé</strong><strong id="pf-legend-total">—</strong></div>
+            </div></div>
+            <p class="pf-due-detail" id="pf-due-detail"></p>
+          </section>
+          <section class="pf-panel pf-extra-cta">
+            <div class="pf-panel-head"><div><h2 data-fr="ϟ Ajouter des travaux supplémentaires" data-en="ϟ Add additional work">ϟ Ajouter des travaux supplémentaires</h2></div></div>
+            <p data-fr="Un nouveau besoin ? Chiffrez-le, proposez-le au client et facturez uniquement après son accord." data-en="New requirements? Price them, propose to the client, and invoice only after approval.">Un nouveau besoin ? Chiffrez-le, proposez-le au client et facturez uniquement après son accord.</p>
+            <div class="pf-steps"><div><span>✎</span><strong data-fr="1. Décrire le besoin" data-en="1. Describe scope">1. Décrire le besoin</strong></div><b>→</b><div><span>▦</span><strong data-fr="2. Chiffrer et proposer" data-en="2. Price & propose">2. Chiffrer et proposer</strong></div><b>→</b><div><span>✓</span><strong data-fr="3. Valider et facturer" data-en="3. Approve & invoice">3. Valider et facturer</strong></div></div>
+            <button type="button" class="pf-btn pf-btn-primary pf-new pf-create" data-new-extra data-fr="＋ Créer un supplément" data-en="＋ Create extra work">＋ Créer un supplément</button>
+          </section>
+        </div>
+      </div>
+      <p class="pf-footnote" data-fr="Les propositions non acceptées n'augmentent ni le contrat, ni les factures, ni les sommes dues." data-en="Unapproved proposals do not increase contract totals, invoices or amounts due.">Les propositions non acceptées n'augmentent ni le contrat, ni les factures, ni les sommes dues.</p>
+    </main>
+  </div>
+  <button type="button" class="pf-overlay" id="pf-overlay" aria-label="Fermer le menu" hidden></button>
+</div>
+<div class="pf-loading" id="pf-loading" role="status">Chargement de l'espace privé…</div>
+<dialog class="pf-dialog" id="pf-extra-dialog" aria-labelledby="pf-dialog-title">
+  <div class="pf-dialog-top"><div><h2 id="pf-dialog-title" data-fr="Travaux supplémentaires" data-en="Additional work">Travaux supplémentaires</h2><p data-fr="Proposition distincte du devis initial. Accord du client requis." data-en="Separate from original quote. Requires client approval.">Proposition distincte du devis initial. Accord du client requis.</p></div><button class="pf-dialog-close" id="pf-dialog-close" type="button" aria-label="Fermer">✕</button></div>
+  <div id="pf-change-widget"></div>
+  <p class="pf-dialog-note" data-fr="Pour émettre une facture complémentaire acceptée et terminée, utilisez l'outil de facturation existant. Aucune nouvelle facture n'est émise par cette fenêtre." data-en="To invoice completed and approved work, use the existing billing workflow. This dialog never issues invoices.">Pour émettre une facture complémentaire acceptée et terminée, utilisez l'outil de facturation existant. Aucune nouvelle facture n'est émise par cette fenêtre.</p>
+  <a class="pf-btn pf-btn-outline" id="pf-open-billing" href="#" data-fr="Ouvrir la facturation du projet" data-en="Open project billing">Ouvrir la facturation du projet</a>
+</dialog>
+</body>
+</html>
