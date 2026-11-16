@@ -1,6 +1,21 @@
 # DZOFT — Secure backup and recovery
 
 
+## Windows CLI Storage download fix — 16 November 2026
+
+The Supabase CLI successfully exported the DZOFT database after Docker Desktop was enabled, but the encrypted backup correctly stopped at `storage cp -r` with **"Unsupported operation"** when the CLI received an absolute Windows scratch path. The backup tool now runs `supabase storage cp -r ss:///client-files . --experimental --remote` **from inside its isolated temporary directory** instead of passing an absolute Windows destination. No remote Storage objects are modified; all previous expected-count and listing-stability checks remain in force. Synthetic CLI tests require this exact relative-destination behavior in both legacy and v3 command modes.
+
+On the owner's Windows machine, update the trusted repository, check that the independent backup drive is available, verify the current Storage object count in a **read-only** SQL query, and retry:
+
+```powershell
+cd "$HOME\\DZOFT-Backup-Runner"
+git pull --ff-only
+Test-Path "E:\\"
+.\\tools\\backup-dzoft-windows.ps1 -OffsitePath "E:\\Private-DZOFT-Backups" -ExpectedStorageCount 3
+```
+
+**Use 3 only if a fresh SQL inventory still returns 3.** The script prompts for the encryption passphrase again; earlier failed executions created no archive. A passing encrypted and copied backup still does **not** verify that full data, Auth accounts and private files can be restored. Keep recovery marked **NOT VERIFIED**.
+
 ## Recovery protection update — 16 November 2026 (read-only inventory)
 
 The connected **RD-Clients** project remains active. Its live inventory, checked using aggregate read-only SQL on 16 November, shows **17 public application tables**, **6 private tables**, **3 Auth users**, **one Storage bucket** and **three objects in `client-files`**. Earlier 13–15 November checks recorded zero Storage objects. The existing November 15 encrypted database archive therefore cannot be used as proof of recoverability for documents uploaded since then. No object names, customer details, account emails or passwords were exported during this review.
