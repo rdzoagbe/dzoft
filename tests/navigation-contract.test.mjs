@@ -136,3 +136,23 @@ test('accepted quote links open the new project quote section, drafts remain edi
  assert.match(admin,/q&&q\.accepted_at\?'#quotes':''/);
  assert.match(admin,/q\.accepted_at\?'#quotes':''/);
 });
+
+test('new project cards are searchable from the shared dossiers search', () => {
+  const simplified=readFileSync(new URL('../admin/simplified-ui.js',import.meta.url),'utf8');
+  assert.match(simplified, /#projects \.v4-project-card/);
+  assert.match(admin, /simplified-ui\.js\?v=20261116-nav-audit1/);
+});
+test('installed mobile app exposes global overview and closes on project links', () => {
+  const mobile=readFileSync(new URL('../admin/installed-app-menu.js',import.meta.url),'utf8');
+  assert.match(mobile, /slug:'vue-globale'/);
+  assert.match(mobile, /\.dzoft-mobile-project a\[href\]/);
+  assert.match(mobile, /menu\.open=false/);
+  assert.match(admin, /installed-app-menu\.js\?v=20261116-nav-audit1/);
+});
+test('all visible sidebar destinations map to real app views', () => {
+  for(const value of ['tableau-de-bord','vue-globale','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille']) {
+    assert.ok(admin.includes(value),'Unknown destination '+value);
+  }
+  assert.match(project,/projet\.html/);
+  assert.match(project,/href="\.\/#\/vue-globale"/);
+});
