@@ -14,7 +14,7 @@ var esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 var uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var money=x=>Number.isFinite(Number(x))&&x!==null&&x!==''?new Intl.NumberFormat(en()?'en-GB':'fr-FR',{style:'currency',currency:'EUR'}).format(Number(x)):'—';
 var when=x=>{if(!x)return '—';var d=new Date(x);return Number.isNaN(d.getTime())?esc(x):d.toLocaleDateString(en()?'en-GB':'fr-FR');};
-var projects=[],clients=[],quotes=[],details=[],trackings={},trackingReady=false,detailState='idle';
+var projects=[],clients=[],quotes=[],details=[],trackings={},trackingReady=false,detailState='idle',clientsError=false,quotesError=false;
 definitions.forEach(function(d){
  var section=el('v-'+d[0]);
  if(!section){section=document.createElement('section');section.id='v-'+d[0];section.hidden=true;section.className='v6-workspace-section';
@@ -31,6 +31,7 @@ function projectCards(panel){
  return '<div class="v6-card-list">'+projects.map(p=>card('projet.html?q='+encodeURIComponent(p.id)+'#'+panel,'▤',p.clientName||tr('Client','Client'),esc(p.numero||''))).join('')+'</div>';
 }
 function invoices(){
+ if(quotesError)return '<div class="v6-warning" role="alert">'+tr('Impossible de charger les factures depuis les devis. Les données existent peut-être encore sur le serveur.','Unable to load invoice records from quotes. Data may still exist on the server.')+'</div><button class="btn sm main" data-retry-owner="invoices" type="button">'+tr('Réessayer','Retry')+'</button>';
  var rows=[];quotes.forEach(q=>(Array.isArray(q.invoices)?q.invoices:[]).forEach(i=>{if(i&&(i.num||i.numero))rows.push({q,i});}));
  if(!rows.length)return empty('Aucune facture enregistrée dans les devis accessibles.','No recorded invoices in accessible quotes.');
  return '<p class="v6-note">'+tr('Factures enregistrées, sans présumer des encaissements.','Recorded invoices. Issuance does not prove payment.')+'</p><div class="v6-card-list">'+rows.map(({q,i})=>
@@ -57,6 +58,7 @@ function catalogue(){
   card(link(q,'quotes'),'▤',l.l,esc(clientName(q.client_id))+' · '+esc(q.numero||'')+(l.u?' · '+esc(l.u):'')+(l.s?' · '+esc(l.s):''),l.p==null?'—':money(l.p))).join('')+'</div>';
 }
 function reports(){
+ if(clientsError||quotesError)return '<div class="v6-warning" role="alert">'+tr('Données partielles : impossible de calculer les rapports tant que Clients et Devis ne sont pas chargés.','Partial data: reports cannot be calculated until Clients and Quotes load correctly.')+'</div>';
  var sums={total:0,received:0,remaining:0},valid=0;
  projects.forEach(p=>{var d=trackings[p.id];if(!d)return;var vals=['total','received','remaining'].map(k=>d[k]===null||d[k]===undefined?NaN:Number(d[k]));if(vals.some(n=>!Number.isFinite(n)))return;
  ['total','received','remaining'].forEach((k,i)=>sums[k]+=Math.round(vals[i]*100));valid++;});
@@ -71,7 +73,8 @@ var renderers={invoices:invoices,journal:()=>detailed('journal'),documents:()=>d
 function render(){definitions.forEach(d=>{var section=el('v-'+d[0]);section.querySelector('h1').textContent=tr(d[1],d[2]);section.querySelector('.v6-page-head>span').textContent=tr(d[3],d[4]);section.querySelector('.v6-page-body').innerHTML=renderers[d[0]]();});}
 function setData(input){
  projects=(input.projects||[]).filter(p=>p&&uuid.test(p.id));clients=input.clients||[];quotes=input.quotes||[];
- trackings=input.trackings||{};trackingReady=!!input.ready;render();
+ trackings=input.trackings||{};trackingReady=!!input.ready;
+ clientsError=!!input.clientsError;quotesError=!!input.quotesError;render();
 }
 function loadingDetails(){detailState='loading';render();}
 function setDetails(rows,failed){details=Array.isArray(rows)?rows:[];detailState=failed?'error':'ready';render();}
