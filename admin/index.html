@@ -567,6 +567,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
   var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [], deliveryMonitor: null }, editing = null;
+  var loadErrors = {}, loadReady = false, loadGeneration = 0;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
   var day = function(d){ return new Date(d).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'}); };
@@ -767,30 +768,58 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- data ---------------- */
   function loadAll(){
-    return Promise.all([
+    var generation=++loadGeneration;
+    loadReady=false;
+    // Independent reads: a timeout in Messages or another ancillary service
+    // must never hide Clients, issued invoices, or accepted quotations.
+    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor'];
+    var reads=[
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
       sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,invoices,deleted_at,data->f->>valid&order=created_at.desc'),
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
-      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc').catch(function(){ return []; }),
-      sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30').catch(function(){ return []; }),
-      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&order=created_at.desc&limit=80').catch(function(){ return []; }),
-      sb.rpc('brevo_delivery_monitor',{},true).catch(function(){return null;})
-    ]).then(function(r){
-      // deleted requests and quotes stay in the trash until removed for good
-      var live = function(x){ return !x.deleted_at; }, gone = function(x){ return !!x.deleted_at; };
-      data.leads = (r[0] || []).filter(live); data.trashLeads = (r[0] || []).filter(gone);
-      data.clients = r[1] || [];
-      data.quotes = (r[2] || []).filter(live); data.trashQuotes = (r[2] || []).filter(gone);
-      data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
-      data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
-      // Cancel pending detail reads before rendering a newly refreshed client set.
+      sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc'),
+      sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30'),
+      sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&order=created_at.desc&limit=80'),
+      sb.rpc('brevo_delivery_monitor',{},true)
+    ];
+    return Promise.allSettled(reads).then(function(results){
+      if(generation!==loadGeneration)return;
+      var r=results.map(function(result,i){
+        if(result.status==='rejected'){
+          loadErrors[names[i]]=result.reason||new Error('Lecture impossible');
+          console.warn('DZOFT owner read failed:',names[i],result.reason&&result.reason.code||'error');
+          return null;
+        }
+        return result.value;
+      });
+      var live=function(x){return !x.deleted_at;},gone=function(x){return !!x.deleted_at;};
+      // Never use cached private rows after a failed or changed-owner refresh.
+      data.leads=Array.isArray(r[0])?r[0].filter(live):[];
+      data.trashLeads=Array.isArray(r[0])?r[0].filter(gone):[];
+      data.clients=Array.isArray(r[1])?r[1]:[];
+      data.quotes=Array.isArray(r[2])?r[2].filter(live):[];
+      data.trashQuotes=Array.isArray(r[2])?r[2].filter(gone):[];
+      data.messages=Array.isArray(r[3])?r[3]:[];
+      data.reviews=Array.isArray(r[4])?r[4]:[];
+      data.events=Array.isArray(r[5])?r[5]:[];
+      data.emailOutbox=Array.isArray(r[6])?r[6]:[];
+      data.deliveryMonitor=r[7]||null;
+      ['leads','clients','quotes','messages'].forEach(function(name,i){
+        if(!Array.isArray(r[i])&&!loadErrors[name])loadErrors[name]=new Error('Réponse serveur inattendue');
+      });
+      data.unread=data.messages.filter(function(m){return m.author==='client'&&!m.read_at;});
       richDetailsLoaded=false;richDetailsLoading=false;richRequest++;
       if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.loadingDetails();
+      loadReady=true;
       render();
       if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();
-      // The owner dashboard remains stable after fresh data arrives.
-    }, fail);
+      var failedMain=['clients','quotes'].filter(function(name){return !!loadErrors[name];});
+      if(failedMain.length)toast('Chargement partiel : '+failedMain.join(', ')+'. Réessayez depuis la page.');
+    },function(err){
+      if(generation!==loadGeneration)return;
+      fail(err);
+    });
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
   function render(){ dashboardDataLoaded=true; dashboardReceiptReady=false;dashboardReceiptStates={};dashboardReceiptFailures=0; renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
@@ -1017,7 +1046,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     });
     if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.setData({
       projects:ps.map(function(q){return {id:q.id,numero:q.numero||'',clientName:(client(q.client_id)||{}).nom||'Client'};}),
-      clients:data.clients,quotes:data.quotes,trackings:dashboardReceiptStates,ready:dashboardReceiptReady
+      clients:data.clients,quotes:data.quotes,trackings:dashboardReceiptStates,ready:dashboardReceiptReady,
+      clientsError:!!loadErrors.clients,quotesError:!!loadErrors.quotes
     });
   }
   function renderEmailLog(){
@@ -1541,6 +1571,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var STS = ['brouillon', 'envoyé', 'accepté', 'refusé'];
   function renderQuotes(){
     var term=$('q-search').value.toLowerCase(),box=$('quotes');
+    if(loadErrors.quotes){box.innerHTML='<div class="v4-empty v4-load-error" role="alert"><h3>Chargement des devis impossible</h3><p>La liste des devis est temporairement indisponible.</p><button class="btn sm main" type="button" data-retry-owner="quotes">Réessayer</button></div>';return;}
     $('n-msg').hidden=!data.unread.length;$('n-msg').textContent=data.unread.length;
     var rows=data.quotes.filter(function(q){var c=client(q.client_id)||{};return !term||(q.numero+' '+c.nom+' '+c.entreprise).toLowerCase().includes(term);});
     if(!rows.length){box.innerHTML='<div class="v4-empty"><h3>Aucun devis trouvé</h3><p>Créez un devis depuis une demande ou un dossier client.</p></div>';return;}
@@ -1560,6 +1591,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }).join('')+'</div>';
   }
   $('quotes').onclick = function(e){
+    if(e.target.closest('[data-retry-owner]')){loadAll();return;}
     var b = e.target.closest('button[data-a]'); if (!b) return;
     var id = b.closest('[data-id]').dataset.id;
     if (b.dataset.a === 'open') return openQuote(id);
@@ -1575,6 +1607,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('c-search').oninput = renderClients;
   function renderClients(){
     var term=$('c-search').value.toLowerCase(),box=$('clients');
+    if(loadErrors.clients){
+      box.innerHTML='<div class="v4-empty v4-load-error" role="alert"><h3>Chargement des clients impossible</h3>'+
+       '<p>Le serveur n’a pas fourni la liste des clients. Les données n’ont pas été supprimées.</p>'+
+       '<button type="button" class="btn sm main" data-retry-owner="clients">Réessayer</button></div>';
+      return;
+    }
     var rows=data.clients.filter(function(c){return !term||(c.nom+' '+c.entreprise+' '+c.contact).toLowerCase().includes(term);});
     if(!rows.length){box.innerHTML='<div class="v4-empty"><h3>Aucun client trouvé</h3><p>Ajoutez un client ou modifiez votre recherche.</p></div>';return;}
     box.innerHTML='<div class="v4-card-list v4-clients">'+rows.map(function(c){
@@ -1595,6 +1633,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     }).join('')+'</div>';
   }
   $('clients').onclick = function(e){
+    if(e.target.closest('[data-retry-owner]')){loadAll();return;}
     // The accepted project's new workspace is the primary client destination.
     // Keep the existing client editor explicitly accessible via Modifier.
     if(e.target.closest('a.dzoft-client-link'))return;
