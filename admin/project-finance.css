@@ -187,3 +187,13 @@ a{color:inherit}
 .pf-side-logout{display:flex;align-items:center;gap:12px;width:100%;padding:10px 15px;background:transparent;color:#e7e4ff;text-align:left;border:1px solid #393851;border-radius:10px;font-size:13px;font-weight:650;min-height:43px;margin-top:12px}
 .pf-side-logout:hover{background:#30314d}
 .pf-side-logout>span:first-child{width:21px;text-align:center;font-size:20px}
+
+/* Dashboard landing: project chooser above the existing approved mockup. */
+.pf-dashboard-lead{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:4px 1px 18px}
+.pf-dashboard-lead h1{font:700 26px/1.22 Sora,system-ui;margin:3px 0 5px;letter-spacing:-.035em}
+.pf-overline{font-size:10px;font-weight:850;letter-spacing:.13em;color:#5b25e8}
+.pf-dashboard-lead p{color:#696784;margin:0;font-size:12.5px}
+.pf-project-switch-label{display:grid;gap:5px;color:#66617f;font-size:11px;font-weight:750;min-width:215px}
+.pf-project-switch-label select{width:100%;min-height:42px;background:#fff;border:1px solid #ddd7f2;border-radius:10px;padding:9px 11px;color:#252043;font-size:13px;font-weight:700;max-width:100%}
+.pf-project-switch-label select:disabled{color:#777188;background:#f4f1f9}
+@media(max-width:760px){.pf-dashboard-lead{flex-direction:column;align-items:stretch;gap:12px}.pf-dashboard-lead h1{font-size:23px}.pf-project-switch-label{min-width:0;width:100%}.pf-dashboard-lead p{font-size:11.5px}}
