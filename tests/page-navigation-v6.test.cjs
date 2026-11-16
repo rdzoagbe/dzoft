@@ -49,3 +49,17 @@ test('the dashboard never silently selects the only accepted client project',()=
  assert.doesNotMatch(admin,/&&routeToPrimaryWorkspace\(\)/);
  assert.match(admin,/Never redirect the whole app into the last accepted client project/);
 });
+
+test('operational pages render existing record data rather than only project links',()=>{
+ const current=file('admin/workspace-panels-v7.js');
+ assert.match(admin,/workspace-panels-v7\.js/);
+ assert.match(current,/q\.invoices/);
+ assert.match(current,/detailed\('journal'\)/);
+ assert.match(current,/detailed\('docs'\)/);
+ assert.match(current,/accepted_data\|\|q\.data/);
+ assert.match(current,/setDetails/);
+ assert.match(current,/trackingReady/);
+ assert.match(admin,/loadRichPanels/);
+ assert.match(admin,/select=id,numero,client_id,accepted_at,journal,docs,data,accepted_data/);
+ assert.doesNotMatch(current,/\.insert\(|\.update\(|\.delete\(|\.rpc\(/);
+});
