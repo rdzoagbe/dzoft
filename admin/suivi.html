@@ -844,7 +844,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   };
   $('jr-add').onclick = function(){ Q.journal = Q.journal || []; Q.journal.unshift({ d: jrToday(), k: 'fait', t: '' }); jrEdit = true; renderJournal(); var t = $('journal').querySelector('textarea.t'); if (t) t.focus(); };
   $('jr-paste').onclick = function(){ $('jr-bulk').hidden = !$('jr-bulk').hidden; if (!$('jr-bulk').hidden) $('jr-text').focus(); };
-  $('jr-cancel').onclick = function(){ $('jr-bulk').hidden = true; };
+  $('jr-cancel').onclick = function(){ $('jr-text').value = ''; $('jr-bulk').hidden = true; $('jr-paste').focus(); };
   $('jr-import').onclick = function(){
     var keys = JR_TYPES.map(function(t){ return t[0]; }), added = 0;
     $('jr-text').value.split(/\r?\n/).forEach(function(line){
@@ -1506,7 +1506,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>
 <script src="weekly-review.js?v=20261114-summary" defer></script>
-<script src="editor-navigation.js?v=20261116-1"></script>
+<script src="editor-navigation.js?v=20261116-2"></script>
 </body>
 </html>
 
