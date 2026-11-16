@@ -584,7 +584,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var startPending = false;
   function safeReturnTarget(){
     var target = new URLSearchParams(location.search).get('return') || '';
-    return /^(?:devis|suivi)\.html(?:\?[a-zA-Z0-9_.~%=&;,+-]*)?(?:#[a-zA-Z0-9_.~%=&;,+\/-]*)?$/.test(target) ? target : '';
+    return /^(?:devis|suivi|projet)\.html(?:\?[a-zA-Z0-9_.~%=&;,+-]*)?(?:#[a-zA-Z0-9_.~%=&;,+\/-]*)?$/.test(target) ? target : '';
   }
   function returnAfterAuth(){
     var target = safeReturnTarget();
@@ -1426,7 +1426,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     return Object.assign({ f: f, lines: [], acc: [] }, extra || {});
   }
   function openQuote(id){ location.href = 'devis.html?q=' + encodeURIComponent(id); }
-  function openFollow(id){ location.href = 'projet.html?q=' + encodeURIComponent(id); }
+  function openFollow(id){
+    var q=data.quotes.filter(function(item){return item.id===id;})[0];
+    location.href=(q&&q.accepted_at?'projet.html?q=':'suivi.html?q=')+encodeURIComponent(id);
+  }
   // unread client messages for a quote (messages sent without a quote count on the client's latest quote)
   function unreadFor(q){
     var latest = data.quotes.filter(function(x){ return x.client_id === q.client_id; })[0];
