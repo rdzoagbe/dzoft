@@ -682,7 +682,7 @@ footer{max-width:1180px}
       '<div class="rvgrid"><div><label for="rv-name">Nom affiché</label><input id="rv-name" maxlength="60" value="' + esc(r ? r.name : shortName(c.nom)) + '"></div>' +
       '<div><label for="rv-act">Activité (facultatif)</label><input id="rv-act" maxlength="80" placeholder="Ex. : boulangerie à Bondy" value="' + esc(r ? r.activity : (c.entreprise || '')) + '"></div></div>' +
       '<label class="chk"><input type="checkbox" id="rv-ok"' + (!r || r.consent ? ' checked' : '') + '> J’accepte que cet avis soit publié sur le site de DZOFT, avec le nom et l’activité ci-dessus.</label>' +
-      '<div class="row"><button class="btn main" type="button" id="rv-send">' + (r ? 'Enregistrer mon avis' : 'Envoyer mon avis') + '</button>' + (r ? '<button class="btn line" type="button" id="rv-cancel">Annuler</button>' : '') + '</div>' +
+      '<div class="row"><button class="btn main" type="button" id="rv-send">' + (r ? 'Enregistrer mon avis' : 'Envoyer mon avis') + '</button>' + '<button class="btn line" type="button" id="rv-cancel">Annuler</button>' + '</div>' +
       '<p class="msgline" id="rv-msg" role="status" aria-live="polite"></p>' +
       '<p class="legal">Je relis chaque avis avant de le publier. Je publie tous les avis autorisés, positifs comme négatifs, sauf s’ils sont injurieux, hors sujet ou contiennent des données personnelles. Vous pouvez le modifier ou demander son retrait à tout moment.</p></section>';
   }
@@ -693,7 +693,12 @@ footer{max-width:1180px}
     function paint(){ [].forEach.call(stars, function(b){ var n = +b.dataset.star; b.classList.toggle('on', n <= rating); b.setAttribute('aria-checked', n === rating ? 'true' : 'false'); }); }
     [].forEach.call(stars, function(b){ b.onclick = function(){ rating = +b.dataset.star; paint(); }; });
     paint();
-    if ($('rv-cancel')) $('rv-cancel').onclick = function(){ RV_EDIT[q.id] = false; route(); };
+    if ($('rv-cancel')) $('rv-cancel').onclick = function(){
+      if ($('rv-send').disabled) return; // Never hide a pending review submission.
+      RV_EDIT[q.id] = false;
+      if (q.review) route();
+      else location.hash = '#/projets'; // No saved review: return to projects without submitting.
+    };
     $('rv-send').onclick = function(){
       var body = $('rv-body').value.trim(), name = $('rv-name').value.trim(), act = $('rv-act').value.trim(), ok = $('rv-ok').checked, m = $('rv-msg');
       m.className = 'msgline err';
@@ -974,12 +979,20 @@ footer{max-width:1180px}
     }).join('') : '<p class="muted">Pas encore de message. Écrivez-moi ici pour toute question.</p>') + '</div>' +
       (qs.length > 1 ? '<label for="m-q">À propos de</label><select id="m-q"><option value="">Général</option>' + qs.map(function(q){ return '<option value="' + q.id + '">' + esc(title(q)) + ' (' + esc(q.numero) + ')</option>'; }).join('') + '</select>' : '') +
       '<label for="m-body">Votre message</label><textarea id="m-body" maxlength="2000" placeholder="Une question, une modification à demander, un retour sur les maquettes…"></textarea>' +
-      '<div class="qacts"><button class="btn main" id="m-send" type="button">Envoyer</button></div><p class="msgline" id="m-msg" role="status" aria-live="polite"></p></section>';
+      '<div class="qacts"><button class="btn main" id="m-send" type="button">Envoyer</button><button class="btn line" id="m-cancel" type="button">Annuler</button></div><p class="msgline" id="m-msg" role="status" aria-live="polite"></p></section>';
     return h;
   };
   WIRE.messages = function(){
     var t = $('thread'); t.scrollTop = t.scrollHeight; markSeen();
     var link = $('nav').querySelector('a[href="#/messages"] i'); if (link) link.remove();
+    $('m-cancel').onclick = function(){
+      if ($('m-send').disabled) return; // Do not discard a message being submitted.
+      $('m-body').value = '';
+      if ($('m-q')) $('m-q').selectedIndex = 0;
+      $('m-msg').className = 'msgline';
+      $('m-msg').textContent = '';
+      $('m-body').focus();
+    };
     $('m-send').onclick = function(){
       var body = $('m-body').value.trim(), b = $('m-send'), e = $('m-msg');
       if (!body) { $('m-body').focus(); return; }
@@ -1001,18 +1014,29 @@ footer{max-width:1180px}
       '<p><span class="muted">Nom :</span> ' + esc(D.client.nom || '') + (D.client.entreprise ? ' · ' + esc(D.client.entreprise) : '') + '</p>' +
       '<p class="muted" style="margin-top:6px">Une information à corriger ? <a href="#/messages">Écrivez-moi</a>.</p></section>' +
       '<section class="card"><h2>Changer de mot de passe</h2><label for="c-pass">Nouveau mot de passe (8 caractères minimum)</label><input id="c-pass" type="password" minlength="8" autocomplete="new-password">' +
-      '<div class="qacts"><button class="btn main" id="c-save" type="button">Enregistrer</button></div><p class="msgline" id="c-msg" role="status" aria-live="polite"></p></section>' +
+      '<div class="qacts"><button class="btn main" id="c-save" type="button">Enregistrer</button><button class="btn line" id="c-cancel" type="button">Annuler</button></div><p class="msgline" id="c-msg" role="status" aria-live="polite"></p></section>' +
       '<section class="card"><h2>Déconnexion</h2><p class="muted">Sur un ordinateur partagé, pensez à vous déconnecter.</p><div class="qacts"><button class="btn line" id="c-out" type="button">Se déconnecter</button></div></section>';
   };
   WIRE.compte = function(){
     $('c-out').onclick = logout;
     if (!$('c-save')) return;
     eyes();
+    $('c-cancel').onclick = function(){
+      if ($('c-save').disabled) return;
+      $('c-pass').value = '';
+      $('c-msg').textContent = '';
+      $('c-msg').className = 'msgline';
+    };
     $('c-save').onclick = function(){
       var p = $('c-pass').value, e = $('c-msg');
       if (p.length < 8) { e.className = 'msgline err'; e.textContent = 'Choisissez un mot de passe de 8 caractères minimum.'; return; }
-      sb.setPassword(p).then(function(){ $('c-pass').value = ''; e.className = 'msgline ok'; e.textContent = 'Mot de passe changé ✓'; },
-        function(){ e.className = 'msgline err'; e.textContent = 'Le changement n’a pas abouti. Déconnectez-vous puis utilisez « Mot de passe oublié ».'; });
+      var saveButton = $('c-save'), cancelButton = $('c-cancel');
+      saveButton.disabled = true; cancelButton.disabled = true;
+      sb.setPassword(p).then(function(){
+        $('c-pass').value = ''; e.className = 'msgline ok'; e.textContent = 'Mot de passe changé ✓';
+      },function(){
+        e.className = 'msgline err'; e.textContent = 'Le changement n’a pas abouti. Déconnectez-vous puis utilisez « Mot de passe oublié ».';
+      }).finally(function(){ saveButton.disabled = false; cancelButton.disabled = false; });
     };
   };
 
