@@ -25,3 +25,30 @@ body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-
 body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) .bar h2{font-size:clamp(20px,2vw,27px);letter-spacing:-.035em}
 body.dzoft-admin #app :is(#v-dossiers,#v-finance) .simplified-heading h2{font-size:clamp(22px,2.4vw,29px)}
 body.dzoft-admin #app .dossier-switch .dossier-pill[aria-pressed=true]{background:linear-gradient(120deg,#6528f1,#4b14da);color:#fff}
+
+/* Owner navigation: global and project-specific destinations share one vocabulary. */
+body.dzoft-admin #app .side .dzoft-side-route{display:flex;align-items:center;gap:11px;min-height:45px;padding:10px 13px;color:#e4e5f7;text-decoration:none;font-size:13px;font-weight:650;border-radius:10px}
+body.dzoft-admin #app .side .dzoft-side-route:hover{background:#2b2c4d;color:#fff}
+body.dzoft-admin #app .side .dzoft-side-route[aria-current=page]{background:linear-gradient(105deg,#7543f7,#5116cf);color:white}
+body.dzoft-admin #app .side .dzoft-nav-symbol{width:21px;flex:0 0 21px;text-align:center;font-size:19px;line-height:1}
+body.dzoft-admin #app .side .dzoft-project-nav[hidden]{display:none!important}
+body.dzoft-admin #app .side .dzoft-project-divider{border-top:1px solid #3b3d58;margin:15px 10px}
+body.dzoft-admin #app .side .dzoft-project-heading{margin:8px 13px 9px;color:#aaa6ca;font-size:10px;letter-spacing:.09em;font-weight:850}
+/* Operational sections are components of the current shell, not alternate sites. */
+body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) :is(.panel,.lead,.card,.finance-line,.settings-fold,table){border-color:#e5e2f1;border-radius:15px;box-shadow:0 5px 19px rgba(27,20,76,.035)}
+body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) th{background:#f8f7fc;text-transform:none;letter-spacing:0;font-weight:780;color:#5c5d76}
+body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) td{border-color:#eeebf6}
+body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) .btn.main{background:linear-gradient(125deg,#652cf3,#4d12d9)}
+body.dzoft-admin #app :is(#v-dossiers,#v-finance,#v-settings) .simplified-heading{margin-bottom:19px}
+body.dzoft-admin #app :is(#v-leads,#v-clients,#v-quotes,#v-projects,#v-inbox,#v-finance,#v-settings,#v-trash,#v-dossiers) a:focus-visible{outline:3px solid #a99bfa;outline-offset:2px}
+@media(max-width:980px){
+ body.dzoft-admin #app .side .dzoft-project-nav,body.dzoft-admin #app .side .dzoft-global-overview{display:none}
+}
+
+body.dzoft-admin #app .dzoft-header-breadcrumb{display:flex;align-items:center;gap:10px;color:#77778e;font-size:12px;font-weight:600;min-width:0}
+body.dzoft-admin #app .dzoft-header-breadcrumb a{color:#5d28d5;text-decoration:none;font-weight:750}
+body.dzoft-admin #app .dzoft-header-breadcrumb strong{font-weight:750;color:#272440;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.dzoft-admin #app .dzoft-header-avatar{display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;background:#6132e2;color:#fff;border-radius:50%;font-size:12px;font-weight:800}
+@media(max-width:980px){
+ body.dzoft-admin #app .dzoft-header-breadcrumb,body.dzoft-admin #app .dzoft-header-avatar{display:none}
+}

@@ -5,9 +5,11 @@ import assert from 'node:assert/strict';
 const admin = readFileSync(new URL('../admin/index.html', import.meta.url), 'utf8');
 const project = readFileSync(new URL('../admin/projet.html', import.meta.url), 'utf8');
 
-test('owner dashboard does not automatically redirect to latest project', () => {
+test('owner dashboard opens one accepted project without arbitrary selection', () => {
   assert.doesNotMatch(admin, /openFinanceDashboard\s*\(/);
-  assert.doesNotMatch(admin, /location\.replace\(['"]projet\.html\?q=/);
+  assert.match(admin, /accepted\.length!==1/);
+  assert.match(admin, /routeToPrimaryWorkspace\(\)/);
+  assert.match(admin, /if\(h==='vue-globale'\)/);
   assert.match(admin, /function fromHash\(\)/);
   assert.match(admin, /dash:'tableau-de-bord'/);
 });
@@ -18,8 +20,8 @@ test('all cross-client navigation targets remain available', () => {
 });
 test('project-specific finance keeps explicit project selection and admin return links', () => {
   assert.match(project, /id="pf-project-switch"/);
-  assert.match(project, /href="\.\/#\/clients"/);
-  assert.match(project, /href="\.\/#\/projets"/);
+  assert.match(project, /href="\.\/#\/dossiers"/);
+  assert.match(project, /href="\.\/#\/vue-globale"/);
   assert.match(project, /href="\.\/#\/paiements"/);
 });
 test('new visual layer is loaded by main admin entry', () => {
@@ -92,4 +94,16 @@ test('specialized quote and project editors share nav without replacing secure w
     assert.ok(editorNav.includes(path),'missing route '+path);
   assert.doesNotMatch(editorNav,/\bsb\.(?:update|insert|remove|rpc)\(/);
   assert.match(editorNav,/valid=/);
+});
+
+test('all global sections retain selected-project navigation and global overview', () => {
+  const js=readFileSync(new URL('../admin/unified-app-shell.js', import.meta.url),'utf8');
+  const styles=readFileSync(new URL('../admin/unified-app-shell.css', import.meta.url),'utf8');
+  assert.match(js, /dzoft-global-overview/);
+  assert.match(js, /data-project-target/);
+  assert.match(js, /dzoft-mobile-project/);
+  assert.match(js, /uuid\.test\(selected\)/);
+  assert.match(js, /dzoft:data-refreshed/);
+  assert.match(styles, /dzoft-project-nav/);
+  assert.doesNotMatch(js, /\bsb\.(?:insert|update|remove|rpc)\(/);
 });

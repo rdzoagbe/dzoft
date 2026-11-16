@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-2">
 </head>
 <body class="dzoft-admin">
 
@@ -784,6 +784,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.messages = r[3] || []; data.reviews = r[4] || []; data.events = r[5] || []; data.emailOutbox = r[6] || []; data.deliveryMonitor = r[7] || null;
       data.unread = data.messages.filter(function(m){ return m.author === 'client' && !m.read_at; });
       render();
+      routeToPrimaryWorkspace();
     }, fail);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
@@ -845,7 +846,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash'];
   var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille'};
   var dashboardDataLoaded = false;
-  // Cross-client dashboard remains global; a client project is opened explicitly.
+  // DZOFT main dashboard is the new project workspace when there is exactly
+  // one accepted project. Multiple projects use an explicit global overview;
+  // never choose an arbitrary client's finances as if they were global.
+  function routeToPrimaryWorkspace(){
+    var route=location.hash.slice(1).replace(/^\//,'');
+    if(route && route!=='tableau-de-bord')return false;
+    if(!dashboardDataLoaded)return false;
+    var accepted=data.quotes.filter(function(q){return q.accepted_at&&q.id;});
+    if(accepted.length!==1)return false;
+    location.replace('projet.html?q='+encodeURIComponent(accepted[0].id));
+    return true;
+  }
   function showView(v){
     if(VIEWS.indexOf(v)<0)v='dash';
     var grouped=['dossiers','leads','clients','quotes','projects'].indexOf(v)!==-1;
@@ -866,7 +878,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   function fromHash(){
     var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
-    if(h==='vue-classique'){location.replace('#/tableau-de-bord');return;}
+    if(h==='vue-classique'){location.replace('#/vue-globale');return;}
+    if(h==='vue-globale'){showView('dash');return;}
+    if((!h||h==='tableau-de-bord')&&routeToPrimaryWorkspace())return;
     Object.keys(SLUG).forEach(function(k){ if (SLUG[k] === h) v = k; });
     showView(v);
   }
@@ -1711,7 +1725,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261116-1"></script>
-<script src="unified-app-shell.js?v=20261116-1"></script>
+<script src="unified-app-shell.js?v=20261116-2"></script>
 </body>
 </html>
 
