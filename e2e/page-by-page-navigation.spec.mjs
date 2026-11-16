@@ -54,6 +54,12 @@ test('project page navigation retains the selected project ID on contextual sect
  const id='12345678-1234-4234-9234-123456789abc';
  await page.route('**/admin/project-finance.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:''}));
  await page.goto('admin/projet.html?q='+id,{waitUntil:'domcontentloaded'});
+ // Production reveals pf-shell only after authentication and RPCs.
+ // For this read-only route test, reveal it without using private credentials.
+ await page.evaluate(()=>{
+   document.getElementById('pf-shell').hidden=false;
+   document.getElementById('pf-loading').hidden=true;
+ });
  const entries=page.locator('#pf-sidebar .dzoft-v6-link');
  await expect(entries).toHaveCount(routes.length);
  for(const [slug,hash] of [['devis','quotes'],['factures','invoices'],['paiements','payments'],['journal','journal'],['documents','documents']]){
