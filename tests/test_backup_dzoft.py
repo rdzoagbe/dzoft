@@ -175,8 +175,12 @@ class BackupTests(unittest.TestCase):
                     expected = "--remote" if mode == "v3" else "--linked"
                     if expected not in args or "--experimental" not in args:
                         sys.exit(11)
-                    dst = pathlib.Path(args[4])
-                    dst.mkdir(parents=True, exist_ok=True)
+                    # Exactly the documented relative destination from inside
+                    # the private temp folder; an absolute Windows path is unsafe
+                    # across CLI v2/v3 path parsers.
+                    if args[4] != "." or not pathlib.Path.cwd().name.startswith("dzoft-storage-"):
+                        sys.exit(12)
+                    dst = pathlib.Path.cwd()
                     (dst / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
                     sys.exit(0)
                 sys.exit(3)
