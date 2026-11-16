@@ -1491,31 +1491,35 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('q-search').oninput = renderQuotes;
   var STS = ['brouillon', 'envoyé', 'accepté', 'refusé'];
   function renderQuotes(){
-    var s = $('q-search').value.toLowerCase(), box = $('quotes');
-    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
-    var rows = data.quotes.filter(function(q){ var c = client(q.client_id) || {}; return !s || (q.numero + ' ' + c.nom + ' ' + c.entreprise).toLowerCase().indexOf(s) > -1; });
-    if (!rows.length) { box.innerHTML = '<div class="empty">Aucun devis. Créez-en un depuis une demande, une fiche client ou « + Nouveau devis ».</div>'; return; }
-    box.innerHTML = '<table><thead><tr><th>N°</th><th>Client</th><th class="hide-m">Date</th><th class="num">Total</th><th>Statut</th><th></th></tr></thead><tbody>' +
-      rows.map(function(q){
-        var c = client(q.client_id) || {};
-        var nu = unreadFor(q), flags = (q.accepted_at ? '<span class="chip" style="background:var(--okbg);color:var(--ok);border-color:#9ed5b3">accepté en ligne</span> ' : q.shared ? '<span class="chip">visible client</span> ' : '') +
-          (nu ? '<span class="chip" style="background:#e3f9fd;color:#0b6577;border-color:#a5e9f5">' + nu + ' message' + (nu > 1 ? 's' : '') + '</span>' : '');
-        return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b>' + (flags ? '<div style="margin-top:4px">' + flags + '</div>' : '') + '</td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
-          '<td class="hide-m">' + day(q.created_at) + '</td><td class="num">' + eur(q.total) + '</td>' +
-          '<td><select data-a="st">' + STS.map(function(x){ return '<option' + (x === q.status ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></td>' +
-          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm line" data-a="follow">Fiche projet</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
-      }).join('') + '</tbody></table>';
+    var term=$('q-search').value.toLowerCase(),box=$('quotes');
+    $('n-msg').hidden=!data.unread.length;$('n-msg').textContent=data.unread.length;
+    var rows=data.quotes.filter(function(q){var c=client(q.client_id)||{};return !term||(q.numero+' '+c.nom+' '+c.entreprise).toLowerCase().includes(term);});
+    if(!rows.length){box.innerHTML='<div class="v4-empty"><h3>Aucun devis trouvé</h3><p>Créez un devis depuis une demande ou un dossier client.</p></div>';return;}
+    box.innerHTML='<div class="v4-card-list v4-quotes">'+rows.map(function(q){
+      var c=client(q.client_id)||{},nu=unreadFor(q);
+      return '<article class="v4-list-card v4-quote-card" data-id="'+esc(q.id)+'">'+
+        '<span class="v4-card-symbol" aria-hidden="true">▤</span><div class="v4-card-core">'+
+        '<p class="v4-card-kicker">'+esc(q.numero||'—')+' · '+day(q.created_at)+'</p>'+
+        '<h3>'+esc(c.nom||'Client')+'</h3>'+
+        '<p class="v4-card-sub">'+esc(c.entreprise||'')+(nu?' · '+nu+' message'+(nu>1?'s':'')+' non lu'+(nu>1?'s':''):'')+'</p>'+
+        '<div class="v4-quote-status"><label>Statut <select data-a="st" aria-label="Statut du devis">'+STS.map(function(x){return '<option'+(x===q.status?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label>'+
+        (q.accepted_at?'<span class="v4-status-ok">Accepté en ligne</span>':q.shared?'<span class="v4-status-neutral">Partagé</span>':'')+'</div></div>'+
+        '<div class="v4-card-side v4-quote-side"><b>'+eur(q.accepted_total||q.total)+'</b>'+
+        '<div class="v4-card-actions"><button type="button" class="btn sm main" data-a="open">Devis</button>'+
+        (q.accepted_at?'<a href="projet.html?q='+encodeURIComponent(q.id)+'" class="btn sm line">Dossier →</a>':'<button type="button" class="btn sm line" data-a="follow">Suivi</button>')+
+        '<button type="button" class="btn sm ghost" data-a="del" title="Mettre le devis à la corbeille">×</button></div></div></article>';
+    }).join('')+'</div>';
   }
   $('quotes').onclick = function(e){
     var b = e.target.closest('button[data-a]'); if (!b) return;
-    var id = b.closest('tr').dataset.id;
+    var id = b.closest('[data-id]').dataset.id;
     if (b.dataset.a === 'open') return openQuote(id);
     if (b.dataset.a === 'follow') return openFollow(id);
     if (b.dataset.a === 'del' && confirm('Mettre ce devis à la corbeille ? Le client ne le verra plus ; vous pourrez le restaurer.')) sb.update('quotes', id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Devis mis à la corbeille.'); loadAll(); }, fail);
   };
   $('quotes').onchange = function(e){
     if (e.target.dataset.a !== 'st') return;
-    sb.update('quotes', e.target.closest('tr').dataset.id, { status: e.target.value }).then(function(){ toast('Statut enregistré.'); loadAll(); }, fail);
+    sb.update('quotes', e.target.closest('[data-id]').dataset.id, { status: e.target.value }).then(function(){ toast('Statut enregistré.'); loadAll(); }, fail);
   };
 
   /* ---------------- clients ---------------- */
