@@ -51,7 +51,9 @@ test('backup script uses documented remote link flags, explicit project and prot
  assert.match(src,/run_cli\(\["db", "dump"\] \+ dump_flags \+ \["--schema=public,private"\]\)/);
  assert.match(src,/storage_ls_flags = select_remote_flags\(\["storage", "ls"\]\)/);
  assert.match(src,/storage_cp_flags = select_remote_flags\(\["storage", "cp"\]\)/);
- assert.match(src,/cwd=PROJECT_ROOT/);
+ assert.match(src,/cwd=cwd if cwd is not None else PROJECT_ROOT/);
+ assert.match(src,/run_cli\(\["storage", "cp", "-r", "ss:\/\/\/" \+ BUCKET, "\."/);
+ assert.match(src,/\+ storage_cp_flags, cwd=base\)/);
  assert.match(gitignore,/supabase\/\.temp\//);
  assert.match(gitignore,/supabase\/\.profiles\//);
  assert.match(gitignore,/\*\.dzoftbak/);
