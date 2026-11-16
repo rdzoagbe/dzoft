@@ -60,7 +60,9 @@ function renderHeader(){
  setText("pf-client-sub",[c.entreprise,c.email].filter(Boolean).join(" · ")||tr("Fiche client privée","Private client record"));
  setText("pf-avatar",clientName().trim().split(/\s+/).slice(0,2).map(function(x){return x.slice(0,1);}).join("").toUpperCase());
  setHref("pf-side-dashboard",projectUrl());
- ["pf-project-tools","pf-side-journal","pf-side-documents"].forEach(function(el){setHref(el,projectUrl());});
+ setHref("pf-project-tools",projectUrl());
+ setHref("pf-side-journal",projectUrl("work/c-journal"));
+ setHref("pf-side-documents",projectUrl("work/c-docs"));
  setHref("pf-side-invoices",projectUrl("billing"));
  setHref("pf-open-billing",projectUrl("billing"));
 }
@@ -215,8 +217,18 @@ function render(){
  $("pf-loading").hidden=true;$("pf-shell").hidden=false;
  applyTranslations();renderHeader();renderKpis();renderSection();
 }
+var MFA_WINDOW=12*60*60;
+function mfaExpired(){
+ return typeof sb.aal==="function"&&typeof sb.mfaFresh==="function"&&
+  (sb.aal()!=="aal2"||!sb.mfaFresh(MFA_WINDOW));
+}
+function requireNewVerification(){
+ conceal();
+ location.replace("./?return="+encodeURIComponent("projet.html?q="+id));
+}
 function readData(){
  if(!sb.session()){conceal();location.replace("./");return;}
+ if(mfaExpired()){requireNewVerification();return;}
  if(state.busy)return;
  state.busy=true;
  return sb.select("quotes","select=*&id=eq."+encodeURIComponent(id)).then(function(rows){
@@ -240,6 +252,7 @@ function conceal(){
 function verifyOwnerAndLoad(){
  conceal();
  if(!sb.session()){location.replace("./");return;}
+ if(mfaExpired()){requireNewVerification();return;}
  return sb.rpc("is_owner",{},true).then(function(ok){
   if(!ok){location.replace("./");return;}
   return readData();
@@ -290,6 +303,7 @@ $("pf-logout").addEventListener("click",function(){
  Promise.resolve(sb.signOut()).finally(function(){location.replace("./");});
 });
 document.addEventListener("visibilitychange",function(){if(!document.hidden)verifyOwnerAndLoad();});
+setInterval(function(){if(!document.hidden&&!$("pf-shell").hidden&&mfaExpired())requireNewVerification();},60000);
 window.addEventListener("pagehide",conceal);
 window.addEventListener("pageshow",function(e){if(e.persisted)verifyOwnerAndLoad();});
 verifyOwnerAndLoad();
