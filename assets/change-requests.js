@@ -121,8 +121,8 @@ function lineRow(l,en,tiers){
  return '<tr data-line'+(discount?' data-discount':'')+' data-when="'+esc(l.when||'')+'"><td><input name="label" maxlength="160" required placeholder="'+tr(en,'Prestation','Item')+'" value="'+esc(l.label||'')+'">'+
   '<input type="hidden" name="source" value="'+esc(l.source||'')+'"><input type="hidden" name="detail" value="'+esc(l.detail||'')+'">'+level+
   '<small data-line-detail>'+esc(l.detail||'')+'</small></td>'+
-  '<td><input name="qty" type="number" min="0.01" max="1000" step="0.01" required value="'+esc(l.qty==null?1:l.qty)+'" aria-label="'+tr(en,'Quantité','Quantity')+'"></td>'+
-  '<td><input name="price" type="number" min="'+(discount?'-1000000':'0')+'" max="'+(discount?'0':'1000000')+'" step="0.01" required value="'+esc(l.price==null?'':l.price)+'" aria-label="'+(discount?tr(en,'Montant de la remise (négatif, €)','Discount amount (negative, €)'):tr(en,'Prix unitaire (€)','Unit price (€)'))+'"'+(l.price==null||l.price===''?' data-unpriced':'')+'></td>'+
+  (discount?'<td><input name="qty" type="hidden" value="1">1</td>':'<td><input name="qty" type="number" min="0.01" max="1000" step="0.01" required value="'+esc(l.qty==null?1:l.qty)+'" aria-label="'+tr(en,'Quantité','Quantity')+'"></td>')+
+  '<td>'+(discount?'<span class="dzoft-calc-minus" aria-hidden="true">−</span>':'')+'<input name="price" type="number" min="0" max="1000000" step="0.01" required value="'+esc(l.price==null||l.price===''?'':Math.abs(Number(l.price)))+'" aria-label="'+(discount?tr(en,'Montant de la remise (€), déduit du total','Discount amount (€), taken off the total'):tr(en,'Prix unitaire (€)','Unit price (€)'))+'"'+(discount?' placeholder="'+tr(en,'Montant','Amount')+'"':'')+(l.price==null||l.price===''?' data-unpriced':'')+'></td>'+
   '<td data-line-total>'+cash(0)+'</td><td><button class="btn line sm" type="button" data-line-remove aria-label="'+tr(en,'Retirer la ligne','Remove line')+'">×</button></td></tr>';
 }
 function calculator(en,blocks,target,tiers){
@@ -215,7 +215,7 @@ function bindOwner(root,options){
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
- function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){return {label:row.querySelector('[name=label]').value.trim(),qty:num(row.querySelector('[name=qty]').value),price:num(row.querySelector('[name=price]').value),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
+ function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=num(row.querySelector('[name=price]').value);return {label:row.querySelector('[name=label]').value.trim(),qty:disc?1:num(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):p,source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
  /* « Calculer depuis le suivi » : the client requests completed since signature, from the private journal.
     A request is billed once: its origin is kept on the line and skipped if already in a live proposal. */
  function hash(t){var h=2166136261;for(var i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
@@ -272,7 +272,7 @@ function bindOwner(root,options){
  function recalc(form){
   var total=0;
   form.querySelectorAll('[data-line]').forEach(function(row){
-   var q=num(row.querySelector('[name=qty]').value),p=num(row.querySelector('[name=price]').value);
+   var disc=row.hasAttribute('data-discount'),q=disc?1:num(row.querySelector('[name=qty]').value),p=num(row.querySelector('[name=price]').value);if(disc&&Number.isFinite(p))p=-Math.abs(p);
    var t=Number.isFinite(q)&&Number.isFinite(p)?Math.round(q*p*100):0;total+=t;
    var pi=row.querySelector('[name=price]');if(pi.value!=='')pi.removeAttribute('data-unpriced');
    row.querySelector('[data-line-total]').textContent=cash(t/100);
