@@ -206,6 +206,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 .invoice-fixed-values strong{font-size:13px;color:#1b2041;overflow-wrap:anywhere;line-height:1.4}
 .invoice-record-more .invoice-record-note{font-size:11px;color:#71788d;margin-top:7px}
 .invoice-record .rm{margin-left:auto}
+.invoice-legacy-paid-note{font-size:12px;line-height:1.5;color:#5f586e;background:#f5f3fa;border:1px solid #e5e0ee;border-radius:9px;padding:10px 12px;margin:3px 0 8px}
+.invoice-record-fields [data-a="record-payment"]{margin:6px 0;max-width:100%}
 .invoice-more{border:1px solid #e9e9f3;border-radius:14px;margin-top:20px;background:#fafaff}
 .invoice-more>summary{cursor:pointer;list-style:none;padding:14px 16px;color:#29304f;font-size:13px;display:flex;justify-content:space-between;align-items:center}
 .invoice-more>summary::-webkit-details-marker{display:none}
@@ -919,7 +921,9 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
             '<label class="invoice-wide">'+il('Lien de paiement (facultatif)','Payment link (optional)')+'<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
             '<div class="invoice-wide">' +
               (official ? '<span class="invoice-record-note">'+il('Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».','Issued invoice amount and number are locked. Record confirmed payments in Payment history.')+'</span>' :
-              '<label class="pd"><input type="checkbox" class="paid"' + (x.paid ? ' checked' : '') + '> ' + (x.paid ? 'Paiement reçu' : 'Marquer comme payée') + '</label>') +
+              (x.paid
+                ? '<div class="invoice-legacy-paid-note" role="status">'+il('Déjà déclarée payée dans l’historique. Vérifiez le détail des encaissements avant toute correction.','Previously marked paid in the historical records. Check the verified payment history before correcting anything.')+'</div>'
+                : '<button type="button" class="btn sm line" data-a="record-payment">'+il('Enregistrer un encaissement vérifié','Record verified payment')+'</button><p class="muted">'+il('Une facture émise ne prouve pas un paiement. Indiquez la date, le montant et le mode de réception dans le suivi des paiements.','An issued invoice is not proof of payment. Record the date, amount and method in Payment history.')+'</p>')) +
               (x.payment_reported_at ? '<p class="muted">Paiement déclaré le ' + esc(new Date(x.payment_reported_at).toLocaleString('fr-FR')) + '</p>' : '') +
             '</div>'+
             '<div class="invfile">' +
@@ -1154,7 +1158,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   function updateInvoice(e){
     var row = e.target.closest('.invr'); if (!row) return;
     var x = Q.invoices[+row.dataset.i], c = e.target.className.split(' ')[0];
-    if (c === 'paid') { if (e.target.checked && !x.paid && !confirm(document.documentElement.lang === 'en' ? 'Have you received this payment in your bank account? The client will be notified by email.' : 'Confirmez-vous avoir reçu ce paiement sur votre compte ? Le client sera averti par e-mail.')) { e.target.checked = false; return; } x.paid = e.target.checked; row.classList.toggle('paid', x.paid); }
+    if (c === 'paid') { e.target.checked = !!x.paid; toast(il('Utilisez le suivi des paiements pour confirmer un encaissement.','Use Payment history to confirm a receipt.')); return; }
     else if (c === 'attach') x.attachPdf = e.target.checked;
     else if ((x.generatedByDzoft || x.basis) && (c === 'num' || c === 'amt' || c === 'n')) { toast('Cette facture est déjà émise : le montant et le numéro sont définitifs.'); return; }
     else if (c === 'amt') x.amt = parseFloat(e.target.value) || 0;
@@ -1192,6 +1196,24 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var b = e.target.closest('button[data-a]'), row = e.target.closest('.invr');
     if (b && row) {
       var x = Q.invoices[+row.dataset.i];
+      if (b.dataset.a === 'record-payment') {
+        // Open the existing owner-only RPC form; never fabricate a paid flag or receipt.
+        var details = $('iv-payments-advanced');
+        if (details) details.open = true;
+        var receiptForm = document.querySelector('#tracking-admin details.tracking-editor:not(.tracking-report-editor) > form');
+        if (!receiptForm) { toast(il('Suivi des paiements indisponible. Actualisez le projet.','Payment history unavailable. Refresh this project.')); return; }
+        var disclosure = receiptForm.closest('details');
+        if (disclosure) disclosure.open = true;
+        var select = receiptForm.elements.invoice;
+        if (select) {
+          var option = Array.from(select.options).find(function(item){return item.value===x.id;});
+          if (option) { select.value=x.id; select.dispatchEvent(new Event('change',{bubbles:true})); }
+          else { select.value='unbilled'; select.dispatchEvent(new Event('change',{bubbles:true})); }
+        }
+        receiptForm.scrollIntoView({behavior:'smooth',block:'center'});
+        if (receiptForm.elements.amount) receiptForm.elements.amount.focus({preventScroll:true});
+        return;
+      }
       if (b.dataset.a === 'payment-reminder') {
         clearTimeout(timer); b.disabled = true;
         return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){ b.disabled = false; if(ok) window.DzoftReminder.open(QID, x.id); });
