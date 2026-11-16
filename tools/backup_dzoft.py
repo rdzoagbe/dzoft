@@ -104,9 +104,12 @@ def run_cli(arguments: list[str], *, binary: bool = False,
                             stdout=subprocess.PIPE, stderr=None, check=False)
     if result.returncode != 0:
         # Do not echo full stderr: CLI logs may include connection details.
+        # Report the safe command group only, not CLI arguments, connection
+        # strings, tokens, remote filenames, or raw stderr.
+        operation = " ".join(arguments[:2])
         raise BackupError(
-            "Supabase CLI command failed. Run 'supabase login', check access to "
-            "the RD-Clients project, and check CLI help locally. "
+            "Supabase CLI operation " + operation + " failed (exit " +
+            str(result.returncode) + "). Check its error immediately above. "
             "No backup was marked successful."
         )
     return result.stdout
@@ -120,9 +123,10 @@ def select_remote_flags(group: list[str], *, explicit_ref: bool = False) -> list
     """
     help_text = run_cli(group + ["--help"]).decode("utf-8", "replace")
     if re.search(r"(?m)^\s*--remote\b", help_text):
-        # Database dumps can bind to the exact ref; Storage uses the linked
-        # target via --remote (confirmed above by 'supabase link').
-        return ["--remote=" + PROJECT_REF] if explicit_ref else ["--remote"]
+        # Always bind to RD-Clients explicitly, including commands executed
+        # from a separate private temporary directory. Bare --remote uses a
+        # linked ref discovered from cwd and can fail or select a wrong project.
+        return ["--remote=" + PROJECT_REF]
     if re.search(r"(?m)^\s*--linked\b", help_text):
         return ["--linked"]
     raise BackupError(
