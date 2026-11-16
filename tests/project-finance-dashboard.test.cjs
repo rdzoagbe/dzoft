@@ -87,3 +87,18 @@ test('Admin routes and MFA return whitelist include the new project workflow',()
  assert.match(js,/encodeURIComponent\("projet\.html\?q="\+id\)/);
  assert.doesNotMatch(html,/Devis & chiffrage/);
 });
+
+test('journal and documents stay inside new project workspace navigation',()=>{
+ for(const tab of ['journal','documents'])assert.match(html,new RegExp('data-panel="'+tab+'"'));
+ assert.match(html,/id="pf-side-journal"/);
+ assert.match(html,/id="pf-side-documents"/);
+ assert.match(js,/state\.section==="journal"\?privateJournal\(\)/);
+ assert.match(js,/state\.section==="documents"\?documents\(\)/);
+ assert.match(js,/setHref\("pf-side-journal","projet\.html\?q="/);
+ assert.match(js,/setHref\("pf-side-documents","projet\.html\?q="/);
+ assert.match(js,/state\.quote&&state\.quote\.journal/);
+ assert.match(js,/state\.quote&&state\.quote\.docs/);
+ assert.match(js,/rel="noopener noreferrer"/);
+ assert.match(js,/projectUrl\("work\/c-journal"\)/);
+ assert.match(js,/projectUrl\("work\/c-docs"\)/);
+});

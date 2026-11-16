@@ -9,7 +9,7 @@ var id=new URLSearchParams(location.search).get("q");
 var validId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||"");
 if(!sb||!sb.session()||!validId){location.replace("./");return;}
 var initialPanel=location.hash.slice(1);
-var validPanels=["overview","quotes","invoices","payments","extras","activity"];
+var validPanels=["overview","quotes","invoices","payments","extras","activity","journal","documents"];
 var state={quote:null,client:null,changes:null,tracking:null,events:[],section:validPanels.includes(initialPanel)?initialPanel:"overview",busy:false,modalInitialized:false,readError:null};
 var acceptedStates=["approved","in_progress","completed"];
 var en=function(){return document.documentElement.lang==="en";};
@@ -64,8 +64,8 @@ function renderHeader(){
  setHref("pf-side-dashboard","./#/tableau-de-bord");
   setHref("pf-side-project","projet.html?q="+encodeURIComponent(id));
  setHref("pf-project-tools",projectUrl());
- setHref("pf-side-journal",projectUrl("work/c-journal"));
- setHref("pf-side-documents",projectUrl("work/c-docs"));
+ setHref("pf-side-journal","projet.html?q="+encodeURIComponent(id)+"#journal");
+ setHref("pf-side-documents","projet.html?q="+encodeURIComponent(id)+"#documents");
  setHref("pf-side-invoices","projet.html?q="+encodeURIComponent(id)+"#invoices");
  setHref("pf-open-billing",projectUrl("billing"));
 }
@@ -202,18 +202,51 @@ function activity(){
  a.sort(function(x,y){return new Date(y.date)-new Date(x.date);});
  return a.length?a.map(function(x){return '<div class="pf-activity-row"><strong>'+esc(x.text)+'</strong><span>'+esc(day(x.date))+'</span></div>';}).join(""):'<div class="pf-empty">'+tr("Aucune activité pour le moment.","No activity yet.")+'</div>';
 }
+/* Private project notes and shared document references are already supplied
+   by the authenticated quote record. These views are read-only; editing remains
+   in the existing guarded project editor, so no concurrent writes are invented. */
+function privateJournal(){
+ var entries=Array.isArray(state.quote&&state.quote.journal)?state.quote.journal.slice():[];
+ entries.sort(function(a,b){return String(b.d||"").localeCompare(String(a.d||""));});
+ var labels={fait:tr("Fait","Completed"),demande:tr("Demande du client","Client request"),
+  "décision":tr("Décision","Decision"),attente:tr("En attente","Pending")};
+ return '<div class="pf-private-note"><p>'+tr("Notes visibles uniquement dans votre espace administrateur. Elles ne sont pas partagées avec le client.","These notes stay in your admin workspace and are not shared with clients.")+'</p>'+
+ '<a class="pf-btn pf-btn-primary" href="'+esc(projectUrl("work/c-journal"))+'">'+tr("Ajouter ou modifier des notes","Add or edit notes")+' ↗</a></div>'+
+ (entries.length?'<div class="pf-journal-list">'+entries.map(function(item){
+  return '<article class="pf-journal-entry"><div><span class="pf-tag neutral">'+esc(labels[item.k]||tr("Note","Note"))+'</span><time>'+esc(day(item.d))+'</time></div><p>'+esc(item.t||"")+'</p></article>';
+ }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucune note privée sur ce dossier.","No private notes for this project.")+'</div>');
+}
+function documents(){
+ var docs=Array.isArray(state.quote&&state.quote.docs)?state.quote.docs:[];
+ return '<div class="pf-private-note"><p>'+tr("Liens de documents associés au dossier. Vérifiez les droits de partage avant de communiquer un lien au client.","Document references for this project. Check sharing permissions before sending a link to a client.")+'</p>'+
+ '<a class="pf-btn pf-btn-primary" href="'+esc(projectUrl("work/c-docs"))+'">'+tr("Gérer les documents","Manage documents")+' ↗</a></div>'+
+ (docs.length?'<div class="pf-document-list">'+docs.map(function(doc){
+  var name=doc.n||tr("Document","Document"),url=String(doc.u||"").trim(),valid=/^https:\/\//i.test(url);
+  return '<article class="pf-document-entry"><span class="pf-document-icon" aria-hidden="true">▢</span>'+
+   '<div><strong>'+esc(name)+'</strong><small>'+esc(valid?url:tr("Lien indisponible ou invalide","Missing or invalid link"))+'</small></div>'+
+   (valid?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+tr("Ouvrir","Open")+' ↗</a>':'')+'</article>';
+ }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucun document lié à ce dossier.","No documents attached to this project.")+'</div>');
+}
 var sections={overview:{fr:["◉ Périmètre du projet","Prestations, statut et montants associés."],en:["◉ Project scope","Services, statuses and amounts."]},
  quotes:{fr:["▤ Devis & accords","Contrat initial et propositions complémentaires."],en:["▤ Quotes & approvals","Original contract and supplementary proposals."]},
  invoices:{fr:["▧ Factures","Factures enregistrées, sans doublon des suppléments."],en:["▧ Invoices","Recorded invoices, with extras counted only once."]},
  payments:{fr:["▣ Paiements","Seulement les paiements confirmés."],en:["▣ Payments","Verified payments only."]},
  extras:{fr:["◇ Suppléments","Demandes, propositions et accords du client."],en:["◇ Extras","Requests, proposals and approvals."]},
- activity:{fr:["⌁ Activité","Chronologie des étapes et décisions."],en:["⌁ Activity","Project milestones and decisions."]}};
+ activity:{fr:["⌁ Activité","Chronologie des étapes et décisions."],en:["⌁ Activity","Project milestones and decisions."]},
+  journal:{fr:["☷ Journal privé","Notes et décisions internes au projet."],en:["☷ Private journal","Internal project notes and decisions."]},
+  documents:{fr:["▢ Documents du projet","Références et liens des documents associés au dossier."],en:["▢ Project documents","Document references and links for the project."]}};
 function renderSection(){
  var s=sections[state.section]||sections.overview,t=s[en()?"en":"fr"];
  setText("pf-panel-title",t[0]);setText("pf-panel-sub",t[1]);
  var box=$("pf-panel-content");
- box.innerHTML=state.section==="overview"?overview():state.section==="quotes"?allQuotes():state.section==="invoices"?allInvoices():state.section==="payments"?payments():state.section==="extras"?extras():activity();
+ box.innerHTML=state.section==="overview"?overview():state.section==="quotes"?allQuotes():state.section==="invoices"?allInvoices():state.section==="payments"?payments():state.section==="extras"?extras():state.section==="journal"?privateJournal():state.section==="documents"?documents():activity();
  $("pf-tabs").querySelectorAll("[data-panel]").forEach(function(b){var on=b.dataset.panel===state.section;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.tabIndex=on?0:-1;});
+ var navActive=state.section==="invoices"?"pf-side-invoices":state.section==="journal"?"pf-side-journal":state.section==="documents"?"pf-side-documents":"pf-side-project";
+ ["pf-side-project","pf-side-invoices","pf-side-journal","pf-side-documents"].forEach(function(name){
+   var el=$(name);if(!el)return;var selected=name===navActive;
+   el.classList.toggle("pf-active",selected);
+   if(selected)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current");
+ });
 }
 function render(){
  if(!state.quote)return;
