@@ -48,7 +48,7 @@ test('new owner dashboard provides real client, quote, finance and case finder r
  const js=read('admin/dashboard-v3.js');
  const html=read('admin/index.html');
  const css=read('admin/dashboard-v3.css');
- assert.match(html,/dashboard-v3\.js\?v=20261116-1/);
+ assert.match(html,/dashboard-v3\.js\?v=20261116-global-v5/);
  assert.match(html,/dashboard-v3\.css\?v=20261116-1/);
  assert.match(html,/case-finder\.js/);
  assert.match(html,/id="sd-dashboard"/);

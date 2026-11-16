@@ -1,0 +1,18 @@
+/* DZOFT global business overview, v5.
+   The cross-client portfolio is not a second copy of a single client's workspace. */
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-selected{display:none!important}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-bottom{display:block}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-activity{width:100%}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button{min-height:66px;background:#f9f7ff;border-color:#e7e2f3}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button:hover{background:#eee8ff}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-activity .sd-surface-head{margin-bottom:13px}
+body.dzoft-admin.dzoft-global-view #app .side [data-tab="dash"][aria-selected="true"]{background:transparent!important;box-shadow:none!important;color:#e4e5f7!important}
+body.dzoft-admin.dzoft-global-view #app .side .dzoft-global-overview[aria-current="page"]{background:linear-gradient(105deg,#7543f7,#5116cf);color:#fff}
+@media(max-width:1100px){
+ body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts{grid-template-columns:1fr 1fr;gap:9px}
+ body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button{padding:10px 11px;min-height:62px}
+}

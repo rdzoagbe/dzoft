@@ -1,0 +1,39 @@
+name: DZOFT navigation Chromium smoke
+
+on:
+  pull_request:
+    paths:
+      - 'admin/**'
+      - 'e2e/global-overview-navigation.spec.mjs'
+      - 'playwright.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/preview-navigation-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Exercise navigation in real Chromium without owner credentials
+        run: npx playwright test e2e/global-overview-navigation.spec.mjs
+      - name: Upload failure screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dzoft-navigation-playwright-results
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

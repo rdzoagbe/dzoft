@@ -88,8 +88,11 @@ function renderSelected(data){
   (d?"":'<p class="sd-warning">'+tr("Suivi financier indisponible pour ce projet.","Financial tracking is unavailable for this project.")+'</p>');
 }
 function translateShell(){
- $("sd-title").textContent=tr("Tableau de bord","Dashboard");
- $("sd-subtitle").textContent=tr("Clients, projets, facturation et encaissements au même endroit.","Clients, projects, invoices and receipts in one place.");
+ var global=location.hash==='#/vue-globale'||location.hash==='#vue-globale';
+ $("sd-title").textContent=global?tr("Vue globale","Global overview"):tr("Tableau de bord","Dashboard");
+ $("sd-subtitle").textContent=global?
+   tr("Votre activité en un coup d'œil. Ouvrez un dossier pour retrouver les outils propres à chaque projet.","Your business at a glance. Open a case for its project-specific tools."):
+   tr("Clients, projets, facturation et encaissements au même endroit.","Clients, projects, invoices and receipts in one place.");
  $("sd-find").textContent=tr("Rechercher un dossier","Find a case");
  $("sd-new-quote").textContent=tr("+ Nouveau devis","+ New quote");
  $("sd-projects-title").textContent=tr("Projets clients","Client projects");
@@ -106,5 +109,6 @@ $("sd-new-quote").addEventListener("click",function(){
  requestAnimationFrame(function(){var b=document.getElementById("b-qnew");if(b)b.click();});
 });
 document.addEventListener("dzoft:locale-change",function(){if(lastInput)render(lastInput);});
+window.addEventListener("hashchange",function(){if(lastInput)translateShell();});
 root.DzoftWorkspaceDashboard={render:render};
 })(window);

@@ -216,7 +216,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-2">
-<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -861,11 +861,20 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   function showView(v){
     if(VIEWS.indexOf(v)<0)v='dash';
+    // Vue globale and Aujourd'hui may share data, but must never be selected
+    // simultaneously or appear to be identical destinations.
+    var isGlobal=location.hash==='#/vue-globale'||location.hash==='#vue-globale';
+    document.body.classList.toggle('dzoft-global-view',isGlobal);
     var grouped=['dossiers','leads','clients','quotes','projects'].indexOf(v)!==-1;
     var activeGroup=v==='dossiers'?'clients':v;
     [].forEach.call(document.querySelectorAll('.side .tab'),function(node){
-      node.setAttribute('aria-selected',String(node.dataset.tab===(grouped?'dossiers':v)));
+      node.setAttribute('aria-selected',String(!isGlobal&&node.dataset.tab===(grouped?'dossiers':v)));
     });
+    var overview=document.querySelector('.dzoft-global-overview');
+    if(overview){
+      if(isGlobal)overview.setAttribute('aria-current','page');
+      else overview.removeAttribute('aria-current');
+    }
     ['dash','dossiers','inbox','finance','settings','trash'].forEach(function(k){
       var node=$('v-'+k);if(node)node.hidden=grouped?k!=='dossiers':k!==v;
     });
@@ -1743,7 +1752,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261116-nav-audit1"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261116-1"></script>
+<script src="dashboard-v3.js?v=20261116-global-v5"></script>
 <script src="unified-app-shell.js?v=20261116-2"></script>
 </body>
 </html>
