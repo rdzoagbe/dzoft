@@ -192,6 +192,7 @@ function render(){
  applyTranslations();renderHeader();renderKpis();renderSection();
 }
 function readData(){
+ if(!sb.session()){conceal();location.replace("./");return;}
  if(state.busy)return;
  state.busy=true;
  return sb.select("quotes","select=*&id=eq."+encodeURIComponent(id)).then(function(rows){
@@ -203,8 +204,22 @@ function readData(){
    sb.rpc("project_tracking",{p_quote:id},true)
   ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();},
    function(err){state.readError=err;state.changes=null;state.tracking=null;render();setText("pf-finance-note",tr("Certaines données financières sont indisponibles. Aucun total non vérifié n'est présenté.","Some financial data is unavailable. Unverified totals are hidden."));});
- }).catch(function(err){if(state.quote){state.readError=err;render();}else showError(tr("Accès impossible au projet. Vérifiez votre session administrateur.","Unable to access project. Check your admin session."));})
+ }).catch(function(){state.readError=true;conceal();showError(tr("Accès impossible au projet. Vérifiez votre session administrateur.","Unable to access project. Check your admin session."));})
  .finally(function(){state.busy=false;});
+}
+function conceal(){
+ $("pf-shell").hidden=true;
+ $("pf-loading").hidden=false;
+ $("pf-loading").textContent=tr("Vérification de la session…","Checking session…");
+ if($("pf-extra-dialog").open)$("pf-extra-dialog").close();
+}
+function verifyOwnerAndLoad(){
+ conceal();
+ if(!sb.session()){location.replace("./");return;}
+ return sb.rpc("is_owner",{},true).then(function(ok){
+  if(!ok){location.replace("./");return;}
+  return readData();
+ }).catch(function(){showError(tr("Accès administrateur non vérifié. Revenez à la connexion.","Admin access could not be verified. Return to sign-in."));});
 }
 function openExtra(){
  if(!state.quote||!state.quote.accepted_at)return;
@@ -241,7 +256,13 @@ $("pf-menu").addEventListener("click",function(){var open=!$("pf-shell").classLi
 $("pf-overlay").addEventListener("click",function(){$("pf-shell").classList.remove("pf-menu-open");$("pf-menu").setAttribute("aria-expanded","false");$("pf-overlay").hidden=true;});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("pf-shell").classList.contains("pf-menu-open"))$("pf-overlay").click();});
 document.addEventListener("dzoft:locale-change",function(){if(state.quote)render();});
-document.addEventListener("visibilitychange",function(){if(!document.hidden){if(!sb.session()){document.body.replaceChildren();location.replace("./");return;}readData();}});
-window.addEventListener("pageshow",function(e){if(e.persisted)readData();});
-readData();
+$("pf-logout").addEventListener("click",function(){
+ conceal();
+ // Hide immediately, independently of whether the remote logout request succeeds.
+ Promise.resolve(sb.signOut()).finally(function(){location.replace("./");});
+});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)verifyOwnerAndLoad();});
+window.addEventListener("pagehide",conceal);
+window.addEventListener("pageshow",function(e){if(e.persisted)verifyOwnerAndLoad();});
+verifyOwnerAndLoad();
 })();
