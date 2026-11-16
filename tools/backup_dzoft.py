@@ -319,8 +319,10 @@ def do_backup(args: argparse.Namespace) -> None:
                 files = [p for p in base.rglob("*") if p.is_file()]
                 if len(files) != expected_storage_count:
                     raise BackupError(
-                        "Storage download count differs from the independently verified "
-                        "database object count. No complete archive will be created.")
+                        "Storage downloaded " + str(len(files)) + " files but SQL expects " +
+                        str(expected_storage_count) +
+                        ". No complete archive will be created. Run probe-storage "
+                        "to diagnose without another database dump.")
                 # Detect objects added, deleted or renamed during the download.
                 listing_after = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
                                          "--experimental"] + storage_ls_flags)
@@ -379,6 +381,44 @@ def do_backup(args: argparse.Namespace) -> None:
     print("Next: copy this encrypted file to a separate secure location.")
     print("Do not commit the archive or your passphrase to GitHub.")
     print("A full Auth/Storage restore has NOT yet been validated.")
+
+
+def do_probe_storage(args: argparse.Namespace) -> None:
+    """Diagnose remote/local Storage count without dumping SQL or archiving files.
+
+    Downloads into a temporary directory, prints COUNT summaries only and
+    removes temporary bytes on exit. Never prints private object names.
+    """
+    if args.expected_storage_count < 0:
+        raise BackupError("Expected Storage count must be non-negative.")
+    print("Storage-only diagnostic for RD-Clients. No database dump or archive.")
+    ls_flags = select_remote_flags(["storage", "ls"])
+    cp_flags = select_remote_flags(["storage", "cp"])
+    listing = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
+                       "--experimental"] + ls_flags)
+    listing_rows = len([line for line in listing.decode("utf-8", "replace").splitlines()
+                        if line.strip()])
+    print("Recursive CLI listing lines:", listing_rows)
+    with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
+        base = Path(scratch)
+        run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, ".",
+                 "--experimental"] + cp_flags, cwd=base)
+        files = [p for p in base.rglob("*") if p.is_file()]
+        print("Local downloaded file count:", len(files))
+        print("Expected SQL object count:", args.expected_storage_count)
+        print("Downloaded total bytes:", sum(p.stat().st_size for p in files))
+        print("Downloaded root directories:",
+              sum(p.is_dir() for p in base.iterdir()))
+        if len(files) != args.expected_storage_count:
+            raise BackupError(
+                "Storage-only diagnostic found a count mismatch; "
+                "no complete archive was created. Temporary downloads will be deleted.")
+        after = run_cli(["storage", "ls", "-r", "ss:///" + BUCKET,
+                         "--experimental"] + ls_flags)
+        if after != listing:
+            raise BackupError("Remote listing changed during diagnostic; retry after stabilization.")
+    print("PASS: Storage-only download and object count matched. "
+          "Temporary downloaded files were removed.")
 
 
 def do_verify(args: argparse.Namespace) -> None:
@@ -450,6 +490,9 @@ def main() -> int:
                         help="Only for conscious database-only backups")
     backup.add_argument("--expected-storage-count", type=int, default=None,
                         help="Read-only SQL object count for client-files; required when non-empty")
+    probe = cmds.add_parser("probe-storage", help="Inspect Storage-only download counts without a database dump")
+    probe.add_argument("--expected-storage-count", type=int, required=True,
+                       help="Read-only SQL object count from client-files")
     verify = cmds.add_parser("verify", help="Verify encrypted archive")
     verify.add_argument("archive", type=Path)
     extract = cmds.add_parser("extract", help="Extract SQL for an isolated restore test")
@@ -460,6 +503,8 @@ def main() -> int:
     try:
         if args.command == "backup":
             do_backup(args)
+        elif args.command == "probe-storage":
+            do_probe_storage(args)
         elif args.command == "verify":
             do_verify(args)
         elif args.command == "extract":
