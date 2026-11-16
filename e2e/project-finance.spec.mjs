@@ -12,8 +12,10 @@ const q={id:quoteId,client_id:customer.id,numero:'DEV-DEMO-001',accepted_at:'202
  {id:'demo-invoice-3',num:'FACT-DEMO-3',amt:700,issued_at:'2026-11-14T12:00:00Z'}
  ],accepted_data:{lines:[{l:'Application web PWA',q:1,p:1500},{l:'Comptes utilisateurs',q:1,p:0}]}};
 window.RDsb={session:()=>({access_token:'synthetic',user:{id:'synthetic-owner'}}),
+ signOut:async()=>{},
  select:async table=>table==='quotes'?[q]:table==='clients'?[customer]:[],
  rpc:async name=>{
+  if(name==='is_owner')return true;
   if(name==='owner_list_change_requests')return [
    {id:'faux-extra',title:'Nouvelle fonctionnalité',description:'Travaux complémentaires à étudier',proposed_scope:'Notifications et codes QR',extra_price:500,status:'proposed',proposal_version:1,created_at:'2026-11-15T10:00:00Z'}];
   if(name==='project_tracking')return {total:1500,base_total:1500,received:800,remaining:700,
