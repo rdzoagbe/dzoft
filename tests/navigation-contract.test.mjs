@@ -25,3 +25,29 @@ test('project-specific finance keeps explicit project selection and admin return
 test('new visual layer is loaded by main admin entry', () => {
   assert.match(admin, /workspace-unified\.css/);
 });
+
+const dashboardV3 = readFileSync(new URL('../admin/dashboard-v3.js', import.meta.url), 'utf8');
+const dashboardV3Styles = readFileSync(new URL('../admin/dashboard-v3.css', import.meta.url), 'utf8');
+
+test('owner dashboard markup uses the new portfolio layout, not legacy Today', () => {
+  assert.match(admin, /id="sd-dashboard"/);
+  for (const id of ['sd-stats','sd-project-list','sd-action-list','sd-project-select','sd-project-summary','sd-verification']) {
+    assert.ok(admin.includes('id="' + id + '"'), 'Missing new dashboard section: ' + id);
+  }
+  assert.doesNotMatch(admin, /<div class="bar"><h2>Tableau de bord<\/h2>/);
+  assert.doesNotMatch(admin, /<script src="workspace-home\.js/);
+  assert.match(admin, /dashboard-v3\.css/);
+  assert.match(admin, /dashboard-v3\.js/);
+});
+test('new dashboard only displays authorized verified financial tracking', () => {
+  assert.match(dashboardV3, /tracking/);
+  assert.match(dashboardV3, /d\.received/);
+  assert.match(dashboardV3, /d\.remaining/);
+  assert.match(dashboardV3, /d\.total/);
+  assert.doesNotMatch(dashboardV3, /\.update\(|\.insert\(|\.delete\(|\.rpc\(/);
+  assert.match(dashboardV3, /projectUrl/);
+});
+test('new dashboard has mobile responsive breakpoints', () => {
+  assert.match(dashboardV3Styles, /max-width:900px/);
+  assert.match(dashboardV3Styles, /max-width:600px/);
+});
