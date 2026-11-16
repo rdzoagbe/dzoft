@@ -120,6 +120,41 @@ Object.assign(dzoftEnglish,{
  'Pas encore envoyée':'Not sent yet',
  'Émise le':'Issued on'
 });
+// Static workspace copy audit: keep full FR/EN coverage for settings, projects,
+// invoices and common form states. These are interface strings, not user data.
+Object.assign(dzoftEnglish,{
+ 'Mot de passe (10 caractères minimum)':'Password (at least 10 characters)',
+ 'Mot de passe oublié':'Forgot password',
+ 'Enregistrer':'Save',
+ 'Chargement des priorités…':'Loading priorities…',
+ 'Autres indicateurs d\'activité':'Other activity indicators',
+ 'Sauvegarde locale sécurisée :':'Secure local backup:',
+ 'Guide DZOFT : sauvegarde chiffrée':'DZOFT guide: encrypted backup',
+ 'Demandes et devis supprimés : restaurez-les ou supprimez-les définitivement':'Deleted requests and quotes: restore or permanently delete them',
+ 'Nouveau devis':'New quote',
+ 'Le client reçoit automatiquement un e-mail de notification. Les détails restent dans son espace.':'The client automatically receives an email notification. Details remain in their client area.',
+ 'Collez le message reçu par WhatsApp ou par e-mail : il est ajouté à vos demandes avec les bonnes informations.':'Paste a WhatsApp or email message to create a request with its details.',
+ 'Ce devis n’est relié à aucune fiche client : l’espace client a besoin d’une fiche.':'This quote is not linked to a client record. The client portal requires one.',
+ 'Créer la fiche à partir du devis':'Create client record from quote',
+ 'Demandes de modification et devis complémentaires':'Change requests and additional quotes',
+ 'Journal du projet':'Project journal',
+ 'privé':'private',
+ 'Le client ne voit jamais ce journal. Seules les publications que vous approuvez lui sont communiquées.':'The client never sees this journal. Only progress updates you approve are shared.',
+ 'Demande du client':'Client request',
+ 'Décision':'Decision',
+ 'Notes et décisions':'Notes and decisions',
+ 'Outils avancés · Modifier, importer ou copier':'Advanced tools · Edit, import or copy',
+ '+ Entrée à éditer':'+ Editable entry',
+ 'Format : date | type | texte. Types : fait, demande, décision, attente. Sans date : aujourd’hui.':'Format: date | type | text. Types: done, request, decision, waiting. No date means today.',
+ 'Préparez et vérifiez le montant':'Prepare and review the amount',
+ 'de confirmer. Le numéro officiel n’est attribué qu’au dernier clic.':'before confirming. The official invoice number is assigned only at the last step.',
+ 'Pour rectifier une facture déjà émise, ne modifiez pas son montant ni son numéro : utilisez un document rectificatif traçable (avoir ou facture rectificative, selon le cas).':'To correct an issued invoice, do not change its amount or number. Use a traceable correction document (credit note or correcting invoice, as applicable).',
+ 'Il est peut-être incomplet ou a été remplacé. Ouvrez le dernier lien reçu par e-mail ou WhatsApp, ou connectez-vous avec votre compte.':'The link may be incomplete or replaced. Open your latest email or WhatsApp link, or sign in.',
+ 'Vérifiez votre connexion internet, puis rechargez la page.':'Check your internet connection and reload the page.'
+});
+Object.assign(dzoftFrenchMap,{
+ 'Enter the six-digit code from your authenticator app. This extra check protects your client and payment information.':'Saisissez le code à six chiffres de votre application d’authentification. Cette vérification protège les informations de vos clients et les paiements.'
+});
 // New payment and external-invoice actions introduced in the project workspace.
 // Translation here is for UI chrome only, never for client-authored invoices.
 Object.assign(dzoftEnglish,{
@@ -148,7 +183,7 @@ function dzoftDynamicEnglish(text){
   // new translation sources instead of being reverted to obsolete UI copy.
   const renderedText=new WeakMap(), renderedAttrs=new WeakMap();
   let locale='fr', observer, busy=false;
-  const translate=value=>{const raw=String(value||''), lead=(raw.match(/^\s*/)||[''])[0], tail=(raw.match(/\s*$/)||[''])[0], core=raw.trim().replace(/\s+/g,' ');return lead+(locale==='en'?(dzoftEnglish[core]||dzoftDynamicEnglish(core)):core)+tail;};
+  const translate=value=>{const raw=String(value||''), lead=(raw.match(/^\s*/)||[''])[0], tail=(raw.match(/\s*$/)||[''])[0], core=raw.trim().replace(/\s+/g,' ');return lead+(locale==='en'?(dzoftEnglish[core]||dzoftDynamicEnglish(core)):(dzoftFrenchMap[core]||core))+tail;};
   function process(root){
     if(!root||busy)return;
     busy=true;
