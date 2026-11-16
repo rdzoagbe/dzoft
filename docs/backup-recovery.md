@@ -1,5 +1,30 @@
 # DZOFT — Secure backup and recovery
 
+
+## Recovery protection update — 16 November 2026 (read-only inventory)
+
+The connected **RD-Clients** project remains active. Its live inventory, checked using aggregate read-only SQL on 16 November, shows **17 public application tables**, **6 private tables**, **3 Auth users**, **one Storage bucket** and **three objects in `client-files`**. Earlier 13–15 November checks recorded zero Storage objects. The existing November 15 encrypted database archive therefore cannot be used as proof of recoverability for documents uploaded since then. No object names, customer details, account emails or passwords were exported during this review.
+
+**Status: NOT RESTORE-VERIFIED.** The 15 November application-data archive had been decrypted and validated from a privately stored cloud copy, and the separate Auth mapping ledger had passed its copy hash and decrypt checks. Neither constitutes a demonstrated restore. The local `restore_dzoft_lab_schema.py` supports only a tightly pinned **schema PRE-DATA** stage; it does not restore complete application rows, private Storage objects, Auth credentials, RLS grants, Edge Functions or SMTP configuration.
+
+**Critical Storage safety change:** The native `-NativePostgres` backup refuses to call a snapshot complete if `client-files` is nonempty (it may explicitly export a **PARTIAL database-only** archive with `-SkipStorage`). The alternative **Supabase CLI backup mode** can include files, but must be run on a trusted disk-encrypted Windows computer. From **SQL Editor** in the same RD-Clients project, immediately before running the export, use this read-only query and record only the total:
+
+```sql
+select count(*) as client_files_objects from storage.objects where bucket_id = 'client-files';
+```
+
+Then from the official checked-out DZOFT repository on your trusted Windows PC, using a genuinely independent, restricted off-site destination, run the **CLI** (not native PostgreSQL) backup with the count returned by the query. For the inventory seen during this audit, that count was **3**; **refresh it before using the command**:
+
+```powershell
+.\tools\backup-dzoft-windows.ps1 -OffsitePath "E:\Private-DZOFT-Backups" -ExpectedStorageCount 3
+```
+
+The updated backup tool requires an independently verified expected count if the CLI Storage listing is nonempty. It refuses an absent, zero or mismatched count, and re-lists Storage after the download to detect changes while exporting. The encrypted manifest must report `exported`, and the independent copy must pass SHA-256 comparison and passphrase-protected verification. These checks cannot guarantee the files' individual content or permit restoring the project; all three files must also be checked in a **disposable isolated restoration drill** before declaring recovery readiness.
+
+**Do not** use `-SkipStorage` to bypass the completeness check, restore to production, put backups or passphrases on public GitHub, or paste client filenames and confidential SQL into support chats. The encrypted archive, Auth-ledger passphrase and any Supabase database password should remain outside the repository. If the CLI's commands are no longer supported, stop and inspect `supabase storage ls --help` / `supabase storage cp --help`; do not force a local or differently linked export.
+
+Supabase Free does not include automatic daily managed backups, and even managed database snapshots do **not** contain Storage object bytes. See [official Supabase database backup guidance](https://supabase.com/docs/guides/platform/backups) and [Storage download guidance](https://supabase.com/docs/guides/storage/management/download-objects).
+
 ## Recovery milestone — 15 November 2026
 
 The owner created an encrypted native PostgreSQL application-data archive `dzoft-20261115-145839Z-b191cd.dzoftbak` (57,786 bytes), copied it to private Google Drive, downloaded it back and successfully ran the authenticated backup integrity/decryption verification on that downloaded copy. The original and downloaded file SHA-256 values have **not yet been compared side-by-side**. This establishes one verified readable cloud copy, **not** a proven database restore or complete Supabase disaster-recovery image.
