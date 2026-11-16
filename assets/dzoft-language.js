@@ -125,10 +125,60 @@ function dzoftDynamicEnglish(text){
 }
 (function(){
   const storageKey='dzoft-ui-locale', originalText=new WeakMap(), originalAttrs=new WeakMap();
+  // Remember our own rendered values so later changes made by the app become
+  // new translation sources instead of being reverted to obsolete UI copy.
+  const renderedText=new WeakMap(), renderedAttrs=new WeakMap();
   let locale='fr', observer, busy=false;
   const translate=value=>{const raw=String(value||''), lead=(raw.match(/^\s*/)||[''])[0], tail=(raw.match(/\s*$/)||[''])[0], core=raw.trim().replace(/\s+/g,' ');return lead+(locale==='en'?(dzoftEnglish[core]||dzoftDynamicEnglish(core)):core)+tail;};
-  function process(root){if(!root||busy)return;busy=true;const nodes=[];if(root.nodeType===Node.TEXT_NODE)nodes.push(root);else if(root.nodeType===Node.ELEMENT_NODE||root===document){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode())nodes.push(w.currentNode);}for(const n of nodes){if(n.parentElement?.closest('script,style,svg,[data-no-translate]'))continue;if(!originalText.has(n))originalText.set(n,n.nodeValue);n.nodeValue=translate(originalText.get(n));}const els=root.nodeType===Node.ELEMENT_NODE?[root,...root.querySelectorAll('*')]:root===document?[...document.querySelectorAll('*')]:[];for(const el of els)for(const attr of ['placeholder','title','aria-label']){if(!el.hasAttribute(attr))continue;let m=originalAttrs.get(el);if(!m){m={};originalAttrs.set(el,m);}if(!(attr in m))m[attr]=el.getAttribute(attr);el.setAttribute(attr,translate(m[attr]));}busy=false;}
+  function process(root){
+    if(!root||busy)return;
+    busy=true;
+    try{
+      const nodes=[];
+      if(root.nodeType===Node.TEXT_NODE)nodes.push(root);
+      else if(root.nodeType===Node.ELEMENT_NODE||root===document){
+        const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+        while(w.nextNode())nodes.push(w.currentNode);
+      }
+      for(const n of nodes){
+        if(n.parentElement?.closest('script,style,svg,[data-no-translate]'))continue;
+        const current=n.nodeValue;
+        if(!originalText.has(n)||current!==renderedText.get(n))originalText.set(n,current);
+        const output=translate(originalText.get(n));
+        renderedText.set(n,output);
+        if(current!==output)n.nodeValue=output;
+      }
+      const els=root.nodeType===Node.ELEMENT_NODE?[root,...root.querySelectorAll('*')]:root===document?[...document.querySelectorAll('*')]:[];
+      for(const el of els){
+        if(el.closest('script,style,svg,[data-no-translate]'))continue;
+        for(const attr of ['placeholder','title','aria-label']){
+          if(!el.hasAttribute(attr))continue;
+          let originals=originalAttrs.get(el),rendered=renderedAttrs.get(el);
+          if(!originals){originals={};originalAttrs.set(el,originals);}
+          if(!rendered){rendered={};renderedAttrs.set(el,rendered);}
+          const current=el.getAttribute(attr);
+          if(!(attr in originals)||current!==rendered[attr])originals[attr]=current;
+          const output=translate(originals[attr]);
+          rendered[attr]=output;
+          if(current!==output)el.setAttribute(attr,output);
+        }
+      }
+    }finally{busy=false;}
+  }
   function setLanguage(next){locale=next==='en'?'en':'fr';document.documentElement.lang=locale;if(document.body.classList.contains('dzoft-client'))document.title=locale==='en'?'Client area · DZOFT':'Espace client · DZOFT';if(document.body.classList.contains('dzoft-admin'))document.title=locale==='en'?'Private workspace · DZOFT':'Espace privé · DZOFT';try{localStorage.setItem(storageKey,locale);}catch(_){}document.querySelectorAll('[data-dzoft-lang]').forEach(b=>{const active=b.dataset.dzoftLang===locale;b.setAttribute('aria-pressed',String(active));b.classList.toggle('active',active);});document.querySelectorAll('.lang-switch-app').forEach(x=>x.setAttribute('aria-label',locale==='en'?'Language':'Langue'));process(document);document.dispatchEvent(new CustomEvent('dzoft:locale-change',{detail:{locale}}));}
-  function init(){let saved='fr';try{saved=localStorage.getItem(storageKey)||'fr';}catch(_){}document.querySelectorAll('[data-dzoft-lang]').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.dzoftLang)));setLanguage(saved);observer=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)process(n);});observer.observe(document.body,{childList:true,subtree:true});}
+  function init(){
+    let saved='fr';
+    try{saved=localStorage.getItem(storageKey)||'fr';}catch(_){}
+    document.querySelectorAll('[data-dzoft-lang]').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.dzoftLang)));
+    setLanguage(saved);
+    observer=new MutationObserver(records=>{
+      for(const r of records){
+        if(r.type==='childList')for(const n of r.addedNodes)process(n);
+        else if(r.type==='characterData')process(r.target);
+        else if(r.type==='attributes')process(r.target);
+      }
+    });
+    observer.observe(document.body,{childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label'],subtree:true});
+  }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
 })();
