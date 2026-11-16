@@ -480,8 +480,15 @@ footer{max-width:1180px}
     }, function(){ au('L’enregistrement n’a pas abouti. Refaites « Mot de passe oublié ».'); });
   };
   function logout(){
+    // Invalidate the visible client area immediately; server logout may be offline.
+    D = null;
+    activeClientUserId = null;
+    token = null;
+    show('s-load');
     try { localStorage.removeItem('rd-espace'); } catch(e){}
-    sb.signOut().then(function(){ location.replace(location.pathname); });
+    Promise.resolve().then(function(){ return sb.signOut(); }).catch(function(){
+      // A network error must not leave an old private screen displayed.
+    }).finally(function(){ location.replace(location.pathname); });
   }
   $('b-out').onclick = logout;
 
