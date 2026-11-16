@@ -220,13 +220,18 @@ function openExtra(){
    root._pfTimer=setTimeout(function(){if(dialog.open&&!state.busy)readData();},450);
   });
   observer.observe(root,{subtree:true,childList:true});
-  window.DzoftChanges.owner(root,{
+  Promise.resolve(window.DzoftChanges.owner(root,{
     sb:sb,quoteId:id,en:en(),invoices:state.quote.invoices||[],
     onInvoice:function(){dialog.close();location.href=projectUrl("billing");}
-  });
+  })).then(function(){
+    if(!dialog.open)return;
+    var form=root.querySelector("[data-change-offer]");
+    if(form){var detail=form.closest("details");if(detail)detail.open=true;}
+  }).catch(function(){root.textContent=tr("Impossible de charger les propositions. Réessayez depuis le suivi du projet.","Unable to load proposals. Retry from project management.");});
+ } else {
+  var form=$("pf-change-widget").querySelector("[data-change-offer]");
+  if(form){var detail=form.closest("details");if(detail)detail.open=true;}
  }
- var form=$("pf-change-widget").querySelector("[data-change-offer]");
- if(form){var detail=form.closest("details");if(detail)detail.open=true;}
 }
 $("pf-dialog-close").addEventListener("click",function(){$("pf-extra-dialog").close();});
 $("pf-extra-dialog").addEventListener("click",function(e){if(e.target===$("pf-extra-dialog"))e.target.close();});
