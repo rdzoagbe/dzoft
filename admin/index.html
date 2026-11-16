@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -1515,10 +1515,27 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       rows.map(function(c){
         var n = data.quotes.filter(function(q){ return q.client_id === c.id; }).length;
         var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length;
-        return '<tr class="click" data-id="' + c.id + '"><td><b>' + esc(c.nom || '—') + '</b>' + (c.user_id ? ' <span class="chip">compte</span>' : '') + (cu ? ' <span class="chip msg">' + cu + ' message' + (cu > 1 ? 's' : '') + '</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n + '</td></tr>';
+        var accepted=data.quotes.filter(function(q){return q.client_id===c.id&&q.accepted_at;}).sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
+        var latest=accepted.length?accepted[0]:null;
+        return '<tr class="click" data-id="' + esc(c.id) + '"><td>' +
+          (latest?'<a class="dzoft-client-link" href="projet.html?q='+encodeURIComponent(latest.id)+'" aria-label="Ouvrir le dossier de '+esc(c.nom||'Client')+'"><b>'+esc(c.nom||'—')+'</b></a>':'<button type="button" class="dzoft-client-link dzoft-client-link-button" data-client-open="'+esc(c.id)+'"><b>'+esc(c.nom||'—')+'</b></button>') +
+          (c.user_id ? ' <span class="chip">compte</span>' : '') + (cu ? ' <span class="chip msg">' + cu + ' message' + (cu > 1 ? 's' : '') + '</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n +
+          ' <button type="button" class="btn sm line" data-client-edit="'+esc(c.id)+'">Modifier</button></td></tr>';
       }).join('') + '</tbody></table>';
   }
-  $('clients').onclick = function(e){ var tr = e.target.closest('tr.click'); if (tr) editClient(client(tr.dataset.id)); };
+  $('clients').onclick = function(e){
+    // The accepted project's new workspace is the primary client destination.
+    // Keep the existing client editor explicitly accessible via Modifier.
+    if(e.target.closest('a.dzoft-client-link'))return;
+    var edit=e.target.closest('[data-client-edit],[data-client-open]');
+    if(edit){editClient(client(edit.dataset.clientEdit||edit.dataset.clientOpen));return;}
+    var row=e.target.closest('tr.click');if(!row)return;
+    var id=row.dataset.id;
+    var accepted=data.quotes.filter(function(q){return q.client_id===id&&q.accepted_at;})
+      .sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
+    if(accepted.length){location.href='projet.html?q='+encodeURIComponent(accepted[0].id);return;}
+    editClient(client(id));
+  };
   $('b-cnew').onclick = function(){ editClient(null); };
   function editClient(c){
     editing = c;

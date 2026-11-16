@@ -51,3 +51,19 @@ test('new dashboard has mobile responsive breakpoints', () => {
   assert.match(dashboardV3Styles, /max-width:900px/);
   assert.match(dashboardV3Styles, /max-width:600px/);
 });
+
+test('client names open accepted project dossiers, not legacy editing modal', () => {
+  assert.match(admin, /class="dzoft-client-link"/);
+  assert.match(admin, /href="projet\.html\?q=/);
+  assert.match(admin, /data-client-edit/);
+  assert.match(admin, /if\(accepted\.length\)\{location\.href='projet\.html\?q='/);
+});
+test('project detail uses the same primary destinations as main workspace', () => {
+  assert.match(project, /id="pf-side-dashboard"/);
+  assert.match(project, /id="pf-side-cases"/);
+  assert.match(project, /href="\.\/#\/messages"/);
+  assert.match(project, /href="\.\/#\/paiements"/);
+  assert.match(project, /project-unified\.css/);
+  assert.match(project, /id="pf-side-project"/);
+  assert.match(project, /id="pf-side-invoices"/);
+});

@@ -13,7 +13,7 @@ test('project dashboard is reachable from existing client and projects navigatio
  assert.match(admin,/q\.accepted_at \? 'projet\.html\?q=' : 'suivi\.html\?q='/);
  assert.match(html,/project-finance\.js\?v=/);
  assert.match(html,/project-finance\.css\?v=/);
- assert.match(html,/href="\.\/#\/clients"/);
+ assert.match(html,/href="\.\/#\/dossiers"/);
  assert.match(html,/id="pf-tabs"/);
  for(const tab of ['overview','quotes','invoices','payments','extras','activity'])
    assert.match(html,new RegExp('data-panel="'+tab+'"'));
