@@ -2,6 +2,10 @@
 
 **Status: NOT restore-tested.** One encrypted application-data archive was later uploaded to Google Drive and the downloaded copy successfully decrypted/validated. The full restore and Auth account re-association remain untested. The downloaded Auth recovery ledger has been independently SHA-256 matched, decrypted and validated on the owner's PC. See [Auth recovery plan](auth-recovery.md). This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
 
+## Current inventory change — 16 November 2026
+
+A read-only SQL aggregate found **3 private `client-files` Storage objects** in RD-Clients, compared with **0 objects** during the original November 15 archive. See [backup-recovery.md](backup-recovery.md#recovery-protection-update--16-november-2026-read-only-inventory) for the current counts and the verified-Storage-count CLI backup procedure. This is not evidence those three object bytes are present in the previous archive. The real recovery drill is still unperformed; do not remove the NOT VERIFIED warning.
+
 ## Verified inventory snapshot — 15 November 2026
 
 A read-only query against the connected DZOFT Supabase project returned:
