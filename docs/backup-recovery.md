@@ -1,6 +1,19 @@
 # DZOFT — Secure backup and recovery
 
 
+## Supabase CLI 3.1.0: explicit remote target in isolated Windows Storage download
+
+The user's `supabase storage cp --help` confirms that CLI 3.1.0 supports `--remote=<ref|branch>`. The backup script copies files from a temporary working directory to keep any plaintext out of the repository. A bare `--remote` relies on a linked project discovered from the current directory and may fail when run from that isolated directory. The script now uses `--remote=rzghbvmszbjlqkdjzpxc` for both Storage listing and copy, and keeps a relative `.` destination for `cp`.
+
+For a safe non-download diagnostic, the owner may run:
+
+```powershell
+cd "$HOME\\DZOFT-Backup-Runner"
+supabase storage ls -r ss:///client-files --experimental --remote=rzghbvmszbjlqkdjzpxc
+```
+
+**The listing may reveal private object names**; do not paste it publicly. This is read-only, and it is not evidence the file bytes are backed up. When retrying the full script, confirm a fresh Storage count in RD-Clients SQL Editor and keep the backup encrypted. Failures now identify the CLI *operation name* and exit code without revealing credentials or filenames. No claim of a successful backup or restore is made until its verification output proves it.
+
 ## Windows CLI Storage download fix — 16 November 2026
 
 The Supabase CLI successfully exported the DZOFT database after Docker Desktop was enabled, but the encrypted backup correctly stopped at `storage cp -r` with **"Unsupported operation"** when the CLI received an absolute Windows scratch path. The backup tool now runs `supabase storage cp -r ss:///client-files . --experimental --remote` **from inside its isolated temporary directory** instead of passing an absolute Windows destination. No remote Storage objects are modified; all previous expected-count and listing-stability checks remain in force. Synthetic CLI tests require this exact relative-destination behavior in both legacy and v3 command modes.
