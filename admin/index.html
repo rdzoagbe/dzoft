@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -314,17 +314,43 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   </nav>
 
   <main>
-    <section id="v-dash">
-      <div class="bar"><h2>Tableau de bord</h2><span class="who" id="today" style="color:var(--mute);font-size:13.5px"></span></div>
-      <section class="today-action-center" id="today-action-center" aria-label="Actions prioritaires" aria-live="polite"><p class="today-data-note">Chargement des priorités…</p></section>
-       <details class="clean-dashboard-more"><summary data-fr="Plus d’actions et raccourcis" data-en="More actions and shortcuts">Plus d’actions et raccourcis</summary>
-         <div class="dashboard-focus" id="dash-focus"></div>
-         <div class="dashboard-shortcuts"><a class="btn sm line" href="#/devis">Gérer les devis</a><a class="btn sm line" href="#/clients">Voir les clients</a><a class="btn sm line" href="#/messages">Ouvrir les messages</a></div>
-       </details>
-       <details class="today-advanced"><summary data-fr="Autres indicateurs d’activité" data-en="Other business indicators">Autres indicateurs d'activité</summary><div class="kpis" id="kpis"></div></details>
-      <details class="today-advanced today-followups"><summary data-fr="Autres rappels et suivis" data-en="Other reminders and follow-ups">Autres rappels et suivis</summary><div class="panel"><ul class="todo" id="todo"></ul></div></details>
-      <div class="panel clean-project-list"><h3 data-fr="Projets actifs" data-en="Active projects">Projets actifs</h3><div id="dash-projects"></div></div>
-      <div class="panel"><h3>Email delivery history</h3><p style="font-size:13px;color:var(--mute)">Brevo acceptance, verified delivery, bounces and tracked opens appear here. An open-tracking signal is not proof of reading.</p><p id="email-delivery-health" style="font-size:12px;color:var(--mute)" role="status">Checking Brevo tracking…</p><div id="email-log"></div></div>
+    <section id="v-dash" aria-labelledby="sd-title">
+      <div class="sd-dashboard" id="sd-dashboard">
+        <div class="sd-head">
+          <div><span class="sd-eyebrow">DZOFT · ADMIN</span><h1 id="sd-title">Tableau de bord</h1><p id="sd-subtitle">Clients, projets, facturation et encaissements au même endroit.</p></div>
+          <div class="sd-head-actions"><button type="button" class="btn line" data-go="dossiers" id="sd-find">Rechercher un dossier</button><button type="button" class="btn main" id="sd-new-quote">+ Nouveau devis</button></div>
+        </div>
+        <div class="sd-stats" id="sd-stats" aria-live="polite"><p class="sd-placeholder">Chargement des indicateurs…</p></div>
+        <div class="sd-content">
+          <section class="sd-surface sd-projects" aria-labelledby="sd-projects-title">
+            <div class="sd-surface-head"><div><span class="sd-overline">VUE D'ENSEMBLE</span><h2 id="sd-projects-title">Projets clients</h2><p>Ouvrez un dossier pour gérer devis, suppléments et factures.</p></div><button class="sd-text-link" type="button" data-go="projects">Tous les projets →</button></div>
+            <div id="sd-project-list" class="sd-project-list"></div>
+          </section>
+          <aside class="sd-surface sd-actions" aria-labelledby="sd-actions-title">
+            <div class="sd-surface-head"><div><span class="sd-overline">À SUIVRE</span><h2 id="sd-actions-title">Actions prioritaires</h2><p>Validation des clients, paiements et échanges.</p></div></div>
+            <div id="sd-action-list" class="sd-action-list" aria-live="polite"></div>
+            <button type="button" class="sd-text-link" data-go="inbox">Ouvrir les messages →</button>
+          </aside>
+        </div>
+        <div class="sd-content sd-bottom">
+          <section class="sd-surface sd-selected" aria-labelledby="sd-selected-title">
+            <div class="sd-surface-head"><div><span class="sd-overline">GESTION FINANCIÈRE</span><h2 id="sd-selected-title">Dossier sélectionné</h2><p>Le contrat initial et les suppléments sont détaillés dans le projet.</p></div><label class="sd-select-label"><span>Projet</span><select id="sd-project-select" aria-label="Choisir un projet"><option>Chargement…</option></select></label></div>
+            <div id="sd-project-summary" aria-live="polite"></div>
+          </section>
+          <section class="sd-surface sd-activity" aria-labelledby="sd-activity-title">
+            <div class="sd-surface-head"><div><span class="sd-overline">RACCOURCIS</span><h2 id="sd-activity-title">Gérer votre activité</h2></div></div>
+            <div class="sd-shortcuts"><button type="button" data-go="clients">Clients <span>→</span></button><button type="button" data-go="quotes">Devis <span>→</span></button><button type="button" data-go="finance">Factures & paiements <span>→</span></button><button type="button" data-go="leads">Demandes reçues <span>→</span></button></div>
+          </section>
+        </div>
+        <details class="sd-email-history"><summary>Historique des e-mails et notifications</summary><div id="email-delivery-health" role="status">Vérification de l'envoi…</div><div id="email-log"></div></details>
+        <p class="sd-verification" id="sd-verification">Les encaissements affichés sont uniquement ceux confirmés dans le suivi du projet. Aucune réception n'est validée automatiquement.</p>
+      </div>
+      <div class="sd-compat" hidden aria-hidden="true">
+        <span id="today"></span>
+        <section id="today-action-center"></section>
+        <div id="dash-focus"></div><div class="dashboard-shortcuts"></div>
+        <div id="kpis"></div><ul id="todo"></ul><div id="dash-projects"></div>
+      </div>
     </section>
     <section id="v-leads" hidden>
       <div class="bar">
@@ -933,6 +959,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('todo').innerHTML = todo.length > 1 ? todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><button class="btn sm line" type="button" data-go="' + esc(t[1]) + '">' + t[2] + '</button></li>'; }).join('') : '<li style="color:var(--mute)">Aucune autre action en attente.</li>';
     $('dash-projects').innerHTML = running.length ? projectTable(running) : '<p style="color:var(--mute)">Aucun projet en cours.</p>';
     renderEmailLog();
+    if(window.DzoftWorkspaceDashboard)window.DzoftWorkspaceDashboard.render({
+      projects:ps.map(function(q){return {id:q.id,numero:q.numero||"",clientName:(client(q.client_id)||{}).nom||"Client",accepted_at:q.accepted_at,accepted_total:q.accepted_total,total:q.total,progress:progress(q),stage:nowStep(q),tracking:dashboardReceiptStates[q.id]||null};}),
+      ready:dashboardReceiptReady,failures:dashboardReceiptFailures,
+      unread:data.unread.map(function(m){return {client_id:m.client_id,clientName:(client(m.client_id)||{}).nom||"Client"};}),
+      newLeads:nNew,waitingQuotes:waiting().length,activeProjects:running.length,
+      english:document.documentElement.lang==="en"
+    });
   }
   function renderEmailLog(){
     var box = $('email-log'),health=$('email-delivery-health'); if(!box) return;
@@ -1661,7 +1694,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261115-one-menu"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="workspace-home.js?v=20261115-v2"></script>
+<script src="dashboard-v3.js?v=20261116-1"></script>
 </body>
 </html>
 

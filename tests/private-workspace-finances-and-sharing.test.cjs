@@ -88,7 +88,7 @@ test('logout is in account menu and installation prompts stay hidden',()=>{
 test('clean overview preserves all records, security policies and actual billing workflows',()=>{
  const home=read('admin/index.html'),project=read('admin/suivi.html');
  const css=read('admin/workspace-epuree.css');
- assert.match(home,/class="clean-dashboard-more"/);
+ assert.match(home,/id="sd-dashboard"/);
  assert.match(home,/id="dash-focus"/);
  assert.match(home,/id="today-action-center"/);
  assert.match(home,/id="dash-projects"/);

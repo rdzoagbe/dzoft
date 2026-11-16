@@ -44,22 +44,24 @@ test('quick actions reveal original sections without initiating payments, invoic
  assert.doesNotMatch(js,/localStorage|sessionStorage/);
 });
 
-test('new home shortcuts preserve old client, quote, finance and case finder routes',()=>{
- const js=read('admin/workspace-home.js');
+test('new owner dashboard provides real client, quote, finance and case finder routes',()=>{
+ const js=read('admin/dashboard-v3.js');
  const html=read('admin/index.html');
- const css=read('admin/workspace-home.css');
- assert.match(html,/workspace-home\.js\?v=20261115-v2/);
- assert.match(html,/workspace-home\.css\?v=20261115-v2/);
+ const css=read('admin/dashboard-v3.css');
+ assert.match(html,/dashboard-v3\.js\?v=20261116-1/);
+ assert.match(html,/dashboard-v3\.css\?v=20261116-1/);
  assert.match(html,/case-finder\.js/);
- assert.match(js,/document\.getElementById\('dossier-search'\)/);
- assert.match(js,/input',\{bubbles:true\}/);
- assert.match(js,/"#\/clients"|'#\/clients'/);
- assert.match(js,/location\.hash='#\/paiements'/);
- assert.match(js,/getElementById\(id\)/);
+ assert.match(html,/id="sd-dashboard"/);
+ assert.match(html,/id="sd-project-list"/);
+ assert.match(html,/id="sd-project-select"/);
+ assert.match(js,/location\.hash="#\/devis"/);
+ assert.match(html,/data-go="finance"/);
+ assert.match(html,/data-go="clients"/);
+ assert.match(js,/projectUrl/);
  assert.doesNotMatch(js,/\.rpc\(|\.update\(|\.insert\(|fetch\(|service_role|localStorage/);
- assert.match(css,/side \.tab\[data-tab="trash"\]\{display:none!important\}/);
+ assert.match(css,/max-width:600px/);
  assert.match(read('admin/simplified-ui.js'),/workspace-trash-link/);
- new vm.Script(js,{filename:'admin/workspace-home.js'});
+ new vm.Script(js,{filename:'admin/dashboard-v3.js'});
 });
 
 test('client portal is neither hidden nor modified by the admin-only redesign',()=>{
