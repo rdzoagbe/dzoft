@@ -22,8 +22,8 @@
   <aside class="pf-sidebar" id="pf-sidebar" aria-label="Navigation DZOFT">
     <a class="pf-logo" href="./#/tableau-de-bord" aria-label="DZOFT accueil"><img src="../assets/dzoft-favicon.svg" alt=""><span>DZOFT</span></a>
     <nav class="pf-side-links" aria-label="Navigation principale">
-      <a href="./#/tableau-de-bord"><span aria-hidden="true">⌂</span><span data-fr="Tableau de bord" data-en="Dashboard">Tableau de bord</span></a>
-      <a href="./#/clients" class="pf-active" aria-current="page"><span aria-hidden="true">♧</span><span data-fr="Clients" data-en="Clients">Clients</span></a>
+      <a id="pf-side-dashboard" href="#" class="pf-active" aria-current="page"><span aria-hidden="true">⌂</span><span data-fr="Tableau de bord" data-en="Dashboard">Tableau de bord</span></a>
+      <a href="./#/clients"><span aria-hidden="true">♧</span><span data-fr="Clients" data-en="Clients">Clients</span></a>
       <a href="./#/projets"><span aria-hidden="true">▱</span><span data-fr="Projets" data-en="Projects">Projets</span></a>
       <a href="./#/devis"><span aria-hidden="true">▤</span><span data-fr="Devis & chiffrage" data-en="Quotes & pricing">Devis & chiffrage</span></a>
       <a href="./#/paiements"><span aria-hidden="true">▣</span><span data-fr="Paiements" data-en="Payments">Paiements</span></a>
@@ -42,6 +42,10 @@
       <div class="pf-top-right"><span class="pf-private" data-fr="Espace privé" data-en="Private workspace">Espace privé</span><span class="pf-user">RD</span><a class="pf-admin-home" href="./" data-fr="Administration" data-en="Admin">Administration</a></div>
     </header>
     <main class="pf-main" id="pf-main" aria-live="off">
+      <div class="pf-dashboard-lead">
+        <div><span class="pf-overline">DZOFT · ADMIN</span><h1 data-fr="Tableau de bord" data-en="Dashboard">Tableau de bord</h1><p data-fr="Dossier client, travaux, factures et encaissements en un coup d'œil." data-en="Client scope, invoices and payments at a glance.">Dossier client, travaux, factures et encaissements en un coup d'œil.</p></div>
+        <label class="pf-project-switch-label" for="pf-project-switch"><span data-fr="Dossier affiché" data-en="Selected project">Dossier affiché</span><select id="pf-project-switch" aria-label="Choisir un projet" disabled><option data-fr="Chargement…" data-en="Loading…">Chargement…</option></select></label>
+      </div>
       <div class="pf-ident">
         <div class="pf-client-ident"><span class="pf-avatar" id="pf-avatar">—</span><div><h1 id="pf-client-name">—</h1><div class="pf-id-sub" id="pf-client-sub">—</div></div></div>
         <div class="pf-project-ident"><span class="pf-project-icon" aria-hidden="true">▱</span><div><h2 id="pf-project-name">—</h2><p id="pf-project-meta"></p></div><span class="pf-status" id="pf-project-status">—</span></div>
