@@ -61,7 +61,7 @@ function translate(){
  });
 }
 function selection(){
- var current=location.hash.replace(/^#\\/?/,'');
+ var current=location.hash.slice(1).replace(/^\//,'');
  if(current==='vue-globale')global.setAttribute('aria-current','page');
  else global.removeAttribute('aria-current');
 }
