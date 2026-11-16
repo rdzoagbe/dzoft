@@ -920,7 +920,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
               '<label>'+il('Montant (€)','Amount (€)')+'<input class="amt" type="number" min="0" step="0.01" value="' + esc(x.amt || '') + '" placeholder="Montant €"></label>')+
             '<label class="invoice-wide">'+il('Lien de paiement (facultatif)','Payment link (optional)')+'<input class="u" value="' + esc(x.u || '') + '" placeholder="https://…" inputmode="url"></label>'+
             '<div class="invoice-wide">' +
-              (official ? '<span class="invoice-record-note">'+il('Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».','Issued invoice amount and number are locked. Record confirmed payments in Payment history.')+'</span>' :
+              (official ? '<span class="invoice-record-note">'+il('Numéro et montant verrouillés après émission. Pour enregistrer un paiement, utilisez « Suivi des paiements ».','Issued invoice amount and number are locked. Record confirmed payments in Payment history.')+'</span>'+(!x.paid ? '<button type="button" class="btn sm line" data-a="record-payment">'+il('Enregistrer un encaissement vérifié','Record verified payment')+'</button>' : '') :
               (x.paid
                 ? '<div class="invoice-legacy-paid-note" role="status">'+il('Déjà déclarée payée dans l’historique. Vérifiez le détail des encaissements avant toute correction.','Previously marked paid in the historical records. Check the verified payment history before correcting anything.')+'</div>'
                 : '<button type="button" class="btn sm line" data-a="record-payment">'+il('Enregistrer un encaissement vérifié','Record verified payment')+'</button><p class="muted">'+il('Une facture émise ne prouve pas un paiement. Indiquez la date, le montant et le mode de réception dans le suivi des paiements.','An issued invoice is not proof of payment. Record the date, amount and method in Payment history.')+'</p>')) +
@@ -1207,8 +1207,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         var select = receiptForm.elements.invoice;
         if (select) {
           var option = Array.from(select.options).find(function(item){return item.value===x.id;});
-          if (option) { select.value=x.id; select.dispatchEvent(new Event('change',{bubbles:true})); }
-          else { select.value='unbilled'; select.dispatchEvent(new Event('change',{bubbles:true})); }
+          if (!option) {
+            toast(il('Cette facture n’est pas disponible pour un nouvel encaissement. Vérifiez les paiements déjà associés.','This invoice is not available for another receipt. Check its existing payment links.'));
+            return;
+          }
+          select.value=x.id;
+          select.dispatchEvent(new Event('change',{bubbles:true}));
         }
         receiptForm.scrollIntoView({behavior:'smooth',block:'center'});
         if (receiptForm.elements.amount) receiptForm.elements.amount.focus({preventScroll:true});
