@@ -1028,12 +1028,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- projects ---------------- */
   function projectTable(rows){
-    return '<table><thead><tr><th>Projet</th><th>Client</th><th class="hide-m">Étape</th><th>Avancement</th><th></th></tr></thead><tbody>' + rows.map(function(q){
-      var c = client(q.client_id) || {}, p = progress(q);
-      return '<tr><td><b>' + esc(q.numero) + '</b><br><span style="color:var(--mute);font-size:12.5px">accepté le ' + day(q.accepted_at) + '</span></td><td>' + esc(c.nom || '—') + '</td>' +
-        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + steps(q).filter(function(s){ return s.done; }).length + ' / ' + steps(q).length + ' étapes terminées</span><span class="mobile-stage">' + esc(nowStep(q)) + '</span></td>' +
-        '<td class="num"><button class="btn sm main" type="button" data-go="follow:' + q.id + '">Fiche projet</button></td></tr>';
-    }).join('') + '</tbody></table>';
+    return '<div class="v4-card-list v4-project-list">'+rows.map(function(q){
+      var c=client(q.client_id)||{},p=progress(q),completed=steps(q).filter(function(x){return x.done;}).length;
+      return '<article class="v4-list-card v4-project-card"><span class="v4-card-symbol" aria-hidden="true">▤</span>'+
+       '<div class="v4-card-core"><p class="v4-card-kicker">'+esc(q.numero||'—')+' · '+day(q.accepted_at)+'</p>'+
+       '<h3>'+esc(c.nom||'Client')+'</h3><p class="v4-card-sub">'+esc(nowStep(q))+'</p>'+
+       '<div class="v4-progress"><span style="width:'+p+'%"></span></div>'+
+       '<small>'+completed+' / '+steps(q).length+' étapes · '+p+'%</small></div>'+
+       '<div class="v4-card-actions"><a class="btn sm main" href="projet.html?q='+encodeURIComponent(q.id)+'">Ouvrir le dossier →</a></div></article>';
+    }).join('')+'</div>';
   }
   function renderProjects(){
     var ps = projectsList();
@@ -1042,15 +1045,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- inbox ---------------- */
   function renderInbox(){
-    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
-    var last = {}, order = [];
-    data.messages.forEach(function(m){ if (!last[m.client_id]) { last[m.client_id] = m; order.push(m.client_id); } });
-    if (!order.length) { $('inbox').innerHTML = '<div class="empty">Aucun message pour l’instant. Les messages de vos clients arrivent ici.</div>'; return; }
-    $('inbox').innerHTML = '<table class="inbox"><tbody>' + order.map(function(id){
-      var m = last[id], c = client(id) || {}, nu = data.unread.filter(function(x){ return x.client_id === id; }).length;
-      return '<tr data-go="thread:' + id + '" class="click"><td><b>' + esc(c.nom || 'Client') + '</b>' + (nu ? ' <span class="chip msg">' + nu + ' non lu' + (nu > 1 ? 's' : '') + '</span>' : '') +
-        '<div class="prev">' + (m.author === 'moi' ? 'Vous : ' : '') + esc(m.body) + '</div></td><td class="num" style="color:var(--mute);font-size:12.5px">' + new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td></tr>';
-    }).join('') + '</tbody></table>';
+    $('n-msg').hidden=!data.unread.length;$('n-msg').textContent=data.unread.length;
+    var last={},order=[];data.messages.forEach(function(m){if(!last[m.client_id]){last[m.client_id]=m;order.push(m.client_id);}});
+    if(!order.length){$('inbox').innerHTML='<div class="v4-empty"><h3>Aucune conversation</h3><p>Les messages de vos clients apparaîtront ici.</p></div>';return;}
+    $('inbox').innerHTML='<div class="v4-card-list v4-messages">'+order.map(function(id){
+      var m=last[id],c=client(id)||{},nu=data.unread.filter(function(x){return x.client_id===id;}).length;
+      return '<button type="button" class="v4-list-card v4-message-card" data-go="thread:'+esc(id)+'">'+
+       '<span class="v4-avatar" aria-hidden="true">'+esc((c.nom||'C').trim().slice(0,1).toUpperCase())+'</span>'+
+       '<span class="v4-card-core"><span class="v4-card-row"><strong>'+esc(c.nom||'Client')+'</strong>'+
+       (nu?'<span class="v4-unread">'+nu+' non lu'+(nu>1?'s':'')+'</span>':'')+'</span>'+
+       '<span class="v4-card-sub">'+(m.author==='moi'?'Vous : ':'')+esc(m.body||'')+'</span></span>'+
+       '<span class="v4-card-side"><small>'+new Date(m.created_at).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</small><span aria-hidden="true">›</span></span></button>';
+    }).join('')+'</div>';
   }
 
   /* ---------------- settings ---------------- */
