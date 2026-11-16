@@ -66,3 +66,13 @@
 .pf-dialog .dzoft-change-item .btn,.pf-dialog .dzoft-change-new .btn,.pf-dialog .dzoft-price-list .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 15px;border-radius:10px;border:1px solid #c9c2f5;background:#fff;color:#3b23b8;font:inherit;font-weight:700;cursor:pointer}
 .pf-dialog .dzoft-change-item .btn.main,.pf-dialog .dzoft-change-new .btn.main{background:linear-gradient(135deg,#6d3cf2,#5216d9);border-color:transparent;color:#fff}
 .pf-dialog .dzoft-change-item .btn.sm,.pf-dialog .dzoft-change-new .btn.sm,.pf-dialog .dzoft-price-list .btn.sm{min-height:40px;padding:7px 12px;font-size:13px}
+.dzoft-calc-auto{border:1px solid #cfc4ff;background:#f6f3ff;border-radius:10px;padding:12px;display:grid;gap:8px}
+.dzoft-calc-auto>p{margin:0}
+.dzoft-calc-auto .btn{justify-self:start}
+.dzoft-calc-summary{font-size:13px;line-height:1.55}
+.dzoft-calc-summary p{margin:4px 0}
+.dzoft-calc-summary ul{margin:6px 0;padding-left:20px}
+.dzoft-calc-warn{color:#9b2020;font-weight:700}
+.dzoft-calc [data-unpriced]{border-color:#d33!important;background:#fff4f4}
+.dzoft-calc tr[data-discount] td:first-child input{font-style:italic}
+.dzoft-calc td small{display:block;color:#636e81;font-size:11px;margin-top:3px}

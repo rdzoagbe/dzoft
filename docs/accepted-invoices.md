@@ -88,3 +88,19 @@ Migration `20261117090000_priced_change_proposals.sql`, fonction Edge `change-si
    signé, avec les lignes et la mention de la signature par code sur le PDF, puis propose l’envoi.
 
 Liste de prix : `settings.price_blocks` (propriétaire seulement). Tests : `tests/priced-change-proposals.sql`.
+
+### « ⚡ Calculer depuis le suivi du projet » (17 novembre 2026)
+
+Migration `20261117120000_change_lines_from_journal.sql`.
+
+- Reprend les entrées « demande du client » du journal privé, datées depuis la signature du devis et marquées
+  « fait » ; une ligne par demande (« Demandé et réalisé le … »). Les demandes « pas encore construites » sont
+  listées à part, jamais facturées.
+- Prix : liste de prix (mots repérés), sinon « prix par défaut d’une demande » (réglage), sinon vide et en rouge :
+  il faut le saisir avant de créer la proposition.
+- Chaque ligne garde son origine (`journal:<date>:<empreinte>`) : une demande déjà dans une proposition vivante
+  (ni refusée, ni retirée) n’est plus reprise.
+- « － Remise commerciale » ajoute une ligne négative ; le total doit rester positif (contrôlé par le serveur).
+- L’activité Git (`project_work_items`) n’est donnée qu’en indication (nombre de jours de travail) : elle ne dit ni
+  ce qui a été fait fonctionnalité par fonctionnalité, ni ce qui était prévu au devis.
+- À vérifier avant l’envoi : retirer ce que le devis couvrait déjà ou ce qui venait de DZOFT (ex. vidéo, nom).

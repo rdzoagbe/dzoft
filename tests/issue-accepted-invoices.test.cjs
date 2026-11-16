@@ -140,3 +140,21 @@ test('priced proposals: server totals and numbers the lines, client signs with a
  assert.match(read('admin/project-finance.js'),/issue_change=/);
  assert.match(admin,/issueAccepted\('supplement', c, null\)/);
 });
+
+test('calculate from tracking: done client requests from the journal, each billed once, with optional discount',()=>{
+ const mig=read('supabase/migrations/20261117120000_change_lines_from_journal.sql');
+ assert.match(changes,/data-calc-journal/);
+ // Only "demande" entries since the quote was signed, done ("fait"), not "pas encore construit".
+ assert.match(changes,/e\.k==='demande'/);
+ assert.match(changes,/\(!since\|\|e\.d>=since\)/);
+ assert.match(changes,/done=\/:\\s\*fait\\b\/i\.test\(text\)&&!\/\^pas encore\/i\.test\(text\)/);
+ // A request already in a live proposal is skipped.
+ assert.match(changes,/\['declined','rejected','withdrawn'\]\.indexOf\(r\.status\)<0/);
+ assert.match(changes,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
+ // The server keeps the origin, accepts a discount, and refuses a negative total.
+ assert.match(mig,/'\^journal:\[0-9\]\{4\}-\[0-9\]\{2\}-\[0-9\]\{2\}:\[a-z0-9\]\{1,16\}\$'/);
+ assert.match(mig,/if positive<=0 or total<0 then raise exception/);
+ assert.match(mig,/add column if not exists default_line_price/);
+ // Journal lines are not copied into the price list.
+ assert.match(changes,/l\.price>0&&!l\.source&&known\.indexOf\(l\.label\)<0/);
+});
