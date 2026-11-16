@@ -44,7 +44,8 @@ test('backup script uses documented remote link flags, explicit project and prot
  assert.match(src,/\["link", "--project-ref", ref\]/);
  assert.match(src,/def select_remote_flags\(group:/);
  assert.match(src,/run_cli\(group \+ \["--help"\]\)/);
- assert.match(src,/return \["--remote=" \+ PROJECT_REF\] if explicit_ref else \["--remote"\]/);
+ assert.match(src,/return \["--remote=" \+ PROJECT_REF\]/);
+ assert.doesNotMatch(src,/return \["--remote"\]/);
  assert.match(src,/return \["--linked"\]/);
  assert.match(src,/raise BackupError\(/);
  assert.match(src,/dump_flags = select_remote_flags\(\["db", "dump"\], explicit_ref=True\)/);

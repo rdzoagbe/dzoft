@@ -165,14 +165,14 @@ class BackupTests(unittest.TestCase):
                         sys.stdout.write("-- fake SQL export\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "ls"]:
-                    expected = "--remote" if mode == "v3" else "--linked"
+                    expected = "--remote=rzghbvmszbjlqkdjzpxc" if mode == "v3" else "--linked"
                     if expected not in args or "--experimental" not in args:
                         sys.exit(10)
                     if os.getenv("WITH_STORAGE") == "1":
                         sys.stdout.write("invoice.pdf\\n")
                     sys.exit(0)
                 if args[:2] == ["storage", "cp"]:
-                    expected = "--remote" if mode == "v3" else "--linked"
+                    expected = "--remote=rzghbvmszbjlqkdjzpxc" if mode == "v3" else "--linked"
                     if expected not in args or "--experimental" not in args:
                         sys.exit(11)
                     # Exactly the documented relative destination from inside
@@ -180,6 +180,8 @@ class BackupTests(unittest.TestCase):
                     # across CLI v2/v3 path parsers.
                     if args[4] != "." or not pathlib.Path.cwd().name.startswith("dzoft-storage-"):
                         sys.exit(12)
+                    if mode == "v3" and "--remote" in args:
+                        sys.exit(13)  # Bare target is ambiguous outside project cwd.
                     dst = pathlib.Path.cwd()
                     (dst / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
                     sys.exit(0)
