@@ -241,6 +241,12 @@ function renderSection(){
  var box=$("pf-panel-content");
  box.innerHTML=state.section==="overview"?overview():state.section==="quotes"?allQuotes():state.section==="invoices"?allInvoices():state.section==="payments"?payments():state.section==="extras"?extras():state.section==="journal"?privateJournal():state.section==="documents"?documents():activity();
  $("pf-tabs").querySelectorAll("[data-panel]").forEach(function(b){var on=b.dataset.panel===state.section;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.tabIndex=on?0:-1;});
+ var navActive=state.section==="invoices"?"pf-side-invoices":state.section==="journal"?"pf-side-journal":state.section==="documents"?"pf-side-documents":"pf-side-project";
+ ["pf-side-project","pf-side-invoices","pf-side-journal","pf-side-documents"].forEach(function(name){
+   var el=$(name);if(!el)return;var selected=name===navActive;
+   el.classList.toggle("pf-active",selected);
+   if(selected)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current");
+ });
 }
 function render(){
  if(!state.quote)return;
