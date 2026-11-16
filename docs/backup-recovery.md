@@ -1,6 +1,14 @@
 # DZOFT — Secure backup and recovery
 
 
+## Storage count mismatch resolved in download selection (16 November 2026)
+
+Live diagnostic: RD-Clients SQL recorded **3** Storage objects, the remote CLI recursively listed **3** entries, and Supabase CLI printed the transfer of **3 PDFs**, yet the old scanner counted **5 local files**, spread across **2 top-level directories** in the temporary workdir. The extra two files were outside the downloaded bucket tree. Their specific role was not inspected, but CLI-generated working metadata is a plausible explanation.
+
+The backup now selects files **exclusively from `<private-temp>/client-files/`**, verifies that directory is real and not a symlink, checks the verified SQL count against only those files, and builds archive paths relative to the bucket root. Unrelated files in the CLI's working directory are ignored, neither counted nor encrypted as customer Storage objects. The temporary directory still gets cleaned up automatically. Synthetic tests reproduce the observed **3 bucket PDFs + 2 extra workdir files** and check that only the three PDFs enter the archive under `storage/client-files/...`.
+
+The Storage-only diagnostic now uses the same scoped file selection as the full backup. This change does **not** override the required object count of three, bypass listing checks, export production data into GitHub, or prove a real backup has succeeded. Run `git pull --ff-only` before a new backup attempt, confirm a fresh SQL Storage count in RD-Clients, and retain the NOT RESTORED / NOT VERIFIED warning until real export and isolated restore checks pass.
+
 ## Storage-only diagnostic after an object-count mismatch (16 November 2026)
 
 After CLI v3.1 remote selection and relative download were fixed, the operator encountered a **different, correctly blocked failure**: the downloaded file count did not equal the three `storage.objects` rows reported by SQL. This is a mismatch, **not** evidence that the three uploaded documents are lost. Do not bypass the verified-count check or rerun the database export repeatedly.
