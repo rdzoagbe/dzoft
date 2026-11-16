@@ -55,8 +55,8 @@ test('new owner dashboard provides real client, quote, finance and case finder r
  assert.match(html,/id="sd-project-list"/);
  assert.match(html,/id="sd-project-select"/);
  assert.match(js,/location\.hash="#\/devis"/);
- assert.match(js,/data-go="finance"/);
- assert.match(js,/data-go="clients"/);
+ assert.match(html,/data-go="finance"/);
+ assert.match(html,/data-go="clients"/);
  assert.match(js,/projectUrl/);
  assert.doesNotMatch(js,/\.rpc\(|\.update\(|\.insert\(|fetch\(|service_role|localStorage/);
  assert.match(css,/max-width:600px/);
