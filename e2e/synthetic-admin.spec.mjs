@@ -602,3 +602,15 @@ test('Standalone quote editor surfaces failed saves and supports Retry without r
  await expect(page.locator('#importbox')).not.toHaveClass(/open/);
  expect(errors).toEqual([]);
 });
+
+test('Dashboard now resolves to the redesigned finance page, not the legacy homepage',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page).toHaveURL(/\/admin\/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0/);
+ await expect(page.locator('#pf-shell')).toBeVisible();
+ await expect(page.locator('.pf-dashboard-lead')).toContainText(/Tableau de bord|Dashboard/);
+ await expect(page.locator('#pf-base')).toContainText('1 500');
+ await expect(page.locator('#pf-side-dashboard')).toHaveAttribute('aria-current','page');
+ expect(errors).toEqual([]);
+});
