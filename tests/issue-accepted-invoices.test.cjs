@@ -158,3 +158,11 @@ test('calculate from tracking: done client requests from the journal, each bille
  // Journal lines are not copied into the price list.
  assert.match(changes,/l\.price>0&&!l\.source&&known\.indexOf\(l\.label\)<0/);
 });
+
+test('the proposal e-mail has its own subject, text and button',()=>{
+ const fn=read('supabase/functions/process-notification-outbox/index.ts');
+ assert.match(fn,/subject: `Proposition complémentaire \$\{ref\} à signer/);
+ assert.match(fn,/"Lire et signer la proposition"/);
+ assert.match(fn,/Rien ne vous est facturé sans votre signature/);
+ assert.match(fn,/subject: `Proposition \$\{ref\} signée par le client/);
+});

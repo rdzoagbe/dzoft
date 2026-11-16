@@ -79,6 +79,27 @@ function eventCopy(type: string, summary: string, quote: any, message: string, i
   };
   const number = quote?.numero ? ` · devis ${quote.numero}` : "";
   const detail = summary.split(" · ").slice(1).join(" · ");
+  // Priced extra-work proposal: "Proposition complémentaire D-2026-001-C1 · 400,00 € · …"
+  if (type === "change_proposed" || type === "change_signed") {
+    const ref = (summary.match(/^Proposition (?:complémentaire )?(\S+)/) || [])[1] || "";
+    const amount = (summary.match(/·\s*([0-9][0-9\s\u202f\u00a0.,]*€)/) || [])[1] || "";
+    const what = `${ref ? "n° " + ref : ""}${ref && amount ? ", " : ""}${amount}`;
+    if (type === "change_signed") return {
+      subject: `Proposition ${ref} signée par le client${amount ? " (" + amount + ")" : ""} · DZOFT`,
+      intro: `${summary}. Vous pouvez marquer les travaux terminés puis créer la facture complémentaire depuis la fiche projet.`,
+      body: "",
+    };
+    if (isOwner) return {
+      subject: `Proposition ${ref} envoyée au client${amount ? " (" + amount + ")" : ""} · DZOFT`,
+      intro: `La proposition ${what} a été envoyée au client. Il la signera avec un code reçu par e-mail.`,
+      body: "",
+    };
+    return {
+      subject: `Proposition complémentaire ${ref} à signer${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `Une proposition de travaux complémentaires${what ? " (" + what + ")" : ""} vous attend dans votre espace client. Elle détaille chaque prestation avec son prix. Le devis signé et ses factures restent inchangés.`,
+      body: `<p>Vous pouvez la lire, puis la signer avec un code à 6 chiffres envoyé à votre adresse e-mail, ou la refuser. Rien ne vous est facturé sans votre signature.</p>`,
+    };
+  }
   const subjectByType: Record<string, string> = {
     quote_published: `Votre devis${quote?.numero ? " n° " + quote.numero : ""} est disponible · DZOFT`,
     quote_accepted: `Devis accepté${quote?.numero ? " n° " + quote.numero : ""} · DZOFT`,
@@ -234,7 +255,7 @@ Deno.serve(async (req) => {
       else if (!isOwner && client?.user_id) link = PORTAL + (event.event_type.includes("message") ? "#/messages" : quote?.id ? (event.event_type === "quote_published" ? `#/devis/${quote.id}` : `#/projets/${quote.id}`) : "#/messages");
       else if (!isOwner && client?.portal_token) link = PORTAL + "#" + client.portal_token;
       const hello = isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + esc(firstName) : ""},`;
-      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : "Une mise à jour de votre projet";
+      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? "Une proposition complémentaire à signer" : "Une mise à jour de votre projet";
       let attachment: Array<{ name: string; content: string }> = [];
 
       if (job.attach_invoice_pdf) {
@@ -277,6 +298,7 @@ Deno.serve(async (req) => {
         : needsAccount && event.event_type === "invoice_shared" ? "Créer mon espace et voir la facture"
         : event.event_type === "quote_published" ? "Voir et accepter mon devis"
         : event.event_type === "invoice_shared" ? "Ouvrir ma facture"
+        : event.event_type === "change_proposed" ? "Lire et signer la proposition"
         : "Ouvrir mon espace client";
       const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#0B1020;line-height:1.6">
         <h2 style="color:#0B1020">${paymentEvent ? "Paiement / Payment update" : heading}</h2><p>${hello}</p>
@@ -286,7 +308,7 @@ Deno.serve(async (req) => {
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent ? copy.body.replace(/<[^>]*>/g, " ") : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },
