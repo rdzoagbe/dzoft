@@ -691,8 +691,19 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       amsg(e && e.name === 'NotAllowedError' ? 'Opération annulée ou délai dépassé. Réessayez' + (mfaFactor ? ', ou utilisez le code.' : '.') : 'Clé d’accès refusée' + (e && e.message ? ' : ' + e.message : '') + (mfaFactor ? '. Utilisez le code en attendant.' : '.'));
     });
   };
-  $('mfa-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
-  $('b-out').onclick = function(){ sb.signOut().then(function(){ location.reload(); }); };
+  function logoutPrivateWorkspace(){
+    // Hide owner and financial data before waiting on a potentially failing network logout.
+    $('app').hidden = true;
+    document.querySelectorAll('.modal').forEach(function(box){ box.hidden = true; });
+    activeOwnerId = null;
+    $('auth').hidden = false;
+    showForm('f-login');
+    Promise.resolve().then(function(){ return sb.signOut(); }).catch(function(){
+      // Local credentials are cleared by signOut before the network request.
+    }).finally(function(){ location.reload(); });
+  }
+  $('mfa-out').onclick = logoutPrivateWorkspace;
+  $('b-out').onclick = logoutPrivateWorkspace;
 
   function start(){
     if (startPending) return;

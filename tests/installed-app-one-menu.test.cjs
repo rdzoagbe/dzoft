@@ -28,7 +28,8 @@ test('one menu includes all routes, public website and existing logout handler',
  assert.match(js,/action:'logout'/);
  assert.match(js,/document\.getElementById\('b-out'\)/);
  assert.match(js,/if\(existing\)existing\.click\(\)/);
- assert.match(html,/\$\('b-out'\)\.onclick = function\(\)\{ sb\.signOut\(\)/);
+ assert.match(html,/\$\('b-out'\)\.onclick = logoutPrivateWorkspace/);
+ assert.match(html,/\$\('app'\)\.hidden = true;[\s\S]*?sb\.signOut\(\)/);
  assert.match(js,/location\.hash='#\/'\+item\.dataset\.appRoute/);
  assert.match(js,/addEventListener\('hashchange'/);
  assert.doesNotMatch(js,/fetch\(|sb\.rpc\(|localStorage|window\.location\.reload\(/);
