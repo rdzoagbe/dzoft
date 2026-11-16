@@ -61,3 +61,11 @@ body.dzoft-admin #app #v-settings .settings-language-panel{border-radius:17px}
  body.dzoft-admin #app .v4-message-card .v4-card-side small{max-width:70px;text-align:right}
  body.dzoft-admin #app #v-dossiers .dossier-switch{gap:3px}
 }
+
+body.dzoft-admin #app #v-leads .v4-lead-more{flex:1 0 100%;margin-top:4px;border-top:1px solid #ebe7f4;padding:10px 0 0}
+body.dzoft-admin #app #v-leads .v4-lead-more summary{display:list-item;list-style-position:inside;cursor:pointer;padding:9px 12px;border-radius:10px;background:#f5f1ff;font-size:12px;font-weight:750;color:#5525ca}
+body.dzoft-admin #app #v-leads .v4-lead-more summary:hover{background:#ece5ff}
+body.dzoft-admin #app #v-leads .v4-lead-tools{display:flex;gap:9px;flex-wrap:wrap;align-items:end;padding:13px 5px 4px}
+body.dzoft-admin #app #v-leads .v4-lead-tools>label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#77738c}
+body.dzoft-admin #app #v-leads .v4-lead-tools select,body.dzoft-admin #app #v-leads .v4-lead-tools input{min-height:36px;font-size:12px;border-radius:8px}
+@media(max-width:600px){body.dzoft-admin #app #v-leads .v4-lead-tools>label{width:100%}body.dzoft-admin #app #v-leads .v4-lead-tools select,body.dzoft-admin #app #v-leads .v4-lead-tools input{width:100%}}
