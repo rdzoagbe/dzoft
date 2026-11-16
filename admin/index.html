@@ -1491,7 +1491,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c; $('mc-msgs').hidden = !c;
     if (c) { var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length; $('mc-msgs').textContent = 'Messages' + (cu ? ' (' + cu + ')' : ''); }
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
-    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="projet.html?q=' + q.id + '">suivi</a>' + (q.accepted_at ? ' · <button type="button" class="btn sm line" data-go="remind:' + q.id + '">Relancer le paiement</button>' : '') + '</span></li>'; }).join('');
+    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="devis.html?q=' + q.id + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="' + (q.accepted_at ? 'projet.html?q=' : 'suivi.html?q=') + q.id + '">suivi</a>' + (q.accepted_at ? ' · <button type="button" class="btn sm line" data-go="remind:' + q.id + '">Relancer le paiement</button>' : '') + '</span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
   function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), email: $('mc-email').value.trim().toLowerCase(), notes: $('mc-notes').value }; }
