@@ -24,7 +24,8 @@ function resolve(page,link){
   return value.endsWith('/')||!value?value+'index.html':value;
  }
  const out=path.posix.normalize(path.posix.join(path.posix.dirname(page),value));
- return out.endsWith('/')||value.endsWith('/')?out.replace(/\/?$/,'/')+'index.html':out;
+ if(value.endsWith('/'))return (out==='.'?'':out.replace(/\/?$/,'/'))+'index.html';
+ return out==='.'?'index.html':out;
 }
 test('literal same-origin links across public, bilingual, client and Admin pages exist',()=>{
  const pages=[...files].filter(function(p){return p.endsWith('.html')&&!p.includes('node_modules/');});
