@@ -16,7 +16,7 @@
 <script src="../assets/dzoft-language.js?v=20261115-billing-fr-en&reactive=20261116" defer></script>
 <script src="sb.js?v=20261109-passkey" defer></script>
 <script src="../assets/change-requests.js?v=20261114-1&invoice=20261115" defer></script>
-<script src="project-finance.js?v=20261116-4" defer></script>
+<script src="project-finance.js?v=20261116-5" defer></script>
 </head>
 <body class="pf-page">
 <div class="pf-shell" id="pf-shell" hidden>
@@ -24,6 +24,7 @@
     <a class="pf-logo" href="./#/tableau-de-bord" aria-label="DZOFT accueil"><img src="../assets/dzoft-favicon.svg" alt=""><span>DZOFT</span></a>
     <nav class="pf-side-links" aria-label="Navigation principale">
       <a id="pf-side-dashboard" href="./#/tableau-de-bord"><span aria-hidden="true">⌂</span><span data-fr="Aujourd’hui" data-en="Today">Aujourd’hui</span></a>
+      <a id="pf-side-global" href="./#/vue-globale"><span aria-hidden="true">◫</span><span data-fr="Vue globale" data-en="Global overview">Vue globale</span></a>
       <a id="pf-side-cases" href="./#/dossiers"><span aria-hidden="true">▱</span><span data-fr="Dossiers clients" data-en="Client cases">Dossiers clients</span></a>
       <a href="./#/messages"><span aria-hidden="true">☏</span><span data-fr="Messages" data-en="Messages">Messages</span></a>
       <a href="./#/paiements"><span aria-hidden="true">▣</span><span data-fr="Factures & paiements" data-en="Invoices & payments">Factures & paiements</span></a>
@@ -42,7 +43,7 @@
     <header class="pf-topbar">
       <button type="button" class="pf-menu" id="pf-menu" aria-label="Ouvrir le menu" aria-controls="pf-sidebar" aria-expanded="false">☰</button>
       <div class="pf-crumb"><a href="./#/dossiers">Dossiers clients</a><span>›</span><span id="pf-crumb-client">—</span><span>›</span><strong id="pf-crumb-project">Projet</strong></div>
-      <div class="pf-top-right"><a class="pf-admin-home" href="./#/tableau-de-bord" data-fr="← Tableau de bord" data-en="← Dashboard">← Tableau de bord</a><span class="pf-user" aria-label="Espace administrateur">RD</span></div>
+      <div class="pf-top-right"><a class="pf-admin-home" href="./#/vue-globale" data-fr="← Vue globale" data-en="← Global overview">← Vue globale</a><span class="pf-user" aria-label="Espace administrateur">RD</span></div>
     </header>
     <main class="pf-main" id="pf-main" aria-live="off">
       <div class="pf-dashboard-lead">
