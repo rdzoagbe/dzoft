@@ -61,12 +61,16 @@ function renderHeader(){
  setText("pf-project-status",q.accepted_at?tr("En cours","In progress"):tr("Devis","Quote"));
  setText("pf-client-sub",[c.entreprise,c.email].filter(Boolean).join(" · ")||tr("Fiche client privée","Private client record"));
  setText("pf-avatar",clientName().trim().split(/\s+/).slice(0,2).map(function(x){return x.slice(0,1);}).join("").toUpperCase());
- setHref("pf-side-dashboard","./#/tableau-de-bord");
-  setHref("pf-side-project","projet.html?q="+encodeURIComponent(id));
+ // The canonical v6 sidebar owns these routes. Do not overwrite #overview,
+ // #journal or #invoices when project data is re-rendered.
+ if(!window.DzoftNavigationV6){
+   setHref("pf-side-dashboard","./#/tableau-de-bord");
+   setHref("pf-side-project","#overview");
+   setHref("pf-side-journal","#journal");
+   setHref("pf-side-documents","#documents");
+   setHref("pf-side-invoices","#invoices");
+ }
  setHref("pf-project-tools",projectUrl());
- setHref("pf-side-journal","projet.html?q="+encodeURIComponent(id)+"#journal");
- setHref("pf-side-documents","projet.html?q="+encodeURIComponent(id)+"#documents");
- setHref("pf-side-invoices","projet.html?q="+encodeURIComponent(id)+"#invoices");
  setHref("pf-open-billing",projectUrl("billing"));
 }
 function loadProjectSwitcher(){
@@ -331,7 +335,10 @@ $("pf-tabs").addEventListener("click",function(e){var b=e.target.closest("[data-
 window.addEventListener("hashchange",function(){var section=location.hash.slice(1);if(!validPanels.includes(section))return;state.section=section;if(state.quote)renderSection();});
 $("pf-project-switch").addEventListener("change",function(){
  var next=this.value;
- if(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(next)&&next!==id){conceal();location.assign("projet.html?q="+encodeURIComponent(next));}
+ // Project switcher values are untrusted until validated against a full UUID.
+ if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(next)&&next!==id){
+   conceal();location.assign("projet.html?q="+encodeURIComponent(next));
+ }
 });
 $("pf-menu").addEventListener("click",function(){var open=!$("pf-shell").classList.contains("pf-menu-open");$("pf-shell").classList.toggle("pf-menu-open",open);$("pf-menu").setAttribute("aria-expanded",String(open));$("pf-overlay").hidden=!open;});
 $("pf-overlay").addEventListener("click",function(){$("pf-shell").classList.remove("pf-menu-open");$("pf-menu").setAttribute("aria-expanded","false");$("pf-overlay").hidden=true;});
