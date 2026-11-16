@@ -107,3 +107,26 @@ test('all global sections retain selected-project navigation and global overview
   assert.match(styles, /dzoft-project-nav/);
   assert.doesNotMatch(js, /\bsb\.(?:insert|update|remove|rpc)\(/);
 });
+
+test('all primary operational views use new DZOFT components instead of legacy tables',()=>{
+ const css=readFileSync(new URL('../admin/workspace-pages-v4.css',import.meta.url),'utf8');
+ assert.match(admin,/workspace-pages-v4\.css/);
+ for(const cls of ['v4-clients','v4-quotes','v4-project-list','v4-messages']){
+   assert.ok(admin.includes(cls),'Missing new view: '+cls);
+ }
+ assert.match(css,/\.v4-list-card/);
+ assert.match(css,/max-width:550px/);
+ assert.match(admin,/v4-lead-more/);
+});
+test('new card actions keep existing client and quote handlers',()=>{
+ assert.match(admin,/data-client-edit/);
+ assert.match(admin,/\.v4-client-card\[data-id\]/);
+ assert.match(admin,/b\.closest\('\[data-id\]'\)\.dataset\.id/);
+ assert.match(admin,/e\.target\.closest\('\[data-id\]'\)\.dataset\.id/);
+ assert.match(admin,/data-a="open"/);
+ assert.match(admin,/data-a="follow"/);
+ assert.match(admin,/data-a="st"/);
+ assert.match(admin,/data-a="del"/);
+ assert.match(admin,/data-go="thread:/);
+ assert.match(admin,/href="projet\.html\?q=/);
+});

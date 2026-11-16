@@ -216,6 +216,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261116-2">
+<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1">
 </head>
 <body class="dzoft-admin">
 
@@ -1028,12 +1029,15 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- projects ---------------- */
   function projectTable(rows){
-    return '<table><thead><tr><th>Projet</th><th>Client</th><th class="hide-m">Étape</th><th>Avancement</th><th></th></tr></thead><tbody>' + rows.map(function(q){
-      var c = client(q.client_id) || {}, p = progress(q);
-      return '<tr><td><b>' + esc(q.numero) + '</b><br><span style="color:var(--mute);font-size:12.5px">accepté le ' + day(q.accepted_at) + '</span></td><td>' + esc(c.nom || '—') + '</td>' +
-        '<td class="hide-m">' + esc(nowStep(q)) + '</td><td><div class="prog"><span style="width:' + p + '%"></span></div><span style="font-size:12px;color:var(--mute)">' + steps(q).filter(function(s){ return s.done; }).length + ' / ' + steps(q).length + ' étapes terminées</span><span class="mobile-stage">' + esc(nowStep(q)) + '</span></td>' +
-        '<td class="num"><button class="btn sm main" type="button" data-go="follow:' + q.id + '">Fiche projet</button></td></tr>';
-    }).join('') + '</tbody></table>';
+    return '<div class="v4-card-list v4-project-list">'+rows.map(function(q){
+      var c=client(q.client_id)||{},p=progress(q),completed=steps(q).filter(function(x){return x.done;}).length;
+      return '<article class="v4-list-card v4-project-card"><span class="v4-card-symbol" aria-hidden="true">▤</span>'+
+       '<div class="v4-card-core"><p class="v4-card-kicker">'+esc(q.numero||'—')+' · '+day(q.accepted_at)+'</p>'+
+       '<h3>'+esc(c.nom||'Client')+'</h3><p class="v4-card-sub">'+esc(nowStep(q))+'</p>'+
+       '<div class="v4-progress"><span style="width:'+p+'%"></span></div>'+
+       '<small>'+completed+' / '+steps(q).length+' étapes · '+p+'%</small></div>'+
+       '<div class="v4-card-actions"><a class="btn sm main" href="projet.html?q='+encodeURIComponent(q.id)+'">Ouvrir le dossier →</a></div></article>';
+    }).join('')+'</div>';
   }
   function renderProjects(){
     var ps = projectsList();
@@ -1042,15 +1046,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- inbox ---------------- */
   function renderInbox(){
-    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
-    var last = {}, order = [];
-    data.messages.forEach(function(m){ if (!last[m.client_id]) { last[m.client_id] = m; order.push(m.client_id); } });
-    if (!order.length) { $('inbox').innerHTML = '<div class="empty">Aucun message pour l’instant. Les messages de vos clients arrivent ici.</div>'; return; }
-    $('inbox').innerHTML = '<table class="inbox"><tbody>' + order.map(function(id){
-      var m = last[id], c = client(id) || {}, nu = data.unread.filter(function(x){ return x.client_id === id; }).length;
-      return '<tr data-go="thread:' + id + '" class="click"><td><b>' + esc(c.nom || 'Client') + '</b>' + (nu ? ' <span class="chip msg">' + nu + ' non lu' + (nu > 1 ? 's' : '') + '</span>' : '') +
-        '<div class="prev">' + (m.author === 'moi' ? 'Vous : ' : '') + esc(m.body) + '</div></td><td class="num" style="color:var(--mute);font-size:12.5px">' + new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td></tr>';
-    }).join('') + '</tbody></table>';
+    $('n-msg').hidden=!data.unread.length;$('n-msg').textContent=data.unread.length;
+    var last={},order=[];data.messages.forEach(function(m){if(!last[m.client_id]){last[m.client_id]=m;order.push(m.client_id);}});
+    if(!order.length){$('inbox').innerHTML='<div class="v4-empty"><h3>Aucune conversation</h3><p>Les messages de vos clients apparaîtront ici.</p></div>';return;}
+    $('inbox').innerHTML='<div class="v4-card-list v4-messages">'+order.map(function(id){
+      var m=last[id],c=client(id)||{},nu=data.unread.filter(function(x){return x.client_id===id;}).length;
+      return '<button type="button" class="v4-list-card v4-message-card" data-go="thread:'+esc(id)+'">'+
+       '<span class="v4-avatar" aria-hidden="true">'+esc((c.nom||'C').trim().slice(0,1).toUpperCase())+'</span>'+
+       '<span class="v4-card-core"><span class="v4-card-row"><strong>'+esc(c.nom||'Client')+'</strong>'+
+       (nu?'<span class="v4-unread">'+nu+' non lu'+(nu>1?'s':'')+'</span>':'')+'</span>'+
+       '<span class="v4-card-sub">'+(m.author==='moi'?'Vous : ':'')+esc(m.body||'')+'</span></span>'+
+       '<span class="v4-card-side"><small>'+new Date(m.created_at).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</small><span aria-hidden="true">›</span></span></button>';
+    }).join('')+'</div>';
   }
 
   /* ---------------- settings ---------------- */
@@ -1398,14 +1405,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
         (l.client_id ? '<button class="btn sm line" data-a="msgs">Messages' + (nu ? ' (' + nu + ')' : '') + '</button>' : '') +
         (more ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
-        '<select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' +
+        '<details class="v4-lead-more"><summary>Statut, relances et autres actions</summary><div class="v4-lead-tools"><label>Statut de la demande <select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>' +
         (leadRetentionDue(l) ? '<button class="btn sm line" data-a="archive">Archiver</button>' : '') +
         (l.status === 'archivée' && restoreStatus ? '<button class="btn sm line" data-a="restore">Restaurer (' + esc(restoreStatus) + ')</button>' : '') +
         (l.status === 'archivée' && !restoreStatus ? '<span style="font-size:12px;color:var(--mute)">Choisissez un statut pour restaurer cette ancienne fiche.</span>' : '') +
         '<label class="next-in" title="Ne mettez à jour cette date que si le prospect a initié un nouveau contact.">dernier contact reçu <input type="date" data-a="prospect-contact" max="' + today + '" value="' + esc(l.last_prospect_contact_at ? iso(new Date(l.last_prospect_contact_at)) : '') + '" aria-label="Date du dernier contact initié par le prospect"></label>' +
         '<button class="btn sm line" data-a="contact-today" title="À utiliser seulement si le prospect vous a recontacté aujourd’hui.">Noter aujourd’hui</button>' +
         '<label class="next-in">relance le <input type="date" data-a="next" value="' + esc(l.next_at || '') + '" aria-label="Date de relance"></label>' +
-        '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
+        '<button class="btn sm ghost" data-a="del">Supprimer</button></div></details></div></article>';
     }).join('');
   }
   $('leads').onclick = function(e){
@@ -1491,50 +1498,59 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('q-search').oninput = renderQuotes;
   var STS = ['brouillon', 'envoyé', 'accepté', 'refusé'];
   function renderQuotes(){
-    var s = $('q-search').value.toLowerCase(), box = $('quotes');
-    $('n-msg').hidden = !data.unread.length; $('n-msg').textContent = data.unread.length;
-    var rows = data.quotes.filter(function(q){ var c = client(q.client_id) || {}; return !s || (q.numero + ' ' + c.nom + ' ' + c.entreprise).toLowerCase().indexOf(s) > -1; });
-    if (!rows.length) { box.innerHTML = '<div class="empty">Aucun devis. Créez-en un depuis une demande, une fiche client ou « + Nouveau devis ».</div>'; return; }
-    box.innerHTML = '<table><thead><tr><th>N°</th><th>Client</th><th class="hide-m">Date</th><th class="num">Total</th><th>Statut</th><th></th></tr></thead><tbody>' +
-      rows.map(function(q){
-        var c = client(q.client_id) || {};
-        var nu = unreadFor(q), flags = (q.accepted_at ? '<span class="chip" style="background:var(--okbg);color:var(--ok);border-color:#9ed5b3">accepté en ligne</span> ' : q.shared ? '<span class="chip">visible client</span> ' : '') +
-          (nu ? '<span class="chip" style="background:#e3f9fd;color:#0b6577;border-color:#a5e9f5">' + nu + ' message' + (nu > 1 ? 's' : '') + '</span>' : '');
-        return '<tr data-id="' + q.id + '"><td><b>' + esc(q.numero) + '</b>' + (flags ? '<div style="margin-top:4px">' + flags + '</div>' : '') + '</td><td>' + esc(c.nom || '—') + (c.entreprise ? '<br><span style="color:var(--mute);font-size:12.5px">' + esc(c.entreprise) + '</span>' : '') + '</td>' +
-          '<td class="hide-m">' + day(q.created_at) + '</td><td class="num">' + eur(q.total) + '</td>' +
-          '<td><select data-a="st">' + STS.map(function(x){ return '<option' + (x === q.status ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></td>' +
-          '<td class="num"><button class="btn sm main" data-a="open">Ouvrir</button> <button class="btn sm line" data-a="follow">Fiche projet</button> <button class="btn sm ghost" data-a="del" title="Supprimer">×</button></td></tr>';
-      }).join('') + '</tbody></table>';
+    var term=$('q-search').value.toLowerCase(),box=$('quotes');
+    $('n-msg').hidden=!data.unread.length;$('n-msg').textContent=data.unread.length;
+    var rows=data.quotes.filter(function(q){var c=client(q.client_id)||{};return !term||(q.numero+' '+c.nom+' '+c.entreprise).toLowerCase().includes(term);});
+    if(!rows.length){box.innerHTML='<div class="v4-empty"><h3>Aucun devis trouvé</h3><p>Créez un devis depuis une demande ou un dossier client.</p></div>';return;}
+    box.innerHTML='<div class="v4-card-list v4-quotes">'+rows.map(function(q){
+      var c=client(q.client_id)||{},nu=unreadFor(q);
+      return '<article class="v4-list-card v4-quote-card" data-id="'+esc(q.id)+'">'+
+        '<span class="v4-card-symbol" aria-hidden="true">▤</span><div class="v4-card-core">'+
+        '<p class="v4-card-kicker">'+esc(q.numero||'—')+' · '+day(q.created_at)+'</p>'+
+        '<h3>'+esc(c.nom||'Client')+'</h3>'+
+        '<p class="v4-card-sub">'+esc(c.entreprise||'')+(nu?' · '+nu+' message'+(nu>1?'s':'')+' non lu'+(nu>1?'s':''):'')+'</p>'+
+        '<div class="v4-quote-status"><label>Statut <select data-a="st" aria-label="Statut du devis">'+STS.map(function(x){return '<option'+(x===q.status?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label>'+
+        (q.accepted_at?'<span class="v4-status-ok">Accepté en ligne</span>':q.shared?'<span class="v4-status-neutral">Partagé</span>':'')+'</div></div>'+
+        '<div class="v4-card-side v4-quote-side"><b>'+eur(q.accepted_total||q.total)+'</b>'+
+        '<div class="v4-card-actions"><button type="button" class="btn sm main" data-a="open">Devis</button>'+
+        (q.accepted_at?'<a href="projet.html?q='+encodeURIComponent(q.id)+'" class="btn sm line">Dossier →</a>':'<button type="button" class="btn sm line" data-a="follow">Suivi</button>')+
+        '<button type="button" class="btn sm ghost" data-a="del" title="Mettre le devis à la corbeille">×</button></div></div></article>';
+    }).join('')+'</div>';
   }
   $('quotes').onclick = function(e){
     var b = e.target.closest('button[data-a]'); if (!b) return;
-    var id = b.closest('tr').dataset.id;
+    var id = b.closest('[data-id]').dataset.id;
     if (b.dataset.a === 'open') return openQuote(id);
     if (b.dataset.a === 'follow') return openFollow(id);
     if (b.dataset.a === 'del' && confirm('Mettre ce devis à la corbeille ? Le client ne le verra plus ; vous pourrez le restaurer.')) sb.update('quotes', id, { deleted_at: new Date().toISOString() }).then(function(){ toast('Devis mis à la corbeille.'); loadAll(); }, fail);
   };
   $('quotes').onchange = function(e){
     if (e.target.dataset.a !== 'st') return;
-    sb.update('quotes', e.target.closest('tr').dataset.id, { status: e.target.value }).then(function(){ toast('Statut enregistré.'); loadAll(); }, fail);
+    sb.update('quotes', e.target.closest('[data-id]').dataset.id, { status: e.target.value }).then(function(){ toast('Statut enregistré.'); loadAll(); }, fail);
   };
 
   /* ---------------- clients ---------------- */
   $('c-search').oninput = renderClients;
   function renderClients(){
-    var s = $('c-search').value.toLowerCase(), box = $('clients');
-    var rows = data.clients.filter(function(c){ return !s || (c.nom + ' ' + c.entreprise + ' ' + c.contact).toLowerCase().indexOf(s) > -1; });
-    if (!rows.length) { box.innerHTML = '<div class="empty">Aucun client pour le moment.</div>'; return; }
-    box.innerHTML = '<table><thead><tr><th>Nom</th><th>Activité</th><th class="hide-m">Contact</th><th class="num">Devis</th></tr></thead><tbody>' +
-      rows.map(function(c){
-        var n = data.quotes.filter(function(q){ return q.client_id === c.id; }).length;
-        var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length;
-        var accepted=data.quotes.filter(function(q){return q.client_id===c.id&&q.accepted_at;}).sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
-        var latest=accepted.length?accepted[0]:null;
-        return '<tr class="click" data-id="' + esc(c.id) + '"><td>' +
-          (latest?'<a class="dzoft-client-link" href="projet.html?q='+encodeURIComponent(latest.id)+'" aria-label="Ouvrir le dossier de '+esc(c.nom||'Client')+'"><b>'+esc(c.nom||'—')+'</b></a>':'<button type="button" class="dzoft-client-link dzoft-client-link-button" data-client-open="'+esc(c.id)+'"><b>'+esc(c.nom||'—')+'</b></button>') +
-          (c.user_id ? ' <span class="chip">compte</span>' : '') + (cu ? ' <span class="chip msg">' + cu + ' message' + (cu > 1 ? 's' : '') + '</span>' : '') + '</td><td>' + esc(c.entreprise) + '</td><td class="hide-m">' + esc(c.contact) + '</td><td class="num">' + n +
-          ' <button type="button" class="btn sm line" data-client-edit="'+esc(c.id)+'">Modifier</button></td></tr>';
-      }).join('') + '</tbody></table>';
+    var term=$('c-search').value.toLowerCase(),box=$('clients');
+    var rows=data.clients.filter(function(c){return !term||(c.nom+' '+c.entreprise+' '+c.contact).toLowerCase().includes(term);});
+    if(!rows.length){box.innerHTML='<div class="v4-empty"><h3>Aucun client trouvé</h3><p>Ajoutez un client ou modifiez votre recherche.</p></div>';return;}
+    box.innerHTML='<div class="v4-card-list v4-clients">'+rows.map(function(c){
+      var n=data.quotes.filter(function(q){return q.client_id===c.id;}).length;
+      var nu=data.unread.filter(function(m){return m.client_id===c.id;}).length;
+      var accepted=data.quotes.filter(function(q){return q.client_id===c.id&&q.accepted_at;}).sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
+      var latest=accepted[0],name=esc(c.nom||'Client');
+      return '<article class="v4-list-card v4-client-card" data-id="'+esc(c.id)+'">'+
+       '<span class="v4-avatar" aria-hidden="true">'+esc((c.nom||'C').trim().slice(0,1).toUpperCase())+'</span>'+
+       '<div class="v4-card-core">'+
+       (latest?'<a class="dzoft-client-link" href="projet.html?q='+encodeURIComponent(latest.id)+'"><h3>'+name+'</h3></a>':'<button class="dzoft-client-link dzoft-client-link-button" type="button" data-client-open="'+esc(c.id)+'"><h3>'+name+'</h3></button>')+
+       '<p class="v4-card-sub">'+esc(c.entreprise||c.contact||'Fiche client')+'</p><div class="v4-tags">'+
+       (c.user_id?'<span class="v4-status-ok">Compte actif</span>':'')+
+       (nu?'<span class="v4-unread">'+nu+' message'+(nu>1?'s':'')+'</span>':'')+
+       '<span>'+n+' devis</span></div></div>'+
+       '<div class="v4-card-actions">'+(latest?'<a href="projet.html?q='+encodeURIComponent(latest.id)+'" class="btn sm main">Ouvrir →</a>':'')+
+       '<button type="button" class="btn sm line" data-client-edit="'+esc(c.id)+'">Modifier</button></div></article>';
+    }).join('')+'</div>';
   }
   $('clients').onclick = function(e){
     // The accepted project's new workspace is the primary client destination.
@@ -1542,7 +1558,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if(e.target.closest('a.dzoft-client-link'))return;
     var edit=e.target.closest('[data-client-edit],[data-client-open]');
     if(edit){editClient(client(edit.dataset.clientEdit||edit.dataset.clientOpen));return;}
-    var row=e.target.closest('tr.click');if(!row)return;
+    var row=e.target.closest('.v4-client-card[data-id]');if(!row)return;
     var id=row.dataset.id;
     var accepted=data.quotes.filter(function(q){return q.client_id===id&&q.accepted_at;})
       .sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
