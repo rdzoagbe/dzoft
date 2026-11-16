@@ -1405,14 +1405,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         '<div class="acts"><button class="btn sm main" data-a="quote">Créer le devis</button>' +
         (l.client_id ? '<button class="btn sm line" data-a="msgs">Messages' + (nu ? ' (' + nu + ')' : '') + '</button>' : '') +
         (more ? '<button class="btn sm line" data-a="more">Tout lire</button>' : '') +
-        '<select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' +
+        '<details class="v4-lead-more"><summary>Statut, relances et autres actions</summary><div class="v4-lead-tools"><label>Statut de la demande <select data-a="st" aria-label="Statut de la demande">' + opts.map(function(o){ return '<option' + (o === l.status ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>' +
         (leadRetentionDue(l) ? '<button class="btn sm line" data-a="archive">Archiver</button>' : '') +
         (l.status === 'archivée' && restoreStatus ? '<button class="btn sm line" data-a="restore">Restaurer (' + esc(restoreStatus) + ')</button>' : '') +
         (l.status === 'archivée' && !restoreStatus ? '<span style="font-size:12px;color:var(--mute)">Choisissez un statut pour restaurer cette ancienne fiche.</span>' : '') +
         '<label class="next-in" title="Ne mettez à jour cette date que si le prospect a initié un nouveau contact.">dernier contact reçu <input type="date" data-a="prospect-contact" max="' + today + '" value="' + esc(l.last_prospect_contact_at ? iso(new Date(l.last_prospect_contact_at)) : '') + '" aria-label="Date du dernier contact initié par le prospect"></label>' +
         '<button class="btn sm line" data-a="contact-today" title="À utiliser seulement si le prospect vous a recontacté aujourd’hui.">Noter aujourd’hui</button>' +
         '<label class="next-in">relance le <input type="date" data-a="next" value="' + esc(l.next_at || '') + '" aria-label="Date de relance"></label>' +
-        '<button class="btn sm ghost" data-a="del">Supprimer</button></div></article>';
+        '<button class="btn sm ghost" data-a="del">Supprimer</button></div></details></div></article>';
     }).join('');
   }
   $('leads').onclick = function(e){
