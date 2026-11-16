@@ -770,13 +770,26 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function loadAll(){
     var generation=++loadGeneration;
     loadReady=false;loadErrors={};
+    var clientBox=$('clients');if(clientBox)clientBox.innerHTML='<div class="v4-empty" role="status">Chargement des clients…</div>';
     // Independent reads: a timeout in Messages or another ancillary service
     // must never hide Clients, issued invoices, or accepted quotations.
     var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor'];
     var reads=[
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
-      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,invoices,deleted_at,data->f->>valid&order=created_at.desc'),
+      sb.select('quotes', 'select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,invoices,deleted_at,data->f->>valid&order=created_at.desc')
+        .catch(function(err){
+          // Some PostgREST versions reject an unaliased JSON path selection.
+          // Retry a standard select, preserving the quote's validity field.
+          if(err&&err.status!==400)return Promise.reject(err);
+          return sb.select('quotes','select=id,created_at,updated_at,numero,status,client_id,lead_id,total,shared,accepted_at,accepted_total,sent_at,steps,care,invoices,deleted_at,data&order=created_at.desc')
+            .then(function(rows){
+              return (rows||[]).map(function(q){
+                q.valid=q.data&&q.data.f&&q.data.f.valid||'';
+                return q;
+              });
+            });
+        }),
       sb.select('messages', 'select=id,client_id,quote_id,author,body,created_at,read_at&order=created_at.desc'),
       sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc'),
       sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30'),
@@ -1632,6 +1645,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
        '<button type="button" class="btn sm line" data-client-edit="'+esc(c.id)+'">Modifier</button></div></article>';
     }).join('')+'</div>';
   }
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#v-invoices [data-retry-owner]')){loadAll();}
+  });
   $('clients').onclick = function(e){
     if(e.target.closest('[data-retry-owner]')){loadAll();return;}
     // The accepted project's new workspace is the primary client destination.
