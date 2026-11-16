@@ -252,6 +252,22 @@ class BackupTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(list(target.glob("*.dzoftbak")), [])
 
+            # Probe only downloads a sandboxed fixture, reports counts, and
+            # does not invoke db dump or produce a durable backup archive.
+            for n,success in (("1",True),("2",False)):
+                target = root / ("probe-" + n)
+                env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), CLI_MODE="v3",
+                           WITH_STORAGE="1", FAIL_DUMP="1")
+                result = subprocess.run(
+                    [sys.executable, str(SCRIPT), "probe-storage",
+                     "--expected-storage-count", n],
+                    input="", text=True, capture_output=True, env=env,
+                    cwd=str(target.parent), timeout=40)
+                self.assertEqual(result.returncode == 0, success, result.stderr + result.stdout)
+                self.assertIn("Local downloaded file count: 1", result.stdout)
+                self.assertIn("Expected SQL object count: " + n, result.stdout)
+                self.assertEqual(list(target.glob("*.dzoftbak")), [])
+                self.assertNotIn("invoice.pdf", result.stdout)
             # With no recognized remote flag, never dump local data by accident.
             unknown = root / "unknown-cli"
             env = dict(os.environ, DZOFT_SUPABASE_CLI=str(cli), CLI_MODE="unknown")
