@@ -32,12 +32,12 @@ routes.forEach(function(item,index){
  if(item.slug==='parametres'){var hr=document.createElement('div');hr.className='dzoft-v6-divider';hr.setAttribute('aria-hidden','true');nav.appendChild(hr);}
  var a=document.createElement('a');
  a.href=url(item);a.className='dzoft-v6-link';a.dataset.route=item.slug;
- a.dataset.fr=item.fr;a.dataset.en=item.en;
+ // Translation markers go on the label only: on the link, the page translator would replace the icon and label.
  if(isProject&&item.id)a.id=item.id;
  if(isProject&&item.slug==='tableau-de-bord')a.id='pf-side-dashboard';
  if(isProject&&item.slug==='clients')a.id='pf-side-cases';
  var icon=document.createElement('span');icon.className='dzoft-v6-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
- var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;
+ var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;label.dataset.fr=item.fr;label.dataset.en=item.en;
  a.append(icon,label);nav.appendChild(a);
  entries[item.slug]=a;
 });
@@ -54,14 +54,15 @@ function active(){
    var a=entries[key];if(key===selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  });
  var main=document.getElementById('dzoft-v6-page-title');
- if(main)main.textContent=entries[selected]?entries[selected].querySelector('.dzoft-v6-label').textContent:(english()?'Workspace':'Espace de gestion');
+ var currentLabel=entries[selected]&&entries[selected].querySelector('.dzoft-v6-label');
+ if(main)main.textContent=currentLabel?currentLabel.textContent:(english()?'Workspace':'Espace de gestion');
  // Keep installed mobile navigation consistent without changing its logout logic.
  document.querySelectorAll('#dzoft-installed-menu-panel [data-app-route]').forEach(function(a){
    if(a.dataset.appRoute===selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  });
 }
 function translate(){
- routes.forEach(function(item){var a=entries[item.slug];if(a)a.querySelector('.dzoft-v6-label').textContent=english()?item.en:item.fr;});
+ routes.forEach(function(item){var a=entries[item.slug],label=a&&a.querySelector('.dzoft-v6-label');if(label)label.textContent=english()?item.en:item.fr;});
  active();
 }
 function mobile(){

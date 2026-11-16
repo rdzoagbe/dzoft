@@ -11,7 +11,7 @@
  body.dzoft-admin #app .top .brand{display:none}
  body.dzoft-admin #app .top #who{color:#595776;font-size:12px}
  body.dzoft-admin #app .top #b-out{color:#5c28d5!important}
- body.dzoft-admin #app .shell main{padding:92px clamp(18px,2.5vw,36px) 50px;min-width:0;max-width:1580px;width:100%;margin:auto}
+ body.dzoft-admin #app .shell main{padding:92px clamp(18px,2.5vw,36px) 50px;min-width:0;max-width:1580px;width:100%;margin:0 auto;align-self:start}
  body.dzoft-admin #app .dzoft-side-brand{position:fixed;top:0;left:0;width:238px;height:78px;display:flex;align-items:center;gap:11px;padding:18px 23px;color:#fff;text-decoration:none;background:#171b30;z-index:9;font-weight:800;font-size:22px;letter-spacing:-.035em}
  body.dzoft-admin #app .dzoft-side-brand img{width:34px;height:34px}
  body.dzoft-admin #app .top:has(.workspace-more) .workspace-more{display:none}

@@ -154,6 +154,7 @@ test('all visible sidebar destinations map to real app views', () => {
   for(const value of ['tableau-de-bord','vue-globale','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille']) {
     assert.ok(admin.includes(value),'Unknown destination '+value);
   }
-  assert.match(project,/projet\.html/);
+  // Project links are built by the shared menu script, not written in projet.html itself.
+  assert.match(readFileSync(new URL('../admin/workspace-nav-v6.js', import.meta.url),'utf8'),/projet\.html\?q=/);
   assert.match(project,/href="\.\/#\/vue-globale"/);
 });
