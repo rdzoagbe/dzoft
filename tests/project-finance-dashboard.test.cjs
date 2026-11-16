@@ -52,6 +52,10 @@ test('extra work is delegated to audited existing workflow; no direct invoice or
  assert.doesNotMatch(js,/sb\.(?:insert|update|remove)\(/);
  assert.doesNotMatch(js,/sb\.rpc\("(?:owner_create_change_proposal|owner_propose_change|issue_accepted_invoice|record_project_receipt)"/);
  assert.match(js,/if\(!sb\|\|!sb\.session\(\)\|\|!validId\)/);
+ assert.match(js,/sb\.rpc\("is_owner",\{\},true\)/);
+ assert.match(js,/window\.addEventListener\("pagehide",conceal\)/);
+ assert.match(js,/\$\("pf-logout"\)\.addEventListener\("click"/);
+ assert.match(html,/id="pf-logout"/);
  assert.match(html,/name="referrer" content="no-referrer"/);
 });
 
