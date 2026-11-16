@@ -12,7 +12,8 @@ param(
   [int]$PgPort = 5432,
   [string]$PgBin = "C:\Program Files\PostgreSQL\18\bin",
   [string]$PgSslRootCert,
-  [switch]$SkipStorage
+  [switch]$SkipStorage,
+  [ValidateRange(-1,1000000)][int]$ExpectedStorageCount = -1
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -55,6 +56,9 @@ Get-ChildItem -LiteralPath $localFull -Filter '*.dzoftbak' -File | ForEach-Objec
 Write-Host "DZOFT: creating an encrypted, locally verified application-data archive."
 Write-Host "You will be asked for your encryption passphrase on this computer. Never send it to GitHub or DZOFT."
 if ($NativePostgres) {
+  if ($ExpectedStorageCount -ge 0) {
+    throw "Native PostgreSQL mode does not include Storage files. Use CLI mode with -ExpectedStorageCount, or explicitly produce a partial database-only archive."
+  }
   if (-not $PgHost -or -not $PgUser) {
     throw "NativePostgres requires -PgHost and -PgUser from the Supabase Connect panel."
   }
@@ -69,7 +73,11 @@ if ($NativePostgres) {
   & $python.Source @nativeArgs
 } else {
   if ($SkipStorage) { throw "-SkipStorage is only supported with -NativePostgres here." }
-  & $python.Source $script 'backup' '--destination' $localFull
+  $cliArgs = @($script, 'backup', '--destination', $localFull)
+  if ($ExpectedStorageCount -ge 0) {
+    $cliArgs += @('--expected-storage-count', [string]$ExpectedStorageCount)
+  }
+  & $python.Source @cliArgs
 }
 if ($LASTEXITCODE -ne 0) { throw "The encrypted backup failed. No off-site copy was created." }
 
