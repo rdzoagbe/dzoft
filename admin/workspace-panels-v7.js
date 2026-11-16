@@ -22,7 +22,7 @@ definitions.forEach(function(d){
  root.insertBefore(section,el('v-settings'));}
 });
 var clientName=id=>{var c=clients.find(x=>x.id===id);return c&&c.nom||tr('Client','Client');};
-var link=(q,panel)=>q&&uuid.test(q.id)?(q.accepted_at?'projet.html?q='+encodeURIComponent(q.id)+'#'+panel:panel==='quotes'?'devis.html?q='+encodeURIComponent(q.id):'suivi.html?q='+encodeURIComponent(q.id)+'#work/c-'+(panel==='journal'?'journal':'docs')):'#/dossiers';
+var link=(q,panel)=>q&&uuid.test(q.id)?(q.accepted_at?'projet.html?q='+encodeURIComponent(q.id)+'#'+panel:panel==='quotes'?'devis.html?q='+encodeURIComponent(q.id):panel==='invoices'||panel==='payments'?'suivi.html?q='+encodeURIComponent(q.id)+'#billing':'suivi.html?q='+encodeURIComponent(q.id)+'#work/c-'+(panel==='journal'?'journal':'docs')):'#/dossiers';
 var empty=(fr,eng)=>'<p class="v6-empty">'+tr(fr,eng)+'</p>';
 var detailNotice=()=>detailState==='error'?'<p class="v6-warning">'+tr('Les détails ne sont pas accessibles. Ouvrez à nouveau cette rubrique pour réessayer.','Detailed records are unavailable. Reopen this section to retry.')+'</p>':empty('Chargement des détails autorisés…','Loading authorised details…');
 var card=(href,icon,name,meta,right)=>'<a class="v6-project-row" href="'+esc(href)+'"><span class="v6-project-icon" aria-hidden="true">'+icon+'</span><span class="v6-project-info"><strong>'+esc(name)+'</strong><small>'+meta+'</small></span>'+(right?'<strong class="v6-record-amount">'+right+'</strong>':'')+'<span class="v6-project-open">→</span></a>';
