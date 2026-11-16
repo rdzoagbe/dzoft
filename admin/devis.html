@@ -626,7 +626,9 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       $('b-print').disabled = $('b-mail').disabled = $('b-wa').disabled = false;
       var d = q.data || {};
       apply(d);
-      $('b-follow').hidden = false; $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
+      $('b-follow').hidden = false;
+      $('b-follow').href = (q.accepted_at ? 'projet.html?q=' : 'suivi.html?q=') + encodeURIComponent(QID);
+      $('b-follow').textContent = q.accepted_at ? 'Tableau de bord du projet' : 'Suivi du devis';
       if (q.accepted_at && q.accepted_terms !== 'v2026-11') {
          $('scope-change-quote').hidden = true;
          if (q.accepted_terms === 'v2026-10') $('cgv-ref').textContent = 'rdzoagbe.github.io/dzoft/cgv-2026-10.html';
