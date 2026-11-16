@@ -126,6 +126,27 @@ class BackupTests(unittest.TestCase):
             with self.subTest(status=status), self.assertRaises(mod.BackupError):
                 mod.verified_archive(mod.seal(blob, PASSWORD), PASSWORD)
 
+    def test_bucket_file_selection_ignores_cli_metadata_but_not_malicious_links(self):
+        with tempfile.TemporaryDirectory(prefix="dzoft-storage-") as scratch:
+            root = Path(scratch)
+            folder = root / mod.BUCKET / "subdir"
+            folder.mkdir(parents=True)
+            for i in range(3):
+                (folder / ("fixture-%s.pdf" % i)).write_bytes(b"fake PDF")
+            (root / "supabase" / ".temp").mkdir(parents=True)
+            (root / "supabase" / ".temp" / "project-ref").write_text("fake")
+            (root / "supabase" / ".temp" / "cli-version").write_text("fake")
+            actual = mod.downloaded_bucket_files(root)
+            self.assertEqual(len(actual), 3)
+            self.assertTrue(all(mod.BUCKET in p.parts for p in actual))
+            self.assertFalse(any("project-ref" in str(p) for p in actual))
+            # A missing bucket must never pass merely because workdir files exist.
+            for p in actual:
+                p.unlink()
+            with self.assertRaises(mod.BackupError):
+                mod.downloaded_bucket_files(root / "supabase")
+
+
     def test_fake_cli_success_storage_and_failure(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -183,7 +204,15 @@ class BackupTests(unittest.TestCase):
                     if mode == "v3" and "--remote" in args:
                         sys.exit(13)  # Bare target is ambiguous outside project cwd.
                     dst = pathlib.Path.cwd()
-                    (dst / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
+                    bucket = dst / "client-files"
+                    bucket.mkdir(parents=True, exist_ok=True)
+                    (bucket / "invoice.pdf").write_bytes(b"synthetic PDF bytes")
+                    # Real Supabase CLI 3.1 creates unrelated workdir metadata.
+                    # Never count or include these helper files in the archive.
+                    cli_meta = dst / "supabase" / ".temp"
+                    cli_meta.mkdir(parents=True, exist_ok=True)
+                    (cli_meta / "project-ref").write_text("synthetic project marker")
+                    (cli_meta / "cli-version").write_text("synthetic version")
                     sys.exit(0)
                 sys.exit(3)
             """), encoding="utf8")
@@ -205,6 +234,10 @@ class BackupTests(unittest.TestCase):
                 _, info = mod.verified_archive(files[0].read_bytes(), PASSWORD)
                 expected = "exported" if with_storage else "verified_empty_by_cli"
                 self.assertEqual(info["storage"]["status"], expected)
+                if with_storage:
+                    self.assertIn("storage/client-files/invoice.pdf", info["files"])
+                    self.assertNotIn("storage/client-files/client-files/invoice.pdf", info["files"])
+                    self.assertNotIn("storage/client-files/supabase/.temp/project-ref", info["files"])
 
             for with_storage in (False, True):
                 target = root / ("modern-storage" if with_storage else "modern-empty")
@@ -221,6 +254,10 @@ class BackupTests(unittest.TestCase):
                 _, info = mod.verified_archive(files[0].read_bytes(), PASSWORD)
                 expected = "exported" if with_storage else "verified_empty_by_cli"
                 self.assertEqual(info["storage"]["status"], expected)
+                if with_storage:
+                    self.assertIn("storage/client-files/invoice.pdf", info["files"])
+                    self.assertNotIn("storage/client-files/client-files/invoice.pdf", info["files"])
+                    self.assertNotIn("storage/client-files/supabase/.temp/project-ref", info["files"])
 
             # A nonempty Storage set must never be called complete without an
             # independently verified object count from a current SQL inventory.
