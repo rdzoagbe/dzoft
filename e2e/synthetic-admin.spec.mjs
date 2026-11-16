@@ -614,3 +614,23 @@ test('Dashboard now resolves to the redesigned finance page, not the legacy home
  await expect(page.locator('#pf-side-dashboard')).toHaveAttribute('aria-current','page');
  expect(errors).toEqual([]);
 });
+
+test('New Admin links open the precise existing work, documents and billing tabs',async({page})=>{
+ await syntheticOwner(page);
+ const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
+ const base='admin/projet.html?q='+q;
+ for(const entry of [
+  {link:'pf-side-documents',fragment:'#work/c-docs',panel:'work',node:'#c-docs'},
+  {link:'pf-side-journal',fragment:'#work/c-journal',panel:'work',node:'#c-journal'},
+  {link:'pf-side-invoices',fragment:'#billing',panel:'billing',node:'#c-inv'}
+ ]){
+  await page.goto(base,{waitUntil:'domcontentloaded'});
+  await expect(page.locator('#pf-shell')).toBeVisible();
+  const target=await page.locator('#'+entry.link).getAttribute('href');
+  expect(target).toContain(entry.fragment);
+  await page.locator('#'+entry.link).click();
+  await expect(page).toHaveURL(new RegExp('\\\\'+entry.fragment.replaceAll('/','\\\\/')+'$'));
+  await expect(page.locator('[data-project-tab="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator(entry.node)).toBeVisible();
+ }
+});
