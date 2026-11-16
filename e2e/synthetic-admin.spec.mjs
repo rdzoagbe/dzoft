@@ -625,7 +625,12 @@ test('New Admin links open the precise existing work, documents and billing tabs
   {link:'pf-side-invoices',fragment:'#billing',panel:'billing',node:'#c-inv'}
  ]){
   await page.goto(base,{waitUntil:'domcontentloaded'});
-  await expect(page.locator('#pf-shell')).toBeVisible();
+  try { await expect(page.locator('#pf-shell')).toBeVisible({timeout:5000}); }
+  catch(error){
+    throw new Error('Finance page navigation failed for '+entry.link+' at URL '+page.url()+
+      ' — '+JSON.stringify(await page.evaluate(()=>({title:document.title,body:document.body?.textContent?.slice(0,140),owner:!!window.RDsb?.session?.()})))+
+      ' — '+error.message);
+  }
   const target=await page.locator('#'+entry.link).getAttribute('href');
   expect(target).toContain(entry.fragment);
   if(await page.locator('#pf-menu').isVisible())await page.locator('#pf-menu').click();
