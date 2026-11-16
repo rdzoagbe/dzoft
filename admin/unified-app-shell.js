@@ -1,13 +1,73 @@
-/* Shared DZOFT branding for all global workspace routes.
-   Does not interfere with installed-app-menu.js (which owns the top mobile menu). */
+/* One persistent owner navigation across every authenticated global section.
+   Project links derive exclusively from already-loaded, authorized admin choices.
+   Nothing is stored or sent to a new service. */
 (function(){
- 'use strict';
- var app=document.getElementById('app');
- if(!app||app.querySelector('.dzoft-side-brand'))return;
- var link=document.createElement('a');
- link.className='dzoft-side-brand';
- link.href='#/tableau-de-bord';
- link.setAttribute('aria-label','DZOFT · Tableau de bord');
+'use strict';
+var app=document.getElementById('app');
+if(!app)return;
+var side=app.querySelector('.side'),switcher=document.getElementById('sd-project-select');
+if(!side)return;
+if(!app.querySelector('.dzoft-side-brand')){
+ var link=document.createElement('a');link.className='dzoft-side-brand';
+ link.href='#/tableau-de-bord';link.setAttribute('aria-label','DZOFT · Tableau de bord');
  link.innerHTML='<img src="../assets/dzoft-favicon.svg" alt=""><span>DZOFT</span>';
  app.appendChild(link);
+}
+var uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+var english=function(){return document.documentElement.lang==='en';};
+var global=side.querySelector('.dzoft-global-overview');
+if(!global){
+ global=document.createElement('a');global.className='dzoft-side-route dzoft-global-overview';
+ global.href='#/vue-globale';global.dataset.fr='Vue globale';global.dataset.en='Global overview';
+ global.innerHTML='<span class="dzoft-nav-symbol" aria-hidden="true">◫</span><span class="dzoft-nav-text"></span>';
+ var dash=side.querySelector('[data-tab="dash"]');
+ if(dash)dash.insertAdjacentElement('afterend',global);
+}
+var group=document.createElement('div');group.className='dzoft-project-nav';group.hidden=true;
+var sep=document.createElement('div');sep.className='dzoft-project-divider';sep.setAttribute('aria-hidden','true');
+var header=document.createElement('p');header.className='dzoft-project-heading';
+header.dataset.fr='PROJET SÉLECTIONNÉ';header.dataset.en='SELECTED PROJECT';
+group.append(sep,header);
+var items=[
+ {slug:'',fr:'Dossier en cours',en:'Current project',symbol:'◇'},
+ {slug:'#invoices',fr:'Factures du projet',en:'Project invoices',symbol:'▧'},
+ {slug:'suivi:work/c-journal',fr:'Journal privé',en:'Private journal',symbol:'☷'},
+ {slug:'suivi:work/c-docs',fr:'Documents du projet',en:'Project documents',symbol:'▢'}
+];
+items.forEach(function(item){
+ var a=document.createElement('a');a.className='dzoft-side-route';
+ a.dataset.projectTarget=item.slug;a.dataset.fr=item.fr;a.dataset.en=item.en;
+ var symbol=document.createElement('span');symbol.className='dzoft-nav-symbol';symbol.setAttribute('aria-hidden','true');symbol.textContent=item.symbol;
+ var txt=document.createElement('span');txt.className='dzoft-nav-text';a.append(symbol,txt);group.appendChild(a);
+});
+var firstHr=side.querySelector('hr');
+if(firstHr)side.insertBefore(group,firstHr);else side.appendChild(group);
+function refresh(){
+ var selected=switcher&&switcher.value||'';
+ if(!uuid.test(selected)){group.hidden=true;return;}
+ group.hidden=false;
+ group.querySelectorAll('[data-project-target]').forEach(function(a){
+  var slug=a.dataset.projectTarget;
+  a.href=slug.startsWith('suivi:')?'suivi.html?q='+encodeURIComponent(selected)+'#'+slug.slice(6):
+   'projet.html?q='+encodeURIComponent(selected)+slug;
+ });
+}
+function translate(){
+ var en=english();
+ global.querySelector('.dzoft-nav-text').textContent=global.dataset[en?'en':'fr'];
+ header.textContent=header.dataset[en?'en':'fr'];
+ group.querySelectorAll('[data-project-target]').forEach(function(a){
+   a.querySelector('.dzoft-nav-text').textContent=a.dataset[en?'en':'fr'];
+ });
+}
+function selection(){
+ var current=location.hash.replace(/^#\\/?/,'');
+ if(current==='vue-globale')global.setAttribute('aria-current','page');
+ else global.removeAttribute('aria-current');
+}
+document.addEventListener('dzoft:locale-change',translate);
+window.addEventListener('hashchange',selection);
+window.addEventListener('dzoft:data-refreshed',refresh);
+if(switcher)switcher.addEventListener('change',refresh);
+translate();selection();refresh();
 })();
