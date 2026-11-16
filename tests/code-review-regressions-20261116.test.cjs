@@ -29,7 +29,7 @@ test('project switcher requires a complete UUID before any navigation',()=>{
  assert.doesNotMatch(project,/\{27,\}/);
 });
 test('new owner data cannot temporarily expose old private journal or documents',()=>{
- const begin=home.indexOf("data.unread = data.messages.filter");
+ const begin=home.indexOf("data.unread=data.messages.filter");
  const done=home.indexOf("if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();",begin);
  const block=home.slice(begin,done);
  assert.ok(block.indexOf('richRequest++')>=0);
