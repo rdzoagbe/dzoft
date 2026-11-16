@@ -44,8 +44,8 @@ group.append(sep,header);
 var items=[
  {slug:'',fr:'Dossier en cours',en:'Current project',symbol:'◇'},
  {slug:'#invoices',fr:'Factures du projet',en:'Project invoices',symbol:'▧'},
- {slug:'suivi:work/c-journal',fr:'Journal privé',en:'Private journal',symbol:'☷'},
- {slug:'suivi:work/c-docs',fr:'Documents du projet',en:'Project documents',symbol:'▢'}
+ {slug:'#journal',fr:'Journal privé',en:'Private journal',symbol:'☷'},
+ {slug:'#documents',fr:'Documents du projet',en:'Project documents',symbol:'▢'}
 ];
 items.forEach(function(item){
  var a=document.createElement('a');a.className='dzoft-side-route';
