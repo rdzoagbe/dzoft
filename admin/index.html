@@ -769,7 +769,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- data ---------------- */
   function loadAll(){
     var generation=++loadGeneration;
-    loadReady=false;
+    loadReady=false;loadErrors={};
     // Independent reads: a timeout in Messages or another ancillary service
     // must never hide Clients, issued invoices, or accepted quotations.
     var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor'];
