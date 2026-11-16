@@ -23,8 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - name: Exercise navigation in real Chromium without owner credentials
         run: npx playwright test e2e/global-overview-navigation.spec.mjs
