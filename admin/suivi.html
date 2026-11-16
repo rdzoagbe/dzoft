@@ -335,6 +335,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         </label>
         <label>Date <input id="jr-quick-date" type="date" required></label>
         <button class="btn sm main" type="submit" id="jr-quick-save">Ajouter au journal</button>
+        <button class="btn sm line" type="button" id="jr-quick-cancel">Annuler</button>
       </div>
     </form>
     <div id="jr-weekly-slot" aria-live="polite"></div>
@@ -828,6 +829,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('jr-quick-text').value='';
     $('jr-quick-date').value=jrToday();
     toast('Note ajoutée au journal privé.');
+  };
+  $('jr-quick-cancel').onclick = function(){
+    // Unfinished private notes are local drafts only; do not persist a cancellation.
+    if ($('jr-quick-save').disabled) return;
+    $('jr-quick').reset();
+    $('jr-quick-date').value = jrToday();
+    $('jr-quick-text').focus();
   };
   $('jr-add').onclick = function(){ Q.journal = Q.journal || []; Q.journal.unshift({ d: jrToday(), k: 'fait', t: '' }); jrEdit = true; renderJournal(); var t = $('journal').querySelector('textarea.t'); if (t) t.focus(); };
   $('jr-paste').onclick = function(){ $('jr-bulk').hidden = !$('jr-bulk').hidden; if (!$('jr-bulk').hidden) $('jr-text').focus(); };
