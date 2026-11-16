@@ -91,8 +91,11 @@ function translate(){
 }
 function selection(){
  var current=location.hash.slice(1).replace(/^\//,'');
- if(current==='vue-globale')global.setAttribute('aria-current','page');
+ var globalSelected=current==='vue-globale';
+ if(globalSelected)global.setAttribute('aria-current','page');
  else global.removeAttribute('aria-current');
+ var dash=side.querySelector('[data-tab="dash"]');
+ if(dash&&globalSelected)dash.setAttribute('aria-selected','false');
 }
 document.addEventListener('dzoft:locale-change',translate);
 window.addEventListener('hashchange',selection);
