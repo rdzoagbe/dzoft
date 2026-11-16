@@ -1,6 +1,22 @@
 # DZOFT — Secure backup and recovery
 
 
+## Storage-only diagnostic after an object-count mismatch (16 November 2026)
+
+After CLI v3.1 remote selection and relative download were fixed, the operator encountered a **different, correctly blocked failure**: the downloaded file count did not equal the three `storage.objects` rows reported by SQL. This is a mismatch, **not** evidence that the three uploaded documents are lost. Do not bypass the verified-count check or rerun the database export repeatedly.
+
+On the owner's trusted, encrypted Windows machine, update the repository and run the **Storage-only** diagnostic:
+
+```powershell
+cd "$HOME\\DZOFT-Backup-Runner"
+git pull --ff-only
+python .\\tools\\backup_dzoft.py probe-storage --expected-storage-count 3
+```
+
+Refresh the read-only database count in **RD-Clients**, not Joblytics, before substituting `3`. The probe lists Storage objects and downloads them into a temporary directory only; it **does not export the database, encrypt an archive, copy to off-site storage, or modify production data**. It reports only recursive CLI listing-line count, local file count, total bytes and root-directory count—**no private filenames**. The temporary files are deleted on exit. This still briefly places unencrypted customer files on the machine, so **only run it on an encrypted and trusted disk**, never a shared or cloud-synced temporary directory.
+
+If the count differs, share only the numeric output and error text, never object names, tokens, or debug logs. Diagnose CLI recursion/path semantics without suppressing the mismatch. Once the probe is green and an updated live SQL count matches, rerun the encrypted full backup and verify the off-site copy. A successful backup is NOT a demonstrated full restore; Issue #72 remains open.
+
 ## Supabase CLI 3.1.0: explicit remote target in isolated Windows Storage download
 
 The user's `supabase storage cp --help` confirms that CLI 3.1.0 supports `--remote=<ref|branch>`. The backup script copies files from a temporary working directory to keep any plaintext out of the repository. A bare `--remote` relies on a linked project discovered from the current directory and may fail when run from that isolated directory. The script now uses `--remote=rzghbvmszbjlqkdjzpxc` for both Storage listing and copy, and keeps a relative `.` destination for `cp`.
