@@ -24,6 +24,7 @@ var icons={};
 var groups=[
  {fr:'Navigation',en:'Navigation',items:[
   {key:'dash',slug:'tableau-de-bord',fr:'Aujourd’hui',en:'Today'},
+  {key:'global',slug:'vue-globale',fr:'Vue globale',en:'Global overview'},
   {key:'dossiers',slug:'dossiers',fr:'Tous les dossiers',en:'All cases'},
   {key:'leads',slug:'demandes',fr:'Demandes',en:'Requests'},
   {key:'clients',slug:'clients',fr:'Clients',en:'Clients'},
@@ -82,7 +83,12 @@ function syncMode(){
 }
 panel.addEventListener('click',function(event){
  var item=event.target.closest('[data-app-route],[data-app-action]');
- if(!item)return;
+ if(!item){
+   // Project-specific links are injected later by unified-app-shell.js.
+   // They are ordinary anchors rather than app-route buttons.
+   if(event.target.closest('.dzoft-mobile-project a[href]'))menu.open=false;
+   return;
+ }
  if(item.dataset.appRoute){
    location.hash='#/'+item.dataset.appRoute;menu.open=false;updateSelected();
  }else if(item.dataset.appAction==='logout'){
