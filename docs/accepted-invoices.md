@@ -104,3 +104,21 @@ Migration `20261117120000_change_lines_from_journal.sql`.
 - L’activité Git (`project_work_items`) n’est donnée qu’en indication (nombre de jours de travail) : elle ne dit ni
   ce qui a été fait fonctionnalité par fonctionnalité, ni ce qui était prévu au devis.
 - À vérifier avant l’envoi : retirer ce que le devis couvrait déjà ou ce qui venait de DZOFT (ex. vidéo, nom).
+
+### Niveaux de prix (17 novembre 2026)
+
+Migration `20261117150000_price_tiers.sql`. Chaque ligne porte un niveau ; le client voit sous la ligne le niveau et sa règle.
+
+| Niveau | Règle montrée au client | Prix par défaut |
+|---|---|---|
+| Retouche | texte, couleur ou taille, sans nouvelle logique | 10 € |
+| Petite évolution | un écran ou un comportement, sans nouvelle donnée | 25 € |
+| Évolution moyenne | nouvelle donnée ou plusieurs écrans, avec tests | 50 € |
+| Évolution importante | donnée protégée côté serveur (confidentialité ou sécurité), plusieurs écrans, tests | 100 € |
+| Offert | proposé par DZOFT, non facturé | 0 € |
+| Inclus (journal seulement) | prévu au devis, ou correction | jamais facturé |
+
+Prix proportionnels au devis UPZONE signé (module « Comptes utilisateurs et base de données » : 150 €).
+Modifiables dans « Ma liste de prix ». Dans le journal privé, une entrée « demande » peut porter
+`lvl` (clé de niveau ou `inclus`), `qty` et `why` (preuve : commits, base de données, tests) : « Calculer depuis
+le suivi » s’en sert. L’assistant renseigne ces champs quand il ajoute une demande réalisée au journal.

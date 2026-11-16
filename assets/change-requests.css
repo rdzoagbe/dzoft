@@ -76,3 +76,5 @@
 .dzoft-calc [data-unpriced]{border-color:#d33!important;background:#fff4f4}
 .dzoft-calc tr[data-discount] td:first-child input{font-style:italic}
 .dzoft-calc td small{display:block;color:#636e81;font-size:11px;margin-top:3px}
+.dzoft-calc td select{display:block;width:100%;margin-top:6px;border:1px solid #cad3e1;border-radius:8px;padding:7px;font:inherit;font-size:12px;background:var(--card,#fff);min-height:36px}
+.dzoft-price-list h4{margin:14px 0 4px;font-size:13px}

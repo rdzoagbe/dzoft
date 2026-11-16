@@ -166,3 +166,14 @@ test('the proposal e-mail has its own subject, text and button',()=>{
  assert.match(fn,/Rien ne vous est facturé sans votre signature/);
  assert.match(fn,/subject: `Proposition \$\{ref\} signée par le client/);
 });
+
+test('price levels: each line shows the client its level and rule; « inclus » is never billed',()=>{
+ const mig=read('supabase/migrations/20261117150000_price_tiers.sql');
+ for(const key of ['retouche','petite','moyenne','importante','offert'])assert.match(mig,new RegExp('"key":"'+key+'"'));
+ assert.match(changes,/function tierDetail\(t,when\)\{return t\?\(t\.label\+' : '\+t\.rule/);
+ assert.match(changes,/if\(e\.lvl==='inclus'\)\{included\.push/);
+ assert.match(changes,/var qty=Number\(e\.qty\)>0&&Number\(e\.qty\)<=1000\?Number\(e\.qty\):1;/);
+ // An offered line shows « Offert » to the client, not 0,00 €.
+ assert.match(changes,/var free=Number\(l\.price\)===0;/);
+ assert.match(mig,/if positive<=0 or total<=0 then raise exception/);
+});

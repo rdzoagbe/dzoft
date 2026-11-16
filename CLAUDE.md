@@ -101,6 +101,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »
   (e-mail `change_proposed`), signature du client par code e-mail (fonction Edge `change-sign-code`, aucune approbation sans
   code), puis facture complémentaire du montant signé. Test `tests/priced-change-proposals.sql`.
+  « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis la signature ; niveaux de prix
+  `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).
+  En ajoutant une demande réalisée au journal, renseigner `lvl`, `qty` et `why` (commits, base, tests) d’après ces règles.
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.

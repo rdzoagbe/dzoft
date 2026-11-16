@@ -30,7 +30,7 @@ function linesTable(r,en){
  var lines=Array.isArray(r.lines)?r.lines:null;
  if(!lines)return '<p>'+esc(r.proposed_scope||'')+'</p><p><strong>'+tr(en,'Supplément proposé : ','Proposed extra charge: ')+cash(r.extra_price)+'</strong></p>';
  return '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Prestation','Item')+'</th><th>'+tr(en,'Qté','Qty')+'</th><th>'+tr(en,'Prix','Price')+'</th><th>'+tr(en,'Total','Total')+'</th></tr></thead><tbody>'+
-  lines.map(function(l){return '<tr><td>'+esc(l.label)+(l.detail?'<small>'+esc(l.detail)+'</small>':'')+'</td><td>'+esc(String(l.qty).replace('.',','))+'</td><td>'+cash(l.price)+'</td><td>'+cash(Math.round(num(l.qty)*num(l.price)*100)/100)+'</td></tr>';}).join('')+
+  lines.map(function(l){var free=Number(l.price)===0;return '<tr><td>'+esc(l.label)+(l.detail?'<small>'+esc(l.detail)+'</small>':'')+'</td><td>'+esc(String(l.qty).replace('.',','))+'</td><td>'+(free?tr(en,'Offert','Free'):cash(l.price))+'</td><td>'+(free?tr(en,'Offert','Free'):cash(Math.round(num(l.qty)*num(l.price)*100)/100))+'</td></tr>';}).join('')+
   '</tbody><tfoot><tr><th colspan="3">'+tr(en,'Total du complément','Extra total')+'</th><th>'+cash(r.extra_price)+'</th></tr></tfoot></table></div>';
 }
 function proposalBlock(r,en){
@@ -113,16 +113,19 @@ function bindClient(root,options){
 /* ---------------- owner ---------------- */
 function words(label){return String(label||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[^a-z0-9]+/).filter(function(w){return w.length>3;});}
 function plain(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
-function lineRow(l,en){
- l=l||{};var discount=Number(l.price)<0||l.discount;
- return '<tr data-line'+(discount?' data-discount':'')+'><td><input name="label" maxlength="160" required placeholder="'+tr(en,'Prestation','Item')+'" value="'+esc(l.label||'')+'">'+
-  '<input type="hidden" name="source" value="'+esc(l.source||'')+'"><input type="hidden" name="detail" value="'+esc(l.detail||'')+'">'+
-  (l.detail?'<small>'+esc(l.detail)+'</small>':'')+'</td>'+
+function tierDetail(t,when){return t?(t.label+' : '+t.rule+(when?' · '+when:'')).slice(0,300):(when||'');}
+function lineRow(l,en,tiers){
+ l=l||{};tiers=tiers||[];var discount=Number(l.price)<0||l.discount;
+ var level=discount?'':'<select name="level" aria-label="'+tr(en,'Niveau de la prestation','Level of the item')+'"><option value="">'+tr(en,'Prix libre','Free price')+'</option>'+
+  tiers.map(function(t){return '<option value="'+esc(t.key)+'"'+(l.level===t.key?' selected':'')+'>'+esc(t.label)+' · '+cash(t.price)+'</option>';}).join('')+'</select>';
+ return '<tr data-line'+(discount?' data-discount':'')+' data-when="'+esc(l.when||'')+'"><td><input name="label" maxlength="160" required placeholder="'+tr(en,'Prestation','Item')+'" value="'+esc(l.label||'')+'">'+
+  '<input type="hidden" name="source" value="'+esc(l.source||'')+'"><input type="hidden" name="detail" value="'+esc(l.detail||'')+'">'+level+
+  '<small data-line-detail>'+esc(l.detail||'')+'</small></td>'+
   '<td><input name="qty" type="number" min="0.01" max="1000" step="0.01" required value="'+esc(l.qty==null?1:l.qty)+'" aria-label="'+tr(en,'Quantité','Quantity')+'"></td>'+
   '<td><input name="price" type="number" min="'+(discount?'-1000000':'0')+'" max="'+(discount?'0':'1000000')+'" step="0.01" required value="'+esc(l.price==null?'':l.price)+'" aria-label="'+(discount?tr(en,'Montant de la remise (négatif, €)','Discount amount (negative, €)'):tr(en,'Prix unitaire (€)','Unit price (€)'))+'"'+(l.price==null||l.price===''?' data-unpriced':'')+'></td>'+
   '<td data-line-total>'+cash(0)+'</td><td><button class="btn line sm" type="button" data-line-remove aria-label="'+tr(en,'Retirer la ligne','Remove line')+'">×</button></td></tr>';
 }
-function calculator(en,blocks,target){
+function calculator(en,blocks,target,tiers){
  // target: null for a new proposal, or the client request being priced.
  var r=target||{};
  return '<form class="dzoft-change-form dzoft-calc" data-change-offer'+(target?' data-for="'+esc(r.id)+'"':'')+'>'+
@@ -139,15 +142,20 @@ function calculator(en,blocks,target){
   '<button class="btn line sm" type="button" data-calc-add-line>'+tr(en,'＋ Ligne libre','＋ Free line')+'</button>'+
   '<button class="btn line sm" type="button" data-calc-discount>'+tr(en,'－ Remise commerciale','－ Commercial discount')+'</button></div>'+
   '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Prestation','Item')+'</th><th>'+tr(en,'Qté','Qty')+'</th><th>'+tr(en,'Prix unitaire','Unit price')+'</th><th>'+tr(en,'Total','Total')+'</th><th><span class="sr-only">'+tr(en,'Retirer','Remove')+'</span></th></tr></thead>'+
-  '<tbody data-calc-lines>'+lineRow(null,en)+'</tbody><tfoot><tr><th colspan="3">'+tr(en,'Total du complément','Extra total')+'</th><th data-calc-total>'+cash(0)+'</th><th></th></tr></tfoot></table></div>'+
+  '<tbody data-calc-lines>'+lineRow(null,en,tiers)+'</tbody><tfoot><tr><th colspan="3">'+tr(en,'Total du complément','Extra total')+'</th><th data-calc-total>'+cash(0)+'</th><th></th></tr></tfoot></table></div>'+
   '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" placeholder="'+tr(en,'Ex. : aucun changement ; + 3 jours','E.g. no change; +3 days')+'"></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="done"><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="keep" checked><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
   '<p>'+tr(en,'Le client voit cette proposition dans son espace et la signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvée lui-même. Utilisez « Envoyer au client » pour le prévenir par e-mail.','The client sees this proposal in their workspace and signs it with a code sent by e-mail. Nothing is owed until they approve it themselves. Use “Send to client” to notify them by e-mail.')+'</p>'+
   '<button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer la proposition','Create the proposal'))+'</button></form>';
 }
-function priceList(en,blocks,defaultPrice){
+function priceList(en,blocks,defaultPrice,tiers){
  return '<details class="dzoft-change-new dzoft-price-list"><summary>'+tr(en,'Ma liste de prix','My price list')+' ('+blocks.length+')</summary>'+
+  '<h4>'+tr(en,'Niveaux de prix','Price levels')+'</h4><p class="dzoft-change-note">'+tr(en,'Chaque ligne affiche au client son niveau et sa règle. Prix proposés en proportion de votre devis signé : le module « Comptes utilisateurs et base de données » y vaut 150 €.','Each line shows the client its level and rule. Default prices are proportional to your signed quote, where the whole “User accounts and database” module is 150 €.')+'</p>'+
+  '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Niveau','Level')+'</th><th>'+tr(en,'Règle montrée au client','Rule shown to the client')+'</th><th>'+tr(en,'Prix','Price')+'</th></tr></thead><tbody>'+
+  tiers.map(function(t,i){return '<tr><td>'+esc(t.label)+'</td><td>'+esc(t.rule)+'</td><td><input type="number" min="0" max="1000000" step="0.01" value="'+esc(t.price)+'" data-tier-price="'+i+'" aria-label="'+tr(en,'Prix du niveau ','Price of level ')+esc(t.label)+'"></td></tr>';}).join('')+
+  '</tbody></table></div><button class="btn line sm" type="button" data-tier-save>'+tr(en,'Enregistrer les niveaux','Save levels')+'</button>'+
+  '<h4>'+tr(en,'Prestations connues','Known items')+'</h4>'+
   '<div class="dzoft-calc-pick"><label>'+tr(en,'Prix par défaut d’une demande absente de la liste (€)','Default price of a request not in the list (€)')+
   '<input type="number" min="0" max="1000000" step="0.01" data-default-price value="'+esc(defaultPrice==null?'':defaultPrice)+'" placeholder="'+tr(en,'Vide : à chiffrer à la main','Empty: priced by hand')+'"></label>'+
   '<button class="btn line sm" type="button" data-default-save>'+tr(en,'Enregistrer','Save')+'</button></div>'+
@@ -158,7 +166,7 @@ function priceList(en,blocks,defaultPrice){
    '<button class="btn line sm" type="button" data-block-save>'+tr(en,'Enregistrer la liste','Save the list')+'</button>'
   :'<p>'+tr(en,'Votre liste se remplit quand vous créez une proposition avec « Ajouter les nouvelles lignes à ma liste de prix ».','Your list fills up when you create a proposal with “Add new lines to my price list”.')+'</p>')+'</details>';
 }
-function adminCard(r,en,invoice,blocks){
+function adminCard(r,en,invoice,blocks,tiers){
  var status=labels(en)[r.status]||r.status;
  var h='<article class="dzoft-change-item" data-change-card="'+esc(r.id)+'"><header><b>'+esc(r.title)+(r.proposal_number?' · '+esc(r.proposal_number):'')+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
  (r.description&&r.description!=='Proposition établie par DZOFT.'?'<p>'+esc(r.description)+'</p>':'')+
@@ -167,7 +175,7 @@ function adminCard(r,en,invoice,blocks){
   h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Renvoyer au client par e-mail','Send again by e-mail'):tr(en,'Envoyer au client par e-mail','Send to client by e-mail'))+'</button></div>'+
    (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta">'+tr(en,'Visible dans l’espace du client, pas encore envoyée par e-mail.','Visible in the client space, not yet sent by e-mail.')+'</p>');
  }
- if(r.status==='requested')h+='<details class="dzoft-change-new"><summary>'+tr(en,'Chiffrer cette demande','Price this request')+'</summary>'+calculator(en,blocks,r)+'</details>';
+ if(r.status==='requested')h+='<details class="dzoft-change-new"><summary>'+tr(en,'Chiffrer cette demande','Price this request')+'</summary>'+calculator(en,blocks,r,tiers)+'</details>';
  if(r.status==='requested'||r.status==='proposed'){
   h+='<form data-change-reject="'+esc(r.id)+'" class="dzoft-change-form dzoft-change-reject"><label>'+tr(en,'Motif si la proposition est retirée ou la demande non retenue','Reason if withdrawn or declined')+
    '<input name="reason" minlength="5" maxlength="600" placeholder="'+tr(en,'Ex. : remplacée par une nouvelle proposition','E.g. replaced by a new proposal')+'" required></label>'+
@@ -192,20 +200,22 @@ function bindOwner(root,options){
  root.__dzoftOwnerOptions=options;
  if(root.__dzoftOwnerRefresh&&root.__dzoftOwnerQuote===quoteId)return root.__dzoftOwnerRefresh();
  function invoiceOf(r){var list=(root.__dzoftOwnerOptions||{}).invoices||[];for(var i=0;i<list.length;i++)if(list[i]&&list[i].change===r.id)return list[i];return null;}
- root.innerHTML=rootMarkup(en);var records=[],blocks=[],defaultPrice=null;
- function loadBlocks(){return Promise.resolve(sb.select('settings','select=price_blocks,default_line_price&id=eq.1')).then(function(rows){var row=rows&&rows[0]||{},b=row.price_blocks;blocks=Array.isArray(b)?b.filter(function(x){return x&&x.label;}):[];defaultPrice=row.default_line_price==null?null:Number(row.default_line_price);}).catch(function(){blocks=[];});}
+ root.innerHTML=rootMarkup(en);var records=[],blocks=[],defaultPrice=null,tiers=[];
+ function loadBlocks(){return Promise.resolve(sb.select('settings','select=price_blocks,default_line_price,price_tiers&id=eq.1')).then(function(rows){var row=rows&&rows[0]||{},b=row.price_blocks;blocks=Array.isArray(b)?b.filter(function(x){return x&&x.label;}):[];defaultPrice=row.default_line_price==null?null:Number(row.default_line_price);
+  tiers=Array.isArray(row.price_tiers)?row.price_tiers.filter(function(t){return t&&t.key&&t.label;}).map(function(t){return {key:String(t.key),label:String(t.label),rule:String(t.rule||''),price:Number(t.price)||0};}):[];}).catch(function(){blocks=[];tiers=[];});}
+ function tierOf(key){for(var i=0;i<tiers.length;i++)if(tiers[i].key===key)return tiers[i];return null;}
  function saveBlocks(next){return Promise.resolve(sb.update('settings',1,{price_blocks:next.slice(0,200)})).then(function(){blocks=next.slice(0,200);});}
  function refresh(){return Promise.all([sb.rpc('owner_list_change_requests',{p_quote:quoteId},true),loadBlocks()]).then(function(res){records=Array.isArray(res[0])?res[0]:[];
   var keepOpen=root.querySelector('.dzoft-change-new[data-new-proposal]');keepOpen=keepOpen&&keepOpen.open;
   root.querySelector('.dzoft-change-content').innerHTML=
   '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Chiffrez les travaux, envoyez la proposition, puis attendez la signature du client (code reçu par e-mail) avant de les facturer.','A request is not an order. Price the work, send the proposal, then wait for the client’s signature (code sent by e-mail) before invoicing.')+'</p>'+
-  '<details class="dzoft-change-new" data-new-proposal'+(keepOpen?' open':'')+'><summary>'+tr(en,'＋ Proposer un complément chiffré','＋ Propose priced additional work')+'</summary>'+calculator(en,blocks,null)+'</details>'+
-  priceList(en,blocks,defaultPrice)+
-  (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
+  '<details class="dzoft-change-new" data-new-proposal'+(keepOpen?' open':'')+'><summary>'+tr(en,'＋ Proposer un complément chiffré','＋ Propose priced additional work')+'</summary>'+calculator(en,blocks,null,tiers)+'</details>'+
+  priceList(en,blocks,defaultPrice,tiers)+
+  (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
- function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){return {label:row.querySelector('[name=label]').value.trim(),qty:num(row.querySelector('[name=qty]').value),price:num(row.querySelector('[name=price]').value),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value};});}
+ function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){return {label:row.querySelector('[name=label]').value.trim(),qty:num(row.querySelector('[name=qty]').value),price:num(row.querySelector('[name=price]').value),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
  /* « Calculer depuis le suivi » : the client requests completed since signature, from the private journal.
     A request is billed once: its origin is kept on the line and skipped if already in a live proposal. */
  function hash(t){var h=2166136261;for(var i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
@@ -221,7 +231,7 @@ function bindOwner(root,options){
    var used={};records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0)(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});});
    readLines(form).forEach(function(l){if(l.source)used[l.source]=1;});
    var clientName=plain(q.clientName||'').split(/\s+/)[0];
-   var added=0,priced=0,skipped=0,later=[];
+   var added=0,priced=0,skipped=0,offered=0,later=[],included=[];
    (Array.isArray(q.journal)?q.journal:[]).filter(function(e){return e&&e.k==='demande'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d||'')&&(!since||e.d>=since);})
     .sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;}).forEach(function(e){
      var text=String(e.t||'').trim(),done=/:\s*fait\b/i.test(text)&&!/^pas encore/i.test(text);
@@ -232,18 +242,26 @@ function bindOwner(root,options){
      label=label.charAt(0).toUpperCase()+label.slice(1);if(label.length>160)label=label.slice(0,157)+'…';
      if(!done){later.push(label);return;}
      var source='journal:'+e.d+':'+hash(e.d+'|'+text).slice(0,16);
-     if(used[source]){skipped++;return;}used[source]=1;
-     var t=plain(text),best=null,score=0;
-     blocks.forEach(function(bl){var ws=(bl.words&&bl.words.length?bl.words:words(bl.label)).map(plain),hit=ws.filter(function(w){return w&&t.indexOf(w)>=0;}).length;if(hit>score){score=hit;best=bl;}});
-     var price=best?best.price:(defaultPrice!=null?defaultPrice:null);if(price!=null)priced++;
+     if(used[source]){skipped++;return;}
+     // The level recorded in the journal decides: "inclus" (already in the quote, or a correction) is never billed.
+     if(e.lvl==='inclus'){included.push(label+(e.why?' — '+e.why:''));return;}
+     used[source]=1;
      var day=new Date(e.d+'T12:00:00').toLocaleDateString(en?'en-GB':'fr-FR',{day:'numeric',month:'long',year:'numeric'});
-     addLine(form,{label:label.length>=2?label:tr(en,'Demande du ','Request of ')+day,qty:1,price:price,source:source,detail:tr(en,'Demandé et réalisé le ','Requested and done on ')+day});added++;
+     var when=tr(en,'réalisé le ','done on ')+day,tier=tierOf(e.lvl),price=null,level='';
+     if(tier){price=tier.price;level=tier.key;}
+     else{var t=plain(text),best=null,score=0;
+      blocks.forEach(function(bl){var ws=(bl.words&&bl.words.length?bl.words:words(bl.label)).map(plain),hit=ws.filter(function(w){return w&&t.indexOf(w)>=0;}).length;if(hit>score){score=hit;best=bl;}});
+      price=best?best.price:(defaultPrice!=null?defaultPrice:null);}
+     if(price!=null)priced++;if(tier&&tier.key==='offert')offered++;
+     var qty=Number(e.qty)>0&&Number(e.qty)<=1000?Number(e.qty):1;
+     addLine(form,{label:label.length>=2?label:tr(en,'Demande du ','Request of ')+day,qty:qty,price:price,source:source,level:level,when:when,detail:tier?tierDetail(tier,when):tr(en,'Demandé et ','Requested and ')+when});added++;
    });
    var days={};work.forEach(function(w){if(w.source_date&&(!since||w.source_date>=since))days[w.source_date]=1;});
    var box=form.querySelector('[data-calc-summary]');box.hidden=false;
    box.innerHTML='<p><strong>'+added+' '+tr(en,'demande(s) réalisée(s) ajoutée(s)','completed request(s) added')+'</strong>'+
     (added?' · '+priced+' '+tr(en,'chiffrée(s)','priced')+(added-priced?' · <span class="dzoft-calc-warn">'+(added-priced)+' '+tr(en,'à chiffrer (prix vide)','to price (empty price)')+'</span>':''):'')+
-    (skipped?' · '+skipped+' '+tr(en,'déjà dans une proposition','already in a proposal'):'')+'</p>'+
+    (offered?' · '+offered+' '+tr(en,'offerte(s)','offered'):'')+(skipped?' · '+skipped+' '+tr(en,'déjà dans une proposition','already in a proposal'):'')+'</p>'+
+    (included.length?'<details><summary>'+included.length+' '+tr(en,'demande(s) incluse(s) au devis ou corrections, non facturée(s)','request(s) included in the quote or fixes, not billed')+'</summary><ul>'+included.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
     '<p>'+tr(en,'Activité Git sur le projet depuis la signature : ','Git activity on the project since signature: ')+Object.keys(days).length+' '+tr(en,'jour(s) de travail.','working day(s).')+'</p>'+
     (later.length?'<details><summary>'+later.length+' '+tr(en,'demande(s) pas encore réalisée(s), non incluse(s)','request(s) not done yet, not included')+'</summary><ul>'+later.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'');
    if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value=tr(en,'Ajouts demandés depuis la signature du devis','Additions requested since the quote was signed');
@@ -265,11 +283,15 @@ function bindOwner(root,options){
   var tbody=form.querySelector('[data-calc-lines]');
   // Replace the first empty line instead of stacking empty rows.
   var empty=Array.prototype.filter.call(tbody.querySelectorAll('[data-line]'),function(row){return !row.querySelector('[name=label]').value.trim()&&!row.querySelector('[name=price]').value;})[0];
-  var holder=document.createElement('tbody');holder.innerHTML=lineRow(l,en);var row=holder.firstChild;
+  var holder=document.createElement('tbody');holder.innerHTML=lineRow(l,en,tiers);var row=holder.firstChild;
   if(empty&&l)tbody.replaceChild(row,empty);else tbody.appendChild(row);
   recalc(form);return row;
  }
  root.addEventListener('input',function(ev){var f=ev.target.closest('form[data-change-offer]');if(f)recalc(f);});
+ // Choosing a level sets the unit price and the rule shown to the client under the line.
+ root.addEventListener('change',function(ev){var sel=ev.target;if(!sel.matches||!sel.matches('select[name=level]'))return;var row=sel.closest('[data-line]'),t=tierOf(sel.value);
+  var d=t?tierDetail(t,row.dataset.when):(row.dataset.when||'');row.querySelector('[name=detail]').value=d;row.querySelector('[data-line-detail]').textContent=d;
+  if(t){row.querySelector('[name=price]').value=t.price;}recalc(sel.closest('form'));});
  root.addEventListener('click',function(ev){
   var b=ev.target.closest('button');if(!b)return;
   var form=b.closest('form[data-change-offer]');
@@ -278,6 +300,8 @@ function bindOwner(root,options){
   if(b.hasAttribute('data-line-remove')&&form){var rows=form.querySelectorAll('[data-line]');if(rows.length>1)b.closest('[data-line]').remove();else{b.closest('[data-line]').querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}recalc(form);return;}
   if(b.hasAttribute('data-calc-discount')&&form){var d=addLine(form,{label:tr(en,'Remise commerciale','Commercial discount'),qty:1,price:'',discount:true});d.querySelector('[name=price]').focus();return;}
   if(b.hasAttribute('data-calc-journal')&&form){fromJournal(form,b);return;}
+  if(b.hasAttribute('data-tier-save')){var next=tiers.map(function(t,i){var inp=root.querySelector('[data-tier-price="'+i+'"]'),v=inp?num(inp.value):t.price;return {key:t.key,label:t.label,rule:t.rule,price:Number.isFinite(v)&&v>=0?Math.round(v*100)/100:t.price};});
+   perform(Promise.resolve(sb.update('settings',1,{price_tiers:next})).then(function(){tiers=next;}),tr(en,'Niveaux de prix enregistrés.','Price levels saved.'));return;}
   if(b.hasAttribute('data-default-save')){var v=root.querySelector('[data-default-price]').value.trim(),dp=v===''?null:Math.round(num(v)*100)/100;
    if(dp!==null&&!(dp>=0)){banner(root,tr(en,'Prix par défaut invalide.','Invalid default price.'),true);return;}
    perform(Promise.resolve(sb.update('settings',1,{default_line_price:dp})),tr(en,'Prix par défaut enregistré.','Default price saved.'));return;}
@@ -302,7 +326,7 @@ function bindOwner(root,options){
   if(f.hasAttribute('data-change-offer')){
    var lines=readLines(f).filter(function(l){return l.label||Number.isFinite(l.price);});
    if(!lines.length||lines.some(function(l){return l.label.length<2||!(l.qty>0)||!Number.isFinite(l.price);})){banner(root,stateError({message:'Each line needs a label, a quantity and a price'},en),true);return;}
-   lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;return o;});
+   lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});
    var total=lines.reduce(function(n,l){return n+Math.round(l.qty*l.price*100);},0)/100;
    if(!(total>0)){banner(root,tr(en,'Le total doit rester positif après la remise.','The total must stay positive after the discount.'),true);return;}
    if(!global.confirm(tr(en,'Créer cette proposition de '+cash(total)+' ? Elle sera visible dans l’espace du client, qui devra la signer.','Create this '+cash(total)+' proposal? It will be visible in the client space and must be signed by the client.')))return;
