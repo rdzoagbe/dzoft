@@ -45,3 +45,10 @@ test('short admin pages start at the top instead of being centred in the window'
  assert.match(css,/body\.dzoft-admin #app \.shell main\{[^}]*margin:0 auto;align-self:start\}/);
  assert.match(admin,/unified-app-shell\.css\?v=20261117-1/);
 });
+
+test('the current section is shown again once every late script has built its sections',()=>{
+ assert.match(admin,/window\.DzoftReapplyRoute = function\(\)\{ if \(!\/access_token\|error=\/\.test\(location\.hash\)\) fromHash\(\); \};/);
+ const last=admin.lastIndexOf('<script src="workspace-nav-v6.js'),reapply=admin.indexOf('window.DzoftReapplyRoute();</script>');
+ assert.ok(reapply>last,'re-applied after the last script that builds sections');
+ for(const late of ['simplified-ui.js','workspace-panels-v7.js'])assert.ok(admin.indexOf(late)<reapply,late+' runs before the route is re-applied');
+});

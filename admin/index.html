@@ -969,6 +969,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     t.onclick = function(){ location.hash = '#/' + SLUG[t.dataset.tab]; };
   });
   window.addEventListener('hashchange', function(){ if (!/access_token|error=/.test(location.hash)) fromHash(); });
+  /* Scripts loaded after this one (simplified-ui.js, workspace-panels-v7.js) build some sections
+     hidden and move lists into them. If the data arrived first, the section chosen above was
+     rebuilt hidden: the page at the end calls this again once every section exists. */
+  window.DzoftReapplyRoute = function(){ if (!/access_token|error=/.test(location.hash)) fromHash(); };
 
   /* ---------------- dashboard ---------------- */
   function steps(q){ return (q.steps || []).length ? q.steps : (window.RDSTEPS || []); }
@@ -1844,6 +1848,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="unified-app-shell.js?v=20261116-v6"></script>
 <script src="workspace-panels-v7.js?v=20261116-data1"></script>
 <script src="workspace-nav-v6.js?v=20261116-1&labels=20261117"></script>
+<script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>
 </body>
 </html>
 
