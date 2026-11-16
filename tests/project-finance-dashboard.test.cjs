@@ -9,7 +9,7 @@ const admin=read('admin/index.html');
 
 test('project dashboard is reachable from existing client and projects navigation',()=>{
  assert.match(admin,/function openFollow\(id\)\{\s*location\.href = 'projet\.html\?q='/);
- assert.match(admin,/href="projet\.html\?q=/);
+ assert.match(admin,/q\.accepted_at \? 'projet\.html\?q=' : 'suivi\.html\?q='/);
  assert.match(html,/project-finance\.js\?v=/);
  assert.match(html,/project-finance\.css\?v=/);
  assert.match(html,/href="\.\/#\/clients"/);
