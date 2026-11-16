@@ -70,3 +70,17 @@ test('Mobile 390px: single menu, stacked finance sections and real supplementary
  await expect(page.locator('#pf-extra-dialog')).toBeHidden();
  expect(errors).toEqual([]);
 });
+
+test('Dashboard entry now opens the redesigned finance interface for latest accepted project',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await owner(page);
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page).toHaveURL(/\/admin\/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0/);
+ await expect(page.locator('#pf-shell')).toBeVisible();
+ await expect(page.locator('.pf-dashboard-lead')).toContainText('Tableau de bord');
+ await expect(page.locator('#pf-project-switch')).toBeAttached();
+ await expect(page.locator('#pf-base')).toContainText('1 500');
+ await expect(page.locator('#pf-extras')).toContainText('0');
+ await expect(page.locator('#pf-remaining')).toContainText('700');
+ await expect(page.locator('#pf-side-dashboard')).toHaveAttribute('aria-current','page');
+});
