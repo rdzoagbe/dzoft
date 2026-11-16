@@ -615,7 +615,9 @@ test('Dashboard now resolves to the redesigned finance page, not the legacy home
  expect(errors).toEqual([]);
 });
 
-test('New Admin links open the precise existing work, documents and billing tabs',async({page})=>{
+test.describe('Cross-page synthetic finance navigation',()=>{
+ test.use({serviceWorkers:'block'}); // Prevent registered PWA SW intercepting mocked sb.js on the next page.
+ test('New Admin links open the precise existing work, documents and billing tabs',async({page})=>{
  await syntheticOwner(page);
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
  const base='admin/projet.html?q='+q;
@@ -639,4 +641,5 @@ test('New Admin links open the precise existing work, documents and billing tabs
   expect(new URL(page.url()).hash).toBe(entry.fragment);
   await expect(page.locator(entry.node)).toBeVisible();
  }
+ });
 });
