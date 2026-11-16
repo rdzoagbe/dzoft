@@ -10,7 +10,7 @@ const admin=read('admin/index.html');
 const nav=read('admin/workspace-nav-v6.js');
 
 test('counters of the former tabs are optional: a missing one never stops the page',()=>{
- assert.match(admin,/function badge\(id, n\)\{ var e = \$\(id\); if \(!e\) return;/);
+ assert.match(admin,/function badge\(id, n\)\{\n    var e = \$\(id\); if \(e\) \{ e\.hidden = !n; e\.textContent = n; \}/);
  for(const id of ['n-new','n-msg','n-trash'])
   assert.doesNotMatch(admin,new RegExp("\\$\\('"+id+"'\\)\\.(hidden|textContent)"),id+' is written without checking it exists');
 });
@@ -51,4 +51,15 @@ test('the current section is shown again once every late script has built its se
  const last=admin.lastIndexOf('<script src="workspace-nav-v6.js'),reapply=admin.indexOf('window.DzoftReapplyRoute();</script>');
  assert.ok(reapply>last,'re-applied after the last script that builds sections');
  for(const late of ['simplified-ui.js','workspace-panels-v7.js'])assert.ok(admin.indexOf(late)<reapply,late+' runs before the route is re-applied');
+});
+
+test('menu counters: new requests on Clients, unread messages on Messages, trash on Paramètres',()=>{
+ assert.match(nav,/\{slug:'messages',fr:'Messages',en:'Messages',glyph:'☏'\}/);
+ assert.match(admin,/var BADGE_ROUTE = \{'n-new':'clients', 'n-msg':'messages', 'n-trash':'parametres'\};/);
+ // Values reported before the menu exists are kept and painted when it is built.
+ assert.match(admin,/window\.DzoftMenuCounts\[BADGE_ROUTE\[id\]\] = n;/);
+ assert.match(nav,/translate\(\);\npaintAllCounts\(\);/);
+ // The counter is beside the label, never inside it: the page translator rewrites labels.
+ assert.match(nav,/a\.append\(icon,label,countBadge\(item\.slug\)\)/);
+ assert.doesNotMatch(nav,/countBadge[^\n]*dataset\.fr/);
 });

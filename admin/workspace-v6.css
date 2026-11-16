@@ -74,3 +74,11 @@ body.dzoft-admin #app :is(#v-invoices,#v-journal,#v-documents,#v-catalogue) .v6-
  body.dzoft-admin #app .v6-project-info{min-width:140px}
  body.dzoft-admin #app .v6-project-open{margin-left:auto}
 }
+/* Counters on the menu (new requests, unread messages, trash). */
+.dzoft-v6-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#ff5a6a;color:#fff;font-size:12px;font-weight:800;line-height:1;margin-left:auto;flex:0 0 auto}
+.dzoft-v6-count[hidden]{display:none}
+.dzoft-v6-count .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.dzoft-v6-link{position:relative}
+@media(max-width:980px){
+ body.dzoft-admin #app .side .dzoft-v6-count{position:absolute;top:3px;right:calc(50% - 22px);min-width:18px;height:18px;padding:0 5px;font-size:10px;margin:0}
+}

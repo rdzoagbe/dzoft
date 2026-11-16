@@ -216,7 +216,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
 <link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
-<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261116-1">
+<link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261117-counts">
 </head>
 <body class="dzoft-admin">
 
@@ -836,7 +836,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   /* Counters of the former sidebar tabs. The unified menu (workspace-nav-v6.js) replaces those tabs,
      so a missing counter is skipped: it must never stop the page from drawing its data. */
-  function badge(id, n){ var e = $(id); if (!e) return; e.hidden = !n; e.textContent = n; }
+  var BADGE_ROUTE = {'n-new':'clients', 'n-msg':'messages', 'n-trash':'parametres'};
+  function badge(id, n){
+    var e = $(id); if (e) { e.hidden = !n; e.textContent = n; }
+    // The unified menu shows the same counters; it may load after this, so the value is kept for it.
+    window.DzoftMenuCounts = window.DzoftMenuCounts || {}; window.DzoftMenuCounts[BADGE_ROUTE[id]] = n;
+    if (window.DzoftNavigationV6 && window.DzoftNavigationV6.setCount) window.DzoftNavigationV6.setCount(BADGE_ROUTE[id], n);
+  }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
   function render(){ dashboardDataLoaded=true; dashboardReceiptReady=false;dashboardReceiptStates={};dashboardReceiptFailures=0; renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
   var dashboardReceiptStates={},dashboardReceiptReady=false,dashboardReceiptFailures=0,receiptQueryGeneration=0;
@@ -1847,7 +1853,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="dashboard-v3.js?v=20261116-global-v5"></script>
 <script src="unified-app-shell.js?v=20261116-v6"></script>
 <script src="workspace-panels-v7.js?v=20261116-data1"></script>
-<script src="workspace-nav-v6.js?v=20261116-1&labels=20261117"></script>
+<script src="workspace-nav-v6.js?v=20261117-counts"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>
 </body>
 </html>

@@ -13,6 +13,7 @@ var routes=[
  {slug:'devis',fr:'Devis & Chiffrage',en:'Quotes & pricing',glyph:'▤',projectPanel:'quotes'},
  {slug:'factures',fr:'Factures',en:'Invoices',glyph:'▧',projectPanel:'invoices',id:'pf-side-invoices'},
  {slug:'paiements',fr:'Paiements',en:'Payments',glyph:'▣',projectPanel:'payments'},
+ {slug:'messages',fr:'Messages',en:'Messages',glyph:'☏'},
  {slug:'journal',fr:'Journal & Suivi',en:'Journal & tracking',glyph:'☷',projectPanel:'journal',id:'pf-side-journal'},
  {slug:'documents',fr:'Documents',en:'Documents',glyph:'□',projectPanel:'documents',id:'pf-side-documents'},
  {slug:'catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',glyph:'♧'},
@@ -28,6 +29,27 @@ nav.replaceChildren();
 nav.removeAttribute('role');
 nav.classList.add('dzoft-v6-nav');
 var entries={};
+/* Counters on the menu: new requests (Clients), unread client messages (Messages), items in the
+   trash (Paramètres, where the trash lives). The dashboard reports them with setCount(); it may do so
+   before this script runs, so the last values wait in window.DzoftMenuCounts. */
+var COUNT_TEXT={clients:['nouvelle(s) demande(s)','new request(s)'],messages:['message(s) non lu(s)','unread message(s)'],parametres:['élément(s) dans la corbeille','item(s) in the trash']};
+function countBadge(slug){
+ var b=document.createElement('span');b.className='dzoft-v6-count';b.dataset.countFor=slug;b.hidden=true;
+ var n=document.createElement('span');n.setAttribute('aria-hidden','true');
+ var sr=document.createElement('span');sr.className='sr-only';
+ b.append(n,sr);return b;
+}
+function paintCount(b,count){
+ var text=COUNT_TEXT[b.dataset.countFor],n=Math.max(0,Math.floor(Number(count)||0));
+ b.hidden=!n||!text;if(b.hidden)return;
+ b.firstChild.textContent=n>99?'99+':String(n);
+ b.lastChild.textContent=' · '+n+' '+text[english()?1:0];
+}
+function setCount(slug,count){
+ window.DzoftMenuCounts=window.DzoftMenuCounts||{};window.DzoftMenuCounts[slug]=count;
+ document.querySelectorAll('[data-count-for="'+slug+'"]').forEach(function(b){paintCount(b,count);});
+}
+function paintAllCounts(){var all=window.DzoftMenuCounts||{};Object.keys(all).forEach(function(slug){setCount(slug,all[slug]);});}
 routes.forEach(function(item,index){
  if(item.slug==='parametres'){var hr=document.createElement('div');hr.className='dzoft-v6-divider';hr.setAttribute('aria-hidden','true');nav.appendChild(hr);}
  var a=document.createElement('a');
@@ -38,7 +60,7 @@ routes.forEach(function(item,index){
  if(isProject&&item.slug==='clients')a.id='pf-side-cases';
  var icon=document.createElement('span');icon.className='dzoft-v6-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
  var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;label.dataset.fr=item.fr;label.dataset.en=item.en;
- a.append(icon,label);nav.appendChild(a);
+ a.append(icon,label,countBadge(item.slug));nav.appendChild(a);
  entries[item.slug]=a;
 });
 function active(){
@@ -77,14 +99,15 @@ function mobile(){
    var b=document.createElement('button');b.type='button';b.className='installed-menu-item';b.dataset.appRoute=item.slug;
    var icon=document.createElement('span');icon.className='installed-menu-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
    var txt=document.createElement('span');txt.className='installed-menu-label';txt.dataset.fr=item.fr;txt.dataset.en=item.en;txt.textContent=english()?item.en:item.fr;
-   b.append(icon,txt);panel.appendChild(b);
+   b.append(icon,txt,countBadge(item.slug));panel.appendChild(b);
  });
  if(old)panel.appendChild(old);
 }
 if(!isProject)mobile();
-document.addEventListener('dzoft:locale-change',function(){translate();var panel=document.getElementById('dzoft-installed-menu-panel');if(panel)panel.querySelectorAll('[data-fr][data-en]').forEach(function(x){x.textContent=x.dataset[english()?'en':'fr'];});});
+document.addEventListener('dzoft:locale-change',function(){translate();paintAllCounts();var panel=document.getElementById('dzoft-installed-menu-panel');if(panel)panel.querySelectorAll('[data-fr][data-en]').forEach(function(x){x.textContent=x.dataset[english()?'en':'fr'];});});
 window.addEventListener('hashchange',active);
 window.addEventListener('pageshow',active);
 translate();
-window.DzoftNavigationV6={routes:routes.map(function(r){return r.slug;}),refresh:active};
+paintAllCounts();
+window.DzoftNavigationV6={routes:routes.map(function(r){return r.slug;}),refresh:active,setCount:setCount};
 })();
