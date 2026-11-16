@@ -5,7 +5,8 @@
   "description": "DZOFT read-only browser regression checks; no client test credentials",
   "scripts": {
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:routes": "node --test tests/navigation-contract.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.65.0"
