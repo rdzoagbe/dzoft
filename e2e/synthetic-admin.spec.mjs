@@ -576,3 +576,27 @@ test('Settings language reacts to updated text and accessible labels, but never 
  await expect(page.locator('#test-authored-text')).toHaveText('Annuler');
  expect(errors).toEqual([]);
 });
+
+
+test('Standalone quote editor surfaces failed saves and supports Retry without real data writes',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('admin/devis.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#sheet')).toBeVisible();
+ const name=page.locator('#c-name');
+ await expect(name).toBeVisible();
+ await name.fill('Synthetic quote save retry');
+ await expect(page.locator('#sync')).toContainText('échec',{timeout:10000});
+ const retry=page.locator('#b-retry');
+ await expect(retry).toBeVisible();
+ const before=await page.evaluate(()=>window.__syntheticCalls.filter(c=>c==='update:quotes').length);
+ await retry.click();
+ await expect.poll(()=>page.evaluate(()=>window.__syntheticCalls.filter(c=>c==='update:quotes').length)).toBeGreaterThan(before);
+ await expect(retry).toBeVisible();
+ await page.locator('#b-import').click();
+ await page.locator('#importtext').fill('Draft pasted from a message');
+ await page.locator('#b-cancel').click();
+ await expect(page.locator('#importtext')).toHaveValue('');
+ await expect(page.locator('#importbox')).not.toHaveClass(/open/);
+ expect(errors).toEqual([]);
+});
