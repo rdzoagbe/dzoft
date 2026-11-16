@@ -118,7 +118,12 @@ function selection(){
   'devis':['Devis','Quotes'],
   'demandes':['Demandes reçues','Requests'],
   'messages':['Messages','Messages'],
-  'paiements':['Factures & paiements','Invoices & payments'],
+  'paiements':['Paiements','Payments'],
+  'factures':['Factures','Invoices'],
+  'journal':['Journal & Suivi','Journal & tracking'],
+  'documents':['Documents','Documents'],
+  'catalogue':['Catalogue (Prestations)','Service catalogue'],
+  'rapports':['Rapports','Reports'],
   'parametres':['Paramètres','Settings'],
   'corbeille':['Corbeille','Trash']
  };

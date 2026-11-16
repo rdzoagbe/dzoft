@@ -5,6 +5,7 @@ on:
     paths:
       - 'admin/**'
       - 'e2e/global-overview-navigation.spec.mjs'
+      - 'e2e/page-by-page-navigation.spec.mjs'
       - 'playwright.config.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -26,7 +27,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - name: Exercise navigation in real Chromium without owner credentials
-        run: npx playwright test e2e/global-overview-navigation.spec.mjs
+        run: npx playwright test e2e/global-overview-navigation.spec.mjs e2e/page-by-page-navigation.spec.mjs
       - name: Upload failure screenshots and traces
         if: failure()
         uses: actions/upload-artifact@v4
