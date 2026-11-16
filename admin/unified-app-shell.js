@@ -13,6 +13,19 @@ if(!app.querySelector('.dzoft-side-brand')){
  link.innerHTML='<img src="../assets/dzoft-favicon.svg" alt=""><span>DZOFT</span>';
  app.appendChild(link);
 }
+var header=app.querySelector('.top .in');
+if(header&&!header.querySelector('.dzoft-header-breadcrumb')){
+ var crumb=document.createElement('div');crumb.className='dzoft-header-breadcrumb';
+ crumb.innerHTML='<a href="#/vue-globale">DZOFT</a><span aria-hidden="true">›</span><strong id="dzoft-header-section">Vue globale</strong>';
+ var brand=header.querySelector('.brand');
+ if(brand)brand.insertAdjacentElement('afterend',crumb);else header.prepend(crumb);
+ var who=header.querySelector('#who');
+ if(who){
+  var badge=document.createElement('span');
+  badge.className='dzoft-header-avatar';badge.textContent='RD';badge.setAttribute('aria-hidden','true');
+  who.insertAdjacentElement('afterend',badge);
+ }
+}
 var uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var english=function(){return document.documentElement.lang==='en';};
 var global=side.querySelector('.dzoft-global-overview');
@@ -96,8 +109,23 @@ function selection(){
  else global.removeAttribute('aria-current');
  var dash=side.querySelector('[data-tab="dash"]');
  if(dash&&globalSelected)dash.setAttribute('aria-selected','false');
+ var titles={
+  'vue-globale':['Vue globale','Global overview'],
+  'tableau-de-bord':['Tableau de bord','Dashboard'],
+  'dossiers':['Dossiers clients','Client cases'],
+  'clients':['Clients','Clients'],
+  'projets':['Projets','Projects'],
+  'devis':['Devis','Quotes'],
+  'demandes':['Demandes reçues','Requests'],
+  'messages':['Messages','Messages'],
+  'paiements':['Factures & paiements','Invoices & payments'],
+  'parametres':['Paramètres','Settings'],
+  'corbeille':['Corbeille','Trash']
+ };
+ var title=document.getElementById('dzoft-header-section');
+ if(title){var labels=titles[current]||titles['tableau-de-bord'];title.textContent=labels[english()?1:0];}
 }
-document.addEventListener('dzoft:locale-change',translate);
+document.addEventListener('dzoft:locale-change',function(){translate();selection();});
 window.addEventListener('hashchange',selection);
 window.addEventListener('dzoft:data-refreshed',refresh);
 if(switcher)switcher.addEventListener('change',refresh);
