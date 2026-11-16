@@ -316,7 +316,7 @@ def do_backup(args: argparse.Namespace) -> None:
                 base = Path(scratch)
                 run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, ".",
                          "--experimental"] + storage_cp_flags, cwd=base)
-                files = [p for p in base.rglob("*") if p.is_file()]
+                files = downloaded_bucket_files(base)
                 if len(files) != expected_storage_count:
                     raise BackupError(
                         "Storage downloaded " + str(len(files)) + " files but SQL expects " +
@@ -337,7 +337,7 @@ def do_backup(args: argparse.Namespace) -> None:
                     projected = sum(len(blob) for blob in exports.values()) + p.stat().st_size
                     if projected > MAX_UNCOMPRESSED_BYTES:
                         raise BackupError("Storage exceeds the safe in-memory backup limit.")
-                    rel = p.relative_to(base).as_posix()
+                    rel = p.relative_to(base / BUCKET).as_posix()
                     exports["storage/client-files/" + rel] = p.read_bytes()
                 storage_metadata.update({"status": "exported",
                                          "files": len(files)})
@@ -383,6 +383,26 @@ def do_backup(args: argparse.Namespace) -> None:
     print("A full Auth/Storage restore has NOT yet been validated.")
 
 
+def downloaded_bucket_files(base: Path) -> list[Path]:
+    """Return only files under the CLI's client-files download directory.
+
+    Supabase CLI 3.1 can write its own workdir/profile metadata alongside
+    client-files; those extra local files are not Storage objects and must
+    never enter the archive or affect the three-object count.
+    """
+    bucket_dir = base / BUCKET
+    if not bucket_dir.is_dir() or bucket_dir.is_symlink():
+        raise BackupError(
+            "Expected the downloaded Storage bucket directory was not found "
+            "as a regular directory. Refusing an incomplete backup.")
+    files = sorted(p for p in bucket_dir.rglob("*") if p.is_file())
+    if any(p.is_symlink() for p in files) or any(
+        p.is_symlink() for p in bucket_dir.rglob("*")
+    ):
+        raise BackupError("Storage download contains a symlink. Refusing backup.")
+    return files
+
+
 def do_probe_storage(args: argparse.Namespace) -> None:
     """Diagnose remote/local Storage count without dumping SQL or archiving files.
 
@@ -403,7 +423,7 @@ def do_probe_storage(args: argparse.Namespace) -> None:
         base = Path(scratch)
         run_cli(["storage", "cp", "-r", "ss:///" + BUCKET, ".",
                  "--experimental"] + cp_flags, cwd=base)
-        files = [p for p in base.rglob("*") if p.is_file()]
+        files = downloaded_bucket_files(base)
         print("Local downloaded file count:", len(files))
         print("Expected SQL object count:", args.expected_storage_count)
         print("Downloaded total bytes:", sum(p.stat().st_size for p in files))
