@@ -541,3 +541,38 @@ test('Unpaid official invoice routes to verified receipt editor without recordin
  expect(after).toBe(initial);
  expect(errors).toEqual([]);
 });
+
+
+test('Settings language reacts to updated text and accessible labels, but never client-authored content',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',err=>errors.push(err.message));
+ await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v-settings')).toBeVisible();
+ await page.locator('#admin-language-settings [data-dzoft-lang="en"]').click();
+ await expect(page.locator('html')).toHaveAttribute('lang','en');
+ await page.evaluate(()=>{
+   const root=document.createElement('section');root.id='test-reactive-locale';
+   root.innerHTML='<p id="test-reactive-status">Paiement reçu</p><input id="test-reactive-input" placeholder="Montant (€)" aria-label="Numéro officiel externe"><p data-no-translate id="test-authored-text">Annuler</p>';
+   document.body.appendChild(root);
+ });
+ await expect(page.locator('#test-reactive-status')).toHaveText('Payment received');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('placeholder','Amount (€)');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('aria-label','Existing external invoice number');
+ await expect(page.locator('#test-authored-text')).toHaveText('Annuler');
+ // Reactivity: update the same Text node, and then change two existing attributes.
+ await page.evaluate(()=>{
+   document.querySelector('#test-reactive-status').firstChild.nodeValue='Annuler';
+   const input=document.querySelector('#test-reactive-input');
+   input.setAttribute('placeholder','Numéro officiel externe');
+   input.setAttribute('aria-label','Montant (€)');
+ });
+ await expect(page.locator('#test-reactive-status')).toHaveText('Cancel');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('placeholder','Existing external invoice number');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('aria-label','Amount (€)');
+ await page.locator('#admin-language-settings [data-dzoft-lang="fr"]').click();
+ await expect(page.locator('#test-reactive-status')).toHaveText('Annuler');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('placeholder','Numéro officiel externe');
+ await expect(page.locator('#test-reactive-input')).toHaveAttribute('aria-label','Montant (€)');
+ await expect(page.locator('#test-authored-text')).toHaveText('Annuler');
+ expect(errors).toEqual([]);
+});

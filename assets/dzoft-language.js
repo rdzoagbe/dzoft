@@ -120,15 +120,119 @@ Object.assign(dzoftEnglish,{
  'Pas encore envoyée':'Not sent yet',
  'Émise le':'Issued on'
 });
+// Static workspace copy audit: keep full FR/EN coverage for settings, projects,
+// invoices and common form states. These are interface strings, not user data.
+Object.assign(dzoftEnglish,{
+ 'Mot de passe (10 caractères minimum)':'Password (at least 10 characters)',
+ 'Mot de passe oublié':'Forgot password',
+ 'Enregistrer':'Save',
+ 'Chargement des priorités…':'Loading priorities…',
+ 'Autres indicateurs d\'activité':'Other activity indicators',
+ 'Sauvegarde locale sécurisée :':'Secure local backup:',
+ 'Guide DZOFT : sauvegarde chiffrée':'DZOFT guide: encrypted backup',
+ 'Demandes et devis supprimés : restaurez-les ou supprimez-les définitivement':'Deleted requests and quotes: restore or permanently delete them',
+ 'Nouveau devis':'New quote',
+ 'Le client reçoit automatiquement un e-mail de notification. Les détails restent dans son espace.':'The client automatically receives an email notification. Details remain in their client area.',
+ 'Collez le message reçu par WhatsApp ou par e-mail : il est ajouté à vos demandes avec les bonnes informations.':'Paste a WhatsApp or email message to create a request with its details.',
+ 'Ce devis n’est relié à aucune fiche client : l’espace client a besoin d’une fiche.':'This quote is not linked to a client record. The client portal requires one.',
+ 'Créer la fiche à partir du devis':'Create client record from quote',
+ 'Demandes de modification et devis complémentaires':'Change requests and additional quotes',
+ 'Journal du projet':'Project journal',
+ 'privé':'private',
+ 'Le client ne voit jamais ce journal. Seules les publications que vous approuvez lui sont communiquées.':'The client never sees this journal. Only progress updates you approve are shared.',
+ 'Demande du client':'Client request',
+ 'Décision':'Decision',
+ 'Notes et décisions':'Notes and decisions',
+ 'Outils avancés · Modifier, importer ou copier':'Advanced tools · Edit, import or copy',
+ '+ Entrée à éditer':'+ Editable entry',
+ 'Format : date | type | texte. Types : fait, demande, décision, attente. Sans date : aujourd’hui.':'Format: date | type | text. Types: done, request, decision, waiting. No date means today.',
+ 'Préparez et vérifiez le montant':'Prepare and review the amount',
+ 'de confirmer. Le numéro officiel n’est attribué qu’au dernier clic.':'before confirming. The official invoice number is assigned only at the last step.',
+ 'Pour rectifier une facture déjà émise, ne modifiez pas son montant ni son numéro : utilisez un document rectificatif traçable (avoir ou facture rectificative, selon le cas).':'To correct an issued invoice, do not change its amount or number. Use a traceable correction document (credit note or correcting invoice, as applicable).',
+ 'Il est peut-être incomplet ou a été remplacé. Ouvrez le dernier lien reçu par e-mail ou WhatsApp, ou connectez-vous avec votre compte.':'The link may be incomplete or replaced. Open your latest email or WhatsApp link, or sign in.',
+ 'Vérifiez votre connexion internet, puis rechargez la page.':'Check your internet connection and reload the page.'
+});
+Object.assign(dzoftFrenchMap,{
+ 'Enter the six-digit code from your authenticator app. This extra check protects your client and payment information.':'Saisissez le code à six chiffres de votre application d’authentification. Cette vérification protège les informations de vos clients et les paiements.'
+});
+// New payment and external-invoice actions introduced in the project workspace.
+// Translation here is for UI chrome only, never for client-authored invoices.
+Object.assign(dzoftEnglish,{
+ 'Numéro officiel externe':'Existing external invoice number',
+ 'Enregistrer la facture externe':'Save external invoice',
+ 'Uniquement pour une facture déjà créée dans un autre outil. Pour émettre une facture DZOFT, utilisez « Créer une facture » plus haut. L\'ajout ne confirme aucun paiement et n\'envoie aucun e-mail.':'Only for an invoice already created in another tool. To issue a DZOFT invoice use Create invoice above. Adding this record does not confirm payment or send an email.',
+ 'Vérifiez le libellé, le numéro et le montant (deux décimales maximum).':'Check the description, number and amount (up to two decimal places).',
+ 'Une facture porte déjà ce numéro.':'An invoice with this number already exists.',
+ 'Enregistrement de la facture externe…':'Saving external invoice…',
+ 'Échec de l’enregistrement. La facture n’a pas été ajoutée.':'Save failed. The invoice was not added.',
+ 'Facture externe enregistrée. Aucun paiement ni e-mail créé.':'External invoice saved. No payment or email created.',
+ 'Enregistrer un encaissement vérifié':'Record verified payment',
+ 'Cette facture n’est pas disponible pour un nouvel encaissement. Vérifiez les paiements déjà associés.':'This invoice is not available for another receipt. Check its existing payment links.',
+ 'Suivi des paiements indisponible. Actualisez le projet.':'Payment history unavailable. Refresh this project.',
+ 'Déjà déclarée payée dans l’historique. Vérifiez le détail des encaissements avant toute correction.':'Previously marked paid in the historical records. Check the verified payment history before correcting anything.',
+ 'Une facture émise ne prouve pas un paiement. Indiquez la date, le montant et le mode de réception dans le suivi des paiements.':'An issued invoice is not proof of payment. Record the date, amount and method in Payment history.',
+ 'Enregistrer un paiement reçu':'Record a received payment',
+ 'Annuler':'Cancel'
+});
 function dzoftDynamicEnglish(text){
  return text.replace(/^Confirmé par Roland le /,'Confirmed by Roland on ').replace(/^Merci ! Votre déclaration du (.+) a été transmise\. Roland confirmera la réception après vérification\.$/,'Thank you! Your payment notification from $1 has been sent. Roland will confirm receipt after checking.').replace(/^Le client a déclaré son paiement le /,'The client reported their payment on ').replace(' · Réception confirmée.',' · Receipt confirmed.').replace(' · Vérifiez votre compte bancaire avant de confirmer.',' · Check your bank account before confirming.').replace(/^Paiement déclaré envoyé par le client · /,'Payment reported as sent by the client · ').replace(/^Paiement déclaré envoyé · /,'Payment reported as sent · ').replace(/^Paiement reçu et confirmé par Roland · /,'Payment received and confirmed by Roland · ').replace(/^Confirmation de paiement corrigée : vérification en cours · /,'Payment confirmation corrected: verification in progress · ').replace(/^Paiement à vérifier · /,'Payment to check · ').replace(/^Signé électroniquement le /,'Electronically signed on ').replace(' · code reçu par e-mail à ',' · email code sent to ').replace(' · adresse IP ',' · IP address ').replace(' · montant accepté : ',' · accepted amount: ').replace(/^CGV (\S+) acceptées\. Le client a demandé un$/, 'Terms $1 accepted. The client requested an').replace(/^démarrage immédiat$/, 'immediate start').replace(/^: vous pouvez commencer dès réception de l’acompte\.$/, ': work can start once the deposit is received.').replace('(compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)','(active client account: use the sign-in link; the old private link is revoked)').replace(/^E-mail envoyé au client le /,'Client email sent on ').replace(/^Envoyé le /,'Sent on ').replace(/^Fiche projet · /,'Project record · ').replace(/^Devis accepté · /,'Quote accepted · ').replace(/^E-mail du devis renvoyé · /,'Quote email resent · ').replace(/Client : envoyé/g,'Client: sent').replace(/Vous : envoyé/g,'You: sent').replace(/^(\d+) \/ (\d+) étapes terminées$/, '$1 / $2 stages completed').replace(/^Acompte à recevoir · /,'Deposit pending · ').replace(/^(\d+) nouvelles? demandes?$/, '$1 new requests').replace(/^(\d+) messages? non lus?$/, '$1 unread messages').replace(/^(\d+) devis en attente d’accord$/, '$1 quotes awaiting acceptance').replace(/^(\d+) projets? en cours$/, '$1 active projects').replace(/^signés en (\d{4})$/, 'signed in $1').replace(/^de suivi mensuel$/, 'monthly maintenance').replace(/^accepté le /,'accepted on ');
 }
 (function(){
   const storageKey='dzoft-ui-locale', originalText=new WeakMap(), originalAttrs=new WeakMap();
+  // Remember our own rendered values so later changes made by the app become
+  // new translation sources instead of being reverted to obsolete UI copy.
+  const renderedText=new WeakMap(), renderedAttrs=new WeakMap();
   let locale='fr', observer, busy=false;
-  const translate=value=>{const raw=String(value||''), lead=(raw.match(/^\s*/)||[''])[0], tail=(raw.match(/\s*$/)||[''])[0], core=raw.trim().replace(/\s+/g,' ');return lead+(locale==='en'?(dzoftEnglish[core]||dzoftDynamicEnglish(core)):core)+tail;};
-  function process(root){if(!root||busy)return;busy=true;const nodes=[];if(root.nodeType===Node.TEXT_NODE)nodes.push(root);else if(root.nodeType===Node.ELEMENT_NODE||root===document){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode())nodes.push(w.currentNode);}for(const n of nodes){if(n.parentElement?.closest('script,style,svg,[data-no-translate]'))continue;if(!originalText.has(n))originalText.set(n,n.nodeValue);n.nodeValue=translate(originalText.get(n));}const els=root.nodeType===Node.ELEMENT_NODE?[root,...root.querySelectorAll('*')]:root===document?[...document.querySelectorAll('*')]:[];for(const el of els)for(const attr of ['placeholder','title','aria-label']){if(!el.hasAttribute(attr))continue;let m=originalAttrs.get(el);if(!m){m={};originalAttrs.set(el,m);}if(!(attr in m))m[attr]=el.getAttribute(attr);el.setAttribute(attr,translate(m[attr]));}busy=false;}
+  const translate=value=>{const raw=String(value||''), lead=(raw.match(/^\s*/)||[''])[0], tail=(raw.match(/\s*$/)||[''])[0], core=raw.trim().replace(/\s+/g,' ');return lead+(locale==='en'?(dzoftEnglish[core]||dzoftDynamicEnglish(core)):(dzoftFrenchMap[core]||core))+tail;};
+  function process(root){
+    if(!root||busy)return;
+    busy=true;
+    try{
+      const nodes=[];
+      if(root.nodeType===Node.TEXT_NODE)nodes.push(root);
+      else if(root.nodeType===Node.ELEMENT_NODE||root===document){
+        const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+        while(w.nextNode())nodes.push(w.currentNode);
+      }
+      for(const n of nodes){
+        if(n.parentElement?.closest('script,style,svg,[data-no-translate]'))continue;
+        const current=n.nodeValue;
+        if(!originalText.has(n)||current!==renderedText.get(n))originalText.set(n,current);
+        const output=translate(originalText.get(n));
+        renderedText.set(n,output);
+        if(current!==output)n.nodeValue=output;
+      }
+      const els=root.nodeType===Node.ELEMENT_NODE?[root,...root.querySelectorAll('*')]:root===document?[...document.querySelectorAll('*')]:[];
+      for(const el of els){
+        if(el.closest('script,style,svg,[data-no-translate]'))continue;
+        for(const attr of ['placeholder','title','aria-label']){
+          if(!el.hasAttribute(attr))continue;
+          let originals=originalAttrs.get(el),rendered=renderedAttrs.get(el);
+          if(!originals){originals={};originalAttrs.set(el,originals);}
+          if(!rendered){rendered={};renderedAttrs.set(el,rendered);}
+          const current=el.getAttribute(attr);
+          if(!(attr in originals)||current!==rendered[attr])originals[attr]=current;
+          const output=translate(originals[attr]);
+          rendered[attr]=output;
+          if(current!==output)el.setAttribute(attr,output);
+        }
+      }
+    }finally{busy=false;}
+  }
   function setLanguage(next){locale=next==='en'?'en':'fr';document.documentElement.lang=locale;if(document.body.classList.contains('dzoft-client'))document.title=locale==='en'?'Client area · DZOFT':'Espace client · DZOFT';if(document.body.classList.contains('dzoft-admin'))document.title=locale==='en'?'Private workspace · DZOFT':'Espace privé · DZOFT';try{localStorage.setItem(storageKey,locale);}catch(_){}document.querySelectorAll('[data-dzoft-lang]').forEach(b=>{const active=b.dataset.dzoftLang===locale;b.setAttribute('aria-pressed',String(active));b.classList.toggle('active',active);});document.querySelectorAll('.lang-switch-app').forEach(x=>x.setAttribute('aria-label',locale==='en'?'Language':'Langue'));process(document);document.dispatchEvent(new CustomEvent('dzoft:locale-change',{detail:{locale}}));}
-  function init(){let saved='fr';try{saved=localStorage.getItem(storageKey)||'fr';}catch(_){}document.querySelectorAll('[data-dzoft-lang]').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.dzoftLang)));setLanguage(saved);observer=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)process(n);});observer.observe(document.body,{childList:true,subtree:true});}
+  function init(){
+    let saved='fr';
+    try{saved=localStorage.getItem(storageKey)||'fr';}catch(_){}
+    document.querySelectorAll('[data-dzoft-lang]').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.dzoftLang)));
+    setLanguage(saved);
+    observer=new MutationObserver(records=>{
+      for(const r of records){
+        if(r.type==='childList')for(const n of r.addedNodes)process(n);
+        else if(r.type==='characterData')process(r.target);
+        else if(r.type==='attributes')process(r.target);
+      }
+    });
+    observer.observe(document.body,{childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label'],subtree:true});
+  }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
 })();
