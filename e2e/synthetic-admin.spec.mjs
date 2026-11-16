@@ -628,6 +628,7 @@ test('New Admin links open the precise existing work, documents and billing tabs
   await expect(page.locator('#pf-shell')).toBeVisible();
   const target=await page.locator('#'+entry.link).getAttribute('href');
   expect(target).toContain(entry.fragment);
+  if(await page.locator('#pf-menu').isVisible())await page.locator('#pf-menu').click();
   await page.locator('#'+entry.link).click();
   await expect(page.locator('[data-project-tab="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
   expect(new URL(page.url()).hash).toBe(entry.fragment);
