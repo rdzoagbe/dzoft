@@ -94,7 +94,7 @@ async function syntheticOwner(page) {
 test('Owner dashboard renders real navigation and action panel with synthetic data', async ({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await page.waitForTimeout(250);
  if (!(await page.locator('#app').isVisible())) {
    const state=await page.evaluate(()=>({mockPresent:!!window.RDsb,fromUrl:typeof window.RDsb?.fromUrl,loginVisible:!!document.querySelector('#auth')&&!document.querySelector('#auth').hidden}));
@@ -154,7 +154,7 @@ test('Read-only synthetic owner tests never emit network requests containing rea
 
 test('Brevo status appears per recipient in the authenticated admin, without sending anything',async({page})=>{
  await syntheticOwner(page);
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#email-log')).toContainText('Client: Delivered');
  await expect(page.locator('#email-log')).toContainText('You: Accepted by Brevo');
  await expect(page.locator('#email-delivery-health')).toContainText('Brevo delivery tracking active');
@@ -171,7 +171,7 @@ test('Brevo status appears in private project activity with synthetic, read-only
 test('Regular mobile browser keeps its dock and normal header; installed-only menu stays hidden',async({page},testInfo)=>{
  test.skip(!testInfo.project.name.includes('mobile'),'Only the mobile layout is relevant');
  await syntheticOwner(page);
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('body')).not.toHaveClass(/dzoft-installed-mobile/);
  await expect(page.locator('#app .side')).toBeVisible();
@@ -195,7 +195,7 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  });
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('body')).toHaveClass(/dzoft-installed-mobile/);
  await expect(page.locator('#app .side')).toBeHidden();
@@ -232,7 +232,7 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
 test('Settings redesign keeps payment, security, backups and legal controls tucked away until opened',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#v-settings')).toBeVisible();
@@ -276,7 +276,7 @@ test('Installed mobile one-menu navigates to clean accordion Settings',async({pa
   };
  });
  await syntheticOwner(page);
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('body')).toHaveClass(/dzoft-installed-mobile/);
  await page.locator('#dzoft-installed-menu-toggle').click();
  await page.locator('#dzoft-installed-menu-panel button[data-app-route="parametres"]').click();
@@ -326,7 +326,7 @@ test('Invoice creator shows editable server-approved amount and prevents an exce
 test('One search finds clients, quotes and projects without leaving the private workspace',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  await page.locator('#app .side [data-tab="dossiers"]').click();
  await expect(page.locator('#v-dossiers')).toBeVisible();
@@ -393,14 +393,16 @@ test('Focused project navigation keeps overview, work, invoices and messages acc
 test('Owner home offers a single workspace search and safe quick actions',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('.owner-command-bar')).toBeVisible();
  const search=page.locator('#owner-global-search');
  await search.fill('Synthetic');
  await page.locator('.owner-command-search button[type="submit"]').click();
  await expect(page.locator('#v-dossiers')).toBeVisible();
  await expect(page.locator('#dossier-search')).toHaveValue('Synthetic');
- await page.locator('#app .side [data-tab="dash"]').click();
+ // Legacy operational overview is intentionally retained for existing tools.
+ // The Dashboard tab itself now navigates to the redesigned finance landing.
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await page.locator('[data-owner-quick="billing"]').click();
  await expect(page.locator('#v-finance')).toBeVisible();
  await expect(page.locator('#app .side [data-tab="trash"]')).toBeHidden();
@@ -409,7 +411,7 @@ test('Owner home offers a single workspace search and safe quick actions',async(
 
 test('Financial dashboard shows actual receipts and outstanding money separately',async({page},testInfo)=>{
  await syntheticOwner(page);
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  const panel=page.locator('#today-action-center');
  await expect(panel).toContainText(/Reçu et confirmé|Received and verified/);
  await expect(panel).toContainText(/Reste à encaisser|Still outstanding/);
@@ -500,7 +502,7 @@ test.describe('Populated invoice layout and bilingual receipts',()=>{
 
 test('Desktop shows sidebar navigation once and keeps direct logout; mobile retains account menu',async({page},testInfo)=>{
  await syntheticOwner(page);
- await page.goto('admin/',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  const side=page.locator('#app .side');
  const headerMenu=page.locator('#app .top .workspace-more');
