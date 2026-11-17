@@ -100,6 +100,14 @@ begin
 
   -- 7. Declining needs no code.
   perform set_config('dzoft.change_signed','no',true);
+  -- Drafts (17 Nov 2026): not sent → hidden from the client and impossible to decide; once sent, decidable.
+  if exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x where x->>'id'=p2->>'id') then
+    raise exception 'An unsent draft is visible to the client'; end if;
+  failed:=false;
+  begin perform private.dzoft_decide_change(client_id,(p2->>'id')::uuid,1,false,'Test client');
+  exception when others then failed:=true; end;
+  if not failed then raise exception 'An unsent draft could be decided'; end if;
+  update public.dzoft_change_requests set sent_at=now() where id=(p2->>'id')::uuid;
   p:=private.dzoft_decide_change(client_id,(p2->>'id')::uuid,1,false,'Test client');
   if p->>'status'<>'declined' then raise exception 'Decline failed: %',p; end if;
 
@@ -108,6 +116,15 @@ begin
   req:=private.dzoft_create_change(client_id,q_key,'Nouvelle page','Le client veut une page de plus.');
   p:=public.owner_price_change_request((req->>'id')::uuid,'[{"label":"Page supplémentaire","qty":1,"price":120}]','+2 jours',false);
   if p->>'proposal_number'<>'TEST-PRICED-001-C3' or (p->>'extra_price')::numeric<>120 or (p->>'proposal_version')::int<>1 then raise exception 'Priced request wrong: %',p; end if;
+  -- Priced but not sent: the client still sees his request, as « requested » and without the draft price.
+  if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
+    where x->>'id'=req->>'id' and x->>'status'='requested' and x->'extra_price'='null'::jsonb) then raise exception 'Client view of a priced, unsent request is wrong'; end if;
+  -- Sent proposals stay visible with their price (sent via the button, or with sent_at only).
+  if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
+    where x->>'id'=p2->>'id' and x->>'status'='declined' and (x->>'extra_price')::numeric=50) then raise exception 'A sent proposal lost its details'; end if;
+  if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
+    where x->>'id'=ch::text and x->>'status'='completed' and (x->>'extra_price')::numeric=400) then raise exception 'A signed proposal lost its details'; end if;
+  update public.dzoft_change_requests set sent_at=now() where id=(req->>'id')::uuid;
   perform set_config('request.jwt.claims','{"role":"service_role"}',true);
   st:=public.reserve_change_sign_code((req->>'id')::uuid,client_id,salt,encode(extensions.digest(salt||'222222','sha256'),'hex'),'p•••',now()+interval '10 minutes');
   perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated','app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);

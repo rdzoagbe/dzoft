@@ -14,6 +14,7 @@ begin
   if exists(select 1 from public.project_events e join public.email_outbox o on o.event_id=e.id
      where e.quote_id=q and e.event_type='change_requested' and o.recipient_role='client') then raise exception 'Client e-mailed about own request'; end if;
   p:=public.owner_price_change_request((r->>'id')::uuid,'[{"label":"Page supplémentaire","qty":1,"price":50}]','',false);
+  update public.dzoft_change_requests set sent_at=now() where id=(r->>'id')::uuid; -- sent to the client: a draft cannot be decided
   open:=public.owner_open_change_requests();
   if jsonb_array_length(open)<>1 or open->0->>'status'<>'proposed' then raise exception 'Open list wrong: %',open; end if;
   perform set_config('dzoft.change_signed','no',true);

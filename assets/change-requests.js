@@ -156,8 +156,8 @@ function calculator(en,blocks,target,tiers){
   '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" placeholder="'+tr(en,'Ex. : aucun changement ; + 3 jours','E.g. no change; +3 days')+'"></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="done"><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="keep" checked><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
-  '<p>'+tr(en,'Le client voit cette proposition dans son espace et la signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvée lui-même. Utilisez « Envoyer au client » pour le prévenir par e-mail.','The client sees this proposal in their workspace and signs it with a code sent by e-mail. Nothing is owed until they approve it themselves. Use “Send to client” to notify them by e-mail.')+'</p>'+
-  '<button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer la proposition','Create the proposal'))+'</button></form>';
+  '<p>'+tr(en,'« Créer le brouillon » : vous seul le voyez, pour le relire. « Envoyer au client » : il apparaît dans son espace et il le signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvé lui-même.','“Create the draft”: only you see it, to check it. “Send to client”: it appears in their space and they sign it with a code sent by e-mail. Nothing is owed until they approve it themselves.')+'</p>'+
+  '<button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button></form>';
 }
 function priceList(en,blocks,defaultPrice,tiers){
  return '<div class="dzoft-price-list">'+
@@ -177,13 +177,14 @@ function priceList(en,blocks,defaultPrice,tiers){
   :'<p>'+tr(en,'Votre liste se remplit quand vous créez une proposition avec « Ajouter les nouvelles lignes à ma liste de prix ».','Your list fills up when you create a proposal with “Add new lines to my price list”.')+'</p>')+'</div>';
 }
 function adminCard(r,en,invoice,blocks,tiers){
- var status=labels(en)[r.status]||r.status;
- var h='<article class="dzoft-change-item" data-change-card="'+esc(r.id)+'"><header><b>'+esc(r.title)+(r.proposal_number?' · '+esc(r.proposal_number):'')+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
+ // A proposal is a draft, seen only by the owner, until « Envoyer au client » (17 Nov 2026, server-side too).
+ var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(labels(en)[r.status]||r.status);
+ var h='<article class="dzoft-change-item'+(draft?' dzoft-change-draft':'')+'" data-change-card="'+esc(r.id)+'"><header><b>'+esc(r.title)+(r.proposal_number?' · '+esc(r.proposal_number):'')+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
  (r.description&&r.description!=='Proposition établie par DZOFT.'?'<p>'+esc(r.description)+'</p>':'')+
  '<p class="dzoft-change-meta">'+tr(en,'Créée le ','Created on ')+esc(when(r.created_at))+'</p>'+proposalBlock(r,en);
  if(r.status==='proposed'){
-  h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Renvoyer au client par e-mail','Send again by e-mail'):tr(en,'Envoyer au client par e-mail','Send to client by e-mail'))+'</button></div>'+
-   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta">'+tr(en,'Visible dans l’espace du client, pas encore envoyée par e-mail.','Visible in the client space, not yet sent by e-mail.')+'</p>');
+  h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Renvoyer au client par e-mail','Send again by e-mail'):tr(en,'Envoyer au client','Send to client'))+'</button></div>'+
+   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta dzoft-change-draft-note">'+tr(en,'Brouillon : le client ne le voit pas encore. Relisez les lignes et le total ci-dessus (c’est ce qu’il verra), retirez-le pour le refaire si besoin, puis « Envoyer au client » : il apparaîtra dans son espace et il recevra un e-mail pour le signer.','Draft: the client cannot see it yet. Check the lines and total above (this is what they will see), withdraw it to redo it if needed, then “Send to client”: it appears in their space and they get an e-mail to sign it.')+'</p>');
  }
  if(r.status==='requested')h+='<details class="dzoft-change-new"><summary>'+tr(en,'Chiffrer cette demande','Price this request')+'</summary>'+calculator(en,blocks,r,tiers)+'</details>';
  if(r.status==='requested'||r.status==='proposed'){
@@ -345,7 +346,7 @@ function bindOwner(root,options){
    banner(root,found?tr(en,found+' prestation(s) repérée(s) : vérifiez-les.',found+' item(s) found: please check them.'):tr(en,'Rien de repéré dans votre liste : ajoutez des lignes libres.','Nothing found in your list: add free lines.'),!found);return;
   }
   if(busy)return;
-  if(b.dataset.changeSend){if(!global.confirm(tr(en,'Envoyer cette proposition au client par e-mail ? Il pourra la lire et la signer dans son espace.','E-mail this proposal to the client? They can read and sign it in their space.')))return;
+  if(b.dataset.changeSend){if(!global.confirm(tr(en,'Envoyer cette proposition au client ? Elle deviendra visible dans son espace et il recevra un e-mail pour la lire et la signer.','Send this proposal to the client? It becomes visible in their space and they get an e-mail to read and sign it.')))return;
    perform(sb.rpc('owner_send_change_proposal',{p_request:b.dataset.changeSend},true).then(function(r){if(typeof sb.fn==='function')sb.fn('process-notification-outbox',{}).catch(function(){});return r;}),tr(en,'E-mail mis en file d’envoi.','E-mail queued.'));return;}
   if(b.dataset.changeInvoice){var record=records.filter(function(r){return r.id===b.dataset.changeInvoice;})[0],issue=(root.__dzoftOwnerOptions||{}).onInvoice;if(record&&typeof issue==='function')issue(record,b);return;}
   if(b.dataset.changeProgress){var next=b.dataset.next;if(next!=='in_progress'&&next!=='completed')return;if(!global.confirm(next==='completed'?tr(en,'Confirmer que ces travaux sont terminés ? Ils pourront ensuite être facturés.','Confirm this work is complete? It can then be invoiced.'):tr(en,'Démarrer ces travaux complémentaires ?','Start this additional work?')))return;perform(sb.rpc('owner_progress_change',{p_request:b.dataset.changeProgress,p_status:next},true));return;}
@@ -357,12 +358,12 @@ function bindOwner(root,options){
    lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});
    var total=lines.reduce(function(n,l){return n+Math.round(l.qty*l.price*100);},0)/100;
    if(!(total>0)){banner(root,tr(en,'Le total doit rester positif après la remise.','The total must stay positive after the discount.'),true);return;}
-   if(!global.confirm(tr(en,'Créer cette proposition de '+cash(total)+' ? Elle sera visible dans l’espace du client, qui devra la signer.','Create this '+cash(total)+' proposal? It will be visible in the client space and must be signed by the client.')))return;
+   if(!global.confirm(tr(en,'Créer ce brouillon de '+cash(total)+' ? Vous seul le voyez : rien n’est visible par le client avant « Envoyer au client ».','Create this '+cash(total)+' draft? Only you can see it: nothing is visible to the client before “Send to client”.')))return;
    var known=blocks.map(function(bl){return bl.label;}),fresh=f.elements.keep.checked?lines.filter(function(l){return l.price>0&&!l.source&&known.indexOf(l.label)<0;}).map(function(l){return {label:l.label,price:l.price,words:words(l.label).slice(0,6)};}):[];
    var call=f.dataset.for?sb.rpc('owner_price_change_request',{p_request:f.dataset.for,p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true)
     :sb.rpc('owner_create_priced_proposal',{p_quote:quoteId,p_title:f.elements.title.value.trim(),p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true);
    perform(call.then(function(r){return fresh.length?saveBlocks(blocks.concat(fresh)).catch(function(){}).then(function(){return r;}):r;}),
-    tr(en,'Proposition créée. Envoyez-la au client avec « Envoyer au client par e-mail ».','Proposal created. Use “Send to client by e-mail” to notify them.'));
+    tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
    return;
   }
   if(f.dataset.changeReject){if(!global.confirm(tr(en,'Retirer ou refuser cette proposition ?','Withdraw or reject this proposal?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}

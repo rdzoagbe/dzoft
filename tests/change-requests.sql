@@ -32,8 +32,10 @@ begin
  perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated',
        'app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
  p:=public.owner_propose_change(req_id,'Add a fully specified seventh page and contact form.',250,'Adds 3 business days');
+ update public.dzoft_change_requests set sent_at=now() where id=req_id; -- sent: a draft cannot be decided
  if p->>'status'<>'proposed' or (p->>'proposal_version')::int<>1 then raise exception 'First proposal not recorded';end if;
  p:=public.owner_propose_change(req_id,'Revised: seventh page plus an additional form field.',275,'Adds 4 business days');
+ update public.dzoft_change_requests set sent_at=now() where id=req_id; -- sent: a draft cannot be decided
  if (p->>'proposal_version')::int<>2 then raise exception 'Proposal version not incremented';end if;
  if jsonb_array_length(public.owner_list_change_requests(qid))<>1 then raise exception 'Owner list empty';end if;
  
@@ -42,7 +44,14 @@ begin
    perform public.portal_decide_change_request(token_id,req_id,1,true,'Synthetic Client');
    raise exception 'FAIL outdated proposal approved';
  exception when others then if sqlerrm like 'FAIL%' then raise;end if; end;
+ -- Approval needs the code sent by e-mail (private.dzoft_sign_change sets this flag after checking the code).
+ begin
+   perform public.portal_decide_change_request(token_id,req_id,2,true,'Synthetic Client');
+   raise exception 'FAIL approved without the e-mail code';
+ exception when others then if sqlerrm like 'FAIL%' then raise;end if; end;
+ perform set_config('dzoft.change_signed','yes',true);
  p:=public.portal_decide_change_request(token_id,req_id,2,true,'Synthetic Client');
+ perform set_config('dzoft.change_signed','no',true);
  if p->>'status'<>'approved' or (p->>'extra_price')::numeric<>275 then raise exception 'Approval does not preserve accepted price';end if;
  begin
    perform public.portal_decide_change_request(token_id,req_id,2,true,'Synthetic Client');
