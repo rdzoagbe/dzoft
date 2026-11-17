@@ -81,10 +81,16 @@ function eventCopyEn(type: string, summary: string, quote: any, message: string,
     intro: "Here is the latest progress on your project:",
     body: digestHtmlEn(digest) + "<p style=\"font-size:13px;color:#5d6f83\">“Tested” means checked on our side. You give your feedback and approvals in your client area.</p>",
   };
-  if (type === "change_proposed") {
+  if (type === "change_proposed" || type === "change_signed") {
     const ref = (summary.match(/^Proposition (?:complémentaire )?(\S+)/) || [])[1] || "";
     const amount = (summary.match(/·\s*([0-9][0-9\s\u202f\u00a0.,]*€)/) || [])[1] || "";
     const what = `${ref ? "no. " + ref : ""}${ref && amount ? ", " : ""}${amount}`;
+    // Acknowledgement of the client's signature (Code civil art. 1127-2), same content as the French copy.
+    if (type === "change_signed") return {
+      subject: `Your signature has been recorded: proposal ${ref}${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `We have received your signature of the proposal for additional work${what ? " (" + what + ")" : ""}${quote?.numero ? ", in addition to quote " + quote.numero : ""}.`,
+      body: `<p>It is subject to the same terms and conditions of sale as that quote. The signed details remain available in your client area. The additional invoice will be sent to you once the work is finished.</p>`,
+    };
     return {
       subject: `Additional proposal ${ref} to sign${amount ? " · " + amount : ""} · DZOFT`,
       intro: `A proposal for additional work${what ? " (" + what + ")" : ""} is waiting in your client area. It lists each item with its price. Your signed quote and its invoices stay unchanged.`,
@@ -133,6 +139,12 @@ function eventCopy(type: string, summary: string, quote: any, message: string, i
     const ref = (summary.match(/^Proposition (?:complémentaire )?(\S+)/) || [])[1] || "";
     const amount = (summary.match(/·\s*([0-9][0-9\s\u202f\u00a0.,]*€)/) || [])[1] || "";
     const what = `${ref ? "n° " + ref : ""}${ref && amount ? ", " : ""}${amount}`;
+    // Client copy: acknowledgement of the signature (Code civil art. 1127-2).
+    if (type === "change_signed" && !isOwner) return {
+      subject: `Votre signature est enregistrée : proposition ${ref}${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `Nous avons bien reçu votre signature de la proposition de travaux complémentaires${what ? " (" + what + ")" : ""}${quote?.numero ? ", en complément du devis " + quote.numero : ""}.`,
+      body: `<p>Elle suit les mêmes conditions générales de vente que ce devis. Le détail signé reste consultable dans votre espace client. La facture complémentaire vous sera adressée une fois les travaux terminés.</p>`,
+    };
     if (type === "change_signed") return {
       subject: `Proposition ${ref} signée par le client${amount ? " (" + amount + ")" : ""} · DZOFT`,
       intro: `${summary}. Vous pouvez marquer les travaux terminés puis créer la facture complémentaire depuis la fiche projet.`,
@@ -305,7 +317,7 @@ Deno.serve(async (req) => {
       else if (!isOwner && client?.user_id) link = PORTAL + (event.event_type.includes("message") ? "#/messages" : quote?.id ? (event.event_type === "quote_published" ? `#/devis/${quote.id}` : `#/projets/${quote.id}`) : "#/messages");
       else if (!isOwner && client?.portal_token) link = PORTAL + "#" + client.portal_token;
       const hello = isOwner ? "Bonjour Roland," : `${english ? "Hello" : "Bonjour"}${firstName ? " " + esc(firstName) : ""},`;
-      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? (english ? "An additional proposal to sign" : "Une proposition complémentaire à signer") : (english ? "An update on your project" : "Une mise à jour de votre projet");
+      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? (english ? "An additional proposal to sign" : "Une proposition complémentaire à signer") : event.event_type === "change_signed" ? (english ? "Your signature has been recorded" : "Votre signature est enregistrée") : (english ? "An update on your project" : "Une mise à jour de votre projet");
       let attachment: Array<{ name: string; content: string }> = [];
 
       if (job.attach_invoice_pdf) {
@@ -373,7 +385,7 @@ Deno.serve(async (req) => {
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">${english ? "Project update email from DZOFT. Attachments are limited to invoice PDFs that Roland has explicitly chosen to send." : "E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer."}</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `${english ? "Hello" : "Bonjour"}${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => english ? `- ${DIGEST_GROUPS_EN[u.category] || "Other work"} · ${DIGEST_STATUS_EN[u.status] || ""}: ${u.summary}` : `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `${english ? "Hello" : "Bonjour"}${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" || event.event_type === "change_signed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => english ? `- ${DIGEST_GROUPS_EN[u.category] || "Other work"} · ${DIGEST_STATUS_EN[u.status] || ""}: ${u.summary}` : `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },
