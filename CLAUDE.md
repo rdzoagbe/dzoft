@@ -41,6 +41,12 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Avancement et demandes · Paiements · Documents) ; Paiements : convenu, reçu, reste, à régler maintenant (factures
   ouvertes moins paiements confirmés). Mon compte : coordonnées, facturation du dernier devis, demande de correction,
   langue. Test `tests/client-portal-language.test.cjs`.
+  Langue du client enregistrée sur sa fiche (`clients.lang` fr|en, `my_set_language` / `portal_set_language`) : les
+  e-mails envoyés plus tard la suivent (projet : `eventCopyEn` dans `process-notification-outbox` ; relance de paiement :
+  langue du client par défaut ; codes de signature : langue envoyée par la page). Les copies de Roland restent en français,
+  les e-mails de paiement restent bilingues. Lien privé (sans compte) : chiffres et avancées via `portal_project_tracking`.
+  Tout texte saisi s’affiche avec `raw()` (jamais réécrit par le dictionnaire). Tests `tests/client-email-language.test.cjs`,
+  `tests/client-language-portal.sql`.
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
