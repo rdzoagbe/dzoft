@@ -26,6 +26,9 @@ test('project e-mails: English wording for clients who chose English, French for
  assert.match(proposal.subject,/Additional proposal D-2026-001-C1 to sign · 400,00 €/);
  assert.match(proposal.body,/Nothing is charged without your signature/);
  assert.match(f.eventCopyEn('something_new','x',q,'',[]).subject,/DZOFT update/);
+ const signed=f.eventCopyEn('change_signed','Proposition complémentaire D-2026-001-C1 · 400,00 € · Pages',q,'',[]);
+ assert.match(signed.subject,/Your signature has been recorded: proposal D-2026-001-C1 · 400,00 €/);
+ assert.match(signed.body,/same terms and conditions of sale/,'acknowledgement keeps the content of the French copy');
  // French stays the default, and the owner's copies stay French.
  assert.match(f.eventCopy('step_progress','Étape · Maquettes',q,'',false,[]).subject,/Votre projet avance/);
  assert.match(outbox,/const english = !isOwner && client\?\.lang === "en";/);
