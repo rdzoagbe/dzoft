@@ -55,7 +55,34 @@ function renderProjects(data){
    '<span class="sd-project-status"><b>'+ (d?esc(money(remaining)):"—") +'</b><small>'+tr("reste","remaining")+'</small></span><span class="sd-chevron">›</span></a>';
  }).join('')+(projects.length>7?'<button type="button" class="sd-text-link sd-see-all" data-go="projects">'+tr("Voir tous les projets","View all projects")+' →</button>':"");
 }
+// Category of a to-do line from the owner dashboard (admin/index.html), for its colour dot and title.
+function todoKind(t){
+ var x=t.text,g=t.target||"";
+ if(/^Virement signalé|^Paiement déclaré/.test(x))return ["reported","Virement signalé","Reported transfer"];
+ if(g.indexOf("thread:")===0)return ["message","Message client","Client message"];
+ if(/^Demande de modification/.test(x))return ["request","Demande du client","Client request"];
+ if(/^Proposition|^Travaux .* terminés/.test(x))return ["quote","Travaux complémentaires","Extra work"];
+ if(g==="leads")return ["lead",/^Relancer/.test(x)?"Relance prévue":"Nouvelle demande",/^Relancer/.test(x)?"Follow-up due":"New request"];
+ if(/^Échec/.test(x))return ["failed","E-mail non envoyé","E-mail not sent"];
+ if(/^Paiement à vérifier|^Acompte|facture/.test(x))return ["pending","Paiement et facturation","Payment and invoicing"];
+ if(/^Devis/.test(x))return ["quote","Devis","Quote"];
+ if(/a validé/.test(x))return ["validated","Étape validée","Step validated"];
+ if(/^Nouvel avis/.test(x))return ["review","Avis client","Client review"];
+ if(/corbeille/.test(x))return ["trash","Corbeille","Trash"];
+ return ["other","Action à suivre","Action to review"];
+}
 function renderActions(data){
+ // The complete to-do list computed by the dashboard: every reminder, nothing hidden.
+ if(Array.isArray(data.todo)){
+  var list=data.todo,shown=list.slice(0,8),more=list.length-shown.length;
+  var row=function(t){var k=todoKind(t);
+   return '<button type="button" class="sd-action" data-go="'+esc(t.target)+'"><span class="sd-action-dot '+esc(k[0])+'"></span>'+
+    '<span class="sd-action-copy"><strong>'+tr(k[1],k[2])+'</strong><small>'+esc(t.text)+'</small></span><span class="sd-action-chevron">›</span></button>';};
+  $("sd-action-list").innerHTML=list.length?shown.map(row).join('')+
+   (more>0?'<details class="sd-more"><summary>'+tr("Voir les "+more+" autres actions","Show "+more+" more actions")+'</summary>'+list.slice(8).map(row).join('')+'</details>':''):
+   '<p class="sd-empty">'+(data.ready?tr("Tout est à jour : aucune action en attente.","All up to date: nothing waiting."):tr("Synchronisation des actions…","Loading actions…"))+'</p>';
+  return;
+ }
  var tasks=root.DzoftToday?root.DzoftToday.build({
   projects:(data.projects||[]).map(function(p){return {id:p.id,numero:p.numero,clientName:p.clientName,tracking:p.tracking};}),
   unread:data.unread||[],ready:data.ready,failures:data.failures
