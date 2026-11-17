@@ -12,23 +12,23 @@ begin
   select count(*) into before_outbox from public.email_outbox;
   select count(*) into before_updates from public.project_updates;
 
-  select decrypted_secret into token from vault.decrypted_secrets where name='dzoft_rodney_sync_token';
+  select decrypted_secret into token from vault.decrypted_secrets where name='dzoft_project_sync_token';
   if token is null or length(token)<>64 then raise exception 'Cron token missing'; end if;
-  if not private.verify_rodney_sync_token(token) then
+  if not private.verify_project_sync_token(token) then
     raise exception 'Vault token verification failed';
   end if;
-  if private.verify_rodney_sync_token('wrong') then
+  if private.verify_project_sync_token('wrong') then
     raise exception 'Invalid cron token accepted';
   end if;
 
-  result:=private.background_import_rodney_groups(jsonb_build_array(
+  result:=private.background_import_project_groups(jsonb_build_array(
     jsonb_build_object('date',test_day::text,'group','qr'),
     jsonb_build_object('date',test_day::text,'group','securite')
   ));
   if (result->>'added')::int<>2 or result->>'client_notified'<>'false' then
     raise exception 'Background import failed or attempted a client notification';
   end if;
-  result:=private.background_import_rodney_groups(jsonb_build_array(
+  result:=private.background_import_project_groups(jsonb_build_array(
     jsonb_build_object('date',test_day::text,'group','qr'),
     jsonb_build_object('date',test_day::text,'group','securite')
   ));
@@ -38,14 +38,14 @@ begin
   end if;
 
   begin
-    perform private.background_import_rodney_groups(jsonb_build_array(
+    perform private.background_import_project_groups(jsonb_build_array(
       jsonb_build_object('date',test_day::text,'group','qr',
         'author','AI assistant','session','private-link')));
     raise exception 'UNSAFE: raw author/session accepted';
   exception when others then if sqlerrm like 'UNSAFE:%' then raise; end if;
   end;
   begin
-    perform private.background_import_rodney_groups(jsonb_build_array(
+    perform private.background_import_project_groups(jsonb_build_array(
       jsonb_build_object('date',test_day::text,'group','openai_prompt')));
     raise exception 'UNSAFE: unapproved category accepted';
   exception when others then if sqlerrm like 'UNSAFE:%' then raise; end if;
@@ -53,6 +53,12 @@ begin
   if (select count(*) from public.project_updates)<>before_updates or
      (select count(*) from public.email_outbox)<>before_outbox then
     raise exception 'Automatic sync wrote client updates or emails';
+  end if;
+  if has_function_privilege('anon','public.background_import_project_groups(jsonb)','execute')
+     or has_function_privilege('authenticated','public.background_import_project_groups(jsonb)','execute')
+     or has_function_privilege('authenticated','public.verify_project_sync_token(text)','execute')
+     or has_function_privilege('anon','public.project_sync_overview()','execute') then
+    raise exception 'Sync functions exposed beyond the worker and the owner';
   end if;
 end
 $test$;

@@ -35,11 +35,11 @@ test('weekly review counts categories without copying AI text or raw commit meta
  assert.doesNotMatch(output.text,/Claude|Co-Authored|secret|claude\.ai|private link|RAW|ai_model_name/);
 });
 test('Edge worker rejects unauthenticated cron invocations and sends only date/group to RPC',()=>{
- const worker=read('supabase/functions/sync-rodney-github/index.ts');
+ const worker=read('supabase/functions/sync-project-github/index.ts');
  assert.match(worker,/Deno\.serve\(/);
  assert.match(worker,/X-DZOFT-Cron-Secret/);
- assert.match(worker,/verify_rodney_sync_token/);
- assert.match(worker,/background_import_rodney_groups/);
+ assert.match(worker,/verify_project_sync_token/);
+ assert.match(worker,/background_import_project_groups/);
  assert.match(worker,/if \(verified !== true\) return response\(401/);
  assert.match(worker,/result\.push\(\{date,group:label\}\)/);
  assert.match(worker,/const unique = date \+ "\\|" \+ label/);
@@ -58,6 +58,6 @@ test('weeklies remain private and present on admin only',()=>{
  const client=read('espace/index.html');
  assert.match(admin,/id="jr-weekly-slot"/);
  assert.match(admin,/weekly-review\.js\?v=/);
- assert.doesNotMatch(client,/jr-weekly-slot|rodney_sync_overview|background_import_rodney_groups/);
+ assert.doesNotMatch(client,/jr-weekly-slot|project_sync_overview|background_import_project_groups/);
  new vm.Script(read('admin/weekly-review.js'));
 });

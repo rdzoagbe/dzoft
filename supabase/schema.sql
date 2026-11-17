@@ -58,7 +58,7 @@ create table private.notification_settings (
   updated_at timestamp with time zone not null default now()
 );
 
-create table private.rodney_sync_state (
+create table private.project_git_sync_state (
   singleton boolean not null default true,
   last_success_at timestamp with time zone,
   last_inserted integer not null default 0,
@@ -371,9 +371,9 @@ alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_in
 alter table private.notification_settings add constraint notification_settings_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
 alter table private.notification_settings add constraint notification_settings_pkey PRIMARY KEY (singleton);
 alter table private.notification_settings add constraint notification_settings_singleton_check CHECK (singleton);
-alter table private.rodney_sync_state add constraint rodney_sync_state_check CHECK (((last_inserted >= 0) AND (last_checked >= 0)));
-alter table private.rodney_sync_state add constraint rodney_sync_state_pkey PRIMARY KEY (singleton);
-alter table private.rodney_sync_state add constraint rodney_sync_state_singleton_check CHECK (singleton);
+alter table private.project_git_sync_state add constraint project_git_sync_state_check CHECK (((last_inserted >= 0) AND (last_checked >= 0)));
+alter table private.project_git_sync_state add constraint project_git_sync_state_pkey PRIMARY KEY (singleton);
+alter table private.project_git_sync_state add constraint project_git_sync_state_singleton_check CHECK (singleton);
 alter table public.clients add constraint clients_pkey PRIMARY KEY (id);
 alter table public.clients add constraint clients_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
 alter table public.dzoft_change_events add constraint dzoft_change_events_actor_type_check CHECK ((actor_type = ANY (ARRAY['client'::text, 'owner'::text])));
@@ -575,7 +575,7 @@ grant DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE on public.si
 
 -- bucket client-files : public=f, size_limit=20971520, mime=image/png,image/jpeg,image/webp,image/gif,image/heic,application/pdf,application/zip,application/x-zip-compressed,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation
 -- cron dzoft_brevo_delivery_reconcile : 25 * * * *
--- cron dzoft_rodney_background_git : 17,47 * * * *
+-- cron dzoft_project_background_git : 17,47 * * * *
 -- cron dzoft-email-outbox : * * * * *
 -- cron dzoft-prune-email-history : 35 3 * * *
 
@@ -727,7 +727,7 @@ end
 $function$
 ;
 
-create or replace function private.background_import_rodney_groups(p_items jsonb)
+create or replace function private.background_import_project_groups(p_items jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -797,7 +797,7 @@ begin
     returning id into fresh;
     if fresh is not null then added:=added+1; end if;
   end loop;
-  insert into private.rodney_sync_state
+  insert into private.project_git_sync_state
     (singleton,last_success_at,last_inserted,last_checked)
     values(true,now(),added,n)
     on conflict(singleton) do update
@@ -2430,7 +2430,7 @@ end
 $function$
 ;
 
-create or replace function private.rodney_sync_overview()
+create or replace function private.project_sync_overview()
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -2446,11 +2446,11 @@ begin
     'last_inserted',s.last_inserted,
     'last_checked',s.last_checked,
     'backend_enabled',exists(
-      select 1 from cron.job j where j.jobname='dzoft_rodney_background_git'
+      select 1 from cron.job j where j.jobname='dzoft_project_background_git'
         and j.active
     )
   ) into result
-  from private.rodney_sync_state s where singleton=true;
+  from private.project_git_sync_state s where singleton=true;
   return coalesce(result,jsonb_build_object(
     'last_success_at',null,'last_inserted',0,'last_checked',0,'backend_enabled',false
   ));
@@ -2652,7 +2652,7 @@ AS $function$
 $function$
 ;
 
-create or replace function private.verify_rodney_sync_token(p_token text)
+create or replace function private.verify_project_sync_token(p_token text)
  RETURNS boolean
  LANGUAGE sql
  SECURITY DEFINER
@@ -2662,7 +2662,7 @@ AS $function$
    and length(p_token)=64
    and coalesce(p_token=(
      select decrypted_secret from vault.decrypted_secrets
-     where name='dzoft_rodney_sync_token' limit 1
+     where name='dzoft_project_sync_token' limit 1
    ),false);
 $function$
 ;
@@ -2712,12 +2712,12 @@ AS $function$
 $function$
 ;
 
-create or replace function public.background_import_rodney_groups(p_items jsonb)
+create or replace function public.background_import_project_groups(p_items jsonb)
  RETURNS jsonb
  LANGUAGE sql
  SET search_path TO ''
 AS $function$
-  select private.background_import_rodney_groups(p_items);
+  select private.background_import_project_groups(p_items);
 $function$
 ;
 
@@ -3971,12 +3971,12 @@ end
 $function$
 ;
 
-create or replace function public.rodney_sync_overview()
+create or replace function public.project_sync_overview()
  RETURNS jsonb
  LANGUAGE sql
  SET search_path TO ''
 AS $function$
-  select private.rodney_sync_overview();
+  select private.project_sync_overview();
 $function$
 ;
 
@@ -4040,12 +4040,12 @@ AS $function$
 $function$
 ;
 
-create or replace function public.verify_rodney_sync_token(p_token text)
+create or replace function public.verify_project_sync_token(p_token text)
  RETURNS boolean
  LANGUAGE sql
  SET search_path TO ''
 AS $function$
-  select private.verify_rodney_sync_token(p_token);
+  select private.verify_project_sync_token(p_token);
 $function$
 ;
 
@@ -4054,7 +4054,7 @@ $function$
 grant execute on function admin_notify_quote(uuid) to authenticated;
 grant execute on function attach_generated_invoice_pdf(uuid,text,text,bigint) to authenticated;
 grant execute on function auto_issue_project_receipt_invoice(uuid,uuid,text) to authenticated;
-grant execute on function background_import_rodney_groups(jsonb) to service_role;
+grant execute on function background_import_project_groups(jsonb) to service_role;
 grant execute on function brevo_delivery_candidates(text) to service_role;
 grant execute on function brevo_delivery_monitor() to authenticated;
 grant execute on function brevo_delivery_recent_candidates(text) to service_role;
@@ -4144,11 +4144,11 @@ grant execute on function register_notification_owner() to authenticated;
 grant execute on function reserve_change_sign_code(uuid,uuid,text,text,text,timestamp with time zone) to service_role;
 grant execute on function reserve_sign_code(uuid,uuid,text,text,text,timestamp with time zone) to service_role;
 grant execute on function retry_email_outbox(uuid) to authenticated;
-grant execute on function rodney_sync_overview() to authenticated;
+grant execute on function project_sync_overview() to authenticated;
 grant execute on function save_project_work_item(uuid,uuid,text,text,text,date,text) to authenticated;
 grant execute on function sync_project_github_groups(uuid,jsonb) to authenticated;
 grant execute on function touch_updated_at() to service_role;
 grant execute on function update_project_payment_status(uuid,uuid,text,date) to authenticated;
 grant execute on function verify_brevo_delivery_token(text,text) to service_role;
 grant execute on function verify_email_outbox_cron(text) to service_role;
-grant execute on function verify_rodney_sync_token(text) to service_role;
+grant execute on function verify_project_sync_token(text) to service_role;

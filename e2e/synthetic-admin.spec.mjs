@@ -61,7 +61,7 @@ const syntheticSb = `
     }
    if(name==='invoice_draft_amount')return {remaining:1050,has_final:false};
    if(name==='list_project_work_items')return work;
-   if(name==='rodney_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
+   if(name==='project_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
    if(name==='sync_project_github_groups')return {added:0,checked:0,client_notified:false};
    if(name==='project_payment_admin_meta')return {};
    if(name==='brevo_delivery_monitor')return {webhook_configured:false,poll_enabled:true,received_events:1};

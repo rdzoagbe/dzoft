@@ -111,7 +111,7 @@ Deno.serve(async (req: Request) => {
   if (!/^[0-9a-f]{64}$/.test(token)) return response(401,{error:"Unauthorized"});
   let phase = "auth";
   try {
-    const verified = await supabaseRpc("verify_rodney_sync_token",{p_token:token});
+    const verified = await supabaseRpc("verify_project_sync_token",{p_token:token});
     if (verified !== true) return response(401,{error:"Unauthorized"});
 
     phase = "github";
@@ -119,7 +119,7 @@ Deno.serve(async (req: Request) => {
     const safe = safeSummary(await source.json());
 
     phase = "database";
-    const added = await supabaseRpc("background_import_rodney_groups",{p_items:safe}) as
+    const added = await supabaseRpc("background_import_project_groups",{p_items:safe}) as
       {added?:number;checked?:number;client_notified?:boolean};
     if (added?.client_notified !== false) throw new Error("Unexpected write response");
 
