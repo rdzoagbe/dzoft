@@ -18,6 +18,8 @@
  body.dzoft-admin.dzoft-editor>header.top .back{color:#5b24ce!important}
  body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{position:relative;margin-left:max(254px,calc(238px + max(16px,(100vw - 238px - 1160px)/2)))}
  body.dzoft-admin.dzoft-editor>.sheet{margin-right:auto}
+ /* Project tools page: its content sits in .workspace-shell, kept to the right of the fixed menu. */
+ body.dzoft-admin.dzoft-editor>.workspace-shell{margin-left:238px;margin-right:0;max-width:none;padding-left:max(24px,calc((100vw - 238px - 1480px)/2));padding-right:max(24px,calc((100vw - 238px - 1480px)/2))}
  body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 238px - 36px);max-width:1250px;margin-right:18px}
  body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle{display:none;align-items:center;justify-content:center;min-width:41px;min-height:41px;border:1px solid #e4ddf6;border-radius:10px;background:#f5f1ff;color:#5421ce;font-size:21px;cursor:pointer}
  body.dzoft-admin.dzoft-editor .dzoft-editor-overlay{display:none}
@@ -28,6 +30,7 @@
  body.dzoft-admin.dzoft-editor>.tools,body.dzoft-admin.dzoft-editor>header.top{margin-left:0}
  body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{margin-left:auto;margin-right:auto}
  body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 24px);max-width:1250px;margin:14px auto}
+ body.dzoft-admin.dzoft-editor>.workspace-shell{margin-left:auto;margin-right:auto;padding-left:16px;padding-right:16px}
  body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle{display:inline-flex}
  body.dzoft-admin.dzoft-editor.dzoft-editor-menu-open .dzoft-editor-overlay{display:block;position:fixed;inset:0;z-index:21;border:0;background:rgba(11,16,32,.5)}
 }
@@ -36,6 +39,7 @@
  body.dzoft-admin.dzoft-editor>.tools b{flex:0 1 auto;order:0}
  body.dzoft-admin.dzoft-editor>.tools .tb{font-size:12px;padding:8px}
  body.dzoft-admin.dzoft-editor>.sheet{width:calc(100% - 18px);padding:18px 14px}
+ body.dzoft-admin.dzoft-editor>.workspace-shell{padding-left:12px;padding-right:12px}
 }
 @media print{
  body.dzoft-admin.dzoft-editor .dzoft-editor-sidebar,body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle,body.dzoft-admin.dzoft-editor .dzoft-editor-overlay{display:none!important}
