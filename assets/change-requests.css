@@ -111,3 +111,7 @@
  .dzoft-calc .dzoft-change-table tfoot th{padding:0;border:0}
  .dzoft-calc .dzoft-change-table tfoot th:empty{display:none}
 }
+
+.dzoft-calc-since{display:grid;gap:5px;font-size:13px;font-weight:600;max-width:240px}
+.dzoft-calc-since input{border:1px solid #cad3e1;border-radius:8px;padding:8px;font:inherit;min-height:40px;background:var(--card,#fff)}
+#dzoft-calc-since-help{color:#636e81;font-size:12px;margin-top:-4px}

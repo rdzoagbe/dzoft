@@ -48,3 +48,18 @@ test('« Calculer depuis le suivi » only adds requests done since the last extr
  assert.match(fj,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
  assert.match(fj,/avant le dernier supplément, non reprise\(s\)/);
 });
+
+test('« Depuis le » lets the owner choose the start date (never before the signature)',()=>{
+ assert.match(js,/<input type="date" name="since"/);
+ const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
+ assert.match(fj,/if\(chosen\)since=signed&&chosen<signed\?signed:chosen;/);
+ assert.match(fj,/\(date choisie\)/);
+});
+
+test('Calculating again with a later start removes journal lines now before it, keeps hand-typed lines',()=>{
+ const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
+ assert.match(fj,/m=\/\^journal:\(\\d\{4\}-\\d\{2\}-\\d\{2\}\):\/\.exec\(src\)/);
+ assert.match(fj,/if\(m&&since&&m\[1\]<since\)/);
+ // Removal happens before the form's remaining lines are marked as used.
+ assert.ok(fj.indexOf('m[1]<since')<fj.indexOf('readLines(form).forEach(function(l){if(l.source)used[l.source]=1;})'));
+});
