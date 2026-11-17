@@ -11,7 +11,7 @@ function body(start,end){
  return html.slice(a,b);
 }
 test('message composer exposes a bilingual Cancel action',()=>{
- assert.match(html,/id="m-send" type="button">Envoyer<\/button><button class="btn line" id="m-cancel" type="button">Annuler/);
+ assert.match(html,/id="m-send" type="button">' \+ L\('Envoyer', 'Send'\) \+ '<\/button><button class="btn line" id="m-cancel" type="button">' \+ L\('Annuler', 'Cancel'\)/);
  const fn=body("WIRE.messages = function(){","VIEWS.compte = function(){");
  assert.match(fn,/\$\('m-cancel'\)\.onclick/);
  assert.match(fn,/\$\('m-body'\)\.value = ''/);
@@ -20,7 +20,7 @@ test('message composer exposes a bilingual Cancel action',()=>{
  assert.doesNotMatch(action,/call\(|sb\.|\.rpc\(|load\(/);
 });
 test('initial review can be cancelled and an existing review remains editable',()=>{
- assert.match(html,/'<button class="btn line" type="button" id="rv-cancel">Annuler<\/button>'/);
+ assert.match(html,/'<button class="btn line" type="button" id="rv-cancel">' \+ L\('Annuler', 'Cancel'\) \+ '<\/button>'/);
  assert.doesNotMatch(html,/\(r \? '<button class="btn line" type="button" id="rv-cancel"/);
  const fn=body("function wireReview(q){","function rib(");
  assert.match(fn,/if \(\$\('rv-send'\)\.disabled\) return/);
@@ -29,7 +29,7 @@ test('initial review can be cancelled and an existing review remains editable',(
  assert.doesNotMatch(fn.slice(fn.indexOf("$('rv-cancel').onclick"),fn.indexOf("$('rv-send').onclick")) , /call\(|\.rpc\(/);
 });
 test('account password discard is safe and cannot race with an in-flight update',()=>{
- assert.match(html,/id="c-cancel" type="button">Annuler/);
+ assert.match(html,/id="c-cancel" type="button">' \+ L\('Annuler', 'Cancel'\)/);
  const fn=body("WIRE.compte = function(){","\/\* ---------- quote rendering");
  assert.match(fn,/\$\('c-cancel'\)\.onclick/);
  assert.match(fn,/\$\('c-pass'\)\.value = ''/);

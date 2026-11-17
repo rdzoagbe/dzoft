@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const html=fs.readFileSync('espace/index.html','utf8');
 const source=html.slice(html.indexOf('  function invoices(q)'),html.indexOf('  function payBlock(q)'));
-const ctx={token:null,esc:String,day:String,eur:String};vm.createContext(ctx);vm.runInContext(source,ctx);
+const ctx={L:fr=>fr,EN:()=>false,token:null,esc:String,day:String,eur:String};vm.createContext(ctx);vm.runInContext(source,ctx);
 const inv={id:'i',num:'TEST',n:'Facture d’acompte',amt:450,paid:false};
 const render=x=>ctx.invoiceList({id:'q',accepted_at:'2026-11-04',invoices:[x]});
 assert.match(render(inv),/J’ai envoyé l’acompte/);
