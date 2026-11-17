@@ -14,7 +14,7 @@ test('owner dashboard preserves the global workspace without forced project redi
   assert.match(admin, /dash:'tableau-de-bord'/);
 });
 test('all cross-client navigation targets remain available', () => {
-  for (const slug of ['tableau-de-bord','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille']) {
+  for (const slug of ['tableau-de-bord','dossiers','demandes','clients','devis','projets','messages','comptabilite','parametres','corbeille']) {
     assert.ok(admin.includes("'"+slug+"'"), 'Missing route: '+slug);
   }
 });
@@ -22,7 +22,7 @@ test('project-specific finance keeps explicit project selection and admin return
   assert.match(project, /id="pf-project-switch"/);
   assert.match(project, /href="\.\/#\/dossiers"/);
   assert.match(project, /href="\.\/#\/vue-globale"/);
-  assert.match(project, /href="\.\/#\/paiements"/);
+  assert.match(project, /href="\.\/#\/comptabilite"/);
 });
 test('new visual layer is loaded by main admin entry', () => {
   assert.match(admin, /workspace-unified\.css/);
@@ -64,7 +64,7 @@ test('project detail uses the same primary destinations as main workspace', () =
   assert.match(project, /id="pf-side-dashboard"/);
   assert.match(project, /id="pf-side-cases"/);
   assert.match(project, /href="\.\/#\/messages"/);
-  assert.match(project, /href="\.\/#\/paiements"/);
+  assert.match(project, /href="\.\/#\/comptabilite"/);
   assert.match(project, /project-unified\.css/);
   assert.match(project, /id="pf-side-project"/);
   assert.match(project, /id="pf-side-invoices"/);
@@ -78,7 +78,7 @@ test('every primary admin route shares the new DZOFT shell', () => {
   assert.match(shellCss,/grid-template-columns:238px minmax\(0,1fr\)/);
   assert.match(shellCss,/\.side/);
   assert.match(shellJs,/dzoft-side-brand/);
-  for(const slug of ['tableau-de-bord','dossiers','messages','paiements','parametres']){
+  for(const slug of ['tableau-de-bord','dossiers','messages','comptabilite','parametres']){
     assert.ok(admin.includes("'"+slug+"'"), 'missing route '+slug);
   }
 });
@@ -90,9 +90,11 @@ test('specialized quote and project editors share nav without replacing secure w
     assert.match(html,/editor-navigation\.css/);
     assert.match(html,/editor-navigation\.js/);
   }
-  // Same menu as the dashboard (17 Nov 2026); project entries point to that project's own sections.
-  for(const path of ['./#/tableau-de-bord','./#/dossiers','./#/messages','./#/paiements','./#/catalogue','./#/rapports','./#/parametres','#billing/c-inv','#work/c-journal','#work/c-docs'])
+  // Same seven entries as the dashboard (17 Nov 2026); a project's own sections live in the project page.
+  for(const path of ['./#/tableau-de-bord','./#/clients','./#/devis','./#/projets','./#/comptabilite','./#/messages','./#/parametres'])
     assert.ok(editorNav.includes(path),'missing route '+path);
+  for(const old of ['./#/paiements','./#/factures','./#/rapports','./#/journal','./#/documents','#work/c-journal','#work/c-docs','ce projet'])
+    assert.ok(!editorNav.includes(old),'old menu entry still present: '+old);
   assert.doesNotMatch(editorNav,/\bsb\.(?:update|insert|remove|rpc)\(/);
   assert.match(editorNav,/valid=/);
 });
@@ -142,20 +144,20 @@ test('accepted quote links open the new project quote section, drafts remain edi
 test('new project cards are searchable from the shared dossiers search', () => {
   const simplified=readFileSync(new URL('../admin/simplified-ui.js',import.meta.url),'utf8');
   assert.match(simplified, /#projects \.v4-project-card/);
-  assert.match(admin, /simplified-ui\.js\?v=20261116-nav-audit1/);
+  assert.match(admin, /simplified-ui\.js\?v=(?:20261116-nav-audit1|20261117-nav7)/);
 });
 test('installed mobile app exposes global overview and closes on project links', () => {
   const mobile=readFileSync(new URL('../admin/installed-app-menu.js',import.meta.url),'utf8');
   assert.match(mobile, /slug:'vue-globale'/);
   assert.match(mobile, /\.dzoft-mobile-project a\[href\]/);
   assert.match(mobile, /menu\.open=false/);
-  assert.match(admin, /installed-app-menu\.js\?v=20261116-nav-audit1/);
+  assert.match(admin, /installed-app-menu\.js\?v=(?:20261116-nav-audit1|20261117-nav7)/);
 });
 test('all visible sidebar destinations map to real app views', () => {
-  for(const value of ['tableau-de-bord','vue-globale','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille']) {
+  for(const value of ['tableau-de-bord','vue-globale','dossiers','demandes','clients','devis','projets','messages','comptabilite','parametres','corbeille']) {
     assert.ok(admin.includes(value),'Unknown destination '+value);
   }
-  // Project links are built by the shared menu script, not written in projet.html itself.
-  assert.match(readFileSync(new URL('../admin/workspace-nav-v6.js', import.meta.url),'utf8'),/projet\.html\?q=/);
+  // Inside a project the menu is the same seven entries; « Projets » is current (17 Nov 2026).
+  assert.match(readFileSync(new URL('../admin/workspace-nav-v6.js', import.meta.url),'utf8'),/selected=isProject\?'projets'/);
   assert.match(project,/href="\.\/#\/vue-globale"/);
 });

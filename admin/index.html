@@ -211,7 +211,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
 <script src="../assets/dzoft-language.js?v=20261115-settings&reactive=20261116" defer></script>
-<link rel="stylesheet" href="simplified-ui.css?v=20261117-blue">
+<link rel="stylesheet" href="simplified-ui.css?v=20261117-nav7">
 <link rel="stylesheet" href="settings-redesign.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-home.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261117-blue">
@@ -382,6 +382,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <div class="bar">
         <h2>Devis</h2>
         <input type="search" id="q-search" placeholder="Rechercher…">
+        <a class="btn sm line" id="b-qcatalogue" href="#/catalogue" data-fr="Catalogue et tarifs" data-en="Catalogue &amp; prices">Catalogue et tarifs</a>
         <button class="btn sm line" id="b-qexport" type="button">Exporter (Excel)</button>
         <button class="btn sm main" id="b-qnew" type="button">+ Nouveau devis</button>
       </div>
@@ -833,7 +834,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.loadingDetails();
       loadReady=true;
       render();
-      if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();
+      if(location.hash.split('/').pop()==='catalogue')loadRichPanels();
       var failedMain=['clients','quotes'].filter(function(name){return !!loadErrors[name];});
       if(failedMain.length)toast('Chargement partiel : '+failedMain.join(', ')+'. Réessayez depuis la page.');
     },function(err){
@@ -851,7 +852,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (window.DzoftNavigationV6 && window.DzoftNavigationV6.setCount) window.DzoftNavigationV6.setCount(BADGE_ROUTE[id], n);
   }
   function client(id){ return data.clients.filter(function(c){ return c.id === id; })[0]; }
-  function render(){ dashboardDataLoaded=true; dashboardReceiptReady=false;dashboardReceiptStates={};dashboardReceiptFailures=0; renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='paiements') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
+  function render(){ dashboardDataLoaded=true; dashboardReceiptReady=false;dashboardReceiptStates={};dashboardReceiptFailures=0; renderLeads(); renderClients(); renderQuotes(); renderDash(); renderProjects(); renderInbox(); renderTrash(); if(location.hash.replace(/^#\/?/, '')==='comptabilite') renderFinance(); window.dispatchEvent(new Event('dzoft:data-refreshed')); refreshReceiptDashboard(); }
   var dashboardReceiptStates={},dashboardReceiptReady=false,dashboardReceiptFailures=0,receiptQueryGeneration=0;
   function refreshReceiptDashboard(){
     var ps=projectsList(),current=++receiptQueryGeneration;
@@ -870,6 +871,49 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       dashboardReceiptStates={};dashboardReceiptFailures=ps.length;dashboardReceiptReady=true;renderDash();
     });
   }
+  /* Livre des recettes (17 Nov 2026): every confirmed payment, oldest first, with date, client, quote,
+     payment method, reference and invoice (Code de commerce, art. L123-28: amount and origin of receipts,
+     in date order). Read-only; the CSV export is for Roland's own records and his accountant. */
+  var BOOK_METHOD={transfer:['Virement','Bank transfer'],card:['Carte','Card'],cash:['Espèces','Cash'],other:['Autre','Other']};
+  var bookRows=[],bookYear='';
+  function receiptsBook(valid,en){
+    bookRows=[];
+    valid.forEach(function(r){
+      var q=r.q,c=client(q.client_id)||{};
+      (r.summary.receipts||[]).forEach(function(x){
+        var inv=(Array.isArray(q.invoices)?q.invoices:[]).filter(function(i){return i&&i.id===x.invoice_id;})[0];
+        bookRows.push({date:String(x.received_on||'').slice(0,10),at:x.created_at||'',client:c.nom||'Client',quote:q.numero||'',method:x.method||'other',reference:x.reference||'',invoice:inv&&(inv.num||inv.numero)||'',amount:Math.round((Number(x.amount)||0)*100)});
+      });
+    });
+    bookRows.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.at<b.at?-1:a.at>b.at?1:0);});
+    var years=bookRows.map(function(x){return x.date.slice(0,4);}).filter(function(y,i,all){return y&&all.indexOf(y)===i;}).sort().reverse();
+    if(years.indexOf(bookYear)<0)bookYear=years[0]||'';
+    var legacy=valid.reduce(function(n,r){return n+Math.round((Number(r.summary.legacy)||0)*100);},0);
+    var head='<section class="finance-book" aria-labelledby="finance-book-title"><div class="finance-book-head"><div><h3 id="finance-book-title">'+(en?'Receipts book':'Livre des recettes')+'</h3>'+
+      '<p class="finance-note">'+(en?'Every confirmed payment, in date order: date, client, quote, payment method, reference and invoice. A basis for your receipts book (French Commercial Code, art. L123-28: amount and origin of receipts, in date order). Export it and keep it; check the format with your accountant or URSSAF.':
+      'Chaque paiement confirmé, par ordre de date : date, client, devis, mode de règlement, référence et facture. Base de votre livre des recettes (Code de commerce, art. L123-28 : montant et origine des recettes, chronologiquement). Exportez-le et conservez-le ; faites valider la forme par votre comptable ou l’URSSAF.')+'</p></div>'+
+      (years.length?'<div class="finance-book-tools"><label>'+(en?'Year':'Année')+' <select id="finance-book-year">'+years.map(function(y){return '<option'+(y===bookYear?' selected':'')+'>'+y+'</option>';}).join('')+'</select></label><button type="button" class="btn sm line" id="finance-book-csv">'+(en?'Export (CSV)':'Exporter (CSV)')+'</button></div>':'')+'</div>';
+    if(!years.length)return head+'<p class="empty">'+(en?'No confirmed payment yet.':'Aucun paiement confirmé pour le moment.')+'</p>'+(legacy?legacyNote(legacy,en):'')+'</section>';
+    var list=bookRows.filter(function(x){return x.date.slice(0,4)===bookYear;}),total=list.reduce(function(n,x){return n+x.amount;},0);
+    var cash=list.filter(function(x){return x.method==='cash';}).reduce(function(n,x){return n+x.amount;},0);
+    var day=function(d){return new Date(d+'T12:00:00').toLocaleDateString(en?'en-GB':'fr-FR');};
+    return head+'<div class="finance-book-table" data-no-translate><table><thead><tr><th>'+(en?'Date':'Date')+'</th><th>'+(en?'Client':'Client')+'</th><th>'+(en?'Quote':'Devis')+'</th><th>'+(en?'Method':'Mode')+'</th><th>'+(en?'Reference':'Référence')+'</th><th>'+(en?'Invoice':'Facture')+'</th><th>'+(en?'Amount':'Montant')+'</th></tr></thead><tbody>'+
+      list.map(function(x){return '<tr><td>'+day(x.date)+'</td><td>'+esc(x.client)+'</td><td>'+esc(x.quote)+'</td><td>'+(BOOK_METHOD[x.method]||BOOK_METHOD.other)[en?1:0]+'</td><td>'+esc(x.reference)+'</td><td>'+(x.invoice?esc(x.invoice):'<span class="finance-pending">'+(en?'to issue':'à établir')+'</span>')+'</td><td>'+eur(x.amount/100)+'</td></tr>';}).join('')+
+      '</tbody><tfoot><tr><th colspan="6">'+(en?'Total ':'Total ')+bookYear+(cash?' <small>('+(en?'of which cash ':'dont espèces ')+eur(cash/100)+')</small>':'')+'</th><th>'+eur(total/100)+'</th></tr></tfoot></table></div>'+(legacy?legacyNote(legacy,en):'')+'</section>';
+  }
+  // Legacy « paid » invoices have no receipt row. Re-recording them would count them twice, so the note only asks
+  // to copy them by hand into the receipts book (date and method from the bank statement).
+  function legacyNote(cents,en){return '<p class="finance-warning-inline">'+(en?'Invoices marked paid before payments were recorded ('+eur(cents/100)+') are counted in « received » but are not listed here. Do not record them again (they would be counted twice): copy them by hand into your receipts book, with the date and method from your bank statement.':'Des factures marquées réglées avant l’enregistrement des paiements ('+eur(cents/100)+') comptent dans « reçu » mais ne sont pas listées ici. Ne les enregistrez pas à nouveau (elles compteraient deux fois) : reportez-les à la main dans votre livre des recettes, avec la date et le mode de règlement de votre relevé bancaire.')+'</p>';}
+  function bookCsv(){
+    var cell=function(v){v=String(v==null?'':v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+    var lines=[['Date','Client','Devis','Mode de règlement','Référence','Facture','Montant (EUR)'].join(';')];
+    bookRows.filter(function(x){return x.date.slice(0,4)===bookYear;}).forEach(function(x){lines.push([x.date,x.client,x.quote,(BOOK_METHOD[x.method]||BOOK_METHOD.other)[0],x.reference,x.invoice,(x.amount/100).toFixed(2).replace('.',',')].map(cell).join(';'));});
+    var blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='livre-des-recettes-'+bookYear+'.csv';document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+  }
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='finance-book-year'){bookYear=e.target.value;renderFinance();}});
+  document.addEventListener('click',function(e){if(e.target&&e.target.id==='finance-book-csv')bookCsv();});
   var financeGeneration = 0;
   function renderFinance(){
     var box=$('finance-content'); if(!box)return;
@@ -892,22 +936,26 @@ td select{width:auto;padding:4px 6px;font-size:13px}
        '<div><span>'+(en?'Remaining balance':'Reste à recevoir')+'</span><b>'+eur(rest)+'</b></div>'+
        '<div><span>'+(en?'Reported / pending (not received)':'Annoncé / en attente (non reçu)')+'</span><b>'+eur(pendingTotal)+'</b></div></div>'+
        '<p class="finance-note">'+(en?'Pending transfers are included in the remaining balance until received.':'Les virements annoncés restent dans le solde à recevoir tant que leur réception n’est pas confirmée.')+'</p>';
+      var book=receiptsBook(valid,en);
       var warning=valid.length===rows.length?'':'<div class="panel finance-warning">'+(en?'Some project balances are unavailable; totals include only accessible projects.':'Certains soldes sont indisponibles : les totaux comprennent uniquement les projets accessibles.')+'</div>';
-      box.innerHTML=summary+warning+'<div class="finance-list">'+rows.map(function(item){
+      box.innerHTML=summary+warning+book+'<h3 class="finance-subtitle">'+(en?'Balance by project':'Soldes par projet')+'</h3><div class="finance-list">'+rows.map(function(item){
         var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
         var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}).length:0;
         var awaiting=d?(d.payment_statuses||[]).filter(function(p){return p.status==='pending'||p.status==='sent_by_client';}):[];
         var awaitingAmount=awaiting.reduce(function(n,p){return n+Math.round((Number(p.amount)||0)*100);},0)/100;
         return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span>'+(pending?'<small class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</small>':'')+(awaiting.length?'<small class="finance-awaiting">'+(en?'Awaiting verification: ':'À confirmer : ')+eur(awaitingAmount)+'</small>':'')+'</div>'+
          (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
-         '<button type="button" class="btn sm main" data-go="follow:'+esc(q.id)+'">'+(en?'Manage payments':'Gérer les paiements')+'</button></article>';
+         '<a class="btn sm main" href="projet.html?q='+encodeURIComponent(q.id)+'#payments">'+(en?'Open the project':'Ouvrir le projet')+'</a></article>';
       }).join('')+'</div>';
     }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
   }
 
   /* ---------------- menu (each section has its own address: admin/#/devis…) ---------------- */
-  var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash','invoices','journal','documents','catalogue','reports'];
-  var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'paiements',settings:'parametres',trash:'corbeille',invoices:'factures',journal:'journal',documents:'documents',catalogue:'catalogue',reports:'rapports'};
+  /* Seven menu entries (17 Nov 2026). Comptabilité (finance) holds the receipts book, the invoice register and the
+     balances; Catalogue opens under Devis. Old addresses are sent to their new place (OLD_ROUTES). */
+  var VIEWS = ['dash','dossiers','leads','clients','quotes','projects','inbox','finance','settings','trash','catalogue'];
+  var SLUG = {dash:'tableau-de-bord',dossiers:'dossiers',leads:'demandes',clients:'clients',quotes:'devis',projects:'projets',inbox:'messages',finance:'comptabilite',settings:'parametres',trash:'corbeille',catalogue:'catalogue'};
+  var OLD_ROUTES = {paiements:'comptabilite',factures:'comptabilite',rapports:'tableau-de-bord',journal:'projets',documents:'projets'};
   var richDetailsLoaded=false,richDetailsLoading=false,richRequest=0;
   function loadRichPanels(){
     if(!dashboardDataLoaded||richDetailsLoaded||richDetailsLoading||!window.DzoftWorkspacePanelsV6)return;
@@ -957,9 +1005,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if(isGlobal)overview.setAttribute('aria-current','page');
       else overview.removeAttribute('aria-current');
     }
-    ['dash','dossiers','inbox','finance','settings','trash','invoices','journal','documents','catalogue','reports'].forEach(function(k){
+    ['dash','dossiers','inbox','finance','settings','trash','catalogue'].forEach(function(k){
       var node=$('v-'+k);if(node)node.hidden=grouped?k!=='dossiers':k!==v;
     });
+    // The invoice register is part of Comptabilité.
+    var register=$('v-invoices');if(register)register.hidden=v!=='finance';
     ['leads','clients','quotes','projects'].forEach(function(k){
       var node=$('v-'+k);if(node)node.hidden=!grouped||k!==activeGroup;
     });
@@ -967,7 +1017,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       node.setAttribute('aria-pressed',String(grouped&&node.dataset.dossier===activeGroup));
     });
     if(v==='finance')renderFinance();
-    if(['journal','documents','catalogue'].includes(v))loadRichPanels();
+    if(v==='catalogue')loadRichPanels();
   }
   function fromHash(){
     var h = location.hash.replace(/^#\/?/, ''), v = 'dash';
@@ -975,6 +1025,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if(h==='vue-globale'){showView('dash');return;}
     // Dashboard is always the global owner workspace; project selection is explicit.
     // Never redirect the whole app into the last accepted client project.
+    if(OLD_ROUTES[h]){location.replace('#/'+OLD_ROUTES[h]);return;}
     Object.keys(SLUG).forEach(function(k){ if (SLUG[k] === h) v = k; });
     showView(v);
   }
@@ -1866,16 +1917,16 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
   }; });
 })();
 </script>
-<script src="simplified-ui.js?v=20261116-nav-audit1"></script>
+<script src="simplified-ui.js?v=20261117-nav7"></script>
 <script src="case-finder.js?v=20261117-cards"></script>
-<script src="installed-app-menu.js?v=20261116-nav-audit1"></script>
+<script src="installed-app-menu.js?v=20261117-nav7"></script>
 <script src="update-notice.js?v=20261117-blue"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261117-blue"></script>
-<script src="unified-app-shell.js?v=20261116-v6"></script>
+<script src="unified-app-shell.js?v=20261117-nav7"></script>
 <script src="../assets/change-requests.js?v=20261117-freeprice"></script>
-<script src="workspace-panels-v7.js?v=20261117-docs"></script>
-<script src="workspace-nav-v6.js?v=20261117-blue"></script>
+<script src="workspace-panels-v7.js?v=20261117-nav7"></script>
+<script src="workspace-nav-v6.js?v=20261117-nav7"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>
 </body>
 </html>

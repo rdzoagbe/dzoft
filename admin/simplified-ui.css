@@ -199,3 +199,32 @@ body.dzoft-admin{background:#f8f9fb;color:#16182b}
 @media(max-width:420px){
  body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu-panel{max-height:calc(100dvh - 93px)}
 }
+/* Comptabilité (17 Nov 2026): receipts book, balances by project, invoice register nested in the page. */
+#app .finance-subtitle,#app #v-finance .v6-nested h2{font-size:18px;margin:26px 0 10px}
+#app .finance-book{background:#fff;border:1px solid var(--studio-line);border-radius:16px;padding:18px;margin:6px 0 4px}
+#app .finance-book-head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-start}
+#app .finance-book-head h3{margin:0 0 4px;font-size:18px}
+#app .finance-book-head .finance-note{margin:0;max-width:640px;font-size:12.5px;color:var(--studio-muted)}
+#app .finance-book-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#app .finance-book-tools select{border:1px solid #cad3e1;border-radius:8px;padding:7px;font:inherit;min-height:38px;background:#fff}
+#app .finance-book-table{overflow-x:auto;margin-top:12px}
+#app .finance-book-table table{width:100%;border-collapse:collapse;font-size:13px;min-width:620px}
+#app .finance-book-table th,#app .finance-book-table td{text-align:left;padding:8px 6px;border-bottom:1px solid #e6eaf2;vertical-align:top}
+#app .finance-book-table th:last-child,#app .finance-book-table td:last-child{text-align:right;white-space:nowrap}
+#app .finance-book-table tfoot th{border-bottom:0;font-size:14px}
+#app .finance-book-table tfoot small{font-weight:400;color:var(--studio-muted)}
+#app .finance-warning-inline{background:#fff7e5;color:#785000;border-radius:10px;padding:10px 12px;font-size:12.5px;margin:12px 0 0}
+#app #v-finance .v6-nested .v6-page-head span{display:block;color:var(--studio-muted);font-size:12.5px;margin-bottom:8px}
+@media(max-width:640px){
+ #app .finance-book{padding:14px}
+ #app .finance-book-table table{min-width:0}
+ #app .finance-book-table thead{display:none}
+ #app .finance-book-table tbody tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid #e6eaf2}
+ #app .finance-book-table tbody td{border:0;padding:0}
+ #app .finance-book-table tbody td:nth-child(1){font-weight:700}
+ #app .finance-book-table tbody td:nth-child(7){grid-row:1;grid-column:2;font-weight:700}
+ #app .finance-book-table tbody td:nth-child(n+2):nth-child(-n+6){grid-column:1;font-size:12px;color:var(--studio-muted)}
+ #app .finance-book-table tbody td:nth-child(5):empty{display:none}
+ #app .finance-book-table tfoot tr{display:flex;justify-content:space-between;gap:8px;padding-top:8px}
+ #app .finance-book-table tfoot th{padding:0}
+}

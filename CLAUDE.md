@@ -74,8 +74,15 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Tableau de bord (17 nov. 2026) : chiffres (déjà encaissé dont ce mois-ci, reste à encaisser dont annoncé par le client,
   prêt à facturer = suppléments signés terminés sans facture, total des contrats, projets en cours), « Projets en cours » et « À faire » ;
   plus de « Dossier sélectionné » ni de « Raccourcis » (les outils d’un projet sont dans le projet).
+  Menu à 7 entrées (17 nov. 2026, choix de Roland) : Tableau de bord, Clients, Devis, Projets, Comptabilité, Messages, Paramètres,
+  identique partout (`workspace-nav-v6.js`, `editor-navigation.js`, menu de l’app installée) ; dans un projet, « Projets » est l’entrée active
+  et les rubriques du projet sont ses onglets. Catalogue s’ouvre depuis Devis (« Catalogue et tarifs »). Anciennes adresses redirigées
+  (`OLD_ROUTES` : paiements et factures → comptabilite, rapports → tableau-de-bord, journal et documents → projets).
+  Comptabilité (`#/comptabilite`, vue `finance`) : chiffres, livre des recettes (paiements confirmés par date : date, client, devis, mode,
+  référence, facture ; année, export CSV ; base du livre exigé par l’art. L123-28 du Code de commerce, sans prétendre être le livre officiel),
+  soldes par projet, registre des factures. Test `tests/page-navigation-v6.test.cjs`.
   Finitions (17 nov. 2026) : admin au bleu de la charte (anciens violets convertis), barre du téléphone = 4 entrées + « Plus »,
-  « ce projet » sous les entrées du menu qui ouvrent la rubrique du projet, compteur de corbeille gris, une ligne de résumé
+  compteur de corbeille gris, une ligne de résumé
   au lieu des cartes sur « Outils du projet », « Ajouter un supplément » seulement sur Vue d’ensemble et Suppléments.
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
