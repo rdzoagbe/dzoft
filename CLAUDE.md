@@ -141,7 +141,8 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »
   (e-mail `change_proposed`), signature du client par code e-mail (fonction Edge `change-sign-code`, aucune approbation sans
   code), puis facture complémentaire du montant signé. Test `tests/priced-change-proposals.sql`.
-  « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis la signature ; niveaux de prix
+  « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis le dernier supplément en cours ou signé
+  (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).
   En ajoutant une demande réalisée au journal, renseigner `lvl`, `qty` et `why` (commits, base, tests) d’après ces règles.
   Origine du prix (17 nov. 2026) : niveau noté au journal, sinon prestation de la liste dont les mots sont dans la demande, sinon prix par défaut ;

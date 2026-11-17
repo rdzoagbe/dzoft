@@ -146,7 +146,8 @@ test('calculate from tracking: done client requests from the journal, each bille
  assert.match(changes,/data-calc-journal/);
  // Only "demande" entries since the quote was signed, done ("fait"), not "pas encore construit".
  assert.match(changes,/e\.k==='demande'/);
- assert.match(changes,/\(!since\|\|e\.d>=since\)/);
+ assert.match(changes,/\(!signed\|\|e\.d>=signed\)/);
+ assert.match(changes,/if\(since&&e\.d<since\)/);
  assert.match(changes,/done=\/:\\s\*fait\\b\/i\.test\(text\)&&!\/\^pas encore\/i\.test\(text\)/);
  // A request already in a live proposal is skipped.
  assert.match(changes,/\['declined','rejected','withdrawn'\]\.indexOf\(r\.status\)<0/);
