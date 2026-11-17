@@ -495,7 +495,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       Q = r && r[0];
       if (!Q) { $('loading').textContent = 'Devis introuvable.'; return; }
       $('suivi-back').href=Q.accepted_at ? 'projet.html?q='+encodeURIComponent(QID) : './#/devis';
-      $('suivi-back').textContent=Q.accepted_at ? '← Tableau de bord du projet' : '← Liste des devis';
+      $('suivi-back').textContent=Q.accepted_at ? '← Dossier client' : '← Liste des devis';
       $('to-devis').textContent=Q.accepted_at ? 'Consulter le devis' : 'Modifier le devis';
       return Promise.all([
         Q.client_id ? sb.select('clients', 'select=*&id=eq.' + Q.client_id) : Promise.resolve([]),
@@ -1520,7 +1520,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>
 <script src="weekly-review.js?v=20261117-sync" defer></script>
-<script src="editor-navigation.js?v=20261116-1"></script>
+<script src="editor-navigation.js?v=20261117-menu"></script>
 </body>
 </html>
 

@@ -10,14 +10,14 @@
 <title>Projet · DZOFT Admin</title>
 <link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="project-finance.css?v=20261117-fit">
+<link rel="stylesheet" href="project-finance.css?v=20261117-tools">
 <link rel="stylesheet" href="project-unified.css?v=20261116-2">
 <link rel="stylesheet" href="workspace-v6.css?v=20261117-counts">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261117-discount">
 <script src="../assets/dzoft-language.js?v=20261115-billing-fr-en&reactive=20261116" defer></script>
 <script src="sb.js?v=20261109-passkey" defer></script>
 <script src="../assets/change-requests.js?v=20261117-prices" defer></script>
-<script src="project-finance.js?v=20261117-quick" defer></script>
+<script src="project-finance.js?v=20261117-tools" defer></script>
 </head>
 <body class="pf-page">
 <div class="pf-shell" id="pf-shell" hidden>
@@ -54,7 +54,7 @@
       <div class="pf-ident">
         <div class="pf-client-ident"><span class="pf-avatar" id="pf-avatar">—</span><div><h1 id="pf-client-name">—</h1><div class="pf-id-sub" id="pf-client-sub">—</div></div></div>
         <div class="pf-project-ident"><span class="pf-project-icon" aria-hidden="true">▱</span><div><h2 id="pf-project-name">—</h2><p id="pf-project-meta"></p></div><span class="pf-status" id="pf-project-status">—</span></div>
-        <div class="pf-action"><a class="pf-btn pf-btn-outline" id="pf-project-tools" href="#" data-fr="Outils avancés du projet ↗" data-en="Advanced project tools ↗">Outils avancés du projet ↗</a></div>
+        <div class="pf-action"><a class="pf-btn pf-btn-outline" id="pf-project-tools" href="#" data-fr="Outils du projet ↗" data-en="Project tools ↗">Outils du projet ↗</a></div>
       </div>
       <div class="pf-kpis" aria-label="Indicateurs financiers">
         <article class="pf-kpi"><span class="pf-kicon purple" aria-hidden="true">◇</span><div><span data-fr="Contrat initial" data-en="Original contract">Contrat initial</span><strong id="pf-base">—</strong></div></article>
@@ -76,7 +76,7 @@
       </nav>
       <div class="pf-content-grid">
         <section class="pf-panel pf-scope" aria-labelledby="pf-panel-title">
-          <div class="pf-panel-head"><div><h2 id="pf-panel-title" data-fr="◉ Périmètre du projet" data-en="◉ Project scope">◉ Périmètre du projet</h2><p id="pf-panel-sub" data-fr="Prestations, statut et montants associés." data-en="Services, statuses and amounts.">Prestations, statut et montants associés.</p></div><button class="pf-btn pf-btn-primary pf-new" type="button" data-new-extra data-fr="＋ Ajouter un supplément" data-en="＋ Add extra work">＋ Ajouter un supplément</button></div>
+          <div class="pf-panel-head"><div><h2 id="pf-panel-title" data-fr="◉ Périmètre du projet" data-en="◉ Project scope">◉ Périmètre du projet</h2><p id="pf-panel-sub" data-fr="Prestations, statut et montants associés." data-en="Services, statuses and amounts.">Prestations, statut et montants associés.</p></div><div class="pf-panel-actions"><a class="pf-btn pf-btn-outline" id="pf-panel-tool" href="#" hidden></a><button class="pf-btn pf-btn-primary pf-new" type="button" data-new-extra data-fr="＋ Ajouter un supplément" data-en="＋ Add extra work">＋ Ajouter un supplément</button></div></div>
           <div id="pf-panel-content" aria-live="polite"><p class="pf-muted" data-fr="Chargement du projet…" data-en="Loading project…">Chargement du projet…</p></div>
         </section>
         <div class="pf-right">
