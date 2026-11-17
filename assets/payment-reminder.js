@@ -25,11 +25,11 @@
     dialog.querySelector('[data-close]').onclick = function(){if(!busy) dialog.close();};
     dialog.addEventListener('cancel',function(e){if(busy)e.preventDefault();});
     dialog.addEventListener('close',function(){dialog.remove();});
-    var box=dialog.querySelector('[data-content]'); var messageLanguage=en()?'en':'fr';
-    var call=function(action,extra){return window.RDsb.fn('payment-reminder',Object.assign({action:action,quote_id:quoteId,invoice_id:invoiceId,lang:messageLanguage},extra||{}));};
+    var box=dialog.querySelector('[data-content]'); var messageLanguage=null; // first preview: the client's saved language
+    var call=function(action,extra){return window.RDsb.fn('payment-reminder',Object.assign({action:action,quote_id:quoteId,invoice_id:invoiceId},messageLanguage?{lang:messageLanguage}:{},extra||{}));};
     async function load(){
       try {
-        var p=await call('preview'); invoiceId=p.invoice_id;
+        var p=await call('preview'); invoiceId=p.invoice_id; if(!messageLanguage)messageLanguage=p.lang==='en'?'en':'fr';
         box.innerHTML='<p><b>'+escape(p.client)+'</b> · '+escape(p.amount)+'</p><label>'+(p.deposit_only?t('Acompte prévu au devis accepté','Deposit from the accepted quote'):t('Facture','Invoice'))+'<select data-invoice style="width:100%">'+p.invoices.map(function(i){return '<option value="'+escape(i.id)+'"'+(i.id===invoiceId?' selected':'')+'>'+escape(i.label)+'</option>';}).join('')+'</select></label>'+
           '<p><label><input type="checkbox" data-email '+(p.email?'checked':'disabled')+'> E-mail · '+escape(p.email||t('Adresse manquante dans la fiche client','Add an email to the client record'))+'</label></p>'+
           '<p><label><input type="checkbox" data-wa> WhatsApp</label></p><label>'+t('Numéro WhatsApp du client (+33…)','Client WhatsApp number (+33…)')+'<input data-phone type="tel" value="'+escape(p.phone?('+'+p.phone):'')+'" style="width:100%;box-sizing:border-box"></label>'+

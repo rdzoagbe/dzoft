@@ -385,6 +385,9 @@ footer{max-width:1180px}
   function stepDefault(s){ return (window.RDSTEPS || []).filter(function(x){ return x.k === s.k; })[0]; }
   function stepT(s){ var d = stepDefault(s); return EN() && d && STEP_EN[s.k] && s.t === d.t ? STEP_EN[s.k][0] : s.t; }
   function stepS(s){ var d = stepDefault(s); return EN() && d && STEP_EN[s.k] && s.s === d.s ? STEP_EN[s.k][1] : s.s; }
+  // Text people typed (messages, notes, names, project titles) is shown as written: the page
+  // dictionary must never rewrite it ("Bonjour Roland" in a message stays as the client wrote it).
+  var raw = function(t){ return '<span data-no-translate>' + esc(t) + '</span>'; };
   var isoDay = function(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? new Date(s + 'T12:00:00') : null; };
 
   // Two ways in: the client's account (e-mail and password), or the secret link espace/#<code>
@@ -515,7 +518,7 @@ footer{max-width:1180px}
     if (token) {
       return sb.rpc('portal_get', { p_token: token }).then(function(d){
         if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
-        D = d; show('app'); route();
+        D = d; show('app'); syncLanguage(); route();
       }, function(){ show('s-err'); });
     }
     if (!sb.session()) { form(createAccount ? 'f-signup' : 'f-login'); return Promise.resolve(); }
@@ -523,7 +526,7 @@ footer{max-width:1180px}
       if (owner) return;
       return sb.rpc('my_space', {}, true).then(function(d){
       D = d; var current = sb.session(); activeClientUserId = current && current.user && current.user.id;
-      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); route();
+      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); syncLanguage(); route();
     }, function(err){
       if (/administrateur/.test(err.message)) { form('f-login', L('Impossible de vérifier votre accès administrateur. Réessayez.', 'Your admin access could not be checked. Please try again.')); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', L('Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.', 'Email address not confirmed yet: click the link in the email we sent you.')); return; }
@@ -606,6 +609,7 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id, sub);
     (WIRE[page] || function(){})(id, sub);
+    if (DzoftTracking.setPortalToken) DzoftTracking.setPortalToken(token);
     DzoftTracking.client(sb);
     if (focusInvoice && focusProject && page === 'projets' && id === focusProject) {
       var invoiceRows = document.querySelectorAll('[data-invoice-id]'), invoiceRow = null;
@@ -618,7 +622,25 @@ footer{max-width:1180px}
   }
   window.addEventListener('hashchange', route);
   // Redraw the current screen in the newly chosen language (dynamic sentences use L()).
-  document.addEventListener('dzoft:locale-change', function(){ if (D && !$('app').hidden) route(); });
+  document.addEventListener('dzoft:locale-change', function(){ if (D && !$('app').hidden) { saveLanguage(); route(); } });
+  // The client's language is also kept on their record, so that e-mails sent later follow it.
+  // A choice clicked on this device wins; otherwise a language saved from another device is applied.
+  var langClicked = false;
+  document.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('[data-dzoft-lang]')) { langClicked = true; try { sessionStorage.setItem('rd-lang-clicked', '1'); } catch(_){} } }, true);
+  try { langClicked = sessionStorage.getItem('rd-lang-clicked') === '1'; } catch(_){}
+  function currentLang(){ return document.documentElement.lang === 'en' ? 'en' : 'fr'; }
+  function saveLanguage(){
+    if (!D || D.lang === currentLang()) return;
+    var next = currentLang();
+    call('set_language', { p_lang: next }).then(function(){ D.lang = next; }, function(){ /* the interface still switches; e-mails keep the previous language */ });
+  }
+  function syncLanguage(){
+    if (!D || !D.lang) return;
+    // French is also the default of every record, so a device showing English (chosen before the
+    // language was saved, or clicked now) wins; a record saying English applies it to this device.
+    if (langClicked || (D.lang === 'fr' && currentLang() === 'en')) { saveLanguage(); return; }
+    if (D.lang !== currentLang()) { var b = document.querySelector('[data-dzoft-lang="' + D.lang + '"]'); if (b) b.click(); }
+  }
 
   /* ---------- pieces ---------- */
   function head(t, sub){ return '<div class="vhead"><h1>' + t + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>'; }
@@ -635,15 +657,15 @@ footer{max-width:1180px}
     var ST = { 'actif': [L('Actif', 'Active'), 'ok'], 'en cours': [L('En cours', 'In progress'), ''], 'à créer': [L('À créer', 'To be created'), 'warn'], 'prévu': [L('Prévu', 'Planned'), 'off'] };
     return '<div class="envlist">' + items.map(function(x){
       var st = ST[x.st] || ST['prévu'], url = /^https:\/\//i.test(x.u || '') ? x.u : '';
-      return '<div class="env"><div class="eh"><b>' + esc(x.l) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
-        '<div class="em">' + (x.w ? esc(x.w) + ' · ' : '') + (x.o === 'rd' ? L('géré par DZOFT', 'managed by DZOFT') : L('à votre nom', 'in your name')) + '</div>' +
-        (x.n ? '<div class="en">' + esc(x.n) + '</div>' : '') +
+      return '<div class="env"><div class="eh"><b>' + raw(x.l) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+        '<div class="em">' + (x.w ? raw(x.w) + ' · ' : '') + (x.o === 'rd' ? L('géré par DZOFT', 'managed by DZOFT') : L('à votre nom', 'in your name')) + '</div>' +
+        (x.n ? '<div class="en">' + raw(x.n) + '</div>' : '') +
         (url ? '<a class="btn line sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + L('Ouvrir ↗', 'Open ↗') + '</a>' : '') + '</div>';
     }).join('') + '</div>';
   }
   function docsList(docs){
     return '<ul class="docs">' + docs.map(function(d){
-      return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + esc(d.n || L('Document', 'Document')) + '</a></li>';
+      return '<li><a href="' + esc(d.u) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + raw(d.n || L('Document', 'Document')) + '</a></li>';
     }).join('') + '</ul>';
   }
   function withdrawEnd(d){ var e = new Date(d); e.setDate(e.getDate() + 14); return e; }
@@ -703,9 +725,9 @@ footer{max-width:1180px}
     var r = q.review;
     if (r && !RV_EDIT[q.id]) {
       var stt = !r.consent ? L('Merci ! Vous n’avez pas autorisé sa publication : il reste entre nous.', 'Thank you! You did not allow it to be published: it stays between us.') : r.published ? L('Publié sur le site de DZOFT. Merci !', 'Published on the DZOFT website. Thank you!') : L('Merci ! Je le relis et le publie sur le site très bientôt.', 'Thank you! I’ll read it and publish it on the website very soon.');
-      return '<section class="card rvshow" id="avis"><h2>' + L('Votre avis', 'Your review') + '</h2><div class="st" aria-label="' + r.rating + L(' sur 5', ' out of 5') + '">' + starsTxt(r.rating) + '</div><blockquote>' + esc(r.body) + '</blockquote>' +
+      return '<section class="card rvshow" id="avis"><h2>' + L('Votre avis', 'Your review') + '</h2><div class="st" aria-label="' + r.rating + L(' sur 5', ' out of 5') + '">' + starsTxt(r.rating) + '</div><blockquote>' + raw(r.body) + '</blockquote>' +
         '<p class="muted">' + esc(r.name) + (r.activity ? ' · ' + esc(r.activity) : '') + '</p><p class="muted" style="margin-top:6px">' + stt + '</p>' +
-        (r.reply ? '<p style="margin-top:8px"><b>' + L('Ma réponse :', 'My reply:') + '</b> ' + esc(r.reply) + '</p>' : '') +
+        (r.reply ? '<p style="margin-top:8px"><b>' + L('Ma réponse :', 'My reply:') + '</b> ' + raw(r.reply) + '</p>' : '') +
         '<div class="row" style="margin-top:12px"><button class="btn line sm" type="button" id="rv-edit">' + L('Modifier mon avis', 'Edit my review') + '</button><a class="btn line sm" href="#/messages">' + L('Demander son retrait', 'Ask for it to be removed') + '</a></div>' +
         // offered whatever the rating: Google forbids asking only happy clients
         '<div class="gbox"><b>' + L('Vous pouvez aussi le publier sur Google', 'You can also post it on Google') + '</b><p class="muted">' + L('C’est ce qui aide le plus les commerçants et indépendants du coin à me trouver. Copiez votre texte, puis collez-le sur ma fiche Google.', 'This is what helps local shops and freelancers find me the most. Copy your text, then paste it on my Google listing.') + '</p>' +
@@ -783,10 +805,10 @@ footer{max-width:1180px}
     return '<ol class="steps">' + list.map(function(s, i){
       var dep = s.k === 'deposit' ? depositText(q) : '';
       return '<li class="' + (s.done ? 'done' : i === now && q.accepted_at ? 'now' : '') + '"><span class="dot">' + (s.done ? '✓' : i + 1) + '</span>' +
-        '<div class="t" data-now="' + L('En cours', 'In progress') + '">' + esc(stepT(s)) + '</div>' + (s.s ? '<div class="s">' + esc(stepS(s)) + dep + '</div>' : '') +
+        '<div class="t" data-now="' + L('En cours', 'In progress') + '">' + raw(stepT(s)) + '</div>' + (s.s ? '<div class="s">' + esc(stepS(s)) + dep + '</div>' : '') +
         (s.vby ? '<div class="d">' + L('Validé par ', 'Approved by ') + esc(s.vby) + L(' le ', ' on ') + day(s.vat) + '</div>' : s.done && s.d ? '<div class="d">' + L('Fait le ', 'Done on ') + day(isoDay(s.d)) + '</div>' : '') +
         (s.ask && !s.done ? '<div class="d" style="color:var(--blue2)">' + L('Votre validation est attendue', 'Your approval is needed') + '</div>' : '') +
-        (s.note ? '<div class="n">' + esc(s.note) + '</div>' : '') + '</li>';
+        (s.note ? '<div class="n">' + raw(s.note) + '</div>' : '') + '</li>';
     }).join('') + '</ol>';
   }
 
@@ -843,13 +865,13 @@ footer{max-width:1180px}
     if (q) {
       var st = state(q), due = dueTotal(q), cur = current(q);
       h += '<section class="card current-project"><div class="ih"><h2 data-no-translate>' + esc(title(q)) + '</h2><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span></div>' +
-        bar(progress(q)) + '<p class="muted">' + completedStages(q) + (cur ? L(' · étape actuelle : ', ' · current stage: ') + esc(stepT(cur)) : '') + '</p>' +
-        '<div class="cp-grid"><div><h3>' + L('Dernière avancée', 'Latest update') + '</h3>' + (token ? '<p class="tracking-help">' + L('Connectez-vous à votre compte pour voir les avancées publiées.', 'Sign in to your account to see published updates.') + '</p>' : '<div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div>') + '</div>' +
+        bar(progress(q)) + '<p class="muted">' + completedStages(q) + (cur ? L(' · étape actuelle : ', ' · current stage: ') + raw(stepT(cur)) : '') + '</p>' +
+        '<div class="cp-grid"><div><h3>' + L('Dernière avancée', 'Latest update') + '</h3><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></div>' +
         '<div><h3>' + L('Paiement', 'Payment') + '</h3>' + (due > 0 ? '<p class="cp-due"><span>' + L('À régler maintenant', 'Due now') + '</span><b>' + eur(due) + '</b></p><a class="btn main sm" href="#/projets/' + q.id + '/paiements">' + L('Voir et payer', 'View and pay') + '</a>' : '<p class="muted">' + L('Rien à régler pour le moment.', 'Nothing to pay right now.') + '</p><a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>') + '</div></div>' +
         '<div class="row"><a class="btn main" href="#/projets/' + q.id + '">' + L('Ouvrir le projet', 'Open the project') + '</a><a class="btn line" href="#/messages">' + L('Écrire à Roland', 'Message Roland') + '</a></div></section>';
     }
     var note = qs.filter(function(x){ return x.note; })[0];
-    if (note) h += '<div class="note"><b>' + L('Le mot de Roland · ', 'A note from Roland · ') + esc(title(note)) + '</b>' + esc(note.note) + '</div>';
+    if (note) h += '<div class="note"><b>' + L('Le mot de Roland · ', 'A note from Roland · ') + raw(title(note)) + '</b>' + raw(note.note) + '</div>';
     if (todo.length > 1) h += '<section class="card"><h2>' + L('Autres actions à suivre', 'Other things to do') + '</h2><ul class="todo">' + todo.slice(1).map(function(t){ return '<li><span>' + esc(t[0]) + '</span><a class="btn line sm" href="' + t[1] + '">' + esc(t[2]) + '</a></li>'; }).join('') + '</ul></section>';
     var others = projects().filter(function(x){ return x !== q; });
     if (others.length) h += '<section class="card"><h2>' + L('Vos autres projets', 'Your other projects') + '</h2><div class="items">' + others.map(quoteCard).join('') + '</div></section>';
@@ -861,8 +883,8 @@ footer{max-width:1180px}
     if (!rq.length) return h + empty(token ? L('Vos demandes envoyées par WhatsApp ou par e-mail ne s’affichent pas ici, mais vos devis oui.', 'Requests sent by WhatsApp or email don’t show here, but your quotes do.') : L('Aucune demande pour le moment.', 'No requests yet.'), '<a class="btn main" href="' + quoteFormUrl() + '">' + L('Faire une demande', 'Make a request') + '</a>');
     return h + '<div class="items">' + rq.map(function(r){
       var st = r.status === 'perdue' ? [L('Close', 'Closed'), 'off'] : qs.length && r.status !== 'nouvelle' ? [L('Traitée', 'Handled'), 'ok'] : r.status === 'nouvelle' ? [L('Reçue', 'Received'), ''] : [L('Devis en préparation', 'Quote in preparation'), 'warn'];
-      return '<div class="item"><div class="ih"><b>' + esc(r.projet || L('Demande', 'Request')) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
-        '<div class="im">' + L('Envoyée le ', 'Sent on ') + day(r.at) + (r.budget ? L(' · budget : ', ' · budget: ') + esc(r.budget) : '') + '</div>' + (r.message ? '<div class="txt">' + esc(r.message) + '</div>' : '') + '</div>';
+      return '<div class="item"><div class="ih"><b>' + raw(r.projet || L('Demande', 'Request')) + '</b><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+        '<div class="im">' + L('Envoyée le ', 'Sent on ') + day(r.at) + (r.budget ? L(' · budget : ', ' · budget: ') + raw(r.budget) : '') + '</div>' + (r.message ? '<div class="txt">' + raw(r.message) + '</div>' : '') + '</div>';
     }).join('') + '</div><p style="margin-top:14px"><a class="btn line" href="' + quoteFormUrl() + '">' + L('Faire une nouvelle demande', 'Make a new request') + '</a></p>';
   };
   VIEWS.devis = function(id){
@@ -920,7 +942,7 @@ footer{max-width:1180px}
     function askCode(){
       mailB.disabled = true; amsg(L('Envoi du code…', 'Sending the code…'), true);
       // the server function checks the client (account session or secret link) before sending
-      sb.fn('sign-code', { quote_id: q.id, token: token || undefined }).then(function(r){
+      sb.fn('sign-code', { quote_id: q.id, token: token || undefined, lang: EN() ? 'en' : 'fr' }).then(function(r){
         amsg(L('Code envoyé par e-mail à ' + r.target + '. Il est valable 10 minutes. Pensez à vos courriers indésirables.', 'Code sent by email to ' + r.target + '. It is valid for 10 minutes. Remember to check your spam folder.'), true);
         $('a-coderow').hidden = false; code.focus();
         mailB.textContent = L('Renvoyer un code', 'Send a new code');
@@ -953,7 +975,7 @@ footer{max-width:1180px}
   WIRE.projets = function(id){
     var q = id && byId(id); if (!q) return;
     wireReview(q);
-    if (typeof window !== 'undefined' && window.DzoftChanges && document.getElementById('dzoft-client-changes')) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:EN(),sendCode:function(changeId){ return sb.fn('change-sign-code', { change_id: changeId, token: token || undefined }); }});
+    if (typeof window !== 'undefined' && window.DzoftChanges && document.getElementById('dzoft-client-changes')) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:EN(),sendCode:function(changeId){ return sb.fn('change-sign-code', { change_id: changeId, token: token || undefined, lang: EN() ? 'en' : 'fr' }); }});
     if (/\/avis$/.test(location.hash) && $('avis')) $('avis').scrollIntoView();
     [].forEach.call(document.querySelectorAll('.valid'), function(box){
       var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;
@@ -975,10 +997,10 @@ footer{max-width:1180px}
   }
   function validationCards(q){
     return steps(q).filter(function(s){ return s.ask && !s.done; }).map(function(s){
-      return '<section class="card accept valid" data-step="' + esc(s.k) + '"><h2>' + L('Votre validation est attendue : ', 'Your approval is needed: ') + esc(stepT(s)) + '</h2>' +
-        (s.note ? '<p class="note2">' + esc(s.note) + '</p>' : '') +
+      return '<section class="card accept valid" data-step="' + esc(s.k) + '"><h2>' + L('Votre validation est attendue : ', 'Your approval is needed: ') + raw(stepT(s)) + '</h2>' +
+        (s.note ? '<p class="note2">' + raw(s.note) + '</p>' : '') +
         '<p>' + L('Vérifiez cette étape' + (okDocs(q).length ? ' (voir l’onglet Documents)' : '') + '. Si tout vous convient, validez-la : je passe à la suite. Sinon, dites-moi ce qu’il faut changer.', 'Please check this stage' + (okDocs(q).length ? ' (see the Documents tab)' : '') + '. If everything suits you, approve it and I’ll move on. If not, tell me what to change.') + '</p>' +
-        '<div class="row"><button class="btn main" type="button" data-v="ok">' + L('Je valide « ', 'I approve “') + esc(stepT(s)) + L(' »', '”') + '</button><a class="btn line" href="#/messages">' + L('Demander des changements', 'Ask for changes') + '</a></div>' +
+        '<div class="row"><button class="btn main" type="button" data-v="ok">' + L('Je valide « ', 'I approve “') + raw(stepT(s)) + L(' »', '”') + '</button><a class="btn line" href="#/messages">' + L('Demander des changements', 'Ask for changes') + '</a></div>' +
         '<p class="msgline" role="status" aria-live="polite"></p><p class="legal">' + L('Votre validation est enregistrée avec votre nom, la date et l’heure.', 'Your approval is recorded with your name, the date and the time.') + '</p></section>';
     }).join('');
   }
@@ -992,24 +1014,24 @@ footer{max-width:1180px}
       return '<a href="#/projets/' + q.id + (t[0] === 'apercu' ? '' : '/' + t[0]) + '"' + (t[0] === tab ? ' aria-current="page"' : '') + '>' + L(t[1], t[2]) + badge + '</a>';
     }).join('') + '</nav>';
     if (tab === 'apercu') {
-      if (q.note) h += '<div class="note"><b>' + L('Le mot de Roland', 'A note from Roland') + '</b>' + esc(q.note) + '</div>';
+      if (q.note) h += '<div class="note"><b>' + L('Le mot de Roland', 'A note from Roland') + '</b>' + raw(q.note) + '</div>';
       h += validationCards(q);
       h += '<div class="overview-grid">' +
         '<section class="card"><h2>' + L('Où en est le projet', 'Where the project stands') + '</h2>' + bar(p) + '<p class="muted">' + completedStages(q) + '</p>' +
-          (cur ? '<p><b>' + L('Étape actuelle : ', 'Current stage: ') + '</b>' + esc(stepT(cur)) + '</p>' : '<p><b>' + L('Projet livré ✓', 'Project delivered ✓') + '</b></p>') +
+          (cur ? '<p><b>' + L('Étape actuelle : ', 'Current stage: ') + '</b>' + raw(stepT(cur)) + '</p>' : '<p><b>' + L('Projet livré ✓', 'Project delivered ✓') + '</b></p>') +
           '<a class="btn line sm" href="#/projets/' + q.id + '/avancement">' + L('Voir toutes les étapes', 'See all stages') + '</a></section>' +
         '<section class="card"><h2>' + L('Paiement', 'Payment') + '</h2>' + (due > 0 ? '<p class="cp-due"><span>' + L('À régler maintenant', 'Due now') + '</span><b>' + eur(due) + '</b></p><a class="btn main sm" href="#/projets/' + q.id + '/paiements">' + L('Voir et payer', 'View and pay') + '</a>' : '<p class="muted">' + L('Rien à régler pour le moment.', 'Nothing to pay right now.') + '</p><a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>') + '</section>' +
         '</div>';
-      if (!token) h += '<section class="card"><h2>' + L('Dernière avancée', 'Latest update') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></section>';
+      h += '<section class="card"><h2>' + L('Dernière avancée', 'Latest update') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></section>';
       h += withdrawText(q);
       h += reviewBlock(q);
     } else if (tab === 'avancement') {
       h += validationCards(q);
       h += '<section class="card"><h2>' + L('Étapes', 'Stages') + ' <span class="pc">' + completedStages(q) + '</span></h2>' + bar(p) + '<div style="margin-top:16px">' + stepsList(q) + '</div></section>';
-      if (!token) h += '<section class="card"><h2>' + L('Avancées publiées', 'Published updates') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="updates"></div></section>';
+      h += '<section class="card"><h2>' + L('Avancées publiées', 'Published updates') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="updates"></div></section>';
       h += '<section class="card" id="dzoft-client-changes-card"><h2>' + L('Demandes de modification', 'Change requests') + '</h2><div id="dzoft-client-changes"></div></section>';
     } else if (tab === 'paiements') {
-      if (!token) h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '" data-tracking-part="payments" data-due="' + esc(JSON.stringify(dueList(q))) + '"><h2>' + L('Où en sont les paiements', 'Payment status') + '</h2><div class="tracking-slot"></div></section>';
+      h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '" data-tracking-part="payments" data-due="' + esc(JSON.stringify(dueList(q))) + '"><h2>' + L('Où en sont les paiements', 'Payment status') + '</h2><div class="tracking-slot"></div></section>';
       h += payBlock(q) + careBlock(q);
     } else {
       h += '<section class="card"><h2>' + L('Documents partagés', 'Shared documents') + '</h2>' + (docs.length ? docsList(docs) : '<p class="muted">' + L('Les maquettes et documents du projet apparaîtront ici.', 'Designs and project documents will appear here.') + '</p>') +
@@ -1022,20 +1044,23 @@ footer{max-width:1180px}
     var qs = quotes().filter(function(q){ return envOf(q).length; }), h = head(L('Environnement', 'Hosting & accounts'), L('Où vit votre projet : site en ligne, code, hébergement, base de données, stores, nom de domaine. Tout est à votre nom, sauf mention contraire.', 'Where your project lives: live site, code, hosting, database, app stores, domain name. Everything is in your name unless stated otherwise.'));
     h += '<p class="secure">🔒 ' + L('Aucun mot de passe n’est affiché ici : seulement les liens et les informations. Vos identifiants vous sont remis avec la fiche de remise, à la livraison.', 'No passwords are shown here, only links and information. Your login details are handed over with the handover sheet on delivery.') + '</p>';
     if (!qs.length) return h + empty(L('Les accès de vos projets apparaîtront ici dès qu’ils seront créés.', 'Your project accounts will appear here as soon as they are created.'));
-    return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + envTable(envOf(q)) + '</section>'; }).join('');
+    return h + qs.map(function(q){ return '<section class="card"><h2>' + raw(title(q)) + '</h2>' + envTable(envOf(q)) + '</section>'; }).join('');
   };
   VIEWS.documents = function(){
+    // Order: what DZOFT shared for each project, the invoices, then the client's own uploads.
     var qs = quotes().filter(function(q){ return okDocs(q).length; }), h = head('Documents', L('Maquettes, factures, fiche de remise et autres fichiers partagés.', 'Designs, invoices, handover sheet and other shared files.'));
+    h += qs.length ? qs.map(function(q){ return '<section class="card"><h2>' + L('Partagés par DZOFT · ', 'Shared by DZOFT · ') + raw(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('')
+      : empty(L('Les maquettes et documents de vos projets apparaîtront ici.', 'Designs and documents for your projects will appear here.'));
+    quotes().filter(function(q){ return invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>' + L('Factures · ', 'Invoices · ') + raw(title(q)) + '</h2>' + invoiceList(q).replace(/<h3 class="subh">[^<]*<\/h3>/, '') + '</section>'; });
     h += '<section class="card" id="myfiles"><h2>' + L('Mes fichiers', 'My files') + '</h2>' + (token ?
       '<p class="muted">' + L('Pour m’envoyer vos fichiers (logo, photos, textes), connectez-vous à votre compte. En attendant, écrivez-moi depuis Messages.', 'To send me your files (logo, photos, texts), sign in to your account. Meanwhile, message me from Messages.') + '</p>' :
       '<p class="muted">' + L('Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).', 'Logo, photos, texts, old documents: upload them here and I receive them directly. 20 MB maximum per file (images, PDF, Word, Excel, ZIP).') + '</p>' +
       '<div class="qacts"><label class="btn main" style="cursor:pointer">' + L('Envoyer des fichiers', 'Upload files') + '<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
       '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">' + L('Chargement…', 'Loading…') + '</li></ul>') + '</section>';
-    quotes().filter(function(q){ return invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>' + L('Factures · ', 'Invoices · ') + esc(title(q)) + '</h2>' + invoiceList(q).replace(/<h3 class="subh">[^<]*<\/h3>/, '') + '</section>'; });
     h += '<section class="card"><h2>' + L('Toujours disponibles', 'Always available') + '</h2>' + docsList([{ n: L('Fiche de remise (modèle)', 'Handover sheet (template, in French)'), u: 'https://rdzoagbe.github.io/dzoft/assets/fiche-de-remise-client.pdf' }]) + '</section>';
-    if (!qs.length) return h + empty(L('Les documents de vos projets apparaîtront ici.', 'Your project documents will appear here.'));
-    return h + qs.map(function(q){ return '<section class="card"><h2>' + esc(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');
+    return h;
   };
+
   var ME = null;
   function myId(){ return ME ? Promise.resolve(ME) : sb.me().then(function(u){ ME = u && u.id; return ME; }); }
   function fsize(n){ return n > 1048576 ? (EN() ? (n / 1048576).toFixed(1) + ' MB' : (n / 1048576).toFixed(1).replace('.', ',') + ' Mo') : Math.max(1, Math.round(n / 1024)) + L(' Ko', ' KB'); }
@@ -1044,7 +1069,7 @@ footer{max-width:1180px}
       list = (list || []).filter(function(f){ return f.id && !/^factures\//i.test(f.name || ''); });
       $('flist').innerHTML = list.length ? list.map(function(f){
         return '<li><a href="#" data-path="u/' + uid + '/' + esc(f.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
-          esc(f.name.replace(/^\d+-/, '')) + '<span class="muted" style="margin-left:auto;font-weight:400;font-size:13px">' + fsize((f.metadata || {}).size || 0) + ' · ' + day(f.created_at) + '</span></a></li>';
+          raw(f.name.replace(/^\d+-/, '')) + '<span class="muted" style="margin-left:auto;font-weight:400;font-size:13px">' + fsize((f.metadata || {}).size || 0) + ' · ' + day(f.created_at) + '</span></a></li>';
       }).join('') : '<li class="muted">' + L('Aucun fichier envoyé pour l’instant.', 'No files uploaded yet.') + '</li>';
     }); }).catch(function(){ $('flist').innerHTML = '<li class="muted">' + L('Vos fichiers sont indisponibles pour le moment.', 'Your files are unavailable right now.') + '</li>'; });
   }
@@ -1083,9 +1108,9 @@ footer{max-width:1180px}
     var ms = D.messages || [], qs = quotes(), h = head('Messages', L('Je vous réponds sous 48 h. Écrivez-moi ici pour toute question sur votre projet.', 'I reply within 48 hours. Message me here with any question about your project.'));
     h += '<section class="card"><div class="thread" id="thread">' + (ms.length ? ms.map(function(x){
       var q = x.quote_id && byId(x.quote_id);
-      return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + esc(x.body) + '<small>' + (x.author === 'client' ? L('Vous', 'You') : 'Roland') + ' · ' + time(x.at) + (q ? ' · ' + esc(q.numero) : '') + '</small></div>';
+      return '<div class="bub ' + (x.author === 'client' ? 'me' : 'him') + '">' + raw(x.body) + '<small>' + (x.author === 'client' ? L('Vous', 'You') : 'Roland') + ' · ' + time(x.at) + (q ? ' · ' + esc(q.numero) : '') + '</small></div>';
     }).join('') : '<p class="muted">' + L('Pas encore de message. Écrivez-moi ici pour toute question.', 'No messages yet. Message me here with any question.') + '</p>') + '</div>' +
-      (qs.length > 1 ? '<label for="m-q">' + L('À propos de', 'About') + '</label><select id="m-q"><option value="">' + L('Général', 'General') + '</option>' + qs.map(function(q){ return '<option value="' + q.id + '">' + esc(title(q)) + ' (' + esc(q.numero) + ')</option>'; }).join('') + '</select>' : '') +
+      (qs.length > 1 ? '<label for="m-q">' + L('À propos de', 'About') + '</label><select id="m-q"><option value="">' + L('Général', 'General') + '</option>' + qs.map(function(q){ return '<option data-no-translate value="' + q.id + '">' + esc(title(q)) + ' (' + esc(q.numero) + ')</option>'; }).join('') + '</select>' : '') +
       '<label for="m-body">' + L('Votre message', 'Your message') + '</label><textarea id="m-body" maxlength="2000" placeholder="' + L('Une question, une modification à demander, un retour sur les maquettes…', 'A question, a change to request, feedback on the designs…') + '"></textarea>' +
       '<div class="qacts"><button class="btn main" id="m-send" type="button">' + L('Envoyer', 'Send') + '</button><button class="btn line" id="m-cancel" type="button">' + L('Annuler', 'Cancel') + '</button></div><p class="msgline" id="m-msg" role="status" aria-live="polite"></p></section>';
     return h;

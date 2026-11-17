@@ -564,7 +564,9 @@
  function dueNow(box,d){var list;try{list=JSON.parse(box.dataset.due||'null');}catch(e){list=null;}if(!Array.isArray(list))return null;return list.reduce(function(n,i){var paid=i.id?d.receipts.filter(function(r){return r.invoice_id===i.id;}).reduce(function(s,r){return s+cents(r.amount);},0):0;return n+Math.max(0,cents(i.amt)-paid);},0)/100;}
  function latest(d){var u=d.updates[0];return u?'<article class="tracking-latest"><div><b>'+esc(label(categories,u.category))+'</b><span class="tracking-status">'+esc(label(statuses,u.status))+'</span></div><p>'+esc(u.summary)+'</p><small>'+day(u.created_at)+'</small></article>':'<p class="tracking-help">'+t('Les prochains résumés publiés apparaîtront ici.','Published progress summaries will appear here.')+'</p>';}
  // data-tracking-part: "payments", "updates" or "latest" draws one part (client tabs); none draws the whole card.
- function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');var part=box.dataset.trackingPart||'';sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true).then(function(d){if(!box.isConnected)return;
+ // Private link (client without an account): figures are read with the link, never with a session.
+ var portalToken=null;function setPortalToken(t){portalToken=t||null;}
+ function client(sb){document.querySelectorAll('[data-project-tracking]').forEach(function(box){if(box.dataset.loading)return;box.dataset.loading='1';box.setAttribute('data-no-translate','');var part=box.dataset.trackingPart||'';(portalToken?sb.rpc('portal_project_tracking',{p_token:portalToken,p_quote:box.dataset.projectTracking}):sb.rpc('project_tracking',{p_quote:box.dataset.projectTracking},true)).then(function(d){if(!box.isConnected)return;
   (box.querySelector('.tracking-slot')||box).innerHTML=part==='payments'?stats(d,dueNow(box,d))+paymentStatuses(d,false)+'<h3>'+t('Paiements reçus','Payments received')+'</h3>'+(d.receipts.length||d.legacy>0?receipts(d,false):'<p class="tracking-help">'+t('Aucun paiement confirmé pour l’instant.','No confirmed payments yet.')+'</p>')
    :part==='updates'?updates(d):part==='latest'?latest(d)
    :'<h2>'+t('Paiements & avancement','Payments & progress')+'</h2>'+stats(d)+paymentStatuses(d,false)+receipts(d,false)+'<h3>'+t('Dernières avancées','Latest progress')+'</h3>'+updates(d);
@@ -575,5 +577,5 @@
  window.addEventListener('focus',refreshClient);setInterval(refreshClient,30000);
  // Language switch: redraw in the new language (the page dictionary skips this card).
  document.addEventListener('dzoft:locale-change',function(){if(last&&document.getElementById('tracking-admin'))admin.apply(null,last);refreshClient();});
- global.DzoftTracking={admin:admin,client:client,lockInvoices:lockInvoices,archive:archiveInvoice};
+ global.DzoftTracking={admin:admin,client:client,setPortalToken:setPortalToken,lockInvoices:lockInvoices,archive:archiveInvoice};
 })(window);

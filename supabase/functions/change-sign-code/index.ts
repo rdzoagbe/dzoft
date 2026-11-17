@@ -26,11 +26,14 @@ Deno.serve(async (req) => {
   let b: any;
   try { b = JSON.parse(raw); } catch { return json({ error: "JSON invalide" }, 400); }
   if (!b || typeof b !== "object" || Array.isArray(b) || !uuid.test(String(b.change_id || ""))) return json({ error: "données invalides" }, 400);
+  // The client area sends its interface language; messages and the e-mail follow it.
+  const en = b.lang === "en";
+  const t = (fr: string, english: string) => (en ? english : fr);
 
   // who is signing: secret link, or signed-in client account (never the owner)
   let client: any = null;
   if (b.token) {
-    if (!uuid.test(String(b.token))) return json({ error: "accès refusé : reconnectez-vous" }, 403);
+    if (!uuid.test(String(b.token))) return json({ error: t("accès refusé : reconnectez-vous", "access denied: please sign in again") }, 403);
     const r = await db.from("clients").select("id,nom,email,contact,user_id").eq("portal_token", b.token).is("user_id", null).maybeSingle();
     client = r.data;
   } else {
@@ -43,16 +46,16 @@ Deno.serve(async (req) => {
       if (client && !client.email) client.email = u.email;
     }
   }
-  if (!client) return json({ error: "accès refusé : reconnectez-vous" }, 403);
+  if (!client) return json({ error: t("accès refusé : reconnectez-vous", "access denied: please sign in again") }, 403);
 
   const { data: c } = await db.from("dzoft_change_requests").select("id,client_id,quote_id,status,proposal_number,extra_price,title").eq("id", b.change_id).maybeSingle();
-  if (!c || c.client_id !== client.id) return json({ error: "proposition introuvable" }, 404);
-  if (c.status !== "proposed") return json({ error: "cette proposition n’attend plus de signature" }, 400);
+  if (!c || c.client_id !== client.id) return json({ error: t("proposition introuvable", "proposal not found") }, 404);
+  if (c.status !== "proposed") return json({ error: t("cette proposition n’attend plus de signature", "this proposal no longer needs a signature") }, 400);
   const { data: q } = await db.from("quotes").select("id,client_id,shared,deleted_at,accepted_at").eq("id", c.quote_id).maybeSingle();
-  if (!q || q.client_id !== client.id || !q.shared || q.deleted_at || !q.accepted_at) return json({ error: "projet introuvable" }, 404);
+  if (!q || q.client_id !== client.id || !q.shared || q.deleted_at || !q.accepted_at) return json({ error: t("projet introuvable", "project not found") }, 404);
 
   const target = [client.email, client.contact].map((x: string) => (x || "").trim()).find((x: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)) || "";
-  if (!target) return json({ error: "aucune adresse e-mail connue : écrivez-moi pour l’ajouter" }, 400);
+  if (!target) return json({ error: t("aucune adresse e-mail connue : écrivez-moi pour l’ajouter", "no email address on file: message me to add one") }, 400);
 
   const n = new Uint32Array(1); crypto.getRandomValues(n);
   const code = String(n[0] % 1000000).padStart(6, "0");
@@ -67,7 +70,7 @@ Deno.serve(async (req) => {
   });
   if (reservation.error || !reservation.data?.ok) {
     const limited = reservation.data?.reason === "rate_limit";
-    return json({ error: limited ? "trop de codes demandés : réessayez dans un moment" : "cette proposition n’est plus disponible" }, limited ? 429 : 400);
+    return json({ error: limited ? t("trop de codes demandés : réessayez dans un moment", "too many codes requested: please try again in a moment") : t("cette proposition n’est plus disponible", "this proposal is no longer available") }, limited ? 429 : 400);
   }
 
   let r: Response;
@@ -75,18 +78,18 @@ Deno.serve(async (req) => {
     method: "POST", signal: AbortSignal.timeout(12000), headers: { "api-key": key, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({
       sender: { name: "DZOFT", email: Deno.env.get("SENDER_EMAIL") || "roland.dzoagbe@hotmail.com" },
-      to: [{ email: target }], subject: "Votre code de signature : " + code,
-      htmlContent: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020"><h2 style="color:#0B1020">Signature de votre proposition complémentaire</h2><p>Votre code pour signer la proposition n° <b>${esc(c.proposal_number || "")}</b> (${esc(c.title)}, ${esc(eur(Number(c.extra_price || 0)))}) :</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;text-align:center;margin:24px 0">${code}</p><p>Il est valable 10 minutes. Ne le communiquez à personne : il vaut signature.</p><p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p></div>`,
+      to: [{ email: target }], subject: t("Votre code de signature : ", "Your signature code: ") + code,
+      htmlContent: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B1020"><h2 style="color:#0B1020">${t("Signature de votre proposition complémentaire", "Signing your additional proposal")}</h2><p>${t("Votre code pour signer la proposition n° ", "Your code to sign proposal no. ")}<b>${esc(c.proposal_number || "")}</b> (${esc(c.title)}, ${esc(eur(Number(c.extra_price || 0)))})${t(" :", ":")}</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;text-align:center;margin:24px 0">${code}</p><p>${t("Il est valable 10 minutes. Ne le communiquez à personne : il vaut signature.", "It is valid for 10 minutes. Do not share it with anyone: it counts as your signature.")}</p><p>Roland Dzoagbe<br>DZOFT · 07 82 88 46 46</p></div>`,
       tags: ["dzoft-change-signature"],
     }),
   }); } catch {
     await db.rpc("cancel_sign_code_reservation", { p_sign_code_id: reservation.data.id });
-    return json({ error: "l’e-mail n’a pas pu être envoyé : réessayez dans un instant" }, 502);
+    return json({ error: t("l’e-mail n’a pas pu être envoyé : réessayez dans un instant", "the email could not be sent: please try again in a moment") }, 502);
   }
   if (!r.ok) {
     console.error("Brevo rejected change signature-code delivery; HTTP status", r.status);
     await db.rpc("cancel_sign_code_reservation", { p_sign_code_id: reservation.data.id });
-    return json({ error: "l’e-mail n’a pas pu être envoyé : réessayez dans un instant" }, 502);
+    return json({ error: t("l’e-mail n’a pas pu être envoyé : réessayez dans un instant", "the email could not be sent: please try again in a moment") }, 502);
   }
   return json({ ok: true, channel: "email", target: shown });
 });
