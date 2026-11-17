@@ -9,7 +9,9 @@ const html=fs.readFileSync(path.join(__dirname,'../espace/index.html'),'utf8');
 const tracking=fs.readFileSync(path.join(__dirname,'../assets/project-tracking.js'),'utf8');
 
 test('the current screen is redrawn when the language changes',()=>{
- assert.match(html,/document\.addEventListener\('dzoft:locale-change', function\(\)\{ if \(D && !\$\('app'\)\.hidden\) \{ saveLanguage\(\); route\(\); \} \}\);/);
+ assert.match(html,/if \(first\) syncLanguage\(\); else saveLanguage\(\);\n    route\(\);/,'redraw on every change; the first announcement applies, never saves');
+ assert.match(html,/e\.isTrusted && e\.target\.closest/,'only a real click counts as the client\'s choice');
+ assert.match(html,/if \(!D \|\| !D\.lang \|\| !langReady\) return;/);
  assert.match(html,/function L\(fr, en\)\{ return EN\(\) \? en : fr; \}/);
 });
 

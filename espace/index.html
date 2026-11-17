@@ -622,11 +622,20 @@ footer{max-width:1180px}
   }
   window.addEventListener('hashchange', route);
   // Redraw the current screen in the newly chosen language (dynamic sentences use L()).
-  document.addEventListener('dzoft:locale-change', function(){ if (D && !$('app').hidden) { saveLanguage(); route(); } });
+  // The language script announces its first language when it starts (it may start after the
+  // client's data has arrived): that first announcement applies the saved language, it never saves.
+  var langReady = false;
+  document.addEventListener('dzoft:locale-change', function(){
+    var first = !langReady; langReady = true;
+    if (!D || $('app').hidden) return;
+    if (first) syncLanguage(); else saveLanguage();
+    route();
+  });
   // The client's language is also kept on their record, so that e-mails sent later follow it.
-  // A choice clicked on this device wins; otherwise a language saved from another device is applied.
+  // A choice made by the person on this device wins (real clicks only, never the page's own);
+  // otherwise a language saved from another device is applied.
   var langClicked = false;
-  document.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('[data-dzoft-lang]')) { langClicked = true; try { sessionStorage.setItem('rd-lang-clicked', '1'); } catch(_){} } }, true);
+  document.addEventListener('click', function(e){ if (e.isTrusted && e.target.closest && e.target.closest('[data-dzoft-lang]')) { langClicked = true; try { sessionStorage.setItem('rd-lang-clicked', '1'); } catch(_){} } }, true);
   try { langClicked = sessionStorage.getItem('rd-lang-clicked') === '1'; } catch(_){}
   function currentLang(){ return document.documentElement.lang === 'en' ? 'en' : 'fr'; }
   function saveLanguage(){
@@ -635,7 +644,7 @@ footer{max-width:1180px}
     call('set_language', { p_lang: next }).then(function(){ D.lang = next; }, function(){ /* the interface still switches; e-mails keep the previous language */ });
   }
   function syncLanguage(){
-    if (!D || !D.lang) return;
+    if (!D || !D.lang || !langReady) return; // runs again on the language script's first announcement
     // French is also the default of every record, so a device showing English (chosen before the
     // language was saved, or clicked now) wins; a record saying English applies it to this device.
     if (langClicked || (D.lang === 'fr' && currentLang() === 'en')) { saveLanguage(); return; }
