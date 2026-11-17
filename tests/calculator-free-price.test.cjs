@@ -48,3 +48,10 @@ test('« Calculer depuis le suivi » only adds requests done since the last extr
  assert.match(fj,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
  assert.match(fj,/avant le dernier supplément, non reprise\(s\)/);
 });
+
+test('« Depuis le » lets the owner choose the start date (never before the signature)',()=>{
+ assert.match(js,/<input type="date" name="since"/);
+ const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
+ assert.match(fj,/if\(chosen\)since=signed&&chosen<signed\?signed:chosen;/);
+ assert.match(fj,/\(date choisie\)/);
+});
