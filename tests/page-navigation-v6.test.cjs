@@ -65,3 +65,8 @@ test('operational pages render existing record data rather than only project lin
  assert.match(admin,/select=id,numero,client_id,accepted_at,journal,docs,data,accepted_data/);
  assert.doesNotMatch(current,/\.insert\(|\.update\(|\.delete\(|\.rpc\(/);
 });
+test('the receipts book never asks to record legacy paid invoices again (double count)',()=>{
+ const note=admin.slice(admin.indexOf('function legacyNote'),admin.indexOf('function bookCsv'));
+ assert.match(note,/Ne les enregistrez pas à nouveau/);
+ assert.doesNotMatch(note,/enregistrez-les comme paiements/);
+});
