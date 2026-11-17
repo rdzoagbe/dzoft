@@ -1,15 +1,8 @@
 name: DZOFT navigation Chromium smoke
 
 on:
+  # Required check on main: it must run on every pull request, or client-only changes cannot merge.
   pull_request:
-    paths:
-      - 'admin/**'
-      - 'e2e/global-overview-navigation.spec.mjs'
-      - 'e2e/page-by-page-navigation.spec.mjs'
-      - 'playwright.config.mjs'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/preview-navigation-browser.yml'
   workflow_dispatch:
 
 permissions:
