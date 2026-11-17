@@ -224,7 +224,7 @@ function bindOwner(root,options){
   Promise.all([sb.select('quotes','select=journal,accepted_at,client_id&id=eq.'+encodeURIComponent(quoteId)),
    Promise.resolve(sb.rpc('list_project_work_items',{p_quote:quoteId},true)).catch(function(){return [];})]).then(function(res){
    var q=res[0]&&res[0][0]||{};
-   // The client's name is removed from the start of journal lines ("Rodney … : notifications…").
+   // The client's name is removed from the start of journal lines ("<prénom> … : notifications…").
    return (q.client_id?Promise.resolve(sb.select('clients','select=nom&id=eq.'+encodeURIComponent(q.client_id))).catch(function(){return [];}):Promise.resolve([])).then(function(c){q.clientName=c&&c[0]&&c[0].nom||'';return [q,res[1]];});
   }).then(function(res){
    var q=res[0],work=Array.isArray(res[1])?res[1]:[],since=String(q.accepted_at||'').slice(0,10);

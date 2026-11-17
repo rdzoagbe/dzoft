@@ -114,7 +114,7 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   car Supabase hébergé ne permet pas encore le facteur MFA `webauthn` (nov. 2026 : Multi-Factor = TOTP et SMS
   seulement). Passer à `true` quand Supabase l’ouvrira ; RP ID `rdzoagbe.github.io`, à refaire si le domaine change.
 - `supabase/schema.sql` : copie de référence du schéma (tables, index, RLS, fonctions SQL,
-  stockage, droits), mise à jour le 2026-11-09 ; à resynchroniser après toute migration.
+  stockage, déclencheurs, droits), régénérée depuis la base réelle le 2026-11-17 ; à régénérer après toute migration.
 - Sauvegardes : le schéma est dans Git, pas les données. Conserver les exports JSON chiffrés
   hors du dépôt public et les mettre à jour après chaque signature ou changement important.
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
