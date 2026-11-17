@@ -105,3 +105,15 @@ body.dzoft-admin #app #v-dash .sd-placeholder,body.dzoft-admin #app #v-dash .sd-
  body.dzoft-admin #app #v-dash .sd-selected-amounts b{font-size:13px}
  body.dzoft-admin #app #v-dash .sd-select-label,body.dzoft-admin #app #v-dash .sd-select-label select{width:100%;max-width:100%}
 }
+/* To-do categories (17 Nov 2026): every reminder of the dashboard is listed. */
+body.dzoft-admin #app #v-dash .sd-action-dot.request{background:#d6336c;box-shadow:0 0 0 5px #fde8ef}
+body.dzoft-admin #app #v-dash .sd-action-dot.pending{background:#29a570;box-shadow:0 0 0 5px #e1f8ed}
+body.dzoft-admin #app #v-dash .sd-action-dot.failed{background:#d93025;box-shadow:0 0 0 5px #fde7e5}
+body.dzoft-admin #app #v-dash .sd-action-dot.validated{background:#0f9d8a;box-shadow:0 0 0 5px #ddf6f2}
+body.dzoft-admin #app #v-dash .sd-action-dot.review{background:#c9a400;box-shadow:0 0 0 5px #fbf4d6}
+body.dzoft-admin #app #v-dash .sd-action-dot.trash{background:#8a8fa3;box-shadow:0 0 0 5px #eef0f4}
+body.dzoft-admin #app #v-dash .sd-action-dot.lead{background:#7543f7;box-shadow:0 0 0 5px #efe8ff}
+body.dzoft-admin #app #v-dash .sd-action-dot.quote{background:#4361ee;box-shadow:0 0 0 5px #e8ecff}
+body.dzoft-admin #app #v-dash .sd-more{margin-top:6px}
+body.dzoft-admin #app #v-dash .sd-more>summary{cursor:pointer;font-weight:700;color:#3448d6;padding:10px 4px;font-size:13px}
+body.dzoft-admin #app #v-dash .sd-action-copy small{white-space:normal;overflow:visible;line-height:1.4}

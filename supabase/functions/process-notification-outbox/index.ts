@@ -143,7 +143,12 @@ function eventCopy(type: string, summary: string, quote: any, message: string, i
       invoice_shared: `Facture envoyée au client${number} · DZOFT`,
       client_file_uploaded: `Fichier reçu du client${number} · DZOFT`,
       review_submitted: `Nouvel avis client${number} · DZOFT`,
+      change_requested: `Nouvelle demande de modification du client${number} · DZOFT`,
+      change_declined: `Proposition refusée par le client${number} · DZOFT`,
+      change_withdrawn: `Demande retirée par le client${number} · DZOFT`,
     };
+    if (type === "change_requested") return { subject: ownerSubjects[type], intro: `${summary}. Ouvrez la fiche projet pour la chiffrer : le client ne voit aucun prix tant que vous n’avez pas envoyé de proposition.`, body };
+    if (type === "change_declined" || type === "change_withdrawn") return { subject: ownerSubjects[type], intro: `${summary}. Rien n’est facturé pour cette demande.`, body };
     return {
       subject: ownerSubjects[type] || `Mise à jour DZOFT${number}`,
       intro: summary,
