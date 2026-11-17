@@ -1,8 +1,8 @@
-# UPZONE project — private automatic GitHub journal
+# Pilot project — private automatic GitHub journal
 
 ## Owner experience
 
-Open **DZOFT Admin → Dossiers → Projets → projet UPZONE → Journal privé du projet**.
+Open **DZOFT Admin → Dossiers → Projets → projet pilote → Journal privé du projet**.
 
 - Opening the private journal reads recent public activity from `ProjectRodney/ProRod`, branch `main`, through the GitHub REST API.
 - DZOFT groups commits by **calendar date + fixed activity category**.

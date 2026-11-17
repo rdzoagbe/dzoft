@@ -15,7 +15,7 @@ DZOFT's existing vetted integration reads **ProjectRodney/ProRod** on `main`. It
 
 ## Scope and limitations
 
-Only the currently approved UPZONE GitHub project has this automatic source. The importer checks a fixed project UUID and a fixed GitHub repository. Other client projects keep the manual workflow until separately authorized and configured.
+Only the currently approved pilot GitHub project has this automatic source. The importer checks a fixed project UUID and a fixed GitHub repository. Other client projects keep the manual workflow until separately authorized and configured.
 
 GitHub category evidence is coarse: it does not confirm what exact feature was implemented, deployed, tested, or accepted. New development categories may take up to about 30 minutes to reach the backend if the owner does not open or manually refresh the project.
 

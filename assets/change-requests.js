@@ -159,7 +159,7 @@ function calculator(en,blocks,target,tiers){
 }
 function priceList(en,blocks,defaultPrice,tiers){
  return '<div class="dzoft-price-list">'+
-  '<h4>'+tr(en,'Niveaux de prix','Price levels')+'</h4><p class="dzoft-change-note">'+tr(en,'Chaque ligne affiche au client son niveau et sa règle. Prix proposés en proportion de votre devis signé : le module « Comptes utilisateurs et base de données » y vaut 150 €.','Each line shows the client its level and rule. Default prices are proportional to your signed quote, where the whole “User accounts and database” module is 150 €.')+'</p>'+
+  '<h4>'+tr(en,'Niveaux de prix','Price levels')+'</h4><p class="dzoft-change-note">'+tr(en,'Chaque ligne affiche au client son niveau et sa règle. Prix proposés en proportion de votre premier devis signé : modifiez-les librement.','Each line shows the client its level and rule. Default prices are proportional to your first signed quote: change them freely.')+'</p>'+
   '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Niveau','Level')+'</th><th>'+tr(en,'Règle montrée au client','Rule shown to the client')+'</th><th>'+tr(en,'Prix','Price')+'</th></tr></thead><tbody>'+
   tiers.map(function(t,i){return '<tr><td>'+esc(t.label)+'</td><td>'+esc(t.rule)+'</td><td><input type="number" min="0" max="1000000" step="0.01" value="'+esc(t.price)+'" data-tier-price="'+i+'" aria-label="'+tr(en,'Prix du niveau ','Price of level ')+esc(t.label)+'"></td></tr>';}).join('')+
   '</tbody></table></div><button class="btn line sm" type="button" data-tier-save>'+tr(en,'Enregistrer les niveaux','Save levels')+'</button>'+

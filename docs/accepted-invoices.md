@@ -118,7 +118,7 @@ Migration `20261117150000_price_tiers.sql`. Chaque ligne porte un niveau ; le cl
 | Offert | proposé par DZOFT, non facturé | 0 € |
 | Inclus (journal seulement) | prévu au devis, ou correction | jamais facturé |
 
-Prix proportionnels au devis UPZONE signé (module « Comptes utilisateurs et base de données » : 150 €).
+Prix proportionnels au premier devis client signé (le détail reste hors du dépôt).
 Modifiables dans « Ma liste de prix ». Dans le journal privé, une entrée « demande » peut porter
 `lvl` (clé de niveau ou `inclus`), `qty` et `why` (preuve : commits, base de données, tests) : « Calculer depuis
 le suivi » s’en sert. L’assistant renseigne ces champs quand il ajoute une demande réalisée au journal.
