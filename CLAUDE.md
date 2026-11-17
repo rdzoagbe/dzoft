@@ -135,6 +135,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis la signature ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).
   En ajoutant une demande réalisée au journal, renseigner `lvl`, `qty` et `why` (commits, base, tests) d’après ces règles.
+  Origine du prix (17 nov. 2026) : niveau noté au journal, sinon prestation de la liste dont les mots sont dans la demande, sinon prix par défaut ;
+  une note privée sous chaque ligne le dit (jamais envoyée). Prix et quantités acceptent la virgule ; « Prix libre » vide le prix ; sur téléphone,
+  chaque ligne tient dans l’écran (test `tests/calculator-free-price.test.cjs`).
   « Mes tarifs » (niveaux, prestations connues, prix par défaut) se modifie uniquement dans Catalogue (Prestations)
   (`admin/#/catalogue`, `DzoftChanges.prices`) ; le calculateur du projet les lit et renvoie vers cette page (17 nov. 2026).
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
