@@ -31,7 +31,7 @@ test('weekly review counts categories without copying AI text or raw commit meta
  assert.equal(output.counts.working,1);
  assert.equal(output.counts.done,1);
  assert.equal(output.counts.published,1);
- assert.match(output.text,/Internal weekly progress review/);
+ assert.match(output.text,/^Project – internal weekly progress review/);
  assert.doesNotMatch(output.text,/Claude|Co-Authored|secret|claude\.ai|private link|RAW|ai_model_name/);
 });
 test('Edge worker rejects unauthenticated cron invocations and sends only date/group to RPC',()=>{

@@ -1,6 +1,6 @@
 -- DZOFT: price levels for extra work. Each level has a rule the client can read on the
--- proposal, and a price the owner sets. Defaults are proportional to the signed UPZONE quote
--- (the whole "accounts and database" module was priced 150 €, so one feature stays below it).
+-- proposal, and a price the owner sets. Defaults are proportional to the first signed client quote
+-- (one feature stays below the price of a whole module of that quote).
 alter table public.settings add column if not exists price_tiers jsonb not null default '[
  {"key":"retouche","label":"Retouche","rule":"texte, couleur ou taille, sans nouvelle logique","price":10},
  {"key":"petite","label":"Petite évolution","rule":"un écran ou un comportement, sans nouvelle donnée","price":25},

@@ -45,7 +45,7 @@ The new `private.publish_project_work_item` RPC verifies owner authentication an
 
 ### Mobile smoke test
 
-Open installed DZOFT Admin → Dossiers → Projets → projet UPZONE → Journal privé.
+Open installed DZOFT Admin → Dossiers → Projets → projet pilote → Journal privé.
 
 1. See the **Tâches et validations** card and existing private notes.
 2. Expand the journal: GitHub activity is loaded and recent categories are added automatically.

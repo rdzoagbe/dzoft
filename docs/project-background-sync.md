@@ -2,7 +2,7 @@
 
 ## Server-side synchronization
 
-The private UPZONE project can now synchronize GitHub activity **even when the admin PWA is closed**.
+The private pilot project can now synchronize GitHub activity **even when the admin PWA is closed**.
 
 - Source: public `ProjectRodney/ProRod`, branch `main`, maximum 100 recent commits.
 - Cadence: PostgreSQL Cron at minutes **17 and 47** of every hour, UTC (~30 minutes; this is polling, **not instant push-triggered webhooks**).
@@ -19,7 +19,7 @@ The worker logs and returns aggregate counts only. It does not store or upload r
 
 ## Weekly internal review
 
-In **DZOFT Admin → Projects → UPZONE project → Private project journal**, the new **This week's project review** card shows:
+In **DZOFT Admin → Projects → the pilot project → Private project journal**, the new **This week's project review** card shows:
 - GitHub topic groups detected this week (no raw descriptions);
 - Tasks **To verify**, **In progress**, and **Completed**;
 - Categories involved and a safe-to-copy internal summary;

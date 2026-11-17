@@ -19,7 +19,7 @@ recipient's email or action by the client. There are no automatic emails.
 ## Owner interface
 
 **DZOFT Admin → Dashboard → Email delivery history** and
-**Projects → UPZONE project → Activity** show each recipient separately:
+**Projects → the pilot project → Activity** show each recipient separately:
 
 - **Accepted by Brevo:** sending API accepted the request; no delivery verification yet.
 - **Delivered:** the receiving mail server accepted the message; not proof the

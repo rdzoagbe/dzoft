@@ -34,7 +34,7 @@ function summary(items){
   days[safeDay(v.source_date)]=true;
  });
  var names=Object.keys(categories).sort().map(function(c){return label[c];});
- var text="UPZONE – Internal weekly progress review\nWeek starting "+start+
+ var text="Project – internal weekly progress review\nWeek starting "+start+
   "\nDays with development activity: "+Object.keys(days).length+
   "\nAreas worked on: "+(names.join(", ")||"No recent activity")+
   "\nAlready shared with client: "+counts.published+
