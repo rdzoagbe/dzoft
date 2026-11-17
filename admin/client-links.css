@@ -1,8 +1,8 @@
 /* Client navigation — project is primary, client editing is an explicit action. */
-body.dzoft-admin #app .dzoft-client-link{color:#5422cf;text-decoration:none;font-weight:750;display:inline-flex;align-items:center;min-height:30px}
-body.dzoft-admin #app .dzoft-client-link:hover{text-decoration:underline;color:#3d18a4}
+body.dzoft-admin #app .dzoft-client-link{color:#2240cf;text-decoration:none;font-weight:750;display:inline-flex;align-items:center;min-height:30px}
+body.dzoft-admin #app .dzoft-client-link:hover{text-decoration:underline;color:#1831a4}
 body.dzoft-admin #app .dzoft-client-link-button{font:inherit;border:0;background:transparent;padding:0;cursor:pointer;text-align:left}
-body.dzoft-admin #app .dzoft-client-link:focus-visible{outline:3px solid #a99bfa;outline-offset:2px;border-radius:5px}
+body.dzoft-admin #app .dzoft-client-link:focus-visible{outline:3px solid #9bacfa;outline-offset:2px;border-radius:5px}
 body.dzoft-admin #app #clients tr.click td:last-child{white-space:nowrap}
 body.dzoft-admin #app #clients [data-client-edit]{margin-left:8px;font-size:11px;min-height:32px}
 @media(max-width:600px){body.dzoft-admin #app #clients [data-client-edit]{margin:5px 0 0;display:inline-flex}}

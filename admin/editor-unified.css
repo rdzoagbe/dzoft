@@ -2,10 +2,10 @@
    deliberately retain their functional forms and print layouts. */
 @media screen {
 body.dzoft-admin.dzoft-editor{
-  --ink:#1c2036;--ink2:#535a70;--mute:#70778c;--line:#e5e2f1;
-  --soft:#f7f5fe;--navy:#171b30;--blue:#6126dc;--blue2:#5420cc;
-  --grad:linear-gradient(125deg,#652cf3,#4d12d9);
-  background:#f8f8ff;color:#1c2036
+  --ink:#1c2036;--ink2:#535a70;--mute:#70778c;--line:#e2e5f1;
+  --soft:#f5f7fe;--navy:#171b30;--blue:#2646dc;--blue2:#203ecc;
+  --grad:linear-gradient(125deg,#2c4ff3,#1235d9);
+  background:#f8f9ff;color:#1c2036
 }
 body.dzoft-admin.dzoft-editor .tools,
 body.dzoft-admin.dzoft-editor header.top{
@@ -15,19 +15,19 @@ body.dzoft-admin.dzoft-editor .tools{gap:9px;padding:12px clamp(12px,2vw,25px)}
 body.dzoft-admin.dzoft-editor .tools .tb,
 body.dzoft-admin.dzoft-editor .top .back{border-radius:9px;text-decoration:none}
 body.dzoft-admin.dzoft-editor .tools .tb.main,
-body.dzoft-admin.dzoft-editor .btn.main{background:linear-gradient(125deg,#652cf3,#4d12d9);color:#fff}
-body.dzoft-admin.dzoft-editor .tools .tb:hover{background:#302e50}
-body.dzoft-admin.dzoft-editor .tools .tb.main:hover{background:#4b18c2}
+body.dzoft-admin.dzoft-editor .btn.main{background:linear-gradient(125deg,#2c4ff3,#1235d9);color:#fff}
+body.dzoft-admin.dzoft-editor .tools .tb:hover{background:#2e3450}
+body.dzoft-admin.dzoft-editor .tools .tb.main:hover{background:#1836c2}
 body.dzoft-admin.dzoft-editor .top .back{color:#fff}
-body.dzoft-admin.dzoft-editor .top .btn.line{color:#241f48}
+body.dzoft-admin.dzoft-editor .top .btn.line{color:#1f2648}
 body.dzoft-admin.dzoft-editor .card,
 body.dzoft-admin.dzoft-editor .sheet{
-  border-color:#e6e2f3;box-shadow:0 7px 24px rgba(27,20,76,.055)
+  border-color:#e2e5f3;box-shadow:0 7px 24px rgba(20,30,76,.055)
 }
 body.dzoft-admin.dzoft-editor .card{border-radius:16px}
-body.dzoft-admin.dzoft-editor .btn.line{border-color:#d9d8ee}
+body.dzoft-admin.dzoft-editor .btn.line{border-color:#d8dcee}
 body.dzoft-admin.dzoft-editor :is(a,button,input,select,textarea):focus-visible{
-  outline:3px solid #a99bfa;outline-offset:2px
+  outline:3px solid #9bacfa;outline-offset:2px
 }
 body.dzoft-admin.dzoft-editor .btn:hover{filter:brightness(.98)}
 }

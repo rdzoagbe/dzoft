@@ -12,9 +12,9 @@ body.dzoft-admin #app .top .workspace-more-menu{min-width:220px;max-width:calc(1
 body.dzoft-admin #app .top .workspace-more-menu button,
 body.dzoft-admin #app .top .workspace-more-menu a{display:flex;align-items:center;min-height:45px;width:100%;box-sizing:border-box;padding:10px 14px;color:#252c40;font-size:13px;font-weight:650;line-height:1.4;text-align:left;background:transparent;border:0;border-radius:9px;text-decoration:none;cursor:pointer}
 body.dzoft-admin #app .top .workspace-more-menu button:hover,
-body.dzoft-admin #app .top .workspace-more-menu a:hover{background:#f4f4f9;color:#3f36a4}
+body.dzoft-admin #app .top .workspace-more-menu a:hover{background:#f4f5f9;color:#3649a4}
 body.dzoft-admin #app .top .workspace-more-menu [data-extra="logout"]{border-top:1px solid #ececf1;border-radius:0;color:#893b48;margin-top:5px;padding-top:13px}
-body.dzoft-admin #app .top .workspace-more:focus-within>summary{outline:2px solid #a99bf8;outline-offset:2px}
+body.dzoft-admin #app .top .workspace-more:focus-within>summary{outline:2px solid #9babf8;outline-offset:2px}
 
 /* Desktop has the persistent sidebar: do not repeat its navigation in a header hamburger.
    Keep one direct sign-out action; narrow browser layouts retain their account menu.
@@ -31,7 +31,7 @@ body.dzoft-admin #app #v-dash>.bar h2{font-size:clamp(19px,2.3vw,24px);letter-sp
 body.dzoft-admin #app .owner-command-bar{background:#fff;box-shadow:none;border:1px solid var(--clean-line);padding:20px 22px 17px;border-radius:17px}
 body.dzoft-admin #app .owner-command-intro h2{font-size:21px}
 body.dzoft-admin #app .owner-command-intro p{font-size:12.5px}
-body.dzoft-admin #app .owner-command-actions button{background:#f8f8fd;border-color:#e8e6f2;border-radius:10px}
+body.dzoft-admin #app .owner-command-actions button{background:#f8f9fd;border-color:#e6e8f2;border-radius:10px}
 body.dzoft-admin #app .today-action-center{margin-top:17px}
 body.dzoft-admin #app .today-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
 body.dzoft-admin #app .today-stat{min-width:0;padding:15px 13px;border:1px solid var(--clean-line);border-radius:13px;background:#fff;box-shadow:none}
@@ -50,7 +50,7 @@ body.dzoft-admin #app .today-advanced{background:#fff;box-shadow:none;border-col
 body.dzoft-admin #app .today-advanced>summary{font-size:12.5px;color:#686b7e}
 
 /* Distinguish legal invoicing from cash actually received. */
-body.dzoft-admin .invoice-stats>div:last-child{background:#f6f6fb;border-color:#e8e8f1}
+body.dzoft-admin .invoice-stats>div:last-child{background:#f6f7fb;border-color:#e8e8f1}
 body.dzoft-admin .invoice-stats>div:last-child strong{color:#2a2e40}
 body.dzoft-admin .invoice-stats span small{font-size:10px;font-weight:500;color:#748094}
 body.dzoft-admin .invoice-payment-truth{display:grid;gap:8px;border:1px solid #e6ddcc;border-left:4px solid #b47336;background:#fffaf4;padding:15px 17px;margin:0 0 12px;border-radius:12px;color:#2c3242}
@@ -66,8 +66,8 @@ body.dzoft-admin .tracking-audience{display:grid;gap:8px;border:1px solid #e4e8e
 body.dzoft-admin .tracking-audience legend{font-weight:800;font-size:13px;padding:0 6px;color:#30354a}
 body.dzoft-admin .tracking-audience label{display:flex;align-items:start;gap:9px;line-height:1.5;font-size:13px;font-weight:650;margin:0;padding:7px 0;cursor:pointer}
 body.dzoft-admin .tracking-audience input,
-body.dzoft-admin .tracking-review-check input{display:inline-block;flex:0 0 auto;width:18px;height:18px;margin:1px 0 0;accent-color:#5844cc}
-body.dzoft-admin .tracking-review-check{display:flex;align-items:start;gap:9px;line-height:1.6;background:#f7f5ff;border:1px solid #dcd5f9;padding:12px 14px;border-radius:11px;margin:12px 0;font-weight:650}
+body.dzoft-admin .tracking-review-check input{display:inline-block;flex:0 0 auto;width:18px;height:18px;margin:1px 0 0;accent-color:#445ccc}
+body.dzoft-admin .tracking-review-check{display:flex;align-items:start;gap:9px;line-height:1.6;background:#f5f7ff;border:1px solid #d5dbf9;padding:12px 14px;border-radius:11px;margin:12px 0;font-weight:650}
 body.dzoft-admin .tracking-review-check[hidden]{display:none!important}
 body.dzoft-admin #tracking-publish>.tracking-editor{background:#fff;border-color:#e5e6ee;border-radius:13px}
 body.dzoft-admin #tracking-publish .tracking-auto-draft{border:1px solid #e0e3ea;background:#f8f9fb;padding:13px;border-radius:10px}

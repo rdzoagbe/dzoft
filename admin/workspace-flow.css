@@ -4,27 +4,27 @@
 #app .side .tab[data-tab=dossiers],#app .side .tab[data-tab=finance]{line-height:1.25;white-space:normal}
 #app .workspace-trash-link{display:inline-flex;margin:18px 0 6px}
 #app .dzoft-case-search-tip{font-size:11px;line-height:1.45;color:#68738b;margin:5px 2px 0}
-#app .dzoft-case-finder{background:#fff;border:1px solid #e6e7f1;border-radius:17px;padding:16px;margin:0 0 19px;box-shadow:0 5px 22px rgba(20,20,40,.035)}
+#app .dzoft-case-finder{background:#fff;border:1px solid #e6e7f1;border-radius:17px;padding:16px;margin:0 0 19px;box-shadow:0 5px 22px rgba(20,24,40,.035)}
 #app .dzoft-case-finder[hidden]{display:none}
 #app .dzoft-case-finder-heading{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:10px}
 #app .dzoft-case-finder-heading strong{font-size:14px}
 #app .dzoft-case-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:450px;overflow-y:auto;overscroll-behavior:contain}
-#app .dzoft-case-result{background:#fbfbfe;border:1px solid #e9e9f3;border-radius:11px;padding:12px 11px;display:flex;gap:9px;align-items:center;min-width:0;text-align:left;cursor:pointer;color:#1c2335}
-#app .dzoft-case-result:hover{background:#f2efff;border-color:#bfb4ff}
-#app .dzoft-case-result:focus-visible{outline:3px solid #8e78ff;outline-offset:2px}
-#app .dzoft-case-kind{font-size:10px;font-weight:800;color:#503bc7;background:#eeeaff;padding:5px 7px;border-radius:7px;flex:none}
+#app .dzoft-case-result{background:#fbfcfe;border:1px solid #e9ebf3;border-radius:11px;padding:12px 11px;display:flex;gap:9px;align-items:center;min-width:0;text-align:left;cursor:pointer;color:#1c2335}
+#app .dzoft-case-result:hover{background:#eff2ff;border-color:#b4c1ff}
+#app .dzoft-case-result:focus-visible{outline:3px solid #7890ff;outline-offset:2px}
+#app .dzoft-case-kind{font-size:10px;font-weight:800;color:#3b54c7;background:#eaeeff;padding:5px 7px;border-radius:7px;flex:none}
 #app .dzoft-case-result-copy{flex:1;min-width:0}
 #app .dzoft-case-result-copy strong{font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #app .dzoft-case-result-copy small{font-size:11px;color:#69748a;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-#app .dzoft-case-arrow{font-size:24px;line-height:1;color:#6450d4}
+#app .dzoft-case-arrow{font-size:24px;line-height:1;color:#5067d4}
 #app .dzoft-case-empty{font-size:12px;color:#69748a;grid-column:1/-1;padding:10px}
-#app .dzoft-found-row{outline:3px solid #8569e9!important;outline-offset:2px;scroll-margin-top:85px}
+#app .dzoft-found-row{outline:3px solid #697fe9!important;outline-offset:2px;scroll-margin-top:85px}
 #app .dashboard-shortcuts{display:flex;flex-wrap:wrap;gap:8px}
 #app .dashboard-shortcuts .btn{min-height:39px}
 .workspace-shell .workspace-actions .btn{line-height:1.35}
 .workspace-shell .workspace-actions .btn[data-workspace-action=documents],
-.workspace-shell .workspace-actions .btn[data-workspace-action=history]{background:#f8f8ff}
-#app .side .tab:focus-visible{outline:3px solid #8b77ff;outline-offset:2px}
+.workspace-shell .workspace-actions .btn[data-workspace-action=history]{background:#f8f9ff}
+#app .side .tab:focus-visible{outline:3px solid #778fff;outline-offset:2px}
 @media(max-width:800px){
  #app .dzoft-case-results{grid-template-columns:1fr;max-height:420px}
  #app .dzoft-case-finder{padding:12px}

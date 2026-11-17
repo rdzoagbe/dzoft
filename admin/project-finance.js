@@ -124,8 +124,8 @@ function renderChart(x){
  var rest=x.due===null||initial===null?null:Math.max(0,Math.round((x.due-initial)*100)/100);
  setText("pf-legend-initial",money(initial));
  setText("pf-legend-extra",money(rest));
- $("pf-donut").style.background=x.committed===null||x.received===null?"#e6e2f7":
-  "conic-gradient(#17b999 0% "+p+"%,#5b24e7 "+p+"% 100%)";
+ $("pf-donut").style.background=x.committed===null||x.received===null?"#e2e6f7":
+  "conic-gradient(#17b999 0% "+p+"%,#2446e7 "+p+"% 100%)";
  $("pf-donut").setAttribute("aria-label",tr("Part encaissée : ","Received share: ")+(x.committed===null||x.received===null?"—":p+"%"));
  setText("pf-due-detail",tr("Répartition indicative des soldes (encaissements non ventilés par facture).","Indicative remaining breakdown (receipts not allocated to individual invoices)."));
 }
@@ -249,6 +249,8 @@ var TOOLS={quotes:["devis.html?q=","","Ouvrir l’éditeur de devis →","Open t
  journal:["suivi.html?q=","#work/c-journal","Écrire dans le journal →","Write in the journal →"],
  documents:["suivi.html?q=","#work/c-docs","Ajouter ou partager un document →","Add or share a document →"]};
 function renderTool(){
+ // « Ajouter un supplément » only on Vue d'ensemble and Suppléments; elsewhere the tool button is enough.
+ var add=document.querySelector(".pf-panel-head [data-new-extra]");if(add)add.hidden=!(state.section==="overview"||state.section==="extras");
  var a=$("pf-panel-tool");if(!a)return;var t=TOOLS[state.section];
  a.hidden=!t;if(!t)return;
  a.href=t[0]+encodeURIComponent(id)+t[1];a.textContent=en()?t[3]:t[2];

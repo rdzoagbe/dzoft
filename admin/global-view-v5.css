@@ -4,11 +4,11 @@ body.dzoft-admin.dzoft-global-view #app #v-dash .sd-selected{display:none!import
 body.dzoft-admin.dzoft-global-view #app #v-dash .sd-bottom{display:block}
 body.dzoft-admin.dzoft-global-view #app #v-dash .sd-activity{width:100%}
 body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button{min-height:66px;background:#f9f7ff;border-color:#e7e2f3}
-body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button:hover{background:#eee8ff}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button{min-height:66px;background:#f7f8ff;border-color:#e2e5f3}
+body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts button:hover{background:#e8ecff}
 body.dzoft-admin.dzoft-global-view #app #v-dash .sd-activity .sd-surface-head{margin-bottom:13px}
 body.dzoft-admin.dzoft-global-view #app .side [data-tab="dash"][aria-selected="true"]{background:transparent!important;box-shadow:none!important;color:#e4e5f7!important}
-body.dzoft-admin.dzoft-global-view #app .side .dzoft-global-overview[aria-current="page"]{background:linear-gradient(105deg,#7543f7,#5116cf);color:#fff}
+body.dzoft-admin.dzoft-global-view #app .side .dzoft-global-overview[aria-current="page"]{background:linear-gradient(105deg,#4363f7,#1636cf);color:#fff}
 @media(max-width:1100px){
  body.dzoft-admin.dzoft-global-view #app #v-dash .sd-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
 }

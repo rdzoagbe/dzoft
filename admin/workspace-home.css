@@ -2,23 +2,23 @@
 #app .side .tab[data-tab="trash"]{display:none!important}
 #app .side .tab[data-tab="settings"]{margin-top:8px}
 #app .side .tab[data-tab="finance"]{font-weight:750}
-#app .owner-command-bar{background:#fff;border:1px solid #e7e6f1;border-radius:21px;padding:23px 24px 20px;margin:0 0 18px;box-shadow:0 7px 25px rgba(26,23,54,.035)}
+#app .owner-command-bar{background:#fff;border:1px solid #e6e8f1;border-radius:21px;padding:23px 24px 20px;margin:0 0 18px;box-shadow:0 7px 25px rgba(23,28,54,.035)}
 #app .owner-command-intro{margin-bottom:17px}
-#app .owner-command-eyebrow{display:block;color:#5a3bdd;font-weight:850;font-size:10px;letter-spacing:.14em;margin-bottom:7px}
+#app .owner-command-eyebrow{display:block;color:#3b57dd;font-weight:850;font-size:10px;letter-spacing:.14em;margin-bottom:7px}
 #app .owner-command-intro h2{font-family:Sora,system-ui,sans-serif;font-size:clamp(20px,2.4vw,27px);line-height:1.25;letter-spacing:-.04em;margin:0 0 6px}
 #app .owner-command-intro p{font-size:13px;line-height:1.5;color:#6a7185}
 #app .owner-command-search{margin:0}
 #app .owner-command-search label{display:block;font-size:12px;font-weight:800;color:#3e4156;margin:0 0 6px}
-#app .owner-search-control{display:flex;align-items:center;gap:10px;border:1px solid #dbdcec;background:#fafaff;border-radius:13px;padding:5px 5px 5px 13px;min-width:0}
+#app .owner-search-control{display:flex;align-items:center;gap:10px;border:1px solid #dbdcec;background:#fafbff;border-radius:13px;padding:5px 5px 5px 13px;min-width:0}
 #app .owner-search-control svg{width:19px;height:19px;color:#77758e;flex:0 0 19px}
 #app .owner-search-control input{flex:1 1 auto;min-width:0;border:0;box-shadow:none;background:transparent;color:#17192d;padding:9px 2px;font-size:14px;outline:none}
-#app .owner-search-control:focus-within{border-color:#6853e5;box-shadow:0 0 0 3px #e9e5ff}
+#app .owner-search-control:focus-within{border-color:#536de5;box-shadow:0 0 0 3px #e5eaff}
 #app .owner-search-control input:focus{outline:0}
 #app .owner-search-control .btn{flex:0 0 auto;min-height:39px;padding:8px 18px;border-radius:9px}
 #app .owner-command-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-#app .owner-command-actions button{display:inline-flex;align-items:center;gap:8px;background:#f5f4ff;border:1px solid #e5e2fc;color:#4635c4;border-radius:11px;min-height:40px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer}
-#app .owner-command-actions button:hover{background:#eae5ff;border-color:#bcb0fa}
-#app .owner-command-actions button:focus-visible,#app .owner-trash-shortcut:focus-visible{outline:3px solid #887aff;outline-offset:2px}
+#app .owner-command-actions button{display:inline-flex;align-items:center;gap:8px;background:#f4f6ff;border:1px solid #e2e7fc;color:#354ec4;border-radius:11px;min-height:40px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer}
+#app .owner-command-actions button:hover{background:#e5eaff;border-color:#b0bdfa}
+#app .owner-command-actions button:focus-visible,#app .owner-trash-shortcut:focus-visible{outline:3px solid #7a91ff;outline-offset:2px}
 #app .owner-command-actions button span:first-child{font-size:17px;font-weight:500;line-height:1}
 #app .owner-trash-shortcut{white-space:nowrap}
 #app #v-settings .settings-page-heading{align-items:center}

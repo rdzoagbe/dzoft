@@ -381,7 +381,9 @@ test('Focused project navigation keeps overview, work, invoices and messages acc
  await expect(page.locator('#project-panel-work')).toBeHidden();
  await expect(page.locator('#project-panel-billing')).toBeHidden();
  await expect(page.locator('[data-project-tab="overview"]')).toHaveAttribute('aria-selected','true');
- await page.locator('[data-open-project="work"]').click();
+ // 17 Nov 2026: the overview cards were replaced by one line; the tabs are the way in.
+ await expect(page.locator('.project-overview-card')).toHaveCount(0);
+ await page.locator('[data-project-tab="work"]').click();
  await expect(page.locator('#project-panel-work')).toBeVisible();
  await expect(page.locator('#c-steps')).toBeVisible();
  await page.locator('[data-project-tab="billing"]').click();
@@ -746,5 +748,46 @@ test('Dashboard shows money at a glance and one to-do list, without the old shor
  await expect(page.locator('#sd-project-select')).toHaveCount(0);
  const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
  expect(over).toBe(false);
+ expect(errors).toEqual([]);
+});
+
+test('Admin polish: one overview line, the add button only where it belongs, a quiet bin count',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
+ await page.goto('admin/suivi.html?q='+q,{waitUntil:'domcontentloaded'});
+ await page.locator('.project-overview-money').click();
+ await expect(page.locator('#project-panel-billing')).toBeVisible();
+ await page.goto('admin/projet.html?q='+q+'#invoices',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#pf-panel-tool')).toBeVisible();
+ await expect(page.locator('.pf-panel-head [data-new-extra]')).toBeHidden();
+ await page.locator('#pf-tabs [data-panel="extras"]').click();
+ await expect(page.locator('.pf-panel-head [data-new-extra]')).toBeVisible();
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const bin=page.locator('#app .side [data-count-for="parametres"]');
+ if(await bin.count()&&await bin.isVisible()){
+  const bg=await bin.evaluate(e=>getComputedStyle(e).backgroundColor);
+  expect(bg).not.toBe('rgb(255, 90, 106)');
+ }
+ expect(errors).toEqual([]);
+});
+
+test('Phone bar shows four main entries and « Plus » opens the rest',async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes('mobile'),'Only the phone layout has the bar');
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const bar=page.locator('#app .side.dzoft-v6-nav');
+ await expect(bar.locator('.dzoft-v6-link:visible')).toHaveCount(4);
+ await expect(bar.locator('[data-route="catalogue"]')).toBeHidden();
+ const more=bar.locator('.dzoft-v6-more');
+ await expect(more).toBeVisible();
+ await more.click();
+ await expect(more).toHaveAttribute('aria-expanded','true');
+ await expect(bar.locator('[data-route="catalogue"]')).toBeVisible();
+ await bar.locator('[data-route="catalogue"]').click();
+ await expect(page).toHaveURL(/#\/catalogue$/);
+ await expect(more).toHaveAttribute('aria-expanded','false');
+ await expect(bar.locator('[data-route="catalogue"]')).toBeHidden();
  expect(errors).toEqual([]);
 });

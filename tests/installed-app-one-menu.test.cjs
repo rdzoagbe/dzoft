@@ -17,7 +17,7 @@ test('single-menu script runs only when an installed PWA is on a mobile viewport
  assert.match(css,/body\.dzoft-admin\.dzoft-installed-mobile #app \.top \.in>:not\(\.installed-app-menu\)\{display:none!important\}/);
  assert.match(css,/#app \.installed-app-menu\{display:none\}/);
  assert.match(html,/installed-app-menu\.js\?v=20261116-nav-audit1/);
- assert.match(html,/simplified-ui\.css\?v=20261115-one-menu/);
+ assert.match(html,/simplified-ui\.css\?v=(?:20261115-one-menu|20261117-blue)/);
  assert.doesNotMatch(read('espace/index.html'),/installed-app-menu\.js|dzoft-installed-mobile/);
 });
 

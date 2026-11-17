@@ -126,7 +126,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 @media screen and (max-width:600px){
   /* Phone: each quote line becomes a small card instead of a table wider than the screen. */
   table:has(> #lines) > thead{display:none}
-  #lines tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:6px 8px;padding:12px 0;border-bottom:1px solid #e9e7f3}
+  #lines tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:6px 8px;padding:12px 0;border-bottom:1px solid #e7e9f3}
   #lines td{display:block;padding:0;border:0;min-width:0}
   #lines tr:not(.grp) td:first-child{grid-column:1 / -1}
   #lines tr.grp td:first-child{grid-column:1 / 4}
@@ -170,8 +170,8 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=contrast-fix">
-<link rel="stylesheet" href="editor-unified.css?v=20261116-1">
-<link rel="stylesheet" href="editor-navigation.css?v=20261117-fit">
+<link rel="stylesheet" href="editor-unified.css?v=20261117-blue">
+<link rel="stylesheet" href="editor-navigation.css?v=20261117-blue">
 </head>
 <body class="dzoft-admin dzoft-editor">
 <div class="tools">
@@ -731,6 +731,6 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 /* Installable admin app: registers the background script (no private data is cached). */
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
-<script src="editor-navigation.js?v=20261117-menu"></script>
+<script src="editor-navigation.js?v=20261117-blue"></script>
 </body>
 </html>

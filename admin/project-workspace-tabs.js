@@ -64,12 +64,10 @@ nav.insertAdjacentElement('afterend',host);
 
 var overview=panes.overview, workPane=panes.work, billing=panes.billing, messages=panes.messages;
 var hero=document.createElement('div');hero.className='project-overview-focus';
-hero.innerHTML='<div class="project-overview-head"><div><p class="project-overview-kicker" data-fr="EN UN COUP D’ŒIL" data-en="AT A GLANCE"></p><h2 data-fr="Que souhaitez-vous faire ?" data-en="What would you like to do?"></h2></div><p data-fr="L’essentiel d’abord. Les informations détaillées restent accessibles dans chaque rubrique." data-en="The essentials first. Detailed information stays available in every section."></p></div>'+
-  '<div class="project-overview-grid">'+
-  '<button type="button" class="project-overview-card" data-open-project="work"><span class="project-overview-symbol" aria-hidden="true">✓</span><span class="project-overview-label" data-fr="Suivre le travail" data-en="Track work"></span><strong id="project-overview-next">—</strong><small data-fr="Étapes, validations et modifications" data-en="Milestones, approvals and changes"></small></button>'+
-  '<button type="button" class="project-overview-card" data-open-project="billing"><span class="project-overview-symbol" aria-hidden="true">€</span><span class="project-overview-label" data-fr="Reste à encaisser" data-en="Still to receive"></span><strong id="project-overview-balance">—</strong><small data-fr="Paiements confirmés, factures et solde" data-en="Confirmed receipts, invoices and balance"></small></button>'+
-  '<button type="button" class="project-overview-card" data-open-project="messages"><span class="project-overview-symbol" aria-hidden="true">✉</span><span class="project-overview-label" data-fr="Contacter le client" data-en="Contact the client"></span><strong data-fr="Ouvrir les échanges" data-en="Open conversation"></strong><small data-fr="Messages et e-mails envoyés" data-en="Messages and sent emails"></small></button>'+
-  '</div>';
+/* 17 Nov 2026: the three cards repeated the tabs and the action buttons above. One line keeps the two figures that
+   matter (next step, money still to receive); the tabs and the buttons above are the only way in. */
+hero.innerHTML='<p class="project-overview-line"><span><span data-fr="Prochaine étape" data-en="Next step"></span> : <strong id="project-overview-next">—</strong></span>'+
+  '<button type="button" class="project-overview-money" data-open-project="billing"><span data-fr="Reste à encaisser" data-en="Still to receive"></span> : <strong id="project-overview-balance">—</strong> →</button></p>';
 overview.appendChild(hero);
 
 // Keep the actual elements so existing events, security gates, forms, uploads,
@@ -172,7 +170,9 @@ function updateOverview(){
  document.getElementById('project-overview-next').textContent=value||'—';
  var outstanding=document.getElementById('iv-payment-outstanding');
  var value=outstanding&&outstanding.textContent.trim();
- document.getElementById('project-overview-balance').textContent=value||'—';
+ // Keep the amount only: the label is already written in front of it.
+ var amount=value&&value.match(/-?[\d\u00a0\u202f .,]*\d\s?€/g);
+ document.getElementById('project-overview-balance').textContent=(amount?amount[amount.length-1].trim():value)||'—';
 }
 var updating=false;
 function updateSoon(){if(updating)return;updating=true;setTimeout(function(){updating=false;updateOverview();},100);}

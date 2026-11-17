@@ -43,7 +43,7 @@ test('the menu survives the page translator replacing text of every [data-fr] el
 test('short admin pages start at the top instead of being centred in the window',()=>{
  const css=read('admin/unified-app-shell.css');
  assert.match(css,/body\.dzoft-admin #app \.shell main\{[^}]*margin:0 auto;align-self:start\}/);
- assert.match(admin,/unified-app-shell\.css\?v=20261117-1/);
+ assert.match(admin,/unified-app-shell\.css\?v=(?:20261117-1|20261117-blue)/);
 });
 
 test('the current section is shown again once every late script has built its sections',()=>{

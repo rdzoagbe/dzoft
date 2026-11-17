@@ -16,7 +16,7 @@ var routes=[
  {slug:'messages',fr:'Messages',en:'Messages',glyph:'☏'},
  {slug:'journal',fr:'Journal & Suivi',en:'Journal & tracking',glyph:'☷',projectPanel:'journal',id:'pf-side-journal'},
  {slug:'documents',fr:'Documents',en:'Documents',glyph:'□',projectPanel:'documents',id:'pf-side-documents'},
- {slug:'catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',glyph:'♧'},
+ {slug:'catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',glyph:'◈'},
  {slug:'rapports',fr:'Rapports',en:'Reports',glyph:'▥'},
  {slug:'parametres',fr:'Paramètres',en:'Settings',glyph:'⚙'}
 ];
@@ -60,9 +60,25 @@ routes.forEach(function(item,index){
  if(isProject&&item.slug==='clients')a.id='pf-side-cases';
  var icon=document.createElement('span');icon.className='dzoft-v6-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
  var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;label.dataset.fr=item.fr;label.dataset.en=item.en;
- a.append(icon,label,countBadge(item.slug));nav.appendChild(a);
+ a.append(icon,label,countBadge(item.slug));
+ // Inside a project these entries open that project's own section: say so under the label.
+ if(isProject&&validId&&item.projectPanel&&item.slug!=='projets'){var scope=document.createElement('small');scope.className='dzoft-v6-scope';scope.dataset.fr='ce projet';scope.dataset.en='this project';scope.textContent=english()?'this project':'ce projet';a.appendChild(scope);}
+ nav.appendChild(a);
  entries[item.slug]=a;
 });
+/* Phone bar (17 Nov 2026): four main entries plus « Plus », which opens every entry. Desktop ignores it. */
+var more=null;
+if(!isProject&&typeof nav.addEventListener==='function'){
+ more=document.createElement('button');more.type='button';more.className='dzoft-v6-more';more.setAttribute('aria-expanded','false');
+ var moreIcon=document.createElement('span');moreIcon.className='dzoft-v6-icon';moreIcon.setAttribute('aria-hidden','true');moreIcon.textContent='⋯';
+ var moreLabel=document.createElement('span');moreLabel.className='dzoft-v6-label';more.append(moreIcon,moreLabel);
+ nav.appendChild(more);
+ var setMore=function(open){nav.classList.toggle('dzoft-v6-open',open);more.setAttribute('aria-expanded',String(open));translate();};
+ more.addEventListener('click',function(e){e.stopPropagation();setMore(!nav.classList.contains('dzoft-v6-open'));});
+ nav.addEventListener('click',function(e){if(e.target.closest('a'))setMore(false);});
+ document.addEventListener('click',function(e){if(!nav.contains(e.target))setMore(false);});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')setMore(false);});
+}
 function active(){
  var current=isProject?(location.hash.slice(1)||'overview'):location.hash.replace(/^#\/?/,'')||'tableau-de-bord';
  if(current==='vue-globale')current='tableau-de-bord';
@@ -84,7 +100,8 @@ function active(){
  });
 }
 function translate(){
- routes.forEach(function(item){var a=entries[item.slug],label=a&&a.querySelector('.dzoft-v6-label');if(label)label.textContent=english()?item.en:item.fr;});
+ if(more){var open=nav.classList.contains('dzoft-v6-open');moreLabel.textContent=open?(english()?'Close':'Fermer'):(english()?'More':'Plus');}
+ routes.forEach(function(item){var a=entries[item.slug],label=a&&a.querySelector('.dzoft-v6-label'),scope=a&&a.querySelector('.dzoft-v6-scope');if(label)label.textContent=english()?item.en:item.fr;if(scope)scope.textContent=english()?'this project':'ce projet';});
  active();
 }
 function mobile(){

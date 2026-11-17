@@ -1,36 +1,36 @@
 /* DZOFT unified project workspace.
    Consistent with the V3 admin dashboard; secured invoice editor stays separate. */
-:root{--pf-purple:#5c20de;--pf-purple2:#4d18c2;--pf-ink:#191b32;--pf-text:#22213d;--pf-muted:#777b90;--pf-line:#e7e4f3;--pf-bg:#f7f7fd}
+:root{--pf-purple:#2041de;--pf-purple2:#1836c2;--pf-ink:#191b32;--pf-text:#21263d;--pf-muted:#777b90;--pf-line:#e4e7f3;--pf-bg:#f7f8fd}
 body.pf-page{background:var(--pf-bg)}
 .pf-shell{grid-template-columns:238px minmax(0,1fr)}
 .pf-sidebar{background:#171b30;padding:24px 12px 16px}
 .pf-logo{font-size:23px;letter-spacing:-.055em}
 .pf-side-links{gap:4px}
 .pf-side-links a{min-height:45px;padding:10px 13px;border-radius:10px;font-size:13px}
-.pf-side-links a.pf-active{background:linear-gradient(105deg,#7543f7,#5116cf)}
+.pf-side-links a.pf-active{background:linear-gradient(105deg,#4363f7,#1636cf)}
 .pf-nav-divider{height:1px;background:#3b3d58;margin:14px 10px}
 .pf-side-links .pf-settings{margin-top:0}
 .pf-tip{margin-top:18px}
-.pf-topbar{min-height:64px;border-bottom:1px solid #e9e7f3;padding:0 24px}
+.pf-topbar{min-height:64px;border-bottom:1px solid #e7e9f3;padding:0 24px}
 .pf-crumb{color:#77778e;font-size:12px}
-.pf-crumb a{color:#5d28d5;font-weight:700}
-.pf-admin-home{font-size:12px;font-weight:750;color:#5c23d4;white-space:nowrap;display:inline-flex}
-.pf-user{background:#6132e2}
+.pf-crumb a{color:#2846d5;font-weight:700}
+.pf-admin-home{font-size:12px;font-weight:750;color:#2342d4;white-space:nowrap;display:inline-flex}
+.pf-user{background:#3251e2}
 .pf-main{max-width:1540px;padding:24px clamp(16px,2.3vw,30px) 48px}
 .pf-dashboard-lead{padding-bottom:19px}
 .pf-dashboard-lead h1{font-size:clamp(24px,2.6vw,31px)}
-.pf-ident{background:#fff;border:1px solid #e6e4f1;border-radius:17px;padding:18px 20px;box-shadow:0 7px 23px rgba(27,20,76,.04);margin-bottom:20px}
-.pf-avatar{background:linear-gradient(140deg,#9c76f4,#5a20df)}
-.pf-project-icon{background:#f0eaff}
-.pf-btn-primary{box-shadow:0 4px 10px rgba(98,49,218,.13)}
-.pf-btn-outline{border-color:#dbd8eb}
-.pf-kpi{border-radius:15px;background:#fff;border:1px solid #e6e4f1;box-shadow:0 7px 23px rgba(27,20,76,.035);min-height:105px}
-.pf-kpi.green,.pf-kpi.peach,.pf-kpi.violet{background:#fff;border-color:#e6e4f1}
-.pf-panel{border-color:#e6e4f1;border-radius:17px}
+.pf-ident{background:#fff;border:1px solid #e4e6f1;border-radius:17px;padding:18px 20px;box-shadow:0 7px 23px rgba(20,30,76,.04);margin-bottom:20px}
+.pf-avatar{background:linear-gradient(140deg,#768cf4,#2042df)}
+.pf-project-icon{background:#eaeeff}
+.pf-btn-primary{box-shadow:0 4px 10px rgba(49,79,218,.13)}
+.pf-btn-outline{border-color:#d8dbeb}
+.pf-kpi{border-radius:15px;background:#fff;border:1px solid #e4e6f1;box-shadow:0 7px 23px rgba(20,30,76,.035);min-height:105px}
+.pf-kpi.green,.pf-kpi.peach,.pf-kpi.violet{background:#fff;border-color:#e4e6f1}
+.pf-panel{border-color:#e4e6f1;border-radius:17px}
 .pf-tabs{scrollbar-width:thin}
-.pf-tab{border-color:#e9e6f6;border-radius:10px}
-.pf-tab.active,.pf-tab[aria-selected=true]{background:linear-gradient(125deg,#652cf3,#4d12d9)}
-.pf-side-links a:focus-visible,.pf-main a:focus-visible,.pf-main button:focus-visible,.pf-main select:focus-visible{outline:3px solid #a99bfa;outline-offset:2px}
+.pf-tab{border-color:#e6e9f6;border-radius:10px}
+.pf-tab.active,.pf-tab[aria-selected=true]{background:linear-gradient(125deg,#2c4ff3,#1235d9)}
+.pf-side-links a:focus-visible,.pf-main a:focus-visible,.pf-main button:focus-visible,.pf-main select:focus-visible{outline:3px solid #9bacfa;outline-offset:2px}
 @media(max-width:1280px){.pf-shell{grid-template-columns:220px minmax(0,1fr)}}
 @media(max-width:760px){
  .pf-shell{display:block}
@@ -49,18 +49,18 @@ body.pf-page{background:var(--pf-bg)}
  .pf-side-links a{min-height:45px}
 }
 /* First-class read-only journal and documents views in the unified dossier */
-.pf-private-note{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#f8f6ff;border:1px solid #e9e4f6;border-radius:14px;padding:14px 16px;margin-bottom:17px}
+.pf-private-note{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#f6f8ff;border:1px solid #e4e7f6;border-radius:14px;padding:14px 16px;margin-bottom:17px}
 .pf-private-note p{font-size:12px;color:#5d5b77;line-height:1.6;flex:1;min-width:180px;margin:0}
 .pf-private-note .pf-btn{font-size:12px;text-decoration:none;white-space:nowrap}
 .pf-journal-list,.pf-document-list{display:grid;gap:9px}
-.pf-journal-entry{border:1px solid #e8e5f2;border-radius:12px;background:#fff;padding:15px 17px}
+.pf-journal-entry{border:1px solid #e5e7f2;border-radius:12px;background:#fff;padding:15px 17px}
 .pf-journal-entry>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pf-journal-entry time{font-size:11px;color:#86829a}
-.pf-journal-entry p{font-size:13px;line-height:1.6;color:#2e2a46;white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0 0}
-.pf-document-entry{display:flex;align-items:center;gap:13px;border:1px solid #e8e5f2;border-radius:12px;background:#fff;padding:14px 16px}
-.pf-document-entry .pf-document-icon{width:39px;height:39px;border-radius:11px;flex:0 0 39px;display:grid;place-items:center;font-size:21px;background:#ede7ff;color:#6227dc}
+.pf-journal-entry p{font-size:13px;line-height:1.6;color:#2a2f46;white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0 0}
+.pf-document-entry{display:flex;align-items:center;gap:13px;border:1px solid #e5e7f2;border-radius:12px;background:#fff;padding:14px 16px}
+.pf-document-entry .pf-document-icon{width:39px;height:39px;border-radius:11px;flex:0 0 39px;display:grid;place-items:center;font-size:21px;background:#e7ebff;color:#2747dc}
 .pf-document-entry>div{display:grid;gap:4px;flex:1;min-width:0}
 .pf-document-entry strong{font-size:13px;overflow-wrap:anywhere}
 .pf-document-entry small{color:#77768c;font-size:11px;overflow-wrap:anywhere}
-.pf-document-entry>a{color:#5822d5;font-weight:800;font-size:12px;white-space:nowrap}
+.pf-document-entry>a{color:#2241d5;font-weight:800;font-size:12px;white-space:nowrap}
 @media(max-width:600px){.pf-private-note{align-items:stretch}.pf-private-note .pf-btn{width:100%;justify-content:center}.pf-document-entry{gap:8px;padding:12px}.pf-document-entry>a{font-size:11px}}
