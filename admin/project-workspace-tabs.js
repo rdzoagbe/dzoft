@@ -192,6 +192,7 @@ document.addEventListener('dzoft:locale-change',translate);
  // as an arbitrary DOM ID or HTML selector.
 var deepLinks={
  'work/c-docs':{pane:'work',target:'c-docs'},
+ 'work/c-files':{pane:'work',target:'c-files'},
  'work/c-journal':{pane:'work',target:'c-journal'},
  'work/c-changes':{pane:'work',target:'c-changes'},
  'billing/c-inv':{pane:'billing',target:'c-inv'},
