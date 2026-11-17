@@ -33,7 +33,7 @@ const dashboardV3Styles = readFileSync(new URL('../admin/dashboard-v3.css', impo
 
 test('owner dashboard markup uses the new portfolio layout, not legacy Today', () => {
   assert.match(admin, /id="sd-dashboard"/);
-  for (const id of ['sd-stats','sd-project-list','sd-action-list','sd-project-select','sd-project-summary','sd-verification']) {
+  for (const id of ['sd-stats','sd-project-list','sd-action-list','sd-verification']) {
     assert.ok(admin.includes('id="' + id + '"'), 'Missing new dashboard section: ' + id);
   }
   assert.doesNotMatch(admin, /<div class="bar"><h2>Tableau de bord<\/h2>/);

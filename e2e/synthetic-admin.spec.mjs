@@ -410,9 +410,9 @@ test('Owner home offers a single workspace search and safe quick actions',async(
  await expect(search).toBeVisible();
  await search.fill('Synthetic');
  await expect(page.locator('.dzoft-case-result').first()).toBeVisible();
- // Shortcut to billing; the trash is not a menu entry (it sits in Settings).
+ // A money tile leads to billing; the trash is not a menu entry (it sits in Settings).
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
- await page.locator('#v-dash .sd-shortcuts [data-go="finance"]').click();
+ await page.locator('#sd-stats [data-go="finance"]').first().click();
  await expect(page.locator('#v-finance')).toBeVisible();
  await expect(page.locator('#app .side [data-route="corbeille"]')).toHaveCount(0);
  expect(errors).toEqual([]);
@@ -729,5 +729,22 @@ test('Client file summaries open the real tools, and the tools page has the dash
  await expect(side.locator('a[aria-current="page"]')).toHaveAttribute('href','projet.html?q='+q);
  await expect(side).toContainText('Catalogue (Prestations)');
  await expect(page.locator('#suivi-back')).toHaveText(/Dossier client/);
+ expect(errors).toEqual([]);
+});
+
+test('Dashboard shows money at a glance and one to-do list, without the old shortcut and selected-project panels',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const stats=page.locator('#sd-stats');
+ await expect(stats).toContainText(/Déjà encaissé|Received and verified/);
+ await expect(stats).toContainText(/ce mois-ci|this month/);
+ await expect(stats).toContainText(/Prêt à facturer|Ready to invoice/);
+ await expect(stats).toContainText(/Rien en attente|Nothing waiting/);
+ await expect(page.locator('#sd-actions-title')).toHaveText(/À faire|To do/);
+ await expect(page.locator('#v-dash .sd-shortcuts')).toHaveCount(0);
+ await expect(page.locator('#sd-project-select')).toHaveCount(0);
+ const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+ expect(over).toBe(false);
  expect(errors).toEqual([]);
 });

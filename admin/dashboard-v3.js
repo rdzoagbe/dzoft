@@ -13,8 +13,11 @@ var cents=function(v){if(v===null||v===undefined||v==="")return null;var n=Numbe
 var tr=function(fr,en){return lastInput&&lastInput.english?en:fr;};
 var money=function(c){return c===null?"—":new Intl.NumberFormat(lastInput&&lastInput.english?"en-GB":"fr-FR",{style:"currency",currency:"EUR"}).format(c/100);};
 var projectUrl=function(id){return "projet.html?q="+encodeURIComponent(id);};
+// Money at a glance (17 Nov 2026). Only verified receipts count as received; "ready to invoice" is finished extra
+// work the client signed and that has no invoice yet (its amount is the signed one). Nothing here is ever written.
+var thisMonth=function(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
 var statsData=function(input){
- var signed=0,received=0,remaining=0,pending=0,valid=0;
+ var signed=0,received=0,remaining=0,pending=0,valid=0,month=0,month0=thisMonth(),ready=0,readyCount=0;
  (input.projects||[]).forEach(function(p){
   var d=p.tracking;
   if(!d)return;
@@ -22,11 +25,13 @@ var statsData=function(input){
   if(total===null||r===null||rest===null)return;
   valid++;signed+=total;received+=r;remaining+=rest;
   (d.payment_statuses||[]).forEach(function(x){if(x.status==="pending"||x.status==="sent_by_client")pending+=cents(x.amount)||0;});
+  (d.receipts||[]).forEach(function(x){if(String(x.received_on||"").slice(0,7)===month0)month+=cents(x.amount)||0;});
  });
- return {signed:signed,received:received,remaining:remaining,pending:pending,valid:valid};
+ (input.changes||[]).forEach(function(c){var v=cents(c.extra_price);if(c.status==="completed"&&!c.invoiced&&v>0){ready+=v;readyCount++;}});
+ return {signed:signed,received:received,remaining:remaining,pending:pending,valid:valid,month:month,ready:ready,readyCount:readyCount};
 };
-function stat(label,value,icon,modifier,route){
- return '<button type="button" class="sd-stat '+modifier+'" data-go="'+route+'"><span class="sd-stat-icon">'+icon+'</span><span class="sd-stat-label">'+label+'</span><strong>'+value+'</strong><span class="sd-stat-arrow">↗</span></button>';
+function stat(label,value,icon,modifier,route,sub){
+ return '<button type="button" class="sd-stat '+modifier+'" data-go="'+esc(route)+'"><span class="sd-stat-icon">'+icon+'</span><span class="sd-stat-label">'+label+'</span><strong>'+value+'</strong>'+(sub?'<small class="sd-stat-sub">'+sub+'</small>':'')+'<span class="sd-stat-arrow">↗</span></button>';
 }
 function renderStats(data){
  var sum=statsData(data),ready=!!data.ready,all=(data.projects||[]).length;
@@ -34,10 +39,10 @@ function renderStats(data){
  var valid=ready&&(all===0||sum.valid>0);
  var fmt=function(n){return valid?money(n):"—";};
  $("sd-stats").innerHTML=
+  stat(tr("Déjà encaissé","Received and verified"),fmt(sum.received),"✓","green","finance",valid?tr("dont "+money(sum.month)+" ce mois-ci",money(sum.month)+" this month"):"")+
+  stat(tr("Reste à encaisser","Outstanding balance"),fmt(sum.remaining),"◷","orange","finance",valid&&sum.pending?tr("dont "+money(sum.pending)+" annoncés par le client, à vérifier",money(sum.pending)+" reported by clients, to check"):"")+
+  stat(tr("Prêt à facturer","Ready to invoice"),data.ready?money(sum.ready):"—","€","violet","finance",data.ready?(sum.readyCount?tr(sum.readyCount+" supplément(s) terminé(s), signé(s)",sum.readyCount+" signed extra(s) completed"):tr("Rien en attente","Nothing waiting")):"")+
   stat(tr("Total des contrats suivis","Tracked contracts total"),fmt(sum.signed),"▣","purple","finance")+
-  stat(tr("Déjà encaissé","Received and verified"),fmt(sum.received),"✓","green","finance")+
-  stat(tr("Reste à encaisser","Outstanding balance"),fmt(sum.remaining),"◷","orange","finance")+
-  stat(tr("En attente de vérification","Pending verification"),fmt(sum.pending),"⌁","violet","finance")+
   stat(tr("Projets en cours","Active projects"),String(data.activeProjects||0),"▤","blue","projects");
  $("sd-verification").textContent=!ready?tr("Chargement des données financières vérifiées…","Loading verified financial data…"):
   partial?tr("Attention : certains soldes ne sont pas accessibles. Les montants affichés sont partiels et ne doivent pas être utilisés comme total comptable.","Some balances are unavailable. Amounts shown are partial and must not be used as accounting totals."):
@@ -97,23 +102,6 @@ function renderActions(data){
     '<span class="sd-action-dot '+esc(a.category)+'"></span><span class="sd-action-copy"><strong>'+tr(label[0],label[1])+'</strong><small>'+esc(a.name)+(a.amount!==null?" · "+money(a.amount):"")+'</small></span><span class="sd-action-chevron">›</span></button>';
  }).join(''):'<p class="sd-empty">'+(data.ready?tr("Aucune priorité détectée dans les dossiers accessibles.","No outstanding priority found in accessible cases."):tr("Synchronisation des actions…","Loading actions…"))+'</p>';
 }
-function renderSelected(data){
- var projects=data.projects||[],picker=$("sd-project-select");
- if(!selectedId||!projects.some(function(p){return p.id===selectedId}))selectedId=projects.length?projects[0].id:"";
- picker.innerHTML=projects.length?projects.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===selectedId?' selected':'')+'>'+esc(p.clientName+" · "+p.numero)+'</option>';}).join(''):'<option value="">'+tr("Aucun projet","No projects")+'</option>';
- picker.disabled=!projects.length;
- var p=projects.find(function(item){return item.id===selectedId;});
- if(!p){$("sd-project-summary").innerHTML='<p class="sd-empty">'+tr("Choisissez un projet dès qu'un devis aura été accepté.","Select a project after a quote has been accepted.")+'</p>';return;}
- var d=p.tracking;var t=d?cents(d.total):null,r=d?cents(d.received):null,b=d?cents(d.remaining):null;
- var pct=t&&r!==null?Math.min(100,Math.max(0,Math.round(100*r/t))):null;
- $("sd-project-summary").innerHTML='<div class="sd-selected-name"><div><strong>'+esc(p.clientName)+'</strong><span>'+esc(p.numero)+'</span></div><a class="sd-project-link" href="'+esc(projectUrl(p.id))+'">'+tr("Ouvrir le dossier","Open project")+' ↗</a></div>'+
-  '<div class="sd-selected-amounts"><div><span>'+tr("Total contractuel suivi","Tracked commitment")+'</span><b>'+money(t)+'</b></div>'+
-  '<div><span>'+tr("Encaissements vérifiés","Verified receipts")+'</span><b>'+money(r)+'</b></div>'+
-  '<div><span>'+tr("Solde à recevoir","Remaining balance")+'</span><b>'+money(b)+'</b></div></div>'+
-  '<div class="sd-selected-track"><span style="width:'+(pct===null?0:pct)+'%"></span></div>'+
-  '<div class="sd-selected-foot"><span>'+(pct===null?"—":pct+"%")+' '+tr("encaissé","collected")+'</span><a href="'+esc(projectUrl(p.id)+"#extras")+'">'+tr("Gérer les suppléments","Manage extras")+' →</a><a href="'+esc(projectUrl(p.id)+"#invoices")+'">'+tr("Voir les factures","View invoices")+' →</a></div>'+
-  (d?"":'<p class="sd-warning">'+tr("Suivi financier indisponible pour ce projet.","Financial tracking is unavailable for this project.")+'</p>');
-}
 function translateShell(){
  var global=location.hash==='#/vue-globale'||location.hash==='#vue-globale';
  $("sd-title").textContent=global?tr("Vue globale","Global overview"):tr("Tableau de bord","Dashboard");
@@ -122,16 +110,13 @@ function translateShell(){
    tr("Clients, projets, facturation et encaissements au même endroit.","Clients, projects, invoices and receipts in one place.");
  $("sd-find").textContent=tr("Rechercher un dossier","Find a case");
  $("sd-new-quote").textContent=tr("+ Nouveau devis","+ New quote");
- $("sd-projects-title").textContent=tr("Projets clients","Client projects");
- $("sd-actions-title").textContent=tr("Actions prioritaires","Priority actions");
- $("sd-selected-title").textContent=tr("Dossier sélectionné","Selected project");
- $("sd-activity-title").textContent=tr("Gérer votre activité","Manage your work");
+ $("sd-projects-title").textContent=tr("Projets en cours","Projects in progress");
+ $("sd-actions-title").textContent=tr("À faire","To do");var ah=$("sd-actions-help");if(ah)ah.textContent=tr("Le plus urgent en premier.","Most urgent first.");
 }
 function render(input){
- lastInput=input;translateShell();translateQuick();renderStats(input);renderProjects(input);renderActions(input);renderSelected(input);
+ lastInput=input;translateShell();translateQuick();renderStats(input);renderProjects(input);renderActions(input);
  if(pendingQuick&&input.ready)runQuick(pendingQuick);
 }
-$("sd-project-select").addEventListener("change",function(){selectedId=this.value;if(lastInput)renderSelected(lastInput);});
 $("sd-new-quote").addEventListener("click",function(){
  location.hash="#/devis";
  requestAnimationFrame(function(){var b=document.getElementById("b-qnew");if(b)b.click();});

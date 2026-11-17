@@ -135,3 +135,6 @@ body.dzoft-admin .sd-pick-actions .btn{min-height:44px}
 @media(max-width:640px){body.dzoft-admin #app #v-dash .sd-quick{grid-template-columns:1fr}}
 body.dzoft-admin dialog.sd-pick[open]{position:fixed;inset:0;margin:auto;height:fit-content;max-height:calc(100vh - 32px);overflow:auto}
 body.dzoft-admin #app #v-dash .sd-quick-btn[aria-busy="true"]{border-color:#4361ee;opacity:.7;cursor:progress}
+/* Money at a glance (17 Nov 2026): a small line under some figures. */
+body.dzoft-admin #app #v-dash .sd-stat .sd-stat-sub{display:block;margin-top:6px;font-size:11px;line-height:1.35;color:#6b6f86;font-weight:500}
+@media(max-width:900px){body.dzoft-admin #app #v-dash .sd-content .sd-actions{order:-1}}
