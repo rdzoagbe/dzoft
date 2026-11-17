@@ -117,3 +117,21 @@ body.dzoft-admin #app #v-dash .sd-action-dot.quote{background:#4361ee;box-shadow
 body.dzoft-admin #app #v-dash .sd-more{margin-top:6px}
 body.dzoft-admin #app #v-dash .sd-more>summary{cursor:pointer;font-weight:700;color:#3448d6;padding:10px 4px;font-size:13px}
 body.dzoft-admin #app #v-dash .sd-action-copy small{white-space:normal;overflow:visible;line-height:1.4}
+/* Quick actions (17 Nov 2026): each one asks for the project, then opens the right form in it. */
+body.dzoft-admin #app #v-dash .sd-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px}
+body.dzoft-admin #app #v-dash .sd-quick-btn{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;border:1px solid #dfe4f2;border-radius:14px;background:#fff;color:#16204a;font:inherit;font-size:13px;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(11,16,32,.04)}
+body.dzoft-admin #app #v-dash .sd-quick-btn span{display:inline-grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:#eef1fe;color:#3448d6;font-weight:700}
+body.dzoft-admin #app #v-dash .sd-quick-btn b{font-weight:650}
+body.dzoft-admin #app #v-dash .sd-quick-btn:hover{border-color:#4361ee}
+body.dzoft-admin #app #v-dash .sd-quick-btn:focus-visible{outline:2px solid #4361ee;outline-offset:2px}
+body.dzoft-admin .sd-pick{border:0;border-radius:16px;padding:22px;width:min(420px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(11,16,32,.25);color:#16204a}
+body.dzoft-admin .sd-pick::backdrop{background:rgba(11,16,32,.45)}
+body.dzoft-admin .sd-pick h2{font-family:Sora,system-ui,sans-serif;font-size:18px;margin:0 0 6px}
+body.dzoft-admin .sd-pick p{font-size:13px;color:#5b6178;margin:0 0 14px;line-height:1.5}
+body.dzoft-admin .sd-pick label{display:block;font-size:12px;font-weight:650;margin:0 0 6px}
+body.dzoft-admin .sd-pick select{width:100%;min-height:44px;border:1px solid #cad3e1;border-radius:10px;padding:8px 10px;font:inherit;background:#fff}
+body.dzoft-admin .sd-pick-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+body.dzoft-admin .sd-pick-actions .btn{min-height:44px}
+@media(max-width:640px){body.dzoft-admin #app #v-dash .sd-quick{grid-template-columns:1fr}}
+body.dzoft-admin dialog.sd-pick[open]{position:fixed;inset:0;margin:auto;height:fit-content;max-height:calc(100vh - 32px);overflow:auto}
+body.dzoft-admin #app #v-dash .sd-quick-btn[aria-busy="true"]{border-color:#4361ee;opacity:.7;cursor:progress}

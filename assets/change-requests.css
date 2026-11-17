@@ -81,3 +81,15 @@
 .dzoft-calc-minus{font-weight:800;margin-right:4px}
 .dzoft-calc tr[data-discount] td:nth-child(3){white-space:nowrap}
 .dzoft-calc tr[data-discount] td:nth-child(3) input{width:90px}
+/* Catalogue page: « Mes tarifs », shared by every project (17 Nov 2026). */
+.dzoft-prices-admin{background:#fff;border:1px solid #dfe4f2;border-radius:16px;padding:18px;margin:0 0 22px}
+.dzoft-prices-admin .dzoft-price-title{font-family:Sora,system-ui,sans-serif;font-size:18px;margin:0 0 4px}
+.dzoft-prices-admin .dzoft-change-table{overflow-x:auto}
+.dzoft-prices-admin .btn{min-height:40px;margin-top:8px}
+.dzoft-price-link{margin:8px 0 12px}
+.dzoft-prices-admin table{width:100%;border-collapse:collapse}
+.dzoft-prices-admin th,.dzoft-prices-admin td{text-align:left;vertical-align:middle;padding:8px 6px}
+.dzoft-prices-admin td input[data-tier-price],.dzoft-prices-admin td input[data-block-price]{width:120px;min-width:90px}
+.dzoft-prices-admin .dzoft-calc-pick input[data-default-price]{max-width:200px}
+.dzoft-prices-admin .dzoft-calc-pick{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+@media(max-width:560px){.dzoft-prices-admin{padding:14px}.dzoft-prices-admin td input[data-tier-price],.dzoft-prices-admin td input[data-block-price]{width:76px;min-width:64px}.dzoft-prices-admin th,.dzoft-prices-admin td{padding:6px 4px;font-size:13px}}

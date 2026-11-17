@@ -536,8 +536,26 @@
    };
    // Existing invoice toggles cannot overwrite receipt-backed statuses.
    q._receiptInvoiceIds=d.receipts.map(function(r){return r.invoice_id;});lockInvoices(q);
+   openFromHash(box,pub);
   }).catch(function(err){console.error('DZOFT: project payment panel could not load or render',err);var paymentTruth=document.getElementById('iv-payment-truth');if(paymentTruth)paymentTruth.textContent=t('Paiements indisponibles pour le moment : ne pas considérer les factures comme réglées.','Payment data unavailable: do not assume invoices are paid.');if(box.isConnected)box.innerHTML='<p class="tracking-message error">'+t('Le suivi des paiements ne peut pas être affiché. Les paiements déjà enregistrés sont conservés. Rechargez la page.','Payment tracking cannot be displayed. Previously saved payments are preserved. Reload the page.')+'</p>';});
  }
+ /* Dashboard quick buttons: suivi.html#billing/pay opens « Enregistrer un paiement reçu », #work/publish opens « Publier une avancée ».
+    The request is read once when the page opens: the panel is redrawn later (language announcement, reload after saving), so it is
+    reopened on each redraw until the owner closes it. The address is shortened so a manual reload does not reopen it. */
+ var openRequest=/^#(billing\/pay|work\/publish)$/.test(location.hash)?location.hash.slice(1):null,openScrolled=false;
+ function openFromHash(box,pub){
+  if(!openRequest)return;
+  var target=openRequest==='billing/pay'?box.querySelector('details.tracking-editor:not(.tracking-report-editor)'):pub.querySelector('details.tracking-editor');
+  if(!target)return;target.open=true;
+  if(location.hash==='#'+openRequest)history.replaceState(null,'',location.pathname+location.search+(openRequest==='billing/pay'?'#billing':'#work'));
+  target.addEventListener('toggle',function(){if(!target.open)openRequest=null;});
+  if(openScrolled)return;openScrolled=true;
+  // After the tab switch and the panel's own layout, so the form is really in view.
+  setTimeout(function(){if(!target.isConnected)return;target.scrollIntoView({block:'start'});var field=target.querySelector('input:not([type=hidden]),select,textarea');if(field)field.focus({preventScroll:true});},350);
+ }
+ // Same page, new address (e.g. a link from the project page itself): open the form without reloading.
+ window.addEventListener('hashchange',function(){if(!/^#(billing\/pay|work\/publish)$/.test(location.hash))return;openRequest=location.hash.slice(1);openScrolled=false;
+  var box=document.getElementById('tracking-admin'),pub=document.getElementById('tracking-publish');if(box&&pub)openFromHash(box,pub);});
  function archiveInvoice(q,sb,receipt,inv){
    if(!global.DzoftInvoicePdf)return Promise.reject(new Error('PDF generator unavailable; reload the page'));
    if(!q.client_id)return Promise.reject(new Error('Client account is missing'));

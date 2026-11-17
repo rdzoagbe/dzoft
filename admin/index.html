@@ -215,7 +215,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261117-todo"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261117-quick">
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261117-prices"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
 <link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261117-counts">
 </head>
 <body class="dzoft-admin">
@@ -321,6 +322,20 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           <div><span class="sd-eyebrow">DZOFT · ADMIN</span><h1 id="sd-title">Tableau de bord</h1><p id="sd-subtitle">Clients, projets, facturation et encaissements au même endroit.</p></div>
           <div class="sd-head-actions"><button type="button" class="btn line" data-go="dossiers" id="sd-find">Rechercher un dossier</button><button type="button" class="btn main" id="sd-new-quote">+ Nouveau devis</button></div>
         </div>
+        <div class="sd-quick" id="sd-quick" role="group" aria-label="Actions rapides" data-no-translate>
+          <button type="button" class="sd-quick-btn" data-quick="pay"><span aria-hidden="true">€</span><b>Enregistrer un paiement</b></button>
+          <button type="button" class="sd-quick-btn" data-quick="extra"><span aria-hidden="true">＋</span><b>Créer un supplément</b></button>
+          <button type="button" class="sd-quick-btn" data-quick="publish"><span aria-hidden="true">↗</span><b>Publier une avancée</b></button>
+        </div>
+        <dialog class="sd-pick" id="sd-pick" aria-labelledby="sd-pick-title" data-no-translate>
+          <form method="dialog">
+            <h2 id="sd-pick-title">Pour quel projet ?</h2>
+            <p id="sd-pick-help"></p>
+            <label for="sd-pick-select" id="sd-pick-label">Projet</label>
+            <select id="sd-pick-select"></select>
+            <div class="sd-pick-actions"><button type="submit" value="cancel" class="btn line" id="sd-pick-cancel" formnovalidate>Annuler</button><button type="submit" value="go" class="btn main" id="sd-pick-go">Ouvrir</button></div>
+          </form>
+        </dialog>
         <div class="sd-stats" id="sd-stats" aria-live="polite"><p class="sd-placeholder">Chargement des indicateurs…</p></div>
         <div class="sd-content">
           <section class="sd-surface sd-projects" aria-labelledby="sd-projects-title">
@@ -1865,9 +1880,10 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261116-nav-audit1"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261117-todo"></script>
+<script src="dashboard-v3.js?v=20261117-quick"></script>
 <script src="unified-app-shell.js?v=20261116-v6"></script>
-<script src="workspace-panels-v7.js?v=20261116-data1"></script>
+<script src="../assets/change-requests.js?v=20261117-prices"></script>
+<script src="workspace-panels-v7.js?v=20261117-prices"></script>
 <script src="workspace-nav-v6.js?v=20261117-site"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>
 </body>

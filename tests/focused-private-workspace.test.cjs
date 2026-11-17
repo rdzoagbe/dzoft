@@ -13,7 +13,7 @@ test('project overview presents exactly four navigable sections and retains all 
  const base=read('admin/project-workspace.js');
  const css=read('admin/project-workspace-tabs.css');
  assert.match(html,/project-workspace\.js\?v=.*" defer/);
- assert.match(html,/project-workspace-tabs\.js\?v=20261115-clean3" defer/);
+ assert.match(html,/project-workspace-tabs\.js\?v=20261117-quick" defer/);
  assert.match(html,/project-workspace-tabs\.css\?v=20261115-v2/);
  for(const key of ["overview","work","billing","messages"])
   assert.match(js,new RegExp("id:'"+key+"'"));
@@ -48,8 +48,8 @@ test('new owner dashboard provides real client, quote, finance and case finder r
  const js=read('admin/dashboard-v3.js');
  const html=read('admin/index.html');
  const css=read('admin/dashboard-v3.css');
- assert.match(html,/dashboard-v3\.js\?v=20261117-todo/);
- assert.match(html,/dashboard-v3\.css\?v=20261117-todo/);
+ assert.match(html,/dashboard-v3\.js\?v=20261117-quick/);
+ assert.match(html,/dashboard-v3\.css\?v=20261117-quick/);
  assert.match(html,/case-finder\.js/);
  assert.match(html,/id="sd-dashboard"/);
  assert.match(html,/id="sd-project-list"/);

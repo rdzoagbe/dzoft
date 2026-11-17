@@ -39,7 +39,7 @@ test('invoice is optional; notification only triggered on receipt confirmation',
 
 test('live project and client portal load fresh payment-state assets',()=>{
  for(const p of ['admin/suivi.html','espace/index.html']){
-  assert.match(read(p),/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs)/);
+  assert.match(read(p),/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs|20261117-quick)/);
   assert.match(read(p),/project-tracking\.css\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs)/);
  }
 });
