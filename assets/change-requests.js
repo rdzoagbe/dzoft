@@ -248,6 +248,11 @@ function bindOwner(root,options){
    // A date chosen by the owner replaces the automatic start (never before the signature).
    var chosen=form.elements.since&&/^\d{4}-\d{2}-\d{2}$/.test(form.elements.since.value)?form.elements.since.value:'';
    if(chosen)since=signed&&chosen<signed?signed:chosen;
+   // Calculating again with a later start: lines imported earlier from the journal and now before the start are removed
+   // (lines typed by hand have no journal origin and stay).
+   Array.prototype.forEach.call(form.querySelectorAll('[data-line]'),function(row){var src=(row.querySelector('[name=source]')||{}).value||'',m=/^journal:(\d{4}-\d{2}-\d{2}):/.exec(src);
+     if(m&&since&&m[1]<since){if(form.querySelectorAll('[data-line]').length>1)row.remove();else row.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}});
+   recalc(form);
    readLines(form).forEach(function(l){if(l.source)used[l.source]=1;});
    var clientName=plain(q.clientName||'').split(/\s+/)[0];
    var added=0,priced=0,skipped=0,offered=0,byLevel=0,byList=0,byDefault=0,later=[],included=[],earlier=[];
