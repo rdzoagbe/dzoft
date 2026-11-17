@@ -26,12 +26,13 @@ Deno.serve(async req => {
     const raw = await req.text();
     if (raw.length > 8000) return reply({error:"Requête trop longue"},413);
     const b = JSON.parse(raw);
-    const english = b.lang === "en";
     if (!["preview","email","whatsapp"].includes(b.action)) return reply({error:"Action inconnue"},400);
     const {data:q,error:qe} = await db.from("quotes").select("id,numero,client_id,shared,accepted_at,deleted_at,invoices,steps,accepted_total,accepted_data").eq("id",b.quote_id).maybeSingle();
     if (qe || !q || !q.shared || !q.accepted_at || q.deleted_at) return reply({error:"Le devis doit être accepté et visible dans l’espace client."},409);
-    const {data:c,error:ce} = await db.from("clients").select("id,nom,email,contact,user_id").eq("id",q.client_id).maybeSingle();
+    const {data:c,error:ce} = await db.from("clients").select("id,nom,email,contact,user_id,lang").eq("id",q.client_id).maybeSingle();
     if (ce || !c) return reply({error:"Client introuvable"},404);
+    // Message language: as chosen in the reminder window, otherwise the language saved by the client.
+    const english = b.lang === "en" || b.lang === "fr" ? b.lang === "en" : c.lang === "en";
     const {data:receipts,error:receiptError} = await db.from("project_receipts").select("invoice_id,amount").eq("quote_id",q.id);
     if (receiptError) throw receiptError;
     const invoices = (q.invoices || []).map((x:any) => {
@@ -57,7 +58,7 @@ Deno.serve(async req => {
     if (b.action === "preview") {
       const {data:history,error} = await db.from("notifications").select("kind,created_at,ok,error").eq("quote_id",q.id).like("ref",`payment:${q.id}:${inv.id}:%`).order("created_at",{ascending:false}).limit(8);
       if(error) throw error;
-      return reply({deposit_only:depositOnly,invoice_id:inv.id,client:c.nom,email:to,phone:phone(c.contact),amount,number:inv.num,message,link,has_pdf:!!inv.file,invoices:invoices.map((x:any)=>({id:x.id,label:`${x.num} · ${x.n || "Facture"} · ${x.amt} €`})),history});
+      return reply({lang:english?"en":"fr",deposit_only:depositOnly,invoice_id:inv.id,client:c.nom,email:to,phone:phone(c.contact),amount,number:inv.num,message,link,has_pdf:!!inv.file,invoices:invoices.map((x:any)=>({id:x.id,label:`${x.num} · ${x.n || "Facture"} · ${x.amt} €`})),history});
     }
     const recipient = b.action === "email" ? to : phone(b.phone || c.contact);
     if (!recipient) return reply({error:b.action === "email" ? "Ajoutez l’adresse e-mail à la fiche client." : "Saisissez un numéro WhatsApp valide avec indicatif international."},400);

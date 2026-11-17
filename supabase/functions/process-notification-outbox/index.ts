@@ -62,6 +62,61 @@ function digestHtml(items: DigestItem[]) {
   return `<ul style="padding-left:18px;margin:16px 0">${items.map((u) =>
     `<li style="margin:0 0 12px"><b>${esc(DIGEST_GROUPS[u.category] || "Autres travaux")}</b> · ${esc(DIGEST_STATUS[u.status] || "")}<br>${esc(u.summary)}</li>`).join("")}</ul>`;
 }
+// English wording for clients who chose English in their client area (clients.lang = 'en').
+// Payment e-mails stay bilingual; the owner's copies stay in French.
+const DIGEST_GROUPS_EN: Record<string, string> = { design: "Design", accounts: "Accounts", venue: "Venues", chat: "Conversations", safety: "Safety", other: "Other work" };
+const DIGEST_STATUS_EN: Record<string, string> = { planned: "Planned", working: "In progress", built: "Built", tested: "Tested" };
+function digestHtmlEn(items: DigestItem[]) {
+  return `<ul style="padding-left:18px;margin:16px 0">${items.map((u) =>
+    `<li style="margin:0 0 12px"><b>${esc(DIGEST_GROUPS_EN[u.category] || "Other work")}</b> · ${esc(DIGEST_STATUS_EN[u.status] || "")}<br>${esc(u.summary)}</li>`).join("")}</ul>`;
+}
+function eventCopyEn(type: string, summary: string, quote: any, message: string, digest: DigestItem[] = []) {
+  const number = quote?.numero ? ` · quote ${quote.numero}` : "";
+  const detail = summary.split(" · ").slice(1).join(" · ");
+  const body = message
+    ? `<div style="white-space:pre-wrap;background:#f3f6fc;border-radius:10px;padding:14px;margin:18px 0">${esc(message)}</div>`
+    : "";
+  if (type === "progress_digest") return {
+    subject: `Your project is moving forward${number} · DZOFT`,
+    intro: "Here is the latest progress on your project:",
+    body: digestHtmlEn(digest) + "<p style=\"font-size:13px;color:#5d6f83\">“Tested” means checked on our side. You give your feedback and approvals in your client area.</p>",
+  };
+  if (type === "change_proposed" || type === "change_signed") {
+    const ref = (summary.match(/^Proposition (?:complémentaire )?(\S+)/) || [])[1] || "";
+    const amount = (summary.match(/·\s*([0-9][0-9\s\u202f\u00a0.,]*€)/) || [])[1] || "";
+    const what = `${ref ? "no. " + ref : ""}${ref && amount ? ", " : ""}${amount}`;
+    // Acknowledgement of the client's signature (Code civil art. 1127-2), same content as the French copy.
+    if (type === "change_signed") return {
+      subject: `Your signature has been recorded: proposal ${ref}${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `We have received your signature of the proposal for additional work${what ? " (" + what + ")" : ""}${quote?.numero ? ", in addition to quote " + quote.numero : ""}.`,
+      body: `<p>It is subject to the same terms and conditions of sale as that quote. The signed details remain available in your client area. The additional invoice will be sent to you once the work is finished.</p>`,
+    };
+    return {
+      subject: `Additional proposal ${ref} to sign${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `A proposal for additional work${what ? " (" + what + ")" : ""} is waiting in your client area. It lists each item with its price. Your signed quote and its invoices stay unchanged.`,
+      body: `<p>You can read it, then sign it with a 6-digit code sent to your email address, or decline it. Nothing is charged without your signature.</p>`,
+    };
+  }
+  const subjects: Record<string, string> = {
+    quote_published: `Your quote${quote?.numero ? " no. " + quote.numero : ""} is ready · DZOFT`,
+    quote_accepted: `Quote accepted${quote?.numero ? " no. " + quote.numero : ""} · DZOFT`,
+    owner_message: `Reply from DZOFT${number}`,
+    step_validation_requested: `Your approval is needed${number} · DZOFT`,
+    step_progress: `Your project is moving forward${number} · DZOFT`,
+    client_step_validated: `Approval received${number} · DZOFT`,
+    invoice_shared: `Your invoice is available${number} · DZOFT`,
+  };
+  const intros: Record<string, string> = {
+    quote_published: `Quote ${quote?.numero || ""} is ready and available in your client area.`,
+    quote_accepted: `Quote ${quote?.numero || ""} has been accepted online.`,
+    owner_message: "Roland has replied to you in your DZOFT client area.",
+    step_validation_requested: `Please check the “${detail}” stage in your client area and let us know whether you approve it.`,
+    step_progress: `The “${detail}” stage of your project is complete. Full progress details are in your client area.`,
+    client_step_validated: `Your approval of the “${detail}” stage has been recorded.`,
+    invoice_shared: `The invoice “${detail}” is available. You can also find it, with the payment details, in your client area.`,
+  };
+  return { subject: subjects[type] || `DZOFT update${number}`, intro: intros[type] || "There is an update on your project in your client area.", body };
+}
 function eventCopy(type: string, summary: string, quote: any, message: string, isOwner: boolean, digest: DigestItem[] = []) {
   // Grouped progress: one email listing every summary of the same publication.
   if (type === "progress_digest") {
@@ -212,7 +267,7 @@ Deno.serve(async (req) => {
       const [{ data: event }, { data: client }] = await Promise.all([
         db.from("project_events").select("event_key,event_type,summary,message_id,quote_id,invoice_id,file_name").eq("id", job.event_id).maybeSingle(),
         job.client_id
-          ? db.from("clients").select("id,nom,email,contact,user_id,portal_token").eq("id", job.client_id).maybeSingle()
+          ? db.from("clients").select("id,nom,email,contact,user_id,portal_token,lang").eq("id", job.client_id).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
       if (!event) throw Object.assign(new Error("project event is missing"), { retryable: false });
@@ -244,7 +299,8 @@ Deno.serve(async (req) => {
       }
       const isOwner = job.recipient_role === "owner";
       const paymentEvent = event.event_type.startsWith("payment_");
-      const copy = eventCopy(event.event_type, event.summary, quote, message, isOwner, digest);
+      const english = !isOwner && client?.lang === "en";
+      const copy = english && !paymentEvent ? eventCopyEn(event.event_type, event.summary, quote, message, digest) : eventCopy(event.event_type, event.summary, quote, message, isOwner, digest);
       const firstName = String(client?.nom || "").trim().split(/\s+/)[0] || "";
       let link = isOwner ? ADMIN : PORTAL;
       if (isOwner && quote?.id) link = `${ADMIN}suivi.html?q=${encodeURIComponent(quote.id)}`;
@@ -260,8 +316,8 @@ Deno.serve(async (req) => {
       }
       else if (!isOwner && client?.user_id) link = PORTAL + (event.event_type.includes("message") ? "#/messages" : quote?.id ? (event.event_type === "quote_published" ? `#/devis/${quote.id}` : `#/projets/${quote.id}`) : "#/messages");
       else if (!isOwner && client?.portal_token) link = PORTAL + "#" + client.portal_token;
-      const hello = isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + esc(firstName) : ""},`;
-      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? "Une proposition complémentaire à signer" : event.event_type === "change_signed" ? "Votre signature est enregistrée" : "Une mise à jour de votre projet";
+      const hello = isOwner ? "Bonjour Roland," : `${english ? "Hello" : "Bonjour"}${firstName ? " " + esc(firstName) : ""},`;
+      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? (english ? "An additional proposal to sign" : "Une proposition complémentaire à signer") : event.event_type === "change_signed" ? (english ? "Your signature has been recorded" : "Votre signature est enregistrée") : (english ? "An update on your project" : "Une mise à jour de votre projet");
       let attachment: Array<{ name: string; content: string }> = [];
 
       if (job.attach_invoice_pdf) {
@@ -292,6 +348,14 @@ Deno.serve(async (req) => {
       const needsAccount = !isOwner && !client?.user_id && (event.event_type === "quote_published" || event.event_type === "invoice_shared");
       const portalLine = isOwner
         ? `Client : ${client?.nom || "fiche projet"}. Ouvrez la fiche pour voir l’historique et l’état des envois.`
+        : english
+        ? (needsAccount && event.event_type === "quote_published"
+          ? "Create your account with the same email address as on the quote. Once confirmed, the quote opens automatically; if you confirm on another device, come back to this link to view and accept it online."
+          : needsAccount && event.event_type === "invoice_shared"
+          ? "Create your account with the same email address as on the quote to open the invoice. If you confirm on another device, come back to this link after signing in. An invoice is for payment; online acceptance and signature apply to the quote."
+          : event.event_type === "invoice_shared" && !attachment.length
+          ? "Your invoice is also available in your client area."
+          : "You’ll find your project’s information and history in your DZOFT client area.")
         : needsAccount && event.event_type === "quote_published"
         ? "Créez votre espace avec la même adresse e-mail que celle indiquée sur le devis. Après confirmation, le devis s’ouvrira automatiquement ; si vous confirmez sur un autre appareil, revenez à ce lien pour le consulter et l’accepter en ligne."
         : needsAccount && event.event_type === "invoice_shared"
@@ -300,6 +364,13 @@ Deno.serve(async (req) => {
         ? "Votre facture est également accessible dans votre espace client."
         : "Retrouvez les informations et l’historique de votre projet dans votre espace DZOFT.";
       const ctaLabel = isOwner ? "Ouvrir la fiche projet"
+        : english
+        ? (needsAccount && event.event_type === "quote_published" ? "Create my account and accept the quote"
+          : needsAccount && event.event_type === "invoice_shared" ? "Create my account and view the invoice"
+          : event.event_type === "quote_published" ? "View and accept my quote"
+          : event.event_type === "invoice_shared" ? "Open my invoice"
+          : event.event_type === "change_proposed" ? "Read and sign the proposal"
+          : "Open my client area")
         : needsAccount && event.event_type === "quote_published" ? "Créer mon espace et accepter le devis"
         : needsAccount && event.event_type === "invoice_shared" ? "Créer mon espace et voir la facture"
         : event.event_type === "quote_published" ? "Voir et accepter mon devis"
@@ -312,9 +383,9 @@ Deno.serve(async (req) => {
         <p>${esc(portalLine)}</p>
         <p style="text-align:center;margin:28px 0"><a href="${esc(link)}" style="background:#4361EE;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${paymentEvent ? "Ouvrir mon espace / Open workspace" : ctaLabel}</a></p>
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
-        <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
+        <p style="font-size:12px;color:#5d6f83">${english ? "Project update email from DZOFT. Attachments are limited to invoice PDFs that Roland has explicitly chosen to send." : "E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer."}</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" || event.event_type === "change_signed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `${english ? "Hello" : "Bonjour"}${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" || event.event_type === "change_signed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => english ? `- ${DIGEST_GROUPS_EN[u.category] || "Other work"} · ${DIGEST_STATUS_EN[u.status] || ""}: ${u.summary}` : `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },

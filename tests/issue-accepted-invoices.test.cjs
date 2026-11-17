@@ -132,7 +132,7 @@ test('priced proposals: server totals and numbers the lines, client signs with a
  assert.match(fn,/c\.client_id !== client\.id/);
  assert.match(fn,/u\.app_metadata\?\.dzoft_owner !== true/);
  assert.match(fn,/reserve_change_sign_code/);
- assert.match(espace,/sb\.fn\('change-sign-code', \{ change_id: changeId, token: token \|\| undefined \}\)/);
+ assert.match(espace,/sb\.fn\('change-sign-code', \{ change_id: changeId, token: token \|\| undefined, lang: EN\(\) \? 'en' : 'fr' \}\)/);
  // Sending is an explicit owner action and goes through the outbox.
  assert.match(mig,/'change_proposed',/);
  assert.match(changes,/owner_send_change_proposal/);
