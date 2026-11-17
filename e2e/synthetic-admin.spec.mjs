@@ -216,7 +216,7 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  await expect(toggle).toHaveAttribute('aria-expanded','false');
  await toggle.click();
  await expect(toggle).toHaveAttribute('aria-expanded','true');
- for(const route of ['tableau-de-bord','clients','projets','devis','factures','paiements','messages','journal','documents','catalogue','rapports','parametres'])
+ for(const route of ['tableau-de-bord','clients','devis','projets','comptabilite','messages','parametres'])
    await expect(menu.locator('button[data-app-route="'+route+'"]')).toBeVisible();
  await expect(menu.locator('a[href="../?workspace=admin"]')).toBeVisible();
  await expect(menu.locator('button[data-app-action="logout"]')).toBeVisible();
@@ -228,8 +228,8 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  await expect(toggle).toHaveAttribute('aria-expanded','false');
  await page.locator('#admin-language-settings button[data-dzoft-lang="en"]').click();
  await toggle.click();
- await expect(menu.locator('button[data-app-route="paiements"]')).toContainText('Payments');
- await menu.locator('button[data-app-route="paiements"]').click();
+ await expect(menu.locator('button[data-app-route="comptabilite"]')).toContainText('Accounts');
+ await menu.locator('button[data-app-route="comptabilite"]').click();
  await expect(page.locator('#v-finance')).toBeVisible();
  await expect(toggle).toHaveAttribute('aria-expanded','false');
  expect(errors,'Installed mobile menu should not introduce browser errors').toEqual([]);
@@ -521,7 +521,7 @@ test('Desktop shows sidebar navigation once and keeps direct logout; mobile reta
  if(testInfo.project.name.includes('desktop')){
    await expect(side).toBeVisible();
    await expect(side.locator('[data-route="parametres"]')).toBeVisible();
-   await expect(side.locator('.dzoft-v6-link')).toHaveCount(12);
+   await expect(side.locator('.dzoft-v6-link')).toHaveCount(7);
    await expect(headerMenu).toBeHidden();
    await expect(logout).toBeVisible();
    await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
@@ -638,7 +638,7 @@ test('Dashboard is the global finance page; a project opens on its own page from
 
 test.describe('Cross-page synthetic finance navigation',()=>{
  test.use({serviceWorkers:'block'}); // Prevent registered PWA SW intercepting mocked sb.js on the next page.
- test('Project menu opens the project page\'s own documents, journal and invoices sections',async({page})=>{
+ test('Project page tabs open its own documents, journal and invoices sections; the menu marks Projets',async({page})=>{
  await syntheticOwner(page);
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
  const base='admin/projet.html?q='+q;
@@ -654,10 +654,9 @@ test.describe('Cross-page synthetic finance navigation',()=>{
       ' — '+JSON.stringify(await page.evaluate(()=>({title:document.title,body:document.body?.textContent?.slice(0,140),owner:!!window.RDsb?.session?.()})))+
       ' — '+error.message);
   }
-  const target=await page.locator('#'+entry.link).getAttribute('href');
-  expect(target).toContain(entry.fragment);
-  if(await page.locator('#pf-menu').isVisible())await page.locator('#pf-menu').click();
-  await page.locator('#'+entry.link).click();
+  // 17 Nov 2026: the menu has seven entries; a project's sections are its own tabs.
+  await expect(page.locator('#pf-sidebar [data-route="projets"]')).toHaveAttribute('aria-current','page');
+  await page.locator('#pf-tabs [data-panel="'+entry.panel+'"]').click();
   await expect(page.locator('#pf-tabs [data-panel="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
   expect(new URL(page.url()).hash).toBe(entry.fragment);
   await expect(page.locator('#pf-panel-title')).toContainText(entry.title);
@@ -728,8 +727,9 @@ test('Client file summaries open the real tools, and the tools page has the dash
  await expect(tool).toHaveAttribute('href','suivi.html?q='+q+'#work/c-journal');
  await page.goto('admin/suivi.html?q='+q,{waitUntil:'domcontentloaded'});
  const side=page.locator('#dzoft-editor-sidebar');
- await expect(side.locator('a[aria-current="page"]')).toHaveAttribute('href','projet.html?q='+q);
- await expect(side).toContainText('Catalogue (Prestations)');
+ await expect(side.locator('a[aria-current="page"]')).toHaveAttribute('href','./#/projets');
+ await expect(side.locator('nav a')).toHaveCount(7);
+ await expect(side).toContainText('Comptabilité');
  await expect(page.locator('#suivi-back')).toHaveText(/Dossier client/);
  expect(errors).toEqual([]);
 });
@@ -779,16 +779,16 @@ test('Phone bar shows four main entries and « Plus » opens the rest',async({pa
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  const bar=page.locator('#app .side.dzoft-v6-nav');
  await expect(bar.locator('.dzoft-v6-link:visible')).toHaveCount(4);
- await expect(bar.locator('[data-route="catalogue"]')).toBeHidden();
+ await expect(bar.locator('[data-route="comptabilite"]')).toBeHidden();
  const more=bar.locator('.dzoft-v6-more');
  await expect(more).toBeVisible();
  await more.click();
  await expect(more).toHaveAttribute('aria-expanded','true');
- await expect(bar.locator('[data-route="catalogue"]')).toBeVisible();
- await bar.locator('[data-route="catalogue"]').click();
- await expect(page).toHaveURL(/#\/catalogue$/);
+ await expect(bar.locator('[data-route="comptabilite"]')).toBeVisible();
+ await bar.locator('[data-route="comptabilite"]').click();
+ await expect(page).toHaveURL(/#\/comptabilite$/);
  await expect(more).toHaveAttribute('aria-expanded','false');
- await expect(bar.locator('[data-route="catalogue"]')).toBeHidden();
+ await expect(bar.locator('[data-route="comptabilite"]')).toBeHidden();
  expect(errors).toEqual([]);
 });
 

@@ -47,9 +47,10 @@ test('documents never write or send anything, and pages show official documents 
  assert.match(admin,/function receiptTotal\(invoiceId\)/);
  assert.match(admin,/return officialDocuments\(\)\+/);
 });
-test('no blank template among the client documents; the admin Documents page leads to each project tab',()=>{
- const portal=read('espace/index.html'),panels=read('admin/workspace-panels-v7.js');
+test('no blank template among the client documents; documents live in each project, not in a global page',()=>{
+ const portal=read('espace/index.html'),panels=read('admin/workspace-panels-v7.js'),admin=read('admin/index.html');
  assert.doesNotMatch(portal,/Toujours disponibles|fiche-de-remise-client\.pdf/);
- assert.match(panels,/documents:documentsByProject/);
- assert.match(panels,/'projet\.html\?q='\+encodeURIComponent\(p\.id\)\+'#documents'/);
+ // 17 Nov 2026: the global Documents page is gone; its old address opens Projets.
+ assert.doesNotMatch(panels,/documentsByProject|\['documents',/);
+ assert.match(admin,/documents:'projets'/);
 });

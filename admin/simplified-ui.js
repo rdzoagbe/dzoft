@@ -7,7 +7,7 @@ var tr=function(fr,english){return en()?english:fr;};
 var nav=function(id,fr,english,svg){
  var b=document.createElement('button');b.type='button';b.className='tab';b.dataset.tab=id;b.setAttribute('role','tab');b.setAttribute('aria-selected','false');
  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+svg+'</svg><span data-fr="'+fr+'" data-en="'+english+'">'+tr(fr,english)+'</span>';
- b.addEventListener('click',function(){location.hash='#/'+(id==='dossiers'?'dossiers':id==='finance'?'paiements':id);});return b;
+ b.addEventListener('click',function(){location.hash='#/'+(id==='dossiers'?'dossiers':id==='finance'?'comptabilite':id);});return b;
 };
 var folder=nav('dossiers','Dossiers clients','Clients & projects','<path d="M3 7h7l2 2h9v11H3z"/><path d="M3 7V5h7l2 2"/>');
 var finance=nav('finance','Factures & paiements','Billing','<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M7 15h3"/>');
@@ -61,8 +61,8 @@ function translate(){
  document.getElementById('dossiers-title').textContent=tr('Tous mes dossiers','All cases');
  document.getElementById('dossiers-intro').textContent=tr('Un seul espace pour retrouver un client, sa demande, son devis et son projet.','Find a client, request, quote or project in one place.');
  search.placeholder=tr('Trouver un client, un devis, un projet…','Find a client, quote or project…');
- document.getElementById('finance-title').textContent=tr('Factures et paiements','Invoices & payments');
- document.getElementById('finance-intro').textContent=tr('Encaissements vérifiés, soldes et factures par projet : sélectionnez un projet pour agir.','Verified receipts, balances and invoices by project. Open a project to take action.');
+ document.getElementById('finance-title').textContent=tr('Comptabilité','Accounts');
+ document.getElementById('finance-intro').textContent=tr('Tous projets : chiffres, livre des recettes, soldes par projet et registre des factures. Pour encaisser ou facturer, ouvrez le projet.','All projects: figures, receipts book, balance by project and invoice register. To record a payment or invoice, open the project.');
  var more=app.querySelector('.workspace-more');if(more){
   more.querySelector('[data-extra=settings]').textContent=tr('Paramètres','Settings');
   more.querySelector('[data-extra=trash]').textContent=tr('Corbeille','Trash');
@@ -80,7 +80,7 @@ if(settings&&!document.getElementById('workspace-trash-link')){
 }
 var shortcuts=document.querySelector('#v-dash .dashboard-shortcuts');
 if(shortcuts&&!document.getElementById('workspace-finance-shortcut')){
- var billing=document.createElement('a');billing.href='#/paiements';
+ var billing=document.createElement('a');billing.href='#/comptabilite';
  billing.id='workspace-finance-shortcut';billing.className='btn sm line';
  shortcuts.appendChild(billing);
 }
@@ -90,7 +90,7 @@ translate=function(){
  var trash=document.getElementById('workspace-trash-link');
  if(trash)trash.textContent=tr('Voir la corbeille et restaurer','View trash and restore');
  var billing=document.getElementById('workspace-finance-shortcut');
- if(billing)billing.textContent=tr('Voir factures et paiements','Invoices and payments');
+ if(billing)billing.textContent=tr('Voir la comptabilité','View accounts');
 };
 document.addEventListener('dzoft:locale-change',translate);translate();
 })();

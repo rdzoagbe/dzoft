@@ -31,7 +31,7 @@ var groups=[
   {key:'quotes',slug:'devis',fr:'Devis',en:'Quotes'},
   {key:'projects',slug:'projets',fr:'Projets',en:'Projects'},
   {key:'inbox',slug:'messages',fr:'Messages',en:'Messages'},
-  {key:'finance',slug:'paiements',fr:'Paiements',en:'Payments'}]},
+  {key:'finance',slug:'comptabilite',fr:'Comptabilité',en:'Accounts'}]},
  {fr:'Compte et préférences',en:'Account & preferences',items:[
   {key:'settings',slug:'parametres',fr:'Paramètres',en:'Settings'},
   {key:'trash',slug:'corbeille',fr:'Corbeille',en:'Trash'},

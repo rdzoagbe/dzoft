@@ -9,7 +9,8 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('one admin workspace preserves all existing routes behind four primary destinations',()=>{
  const html=read('admin/index.html'),ui=read('admin/simplified-ui.js');
  assert.match(html,/dossiers:'dossiers'/);
- assert.match(html,/finance:'paiements'/);
+ assert.match(html,/finance:'comptabilite'/);
+ assert.match(html,/paiements:'comptabilite',factures:'comptabilite'/);
  for(const slug of ["leads:'demandes'","clients:'clients'","quotes:'devis'","projects:'projets'","inbox:'messages'","settings:'parametres'","trash:'corbeille'"])
   assert.ok(html.includes(slug),'route preserved: '+slug);
  assert.match(ui,/dossiers\.appendChild\(node\)/);

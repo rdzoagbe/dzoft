@@ -42,7 +42,7 @@ form.addEventListener('submit',function(e){
 });
 tools.addEventListener('click',function(e){
  var b=e.target.closest('[data-owner-quick]');if(!b)return;
- if(b.dataset.ownerQuick==='billing'){location.hash='#/paiements';return;}
+ if(b.dataset.ownerQuick==='billing'){location.hash='#/comptabilite';return;}
  var id=b.dataset.ownerQuick==='client'?'b-cnew':'b-qnew';
  location.hash=b.dataset.ownerQuick==='client'?'#/clients':'#/devis';
  // Reuse the real existing creation UI; never synthesize a write request.

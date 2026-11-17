@@ -30,14 +30,14 @@ test('the menu survives the page translator replacing text of every [data-fr] el
  const document={documentElement:{lang:'fr'},createElement:el,getElementById:()=>null,querySelectorAll:()=>[],
   querySelector:s=>s==='#app .side'?side:null,addEventListener:(t,f)=>{listeners[t]=f;}};
  const window={addEventListener(){},DzoftNavigationV6:null};
- vm.runInNewContext(nav,{document,window,location:{pathname:'/dzoft/admin/',hash:'#/factures',search:''},URLSearchParams});
+ vm.runInNewContext(nav,{document,window,location:{pathname:'/dzoft/admin/',hash:'#/comptabilite',search:''},URLSearchParams});
  // What dzoft-language.js does: every [data-fr][data-en] element gets its text replaced.
  const walk=n=>{for(const c of n.children){if(c.dataset.fr&&c.dataset.en){c.textContent=c.dataset.en;c.children=[];}walk(c);}};
  document.documentElement.lang='en';walk(side);
  assert.doesNotThrow(()=>listeners['dzoft:locale-change']());
- const link=side.children.find(c=>c.dataset&&c.dataset.route==='factures');
+ const link=side.children.find(c=>c.dataset&&c.dataset.route==='comptabilite');
  assert.ok(link.querySelector('.dzoft-v6-icon'),'icon kept');
- assert.equal(link.querySelector('.dzoft-v6-label').textContent,'Invoices');
+ assert.equal(link.querySelector('.dzoft-v6-label').textContent,'Accounts');
 });
 
 test('short admin pages start at the top instead of being centred in the window',()=>{

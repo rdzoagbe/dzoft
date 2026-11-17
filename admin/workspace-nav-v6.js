@@ -6,23 +6,23 @@ var isProject=/\/projet\.html$/i.test(location.pathname);
 var id=isProject?new URLSearchParams(location.search).get('q'):null;
 var validId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||'');
 var english=function(){return document.documentElement.lang==='en';};
+/* Seven entries (17 Nov 2026, chosen by Roland): one place per job. A project's own invoices, payments,
+   journal and documents live in the project page, not in this menu. Old addresses still work:
+   factures and paiements open Comptabilité, catalogue opens under Devis, rapports opens the dashboard,
+   journal and documents open Projets. */
 var routes=[
  {slug:'tableau-de-bord',fr:'Tableau de bord',en:'Dashboard',glyph:'⌂'},
  {slug:'clients',fr:'Clients',en:'Clients',glyph:'♧'},
- {slug:'projets',fr:'Projets',en:'Projects',glyph:'▱',projectPanel:'overview',id:'pf-side-project'},
- {slug:'devis',fr:'Devis & Chiffrage',en:'Quotes & pricing',glyph:'▤',projectPanel:'quotes'},
- {slug:'factures',fr:'Factures',en:'Invoices',glyph:'▧',projectPanel:'invoices',id:'pf-side-invoices'},
- {slug:'paiements',fr:'Paiements',en:'Payments',glyph:'▣',projectPanel:'payments'},
+ {slug:'devis',fr:'Devis',en:'Quotes',glyph:'▤'},
+ {slug:'projets',fr:'Projets',en:'Projects',glyph:'▱',id:'pf-side-project'},
+ {slug:'comptabilite',fr:'Comptabilité',en:'Accounts',glyph:'▧'},
  {slug:'messages',fr:'Messages',en:'Messages',glyph:'☏'},
- {slug:'journal',fr:'Journal & Suivi',en:'Journal & tracking',glyph:'☷',projectPanel:'journal',id:'pf-side-journal'},
- {slug:'documents',fr:'Documents',en:'Documents',glyph:'□',projectPanel:'documents',id:'pf-side-documents'},
- {slug:'catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',glyph:'◈'},
- {slug:'rapports',fr:'Rapports',en:'Reports',glyph:'▥'},
  {slug:'parametres',fr:'Paramètres',en:'Settings',glyph:'⚙'}
 ];
+var ALIAS={'vue-globale':'tableau-de-bord','vue-classique':'tableau-de-bord',rapports:'tableau-de-bord',dossiers:'clients',demandes:'clients',
+ catalogue:'devis',factures:'comptabilite',paiements:'comptabilite',journal:'projets',documents:'projets',corbeille:'parametres'};
 var home=function(slug){return (isProject?'./':'')+'#/'+slug;};
-var projectLink=function(item){return validId&&item.projectPanel?'projet.html?q='+encodeURIComponent(id)+'#'+item.projectPanel:home(item.slug);};
-var url=function(item){return isProject&&validId&&item.projectPanel?('#'+item.projectPanel):home(item.slug);};
+var url=function(item){return home(item.slug);};
 var nav=document.querySelector(isProject?'#pf-sidebar .pf-side-links':'#app .side');
 if(!nav)return;
 nav.replaceChildren();
@@ -61,8 +61,6 @@ routes.forEach(function(item,index){
  var icon=document.createElement('span');icon.className='dzoft-v6-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
  var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;label.dataset.fr=item.fr;label.dataset.en=item.en;
  a.append(icon,label,countBadge(item.slug));
- // Inside a project these entries open that project's own section: say so under the label.
- if(isProject&&validId&&item.projectPanel&&item.slug!=='projets'){var scope=document.createElement('small');scope.className='dzoft-v6-scope';scope.dataset.fr='ce projet';scope.dataset.en='this project';scope.textContent=english()?'this project':'ce projet';a.appendChild(scope);}
  nav.appendChild(a);
  entries[item.slug]=a;
 });
@@ -80,14 +78,9 @@ if(!isProject&&typeof nav.addEventListener==='function'){
  document.addEventListener('keydown',function(e){if(e.key==='Escape')setMore(false);});
 }
 function active(){
- var current=isProject?(location.hash.slice(1)||'overview'):location.hash.replace(/^#\/?/,'')||'tableau-de-bord';
- if(current==='vue-globale')current='tableau-de-bord';
- if(current==='dossiers')current='clients';
- if(current==='demandes')current='clients';
- if(current==='corbeille')current='parametres';
- var selected=current;
- if(isProject){var map={overview:'projets',quotes:'devis',invoices:'factures',payments:'paiements',extras:'projets',activity:'journal',journal:'journal',documents:'documents'};selected=map[current]||'projets';}
- if(!isProject&&current==='vue-classique')selected='tableau-de-bord';
+ // Inside a project page, « Projets » is the current entry whatever the tab.
+ var current=location.hash.replace(/^#\/?/,'')||'tableau-de-bord';
+ var selected=isProject?'projets':(ALIAS[current]||current);
  Object.keys(entries).forEach(function(key){
    var a=entries[key];if(key===selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  });
@@ -101,7 +94,7 @@ function active(){
 }
 function translate(){
  if(more){var open=nav.classList.contains('dzoft-v6-open');moreLabel.textContent=open?(english()?'Close':'Fermer'):(english()?'More':'Plus');}
- routes.forEach(function(item){var a=entries[item.slug],label=a&&a.querySelector('.dzoft-v6-label'),scope=a&&a.querySelector('.dzoft-v6-scope');if(label)label.textContent=english()?item.en:item.fr;if(scope)scope.textContent=english()?'this project':'ce projet';});
+ routes.forEach(function(item){var a=entries[item.slug],label=a&&a.querySelector('.dzoft-v6-label');if(label)label.textContent=english()?item.en:item.fr;});
  active();
 }
 function mobile(){

@@ -48,7 +48,8 @@ test('dashboard retains existing navigation and projects, while its actionable p
  assert.match(html,/DzoftToday\.render/);
  assert.match(html,/dashboardReceiptFailures/);
  assert.match(html,/sb\.rpc\('project_tracking'/);
- assert.match(html,/data-go="follow:/);
+ // Comptabilité opens each project's own payments tab (17 Nov 2026).
+ assert.match(html,/href="projet\.html\?q='\+encodeURIComponent\(q\.id\)\+'#payments"/);
  assert.doesNotMatch(js,/sb\.rpc|fetch\(|localStorage|record_project_payment/);
  new vm.Script(js);
 });
