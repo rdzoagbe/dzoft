@@ -40,7 +40,8 @@ test('« Calculer depuis le suivi » only adds requests done since the last extr
  const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
  // The start is the latest of the signature and the last live proposal (declined, rejected or withdrawn ones do not count).
  assert.match(fj,/if\(\['declined','rejected','withdrawn'\]\.indexOf\(r\.status\)<0\)\{/);
- assert.match(fj,/var c=String\(r\.created_at\|\|''\)\.slice\(0,10\);if\(c>lastDay\)lastDay=c;/);
+ // Only priced extra work counts (not an unpriced client request), dated when it was proposed.
+ assert.match(fj,/if\(\['proposed','approved','in_progress','completed'\]\.indexOf\(r\.status\)>=0\)\{var c=String\(r\.proposed_at\|\|r\.created_at\|\|''\)\.slice\(0,10\);if\(c>lastDay\)lastDay=c;\}/);
  assert.match(fj,/if\(lastDay>since\)since=lastDay;/);
  // Older done requests are listed apart, never added; lines already in a live proposal are still skipped.
  assert.match(fj,/if\(since&&e\.d<since\)\{[^]*?earlier\.push\([^]*?return false;\}/);

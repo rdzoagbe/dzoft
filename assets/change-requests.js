@@ -236,7 +236,9 @@ function bindOwner(root,options){
    return (q.client_id?Promise.resolve(sb.select('clients','select=nom&id=eq.'+encodeURIComponent(q.client_id))).catch(function(){return [];}):Promise.resolve([])).then(function(c){q.clientName=c&&c[0]&&c[0].nom||'';return [q,res[1]];});
   }).then(function(res){
    var q=res[0],work=Array.isArray(res[1])?res[1]:[],signed=String(q.accepted_at||'').slice(0,10),since=signed;
-   var used={},lastDay='';records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0){(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});var c=String(r.created_at||'').slice(0,10);if(c>lastDay)lastDay=c;}});
+   var used={},lastDay='';records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0){(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});
+     // Only priced extra work moves the start (a client's unpriced request does not), dated when it was proposed.
+     if(['proposed','approved','in_progress','completed'].indexOf(r.status)>=0){var c=String(r.proposed_at||r.created_at||'').slice(0,10);if(c>lastDay)lastDay=c;}}});
    /* Only what is new (17 Nov 2026): requests done since the last extra-work proposal still open or signed (or since
       the signature when there is none). Proposals made before the calculator, or typed by hand, carry no link to the
       journal: without this, their requests would come back every time. Older requests are listed apart, never added. */
