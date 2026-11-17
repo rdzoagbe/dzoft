@@ -144,7 +144,8 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Brouillon jusqu’à l’envoi (17 nov. 2026, migration `20261117200000_change_proposal_draft_until_sent.sql`) : une proposition
   chiffrée reste un brouillon visible par Roland seul (`sent_at` vide) ; le client ne la voit pas (sa propre demande reste
   « à l’étude », sans prix), ne peut ni recevoir de code ni la signer avant « Envoyer au client » ; la rechiffrer en refait un
-  brouillon. Test `tests/change-proposal-draft.test.cjs`.
+  brouillon. Reste privé même retiré ou refusé sans avoir été envoyé (migration `20261117210000_…`).
+  Tests `tests/change-proposal-draft.test.cjs`, `tests/change-draft-private-after-close.sql`.
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis le dernier supplément en cours ou signé
   (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; « Depuis le » permet de choisir la date ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).

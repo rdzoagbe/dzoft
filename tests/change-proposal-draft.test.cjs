@@ -13,6 +13,19 @@ test('the client never lists a proposal that was not sent',()=>{
  // The owner keeps the full list.
  assert.match(schema,/return private\.dzoft_changes_for_project\(cid,p_quote\);/);
 });
+test('a draft stays private once rejected or withdrawn (any status), sent proposals keep their details',()=>{
+ const fix=read('supabase/migrations/20261117210000_change_draft_private_after_close.sql');
+ // Redaction no longer depends on status='proposed': any version not sent shows no scope, price or lines.
+ assert.match(fix,/case when c\.sent_at is null and c\.proposal_version>0 then[\s\S]{0,200}?'proposed_scope',null,'extra_price',null,'timeline_impact',null,'lines',null/);
+ assert.match(fix,/'status',case when c\.status='proposed' then 'requested' else c\.status end/);
+ // Opened by DZOFT and never sent: hidden whatever its status.
+ assert.match(fix,/and not \(c\.sent_at is null and s\.last_sent is null and c\.proposal_version>0 and exists\(/);
+ assert.doesNotMatch(fix,/c\.status='proposed' and c\.sent_at is null and exists/);
+ // History: no 'proposed' event nor version number of a draft.
+ assert.match(fix,/c\.sent_at is not null or e\.event_type<>'proposed' or e\.proposal_version<=coalesce\(s\.last_sent,0\)/);
+ assert.ok(schema.includes("and not (c.sent_at is null and s.last_sent is null"),'schema.sql regenerated');
+ assert.ok(fs.existsSync(path.join(__dirname,'change-draft-private-after-close.sql')));
+});
 test('no signing code and no decision on a proposal that was not sent; repricing makes it a draft again',()=>{
  assert.match(mig,/status='proposed' and sent_at is not null for update;/);
  assert.match(mig,/if c\.sent_at is null then raise exception 'Proposal changed or is no longer awaiting approval';end if;/);

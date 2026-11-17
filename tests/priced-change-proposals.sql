@@ -119,6 +119,11 @@ begin
   -- Priced but not sent: the client still sees his request, as « requested » and without the draft price.
   if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
     where x->>'id'=req->>'id' and x->>'status'='requested' and x->'extra_price'='null'::jsonb) then raise exception 'Client view of a priced, unsent request is wrong'; end if;
+  -- Sent proposals stay visible with their price (sent via the button, or with sent_at only).
+  if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
+    where x->>'id'=p2->>'id' and x->>'status'='declined' and (x->>'extra_price')::numeric=50) then raise exception 'A sent proposal lost its details'; end if;
+  if not exists(select 1 from jsonb_array_elements(private.dzoft_changes_for_client(client_id,q_key)) x
+    where x->>'id'=ch::text and x->>'status'='completed' and (x->>'extra_price')::numeric=400) then raise exception 'A signed proposal lost its details'; end if;
   update public.dzoft_change_requests set sent_at=now() where id=(req->>'id')::uuid;
   perform set_config('request.jwt.claims','{"role":"service_role"}',true);
   st:=public.reserve_change_sign_code((req->>'id')::uuid,client_id,salt,encode(extensions.digest(salt||'222222','sha256'),'hex'),'p•••',now()+interval '10 minutes');
