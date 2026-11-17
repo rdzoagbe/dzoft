@@ -1120,7 +1120,7 @@ footer{max-width:1180px}
       '<p class="muted">' + L('Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).', 'Logo, photos, texts, old documents: upload them here and I receive them directly. 20 MB maximum per file (images, PDF, Word, Excel, ZIP).') + '</p>' +
       '<div class="qacts"><label class="btn main" style="cursor:pointer">' + L('Envoyer des fichiers', 'Upload files') + '<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
       '<p class="msgline" id="up-msg" role="status" aria-live="polite"></p><ul class="docs" id="flist"><li class="muted">' + L('Chargement…', 'Loading…') + '</li></ul>') + '</section>';
-    h += '<section class="card"><h2>' + L('Toujours disponibles', 'Always available') + '</h2>' + docsList([{ n: L('Fiche de remise (modèle)', 'Handover sheet (template, in French)'), u: 'https://rdzoagbe.github.io/dzoft/assets/fiche-de-remise-client.pdf' }]) + '</section>';
+    // The handover sheet is shared in « Fichiers du projet » at delivery, filled in for the client (no blank template here).
     return h;
   };
 

@@ -5,7 +5,7 @@ var root=document.querySelector('#app .shell main');if(!root)return;
 var definitions=[
  ['invoices','Factures','Invoices','Registre des factures émises','Issued invoice register'],
  ['journal','Journal & Suivi','Journal & tracking','Notes privées des projets','Private project notes'],
- ['documents','Documents','Documents','Références de documents des projets','Project document references'],
+ ['documents','Documents','Documents','Contrat, factures, reçus et fichiers : choisissez le projet','Contract, invoices, receipts and files: choose the project'],
  ['catalogue','Catalogue (Prestations)','Service catalogue','Mes tarifs et prestations de vos devis','My prices and the services in your quotes'],
  ['reports','Rapports','Reports','Suivi des dossiers et des encaissements','Case and receipt reporting']
 ];
@@ -77,7 +77,13 @@ function reports(){
  (complete?'':'<p class="v6-warning">'+tr('Données financières incomplètes ou en cours de chargement. Aucun total partiel n’est affiché comme définitif.','Financial data incomplete or loading. Partial totals are not represented as final.')+'</p>')+
  '<h2 class="v6-report-subtitle">'+tr('Dossiers de projets','Project cases')+'</h2>'+projectCards('overview');
 }
-var renderers={invoices:invoices,journal:()=>detailed('journal'),documents:()=>detailed('docs'),catalogue:catalogue,reports:reports};
+/* 17 Nov 2026: each project has a complete Documents tab (contract, signed extra work, invoices, payment receipts,
+   files). This page only leads to it, instead of listing loose links. */
+function documentsByProject(){
+ return (projects.length?'<div class="v6-card-list">'+projects.map(p=>card('projet.html?q='+encodeURIComponent(p.id)+'#documents','▢',p.clientName||tr('Client','Client'),esc(p.numero||'')+' · '+tr('contrat, factures, reçus, fichiers','contract, invoices, receipts, files'))).join('')+'</div>':empty('Aucun projet signé pour le moment.','No signed project yet.'))+
+  '<h2 class="v6-report-subtitle">'+tr('Fichiers partagés avec les clients','Files shared with clients')+'</h2>'+detailed('docs');
+}
+var renderers={invoices:invoices,journal:()=>detailed('journal'),documents:documentsByProject,catalogue:catalogue,reports:reports};
 function render(){definitions.forEach(d=>{var section=el('v-'+d[0]);section.querySelector('h1').textContent=tr(d[1],d[2]);section.querySelector('.v6-page-head>span').textContent=tr(d[3],d[4]);section.querySelector('.v6-page-body').innerHTML=renderers[d[0]]();});}
 function setData(input){
  projects=(input.projects||[]).filter(p=>p&&uuid.test(p.id));clients=input.clients||[];quotes=input.quotes||[];

@@ -47,3 +47,9 @@ test('documents never write or send anything, and pages show official documents 
  assert.match(admin,/function receiptTotal\(invoiceId\)/);
  assert.match(admin,/return officialDocuments\(\)\+/);
 });
+test('no blank template among the client documents; the admin Documents page leads to each project tab',()=>{
+ const portal=read('espace/index.html'),panels=read('admin/workspace-panels-v7.js');
+ assert.doesNotMatch(portal,/Toujours disponibles|fiche-de-remise-client\.pdf/);
+ assert.match(panels,/documents:documentsByProject/);
+ assert.match(panels,/'projet\.html\?q='\+encodeURIComponent\(p\.id\)\+'#documents'/);
+});
