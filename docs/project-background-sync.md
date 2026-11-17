@@ -6,7 +6,7 @@ The private UPZONE project can now synchronize GitHub activity **even when the a
 
 - Source: public `ProjectRodney/ProRod`, branch `main`, maximum 100 recent commits.
 - Cadence: PostgreSQL Cron at minutes **17 and 47** of every hour, UTC (~30 minutes; this is polling, **not instant push-triggered webhooks**).
-- The cron job invokes the separately deployed `sync-rodney-github` Supabase Edge Function.
+- The cron job invokes the separately deployed `sync-project-github` Supabase Edge Function.
 - Authentication uses a **random purpose-specific secret generated in Supabase Vault**. It is never committed to GitHub or shown to a client. The Edge Function validates it via a server-only RPC before contacting GitHub.
 - The Edge Function reads the **first line only** of each commit locally in memory, maps it to a fixed category, groups by day, then sends **only** `{"date":"YYYY-MM-DD","group":"qr"}` pairs to Supabase.
 - The owner-private database RPC checks project ID, date window, allowed groups, and exact JSON keys. Duplicate category/date pairs are ignored, and existing statuses are preserved.
@@ -34,7 +34,7 @@ In **DZOFT Admin → Projects → UPZONE project → Private project journal**, 
 - Secret validation and background ingestion are granted **only** to `service_role`; anonymous and ordinary authenticated accounts cannot call those functions.
 - The owner-only sync status RPC exposes timestamps and counts, never tokens or client data.
 - Cron and Edge Function errors should be inspected in the Supabase dashboard; aggregate status is not a full error log.
-- If stopping background activity, deactivate the `dzoft_rodney_background_git` schedule in **Supabase → Cron**. Revoke/rotate the purpose-specific token if it may be compromised, then redeploy/reconfigure the caller.
+- If stopping background activity, deactivate the `dzoft_project_background_git` schedule in **Supabase → Cron**. Revoke/rotate the purpose-specific token if it may be compromised, then redeploy/reconfigure the caller.
 
 ## Data backup readiness: still NOT verified
 
@@ -47,7 +47,7 @@ See [the DZOFT backup guide](backup-recovery.md) for a Windows walkthrough. No p
 - [x] Rollback-only tests of input sanitization, duplicate protection and no mail.
 - [x] Node tests for owner weekly review and no raw GitHub information crossing the boundary.
 - [x] Edge Function deployed with a purpose-specific token; first run uncovered and resolved a narrowly scoped service-role schema permission issue.
-- [x] Vault token, service-only RPCs and twice-hourly Cron schedule installed; scheduler `dzoft_rodney_background_git` active.
+- [x] Vault token, service-only RPCs and twice-hourly Cron schedule installed; scheduler `dzoft_project_background_git` active.
 - [x] Live Edge worker successfully imported **40** private date/category groups, all **To verify**; no raw commit text/AI metadata in stored titles.
 - [x] Private sync status shows the successful run; **0** newly published client updates or emails and unchanged client/quote/payment/email fingerprints.
 - [x] Verify functional security on the live database with rollback-only test fixtures; keep actual first run as a separate smoke check.

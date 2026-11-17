@@ -46,7 +46,7 @@ function load(){
  root.replaceChildren(node("p","muted","Loading private weekly review…"));
  Promise.all([
   sb.rpc("list_project_work_items",{p_quote:q},true),
-  sb.rpc("rodney_sync_overview",{},true)
+  sb.rpc("project_sync_overview",{},true)
  ]).then(function(pair){draw(summary(pair[0]),pair[1]||{});loaded=true;})
  .catch(function(){
   root.replaceChildren(node("p","jr-task-message error",
