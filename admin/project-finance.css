@@ -202,3 +202,7 @@ a{color:inherit}
 .pf-project-switch-label select{width:100%;min-height:42px;background:#fff;border:1px solid #ddd7f2;border-radius:10px;padding:9px 11px;color:#252043;font-size:13px;font-weight:700;max-width:100%}
 .pf-project-switch-label select:disabled{color:#777188;background:#f4f1f9}
 @media(max-width:760px){.pf-dashboard-lead{flex-direction:column;align-items:stretch;gap:12px}.pf-dashboard-lead h1{font-size:23px}.pf-project-switch-label{min-width:0;width:100%}.pf-dashboard-lead p{font-size:11.5px}}
+/* « Open the tool » next to « Ajouter un supplément » (17 Nov 2026). */
+.pf-panel-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.pf-panel-actions #pf-panel-tool{font-size:12px;text-decoration:none}
+@media(max-width:640px){.pf-panel-head{flex-wrap:wrap}.pf-panel-actions{width:100%;justify-content:flex-start}}

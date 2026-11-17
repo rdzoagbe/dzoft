@@ -647,7 +647,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       apply(d);
       $('b-follow').hidden = false;
       $('b-follow').href = (q.accepted_at ? 'projet.html?q=' : 'suivi.html?q=') + encodeURIComponent(QID);
-      $('b-follow').textContent = q.accepted_at ? 'Tableau de bord du projet' : 'Suivi du devis';
+      $('b-follow').textContent = q.accepted_at ? 'Dossier client' : 'Suivi du devis';
       if (q.accepted_at && q.accepted_terms !== 'v2026-11') {
          $('scope-change-quote').hidden = true;
          if (q.accepted_terms === 'v2026-10') $('cgv-ref').textContent = 'rdzoagbe.github.io/dzoft/cgv-2026-10.html';
@@ -731,6 +731,6 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 /* Installable admin app: registers the background script (no private data is cached). */
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 </script>
-<script src="editor-navigation.js?v=20261116-1"></script>
+<script src="editor-navigation.js?v=20261117-menu"></script>
 </body>
 </html>

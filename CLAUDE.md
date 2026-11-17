@@ -49,6 +49,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   `tests/client-language-portal.sql`.
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
+  Deux pages par projet (17 nov. 2026, version légère choisie par Roland) : `projet.html` « Dossier client » (résumé, argent,
+  suppléments ; chaque onglet a un bouton vers le vrai outil) et `suivi.html` « Outils du projet » ; même menu partout
+  (`editor-navigation.js` reprend les noms et l’ordre de `workspace-nav-v6.js`). Test `tests/admin-project-pages-light.test.cjs`.
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
   décision, en attente) dans `quotes.journal`, collage de plusieurs lignes « date | type | texte », jamais renvoyée au client
   (test `tests/project-journal.test.cjs`). Ne jamais y mettre de journal dans le dépôt : il vit dans la base.

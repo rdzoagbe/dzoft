@@ -241,9 +241,21 @@ var sections={overview:{fr:["◉ Périmètre du projet","Prestations, statut et 
  activity:{fr:["⌁ Activité","Chronologie des étapes et décisions."],en:["⌁ Activity","Project milestones and decisions."]},
   journal:{fr:["☷ Journal privé","Notes et décisions internes au projet."],en:["☷ Private journal","Internal project notes and decisions."]},
   documents:{fr:["▢ Documents du projet","Références et liens des documents associés au dossier."],en:["▢ Project documents","Document references and links for the project."]}};
+/* Each summary opens the real tool for it, on the « Outils du projet » page (17 Nov 2026). */
+var TOOLS={quotes:["devis.html?q=","","Ouvrir l’éditeur de devis →","Open the quote editor →"],
+ invoices:["suivi.html?q=","#billing/c-inv","Créer ou envoyer une facture →","Create or send an invoice →"],
+ payments:["suivi.html?q=","#billing/pay","Enregistrer un paiement →","Record a payment →"],
+ activity:["suivi.html?q=","#messages","Messages et e-mails envoyés →","Messages and e-mails sent →"],
+ journal:["suivi.html?q=","#work/c-journal","Écrire dans le journal →","Write in the journal →"],
+ documents:["suivi.html?q=","#work/c-docs","Ajouter ou partager un document →","Add or share a document →"]};
+function renderTool(){
+ var a=$("pf-panel-tool");if(!a)return;var t=TOOLS[state.section];
+ a.hidden=!t;if(!t)return;
+ a.href=t[0]+encodeURIComponent(id)+t[1];a.textContent=en()?t[3]:t[2];
+}
 function renderSection(){
  var s=sections[state.section]||sections.overview,t=s[en()?"en":"fr"];
- setText("pf-panel-title",t[0]);setText("pf-panel-sub",t[1]);
+ setText("pf-panel-title",t[0]);setText("pf-panel-sub",t[1]);renderTool();
  var box=$("pf-panel-content");
  box.innerHTML=state.section==="overview"?overview():state.section==="quotes"?allQuotes():state.section==="invoices"?allInvoices():state.section==="payments"?payments():state.section==="extras"?extras():state.section==="journal"?privateJournal():state.section==="documents"?documents():activity();
  $("pf-tabs").querySelectorAll("[data-panel]").forEach(function(b){var on=b.dataset.panel===state.section;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.tabIndex=on?0:-1;});

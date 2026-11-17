@@ -90,7 +90,8 @@ test('specialized quote and project editors share nav without replacing secure w
     assert.match(html,/editor-navigation\.css/);
     assert.match(html,/editor-navigation\.js/);
   }
-  for(const path of ['./#/tableau-de-bord','./#/dossiers','./#/messages','./#/paiements','./#/parametres'])
+  // Same menu as the dashboard (17 Nov 2026); project entries point to that project's own sections.
+  for(const path of ['./#/tableau-de-bord','./#/dossiers','./#/messages','./#/paiements','./#/catalogue','./#/rapports','./#/parametres','#billing/c-inv','#work/c-journal','#work/c-docs'])
     assert.ok(editorNav.includes(path),'missing route '+path);
   assert.doesNotMatch(editorNav,/\bsb\.(?:update|insert|remove|rpc)\(/);
   assert.match(editorNav,/valid=/);

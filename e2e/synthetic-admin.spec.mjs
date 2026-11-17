@@ -711,3 +711,23 @@ test('Price list lives on the Catalogue page; the project calculator links to it
  await expect(dialog.locator('[data-tier-save]')).toHaveCount(0);
  expect(errors).toEqual([]);
 });
+
+test('Client file summaries open the real tools, and the tools page has the dashboard menu',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
+ await page.goto('admin/projet.html?q='+q+'#invoices',{waitUntil:'domcontentloaded'});
+ const tool=page.locator('#pf-panel-tool');
+ await expect(tool).toBeVisible();
+ await expect(tool).toHaveAttribute('href','suivi.html?q='+q+'#billing/c-inv');
+ await page.locator('#pf-tabs [data-panel="overview"]').click();
+ await expect(tool).toBeHidden();
+ await page.locator('#pf-tabs [data-panel="journal"]').click();
+ await expect(tool).toHaveAttribute('href','suivi.html?q='+q+'#work/c-journal');
+ await page.goto('admin/suivi.html?q='+q,{waitUntil:'domcontentloaded'});
+ const side=page.locator('#dzoft-editor-sidebar');
+ await expect(side.locator('a[aria-current="page"]')).toHaveAttribute('href','projet.html?q='+q);
+ await expect(side).toContainText('Catalogue (Prestations)');
+ await expect(page.locator('#suivi-back')).toHaveText(/Dossier client/);
+ expect(errors).toEqual([]);
+});

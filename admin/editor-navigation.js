@@ -11,17 +11,21 @@
  aside.id='dzoft-editor-sidebar';
  aside.className='dzoft-editor-sidebar';
  aside.setAttribute('aria-label','Navigation DZOFT');
- var back=valid?'projet.html?q='+encodeURIComponent(quote):'./#/dossiers';
- var current=quotePage?'devis':'suivi';
+ /* Same menu, same order and same names as the dashboard and the « Dossier client » page (17 Nov 2026).
+    Inside a project, its entries open that project's own sections; the « Outils du projet » page shows « Projets » as current. */
+ var q=encodeURIComponent(quote),tools=function(h){return valid?'suivi.html?q='+q+h:null;};
  var paths=[
-  {route:'./#/tableau-de-bord',fr:'Aujourd’hui',en:'Today',icon:'⌂'},
-  {route:'./#/dossiers',fr:'Dossiers clients',en:'Client cases',icon:'▱'},
+  {route:'./#/tableau-de-bord',fr:'Tableau de bord',en:'Dashboard',icon:'⌂'},
+  {route:'./#/dossiers',fr:'Clients',en:'Clients',icon:'♧'},
+  {route:valid?'projet.html?q='+q:'./#/projets',fr:'Projets',en:'Projects',icon:'▱',active:!quotePage},
+  {route:quotePage?'#':(valid?'devis.html?q='+q:'./#/devis'),fr:'Devis & Chiffrage',en:'Quotes & pricing',icon:'▤',active:quotePage},
+  {route:tools('#billing/c-inv')||'./#/factures',fr:'Factures',en:'Invoices',icon:'▧'},
+  {route:tools('#billing')||'./#/paiements',fr:'Paiements',en:'Payments',icon:'▣'},
   {route:'./#/messages',fr:'Messages',en:'Messages',icon:'☏'},
-  {route:'./#/paiements',fr:'Factures & paiements',en:'Invoices & payments',icon:'▣'},
-  {divider:true},
-  {route:back,fr:'Dossier du projet',en:'Project workspace',icon:'◈'},
-  {route:quotePage?'#':'devis.html?q='+encodeURIComponent(quote),fr:'Éditeur de devis',en:'Quote editor',icon:'▤',active:quotePage},
-  {route:!quotePage?'#':'suivi.html?q='+encodeURIComponent(quote),fr:'Outils du projet',en:'Project tools',icon:'☷',active:!quotePage},
+  {route:tools('#work/c-journal')||'./#/journal',fr:'Journal & Suivi',en:'Journal & tracking',icon:'☷'},
+  {route:tools('#work/c-docs')||'./#/documents',fr:'Documents',en:'Documents',icon:'□'},
+  {route:'./#/catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',icon:'♧'},
+  {route:'./#/rapports',fr:'Rapports',en:'Reports',icon:'▥'},
   {divider:true},
   {route:'./#/parametres',fr:'Paramètres',en:'Settings',icon:'⚙'}
  ];
