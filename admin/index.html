@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261116-1"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261117-todo"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
 <link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261117-counts">
 </head>
 <body class="dzoft-admin">
@@ -566,7 +566,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [], deliveryMonitor: null }, editing = null;
+  var data = { leads: [], clients: [], quotes: [], unread: [], messages: [], changes: [], trashLeads: [], trashQuotes: [], events: [], emailOutbox: [], deliveryMonitor: null }, editing = null;
   var loadErrors = {}, loadReady = false, loadGeneration = 0;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var eur = function(n){ return (Math.round((+n || 0) * 100) / 100).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; };
@@ -773,7 +773,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var clientBox=$('clients');if(clientBox)clientBox.innerHTML='<div class="v4-empty" role="status">Chargement des clients…</div>';
     // Independent reads: a timeout in Messages or another ancillary service
     // must never hide Clients, issued invoices, or accepted quotations.
-    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor'];
+    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor','change_requests'];
     var reads=[
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
@@ -794,7 +794,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.select('reviews', 'select=id,quote_id,client_id,rating,consent,published,created_at&order=created_at.desc'),
       sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30'),
       sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&order=created_at.desc&limit=80'),
-      sb.rpc('brevo_delivery_monitor',{},true)
+      sb.rpc('brevo_delivery_monitor',{},true),
+      sb.rpc('owner_open_change_requests',{},true)
     ];
     return Promise.allSettled(reads).then(function(results){
       if(generation!==loadGeneration)return;
@@ -818,6 +819,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.events=Array.isArray(r[5])?r[5]:[];
       data.emailOutbox=Array.isArray(r[6])?r[6]:[];
       data.deliveryMonitor=r[7]||null;
+      data.changes=Array.isArray(r[8])?r[8]:[];
       ['leads','clients','quotes','messages'].forEach(function(name,i){
         if(!Array.isArray(r[i])&&!loadErrors[name])loadErrors[name]=new Error('Réponse serveur inattendue');
       });
@@ -1045,8 +1047,20 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       if (x.payment_reported_at) { todo.push(['Paiement déclaré envoyé · ' + (x.num || x.n) + ' · ' + ((client(q.client_id) || {}).nom || 'Client'), 'follow:' + q.id, 'Confirmer la réception']); return; }
       todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
     }); });
+    // Extra work (changes after signature): what the client is waiting for, and what is yours to do.
+    (data.changes || []).forEach(function(c){
+      var who = (client(c.client_id) || {}).nom || 'Client', ref = c.proposal_number || ('« ' + c.title + ' »');
+      if (c.status === 'requested') todo.push(['Demande de modification de ' + who + ' : « ' + c.title + ' », à chiffrer', 'follow:' + c.quote_id, 'Chiffrer']);
+      else if (c.status === 'proposed' && !c.sent_at) todo.push(['Proposition ' + ref + ' (' + who + ') prête mais pas encore envoyée', 'follow:' + c.quote_id, 'Envoyer']);
+      else if (c.status === 'proposed') { var d = Math.floor((Date.now() - new Date(c.sent_at)) / 864e5); if (d >= 5) todo.push(['Proposition ' + ref + ' envoyée à ' + who + ' il y a ' + d + ' jours, sans signature : pensez à relancer', 'follow:' + c.quote_id, 'Suivi']); }
+      else if (c.status === 'approved' || c.status === 'in_progress') todo.push(['Proposition ' + ref + ' signée par ' + who + (c.extra_price ? ' · ' + eur(c.extra_price) : '') + ' : travaux à réaliser', 'follow:' + c.quote_id, 'Suivi']);
+      else if (c.status === 'completed' && !c.invoiced) todo.push(['Travaux ' + ref + ' terminés (' + who + ') : facture complémentaire à émettre' + (c.extra_price ? ' · ' + eur(c.extra_price) : ''), 'follow:' + c.quote_id, 'Facturer']);
+    });
+    // Items in the trash stay visible until they are restored or deleted for good.
+    var trashCount = (data.trashLeads || []).length + (data.trashQuotes || []).length;
+    if (trashCount) todo.push([trashCount + ' élément' + (trashCount > 1 ? 's' : '') + ' dans la corbeille : à restaurer ou supprimer définitivement', 'trash', 'Ouvrir']);
     // Put conversations and scheduled follow-ups before routine administration.
-    todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[0].indexOf('Virement signalé par le client') === 0 ? 0 : t[1].indexOf('thread:') === 0 ? 1 : t[1] === 'leads' ? 2 : t[0].indexOf('Échec') === 0 ? 3 : 4 }; })
+    todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[0].indexOf('Virement signalé par le client') === 0 ? 0 : t[1].indexOf('thread:') === 0 || t[0].indexOf('Demande de modification') === 0 ? 1 : t[1] === 'leads' ? 2 : t[0].indexOf('Échec') === 0 ? 3 : 4 }; })
       .sort(function(a,b){ return a.rank - b.rank || a.order - b.order; }).map(function(x){ return x.task; });
     var firstAction = todo[0];
     if(window.DzoftToday){
@@ -1068,6 +1082,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       ready:dashboardReceiptReady,failures:dashboardReceiptFailures,
       unread:data.unread.map(function(m){return {client_id:m.client_id,clientName:(client(m.client_id)||{}).nom||"Client"};}),
       newLeads:nNew,waitingQuotes:waiting().length,activeProjects:running.length,
+      todo:todo.map(function(t){return {text:t[0],target:t[1],action:t[2]};}),
       english:document.documentElement.lang==="en"
     });
     if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.setData({
@@ -1850,7 +1865,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261116-nav-audit1"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261116-global-v5"></script>
+<script src="dashboard-v3.js?v=20261117-todo"></script>
 <script src="unified-app-shell.js?v=20261116-v6"></script>
 <script src="workspace-panels-v7.js?v=20261116-data1"></script>
 <script src="workspace-nav-v6.js?v=20261117-site"></script>
