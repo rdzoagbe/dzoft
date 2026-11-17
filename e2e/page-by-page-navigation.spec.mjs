@@ -63,17 +63,13 @@ test('installed mobile menu includes every canonical route and closes after navi
 test('inside a project the same seven entries show, with Projets current',async({page},info)=>{
  test.skip(info.project.name.includes('mobile'),'Project sidebar desktop check');
  const id='12345678-1234-4234-9234-123456789abc';
- await page.route('**/admin/project-finance.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:''}));
- await page.goto('admin/projet.html?q='+id,{waitUntil:'domcontentloaded'});
- await page.evaluate(()=>{
-   document.getElementById('pf-shell').hidden=false;
-   document.getElementById('pf-loading').hidden=true;
- });
- const entries=page.locator('#pf-sidebar .dzoft-v6-link');
+ // The editor menu is drawn before any data: the page itself is not needed for this check.
+ await page.route('**/admin/sb.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:'window.RDsb={session:()=>({}),aal:()=>"aal2",mfaFresh:()=>true,select:()=>new Promise(()=>{}),rpc:()=>new Promise(()=>{})};'}));
+ await page.goto('admin/suivi.html?q='+id,{waitUntil:'domcontentloaded'});
+ const entries=page.locator('#dzoft-editor-sidebar nav a');
  await expect(entries).toHaveCount(routes.length);
- await expect(page.locator('#pf-sidebar [data-route="projets"]')).toHaveAttribute('aria-current','page');
- for(const [slug] of routes)await expect(page.locator('#pf-sidebar [data-route="'+slug+'"]')).toHaveAttribute('href','./#/'+slug);
- await expect(page.locator('#pf-sidebar .dzoft-v6-scope')).toHaveCount(0);
+ for(const [slug] of routes)await expect(page.locator('#dzoft-editor-sidebar nav a[href="./#/'+slug+'"]')).toHaveCount(1);
+ await expect(page.locator('#dzoft-editor-sidebar a[aria-current="page"]')).toHaveAttribute('href','./#/projets');
 });
 
 test('Comptabilité and Catalogue show the recorded data',async({page},info)=>{

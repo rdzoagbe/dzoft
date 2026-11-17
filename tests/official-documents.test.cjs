@@ -38,14 +38,15 @@ test('payment receipt names its invoice and says it does not replace it',async()
 });
 test('documents never write or send anything, and pages show official documents first',()=>{
  assert.doesNotMatch(src,/fetch\(|XMLHttpRequest|\.rpc\(|\.update\(|\.insert\(|localStorage/);
- const portal=read('espace/index.html'),admin=read('admin/project-finance.js');
- assert.match(portal,/dzoft-documents\.js\?v=/);assert.match(read('admin/projet.html'),/dzoft-documents\.js\?v=/);
+ const portal=read('espace/index.html'),admin=read('admin/project-summary.js');
+ assert.match(portal,/dzoft-documents\.js\?v=/);assert.match(read('admin/suivi.html'),/dzoft-documents\.js\?v=/);
  assert.match(portal,/signed\.map\(officialDocs\)[\s\S]*Fichiers du projet · [\s\S]*Fichiers que vous m’avez envoyés/);
  assert.match(portal,/call\('list_change_requests', \{ p_quote: id \}\)/);
  assert.match(portal,/portal_project_tracking/);
  // In the admin, « réglée » comes from recorded payments only.
- assert.match(admin,/function receiptTotal\(invoiceId\)/);
- assert.match(admin,/return officialDocuments\(\)\+/);
+ assert.match(admin,/function paidFor\(invoiceId\)/);
+ // The project page's Documents tab starts with the official documents.
+ assert.match(read('admin/project-workspace-tabs.js'),/docsPane\.appendChild\(official\);[\s\S]*\['c-docs','c-files'\]/);
 });
 test('no blank template among the client documents; documents live in each project, not in a global page',()=>{
  const portal=read('espace/index.html'),panels=read('admin/workspace-panels-v7.js'),admin=read('admin/index.html');

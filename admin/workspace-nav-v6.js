@@ -2,9 +2,7 @@
    Anchors are real routes; no placeholder (#) links and no invented data writes. */
 (function(){
 'use strict';
-var isProject=/\/projet\.html$/i.test(location.pathname);
-var id=isProject?new URLSearchParams(location.search).get('q'):null;
-var validId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||'');
+// Dashboard only (admin/index.html). The project page and the quote editor draw the same entries with editor-navigation.js.
 var english=function(){return document.documentElement.lang==='en';};
 /* Seven entries (17 Nov 2026, chosen by Roland): one place per job. A project's own invoices, payments,
    journal and documents live in the project page, not in this menu. Old addresses still work:
@@ -14,16 +12,16 @@ var routes=[
  {slug:'tableau-de-bord',fr:'Tableau de bord',en:'Dashboard',glyph:'⌂'},
  {slug:'clients',fr:'Clients',en:'Clients',glyph:'♧'},
  {slug:'devis',fr:'Devis',en:'Quotes',glyph:'▤'},
- {slug:'projets',fr:'Projets',en:'Projects',glyph:'▱',id:'pf-side-project'},
+ {slug:'projets',fr:'Projets',en:'Projects',glyph:'▱'},
  {slug:'comptabilite',fr:'Comptabilité',en:'Accounts',glyph:'▧'},
  {slug:'messages',fr:'Messages',en:'Messages',glyph:'☏'},
  {slug:'parametres',fr:'Paramètres',en:'Settings',glyph:'⚙'}
 ];
 var ALIAS={'vue-globale':'tableau-de-bord','vue-classique':'tableau-de-bord',rapports:'tableau-de-bord',dossiers:'clients',demandes:'clients',
  catalogue:'devis',factures:'comptabilite',paiements:'comptabilite',journal:'projets',documents:'projets',corbeille:'parametres'};
-var home=function(slug){return (isProject?'./':'')+'#/'+slug;};
+var home=function(slug){return '#/'+slug;};
 var url=function(item){return home(item.slug);};
-var nav=document.querySelector(isProject?'#pf-sidebar .pf-side-links':'#app .side');
+var nav=document.querySelector('#app .side');
 if(!nav)return;
 nav.replaceChildren();
 nav.removeAttribute('role');
@@ -55,9 +53,6 @@ routes.forEach(function(item,index){
  var a=document.createElement('a');
  a.href=url(item);a.className='dzoft-v6-link';a.dataset.route=item.slug;
  // Translation markers go on the label only: on the link, the page translator would replace the icon and label.
- if(isProject&&item.id)a.id=item.id;
- if(isProject&&item.slug==='tableau-de-bord')a.id='pf-side-dashboard';
- if(isProject&&item.slug==='clients')a.id='pf-side-cases';
  var icon=document.createElement('span');icon.className='dzoft-v6-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.glyph;
  var label=document.createElement('span');label.className='dzoft-v6-label';label.textContent=english()?item.en:item.fr;label.dataset.fr=item.fr;label.dataset.en=item.en;
  a.append(icon,label,countBadge(item.slug));
@@ -66,7 +61,7 @@ routes.forEach(function(item,index){
 });
 /* Phone bar (17 Nov 2026): four main entries plus « Plus », which opens every entry. Desktop ignores it. */
 var more=null;
-if(!isProject&&typeof nav.addEventListener==='function'){
+if(typeof nav.addEventListener==='function'){
  more=document.createElement('button');more.type='button';more.className='dzoft-v6-more';more.setAttribute('aria-expanded','false');
  var moreIcon=document.createElement('span');moreIcon.className='dzoft-v6-icon';moreIcon.setAttribute('aria-hidden','true');moreIcon.textContent='⋯';
  var moreLabel=document.createElement('span');moreLabel.className='dzoft-v6-label';more.append(moreIcon,moreLabel);
@@ -78,9 +73,8 @@ if(!isProject&&typeof nav.addEventListener==='function'){
  document.addEventListener('keydown',function(e){if(e.key==='Escape')setMore(false);});
 }
 function active(){
- // Inside a project page, « Projets » is the current entry whatever the tab.
  var current=location.hash.replace(/^#\/?/,'')||'tableau-de-bord';
- var selected=isProject?'projets':(ALIAS[current]||current);
+ var selected=ALIAS[current]||current;
  Object.keys(entries).forEach(function(key){
    var a=entries[key];if(key===selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  });
@@ -115,7 +109,7 @@ function mobile(){
  if(site)panel.appendChild(site);
  if(old)panel.appendChild(old);
 }
-if(!isProject)mobile();
+mobile();
 document.addEventListener('dzoft:locale-change',function(){translate();paintAllCounts();var panel=document.getElementById('dzoft-installed-menu-panel');if(panel)panel.querySelectorAll('[data-fr][data-en]').forEach(function(x){x.textContent=x.dataset[english()?'en':'fr'];});});
 window.addEventListener('hashchange',active);
 window.addEventListener('pageshow',active);

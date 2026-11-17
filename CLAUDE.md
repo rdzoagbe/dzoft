@@ -50,12 +50,15 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Documents (17 nov. 2026) : d’abord « Documents officiels » par projet signé = contrat (devis signé en PDF + CGV acceptées),
   compléments signés, factures, paiements reçus (reçu PDF par paiement) ; puis fichiers du projet, puis fichiers envoyés par le client.
   PDF dessinés dans le navigateur depuis les enregistrements (`assets/dzoft-documents.js`, en français, rien n’est écrit) ;
-  un reçu ne remplace jamais la facture. Même onglet dans l’admin (`projet.html#documents`). Test `tests/official-documents.test.cjs`.
+  un reçu ne remplace jamais la facture. Même onglet dans l’admin (`suivi.html#documents`). Test `tests/official-documents.test.cjs`.
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
-  Deux pages par projet (17 nov. 2026, version légère choisie par Roland) : `projet.html` « Dossier client » (résumé, argent,
-  suppléments ; chaque onglet a un bouton vers le vrai outil) et `suivi.html` « Outils du projet » ; même menu partout
-  (`editor-navigation.js` reprend les noms et l’ordre de `workspace-nav-v6.js`). Test `tests/admin-project-pages-light.test.cjs`.
+  Une seule page par projet (17 nov. 2026) : `suivi.html`, cinq onglets Vue d’ensemble · Travail · Argent (factures, paiements,
+  suppléments, suivi mensuel) · Documents · Messages ; au-dessus, des actions (Enregistrer un paiement, Publier une avancée,
+  Écrire au client, Ajouter un supplément). Vue d’ensemble et documents officiels : `admin/project-summary.js` (lecture seule,
+  chiffres du serveur ; suivi.html lui passe ses données par `window.DzoftProjectData`). `projet.html` ne fait plus que rediriger
+  les anciens liens vers le bon onglet. Même menu partout (`editor-navigation.js` reprend `workspace-nav-v6.js`).
+  Test `tests/admin-one-project-page.test.cjs`.
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
   décision, en attente) dans `quotes.journal`, collage de plusieurs lignes « date | type | texte », jamais renvoyée au client
   (test `tests/project-journal.test.cjs`). Ne jamais y mettre de journal dans le dépôt : il vit dans la base.
@@ -69,7 +72,7 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
   bouton « Installer l’app » affiché quand le navigateur le propose.
   Boutons rapides du tableau de bord (17 nov. 2026) : Enregistrer un paiement (`suivi.html?q=…#billing/pay`), Créer un supplément
-  (`projet.html?q=…#new-extra`), Publier une avancée (`suivi.html?q=…#work/publish`) ; ils demandent le projet s’il y en a plusieurs
+  (`suivi.html?q=…#billing/new-extra`), Publier une avancée (`suivi.html?q=…#work/publish`) ; ils demandent le projet s’il y en a plusieurs
   et ouvrent seulement le formulaire, sans rien enregistrer (test `tests/admin-prices-quick-actions.test.cjs`).
   Tableau de bord (17 nov. 2026) : chiffres (déjà encaissé dont ce mois-ci, reste à encaisser dont annoncé par le client,
   prêt à facturer = suppléments signés terminés sans facture, total des contrats, projets en cours), « Projets en cours » et « À faire » ;
@@ -82,8 +85,7 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   référence, facture ; année, export CSV ; base du livre exigé par l’art. L123-28 du Code de commerce, sans prétendre être le livre officiel),
   soldes par projet, registre des factures. Test `tests/page-navigation-v6.test.cjs`.
   Finitions (17 nov. 2026) : admin au bleu de la charte (anciens violets convertis), barre du téléphone = 4 entrées + « Plus »,
-  compteur de corbeille gris, une ligne de résumé
-  au lieu des cartes sur « Outils du projet », « Ajouter un supplément » seulement sur Vue d’ensemble et Suppléments.
+  compteur de corbeille gris.
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.

@@ -23,10 +23,12 @@ nav.setAttribute('role','tablist');
 nav.setAttribute('aria-label','Project sections');
 var host=document.createElement('div');
 host.className='project-focus-panels';
+/* One project page (17 Nov 2026): five tabs. « billing » keeps its id so existing links (#billing/pay…) still work. */
 var sections=[
  {id:'overview',fr:'Vue d’ensemble',en:'Overview'},
  {id:'work',fr:'Travail',en:'Work'},
- {id:'billing',fr:'Factures et paiements',en:'Billing'},
+ {id:'billing',fr:'Argent',en:'Money'},
+ {id:'documents',fr:'Documents',en:'Documents'},
  {id:'messages',fr:'Messages',en:'Messages'}
 ];
 var panes={};
@@ -51,8 +53,9 @@ function paneTitle(item,panel){
  h.innerHTML='<h2></h2><p></p>';h.querySelector('h2').dataset.fr=item.fr;
  h.querySelector('h2').dataset.en=item.en;
  var subs={
-  work:['Étapes, modifications, journal et fichiers du projet.','Milestones, changes, private notes and project files.'],
-  billing:['Factures, encaissements et suivi mensuel.','Invoices, receipts and monthly maintenance.'],
+  work:['Étapes, avancement publié et journal privé.','Milestones, published progress and private journal.'],
+  billing:['Factures, paiements reçus, suppléments et suivi mensuel.','Invoices, payments received, extra work and monthly maintenance.'],
+  documents:['Contrat, compléments, factures et reçus en PDF, puis les fichiers du projet et ceux du client.','Contract, extra work, invoices and receipts as PDF, then project and client files.'],
   messages:['Échanges avec le client et historique des e-mails.','Client conversations and email history.']
  };
  if(subs[item.id]){h.querySelector('p').dataset.fr=subs[item.id][0];h.querySelector('p').dataset.en=subs[item.id][1];}
@@ -62,20 +65,26 @@ function paneTitle(item,panel){
 intro.insertAdjacentElement('afterend',nav);
 nav.insertAdjacentElement('afterend',host);
 
-var overview=panes.overview, workPane=panes.work, billing=panes.billing, messages=panes.messages;
-var hero=document.createElement('div');hero.className='project-overview-focus';
-/* 17 Nov 2026: the three cards repeated the tabs and the action buttons above. One line keeps the two figures that
-   matter (next step, money still to receive); the tabs and the buttons above are the only way in. */
-hero.innerHTML='<p class="project-overview-line"><span><span data-fr="Prochaine étape" data-en="Next step"></span> : <strong id="project-overview-next">—</strong></span>'+
-  '<button type="button" class="project-overview-money" data-open-project="billing"><span data-fr="Reste à encaisser" data-en="Still to receive"></span> : <strong id="project-overview-balance">—</strong> →</button></p>';
-overview.appendChild(hero);
+var overview=panes.overview, workPane=panes.work, billing=panes.billing, docsPane=panes.documents, messages=panes.messages;
+/* 17 Nov 2026: one project page. The client card and the money tiles (project-summary.js) replace the former one-line
+   summary, which repeated the next step and the balance shown above. */
+// Client card, money tiles and project scope (admin/project-summary.js).
+var summaryBox=document.createElement('div');summaryBox.id='ps-summary';summaryBox.className='ps-summary';overview.appendChild(summaryBox);
 
 // Keep the actual elements so existing events, security gates, forms, uploads,
 // invoice numbering and server-side payment logic behave exactly as before.
 workPane.appendChild(work);
 billing.appendChild(document.getElementById('c-inv'));
+var changes=document.getElementById('c-changes');
+if(changes)billing.appendChild(changes);
 var care=document.getElementById('c-care');
 if(care)billing.appendChild(care.closest('.workspace-fold')||care);
+// Documents: official PDFs first, then shared documents and the client's files (opened, not folded).
+var official=document.createElement('section');official.className='card ps-official';
+official.innerHTML='<h2 data-fr="Documents officiels" data-en="Official documents"></h2><div id="ps-docs" class="ps-docs" aria-live="polite"></div>';
+docsPane.appendChild(official);
+// The cards have their own titles: take them out of their folds (a hidden card then leaves nothing behind).
+['c-docs','c-files'].forEach(function(id){var node=document.getElementById(id);if(!node)return;var fold=node.closest('.workspace-fold');docsPane.appendChild(node);if(fold)fold.remove();});
 var msg=document.getElementById('c-msg');
 if(msg)messages.appendChild(msg);
 var note=document.getElementById('c-note');
@@ -102,6 +111,8 @@ if(leftover){ // Future app features must not disappear if a new panel was added
  workPane.appendChild(extra);
 }
 
+// The data may have arrived before these containers existed.
+if(window.DzoftProjectSummary)window.DzoftProjectSummary.render();
 var buttons=Array.from(nav.querySelectorAll('[data-project-tab]'));
 function focusPane(id,target){
  var pane=panes[id];
@@ -125,6 +136,7 @@ function select(id,opt){
   b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;
  });
  sections.forEach(function(item){panes[item.id].hidden=item.id!==id;});
+ if((id==='overview'||id==='documents')&&window.DzoftProjectSummary&&window.DzoftProjectSummary.refreshIfStale)window.DzoftProjectSummary.refreshIfStale();
  if(opt.replaceHash!==false){
   var path=location.pathname+location.search;
   history.replaceState(history.state,'',path+'#'+id);
@@ -157,44 +169,43 @@ intro.addEventListener('click',function(event){
  event.stopPropagation();
  event.stopImmediatePropagation();
  var dest=action.dataset.workspaceAction;
- var id=dest==='payment'?'billing':dest==='progress'||dest==='documents'?'work':'messages';
- var target=dest==='payment'?'tracking-admin':dest==='progress'?'tracking-publish':dest==='documents'?'c-docs':dest==='history'?'c-activity':'c-msg';
- select(id,{scroll:true,target:target});
+ if(dest==='extra'){newExtra();return;}
+ // Same addresses as the dashboard quick buttons, so the payment and publish forms open themselves.
+ var deep={payment:'billing/pay',progress:'work/publish',message:'messages/c-msg'}[dest]||'messages/c-msg';
+ history.replaceState(history.state,'',location.pathname+location.search+'#'+deep);
+ window.dispatchEvent(new HashChangeEvent('hashchange'));
  if(dest==='message')setTimeout(function(){var field=document.getElementById('reply');if(field)field.focus({preventScroll:true});},350);
 },true);
-window.DzoftProjectWorkspace={open:function(id){return select(id,{scroll:true});}};
-
-function updateOverview(){
- var next=document.getElementById('workspace-next-value');
- var value=next&&next.textContent.trim();
- document.getElementById('project-overview-next').textContent=value||'—';
- var outstanding=document.getElementById('iv-payment-outstanding');
- var value=outstanding&&outstanding.textContent.trim();
- // Keep the amount only: the label is already written in front of it.
- var amount=value&&value.match(/-?[\d\u00a0\u202f .,]*\d\s?€/g);
- document.getElementById('project-overview-balance').textContent=(amount?amount[amount.length-1].trim():value)||'—';
+/* « Ajouter un supplément »: Argent, then the priced proposal form, opened (it is drawn after the data loads). */
+function newExtra(){
+ select('billing',{scroll:true,target:'c-changes'});
+ var tries=0;(function open(){
+  var form=document.querySelector('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]');
+  if(form){form.open=true;form.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(++tries<40)setTimeout(open,150);
+ })();
 }
-var updating=false;
-function updateSoon(){if(updating)return;updating=true;setTimeout(function(){updating=false;updateOverview();},100);}
-['workspace-next-value','iv-payment-truth'].forEach(function(id){
- var el=document.getElementById(id);
- if(el)new MutationObserver(updateSoon).observe(el,{childList:true,subtree:true,characterData:true});
-});
+window.DzoftProjectWorkspace={open:function(id){return select(id,{scroll:true});},newExtra:newExtra};
+
 function translate(){
  nav.setAttribute('aria-label',tr('Rubriques du projet','Project sections'));
  buttons.forEach(translateNode);
- main.querySelectorAll('.project-overview-focus [data-fr][data-en],.project-panel-heading [data-fr][data-en],.project-focus-panel .project-more-tools>summary[data-fr],.project-focus-panel .workspace-fold>summary[data-fr]').forEach(translateNode);
- updateOverview();
+ if(window.DzoftProjectSummary)window.DzoftProjectSummary.render();
+ main.querySelectorAll('.project-panel-heading [data-fr][data-en],.ps-official>h2[data-fr],.project-focus-panel .project-more-tools>summary[data-fr],.project-focus-panel .workspace-fold>summary[data-fr]').forEach(translateNode);
 }
 document.addEventListener('dzoft:locale-change',translate);
 // Deep links open the correct tab before navigating to the target control.
  // Explicitly allow only known project sections: never interpret a URL hash
  // as an arbitrary DOM ID or HTML selector.
 var deepLinks={
- 'work/c-docs':{pane:'work',target:'c-docs'},
- 'work/c-files':{pane:'work',target:'c-files'},
+ 'work/c-docs':{pane:'documents',target:'c-docs'},
+ 'work/c-files':{pane:'documents',target:'c-files'},
+ 'documents/c-docs':{pane:'documents',target:'c-docs'},
+ 'documents/c-files':{pane:'documents',target:'c-files'},
  'work/c-journal':{pane:'work',target:'c-journal'},
- 'work/c-changes':{pane:'work',target:'c-changes'},
+ 'work/c-changes':{pane:'billing',target:'c-changes'},
+ 'billing/c-changes':{pane:'billing',target:'c-changes'},
+ 'billing/new-extra':{extra:true},
  'billing/c-inv':{pane:'billing',target:'c-inv'},
  'billing/pay':{pane:'billing',target:'c-inv'},
  'work/publish':{pane:'work',target:'c-steps'},
@@ -203,6 +214,7 @@ var deepLinks={
 function applyLocationHash(){
  var value=location.hash.replace(/^#/,'');
  var deep=deepLinks[value];
+ if(deep&&deep.extra){newExtra();return;}
  if(deep){select(deep.pane,{replaceHash:false,scroll:true,target:deep.target});return;}
  if(panes[value])select(value,{replaceHash:false});
 }
@@ -211,5 +223,4 @@ translate();
 var initial=location.hash.replace(/^#/,'');
 if(deepLinks[initial])applyLocationHash();
 else select(panes[initial]?initial:'overview',{replaceHash:false});
-updateSoon();
 })();

@@ -136,8 +136,8 @@ test('priced proposals: server totals and numbers the lines, client signs with a
  // Sending is an explicit owner action and goes through the outbox.
  assert.match(mig,/'change_proposed',/);
  assert.match(changes,/owner_send_change_proposal/);
- // Signed and completed work is invoiced from the project page through the existing invoice tool.
- assert.match(read('admin/project-finance.js'),/issue_change=/);
+ // Signed and completed work is invoiced on the project page itself, through the existing invoice tool.
+ assert.match(read('admin/suivi.html'),/onInvoice:function\(record,btn\)\{ issueAccepted\('supplement',record,btn\); \}/);
  assert.match(admin,/issueAccepted\('supplement', c, null\)/);
 });
 

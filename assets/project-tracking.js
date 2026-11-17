@@ -547,6 +547,8 @@
   if(!openRequest)return;
   var target=openRequest==='billing/pay'?box.querySelector('details.tracking-editor:not(.tracking-report-editor)'):pub.querySelector('details.tracking-editor');
   if(!target)return;target.open=true;
+  // Unfold the sections around it too (e.g. « Détails des paiements »), or the opened form stays out of sight.
+  for(var up=target.parentElement;up;up=up.parentElement)if(up.tagName==='DETAILS')up.open=true;
   if(location.hash==='#'+openRequest)history.replaceState(null,'',location.pathname+location.search+(openRequest==='billing/pay'?'#billing':'#work'));
   target.addEventListener('toggle',function(){if(!target.open)openRequest=null;});
   if(openScrolled)return;openScrolled=true;

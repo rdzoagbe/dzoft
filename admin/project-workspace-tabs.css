@@ -75,3 +75,43 @@
 .project-overview-money{border:1px solid #d6dcf5;background:#f4f6ff;color:#16204a;border-radius:10px;padding:9px 13px;font:inherit;font-size:14px;cursor:pointer}
 .project-overview-money:hover{border-color:#4361ee}
 .project-overview-money:focus-visible{outline:2px solid #4361ee;outline-offset:2px}
+/* One project page (17 Nov 2026): client card, money tiles, scope, official documents (project-summary.js). */
+.ps-summary{display:grid;gap:14px;margin-top:14px}
+.ps-summary:empty{display:none}
+.ps-client{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e1e6f2;border-radius:16px;padding:16px 18px}
+.ps-client>div{flex:1;min-width:0}
+.ps-client strong{display:block;font-size:18px;overflow-wrap:anywhere}
+.ps-client small{display:block;color:#647089;font-size:13px;overflow-wrap:anywhere}
+.ps-avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#4361EE,#3A4FE0);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.ps-badge{background:#e6f7f1;color:#0f7a57;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.ps-badge.wait{background:#fff4e0;color:#8a5a00}
+.ps-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ps-tile{background:#fff;border:1px solid #e1e6f2;border-radius:14px;padding:14px 16px}
+.ps-tile span{display:block;color:#647089;font-size:12px}
+.ps-tile strong{display:block;font-size:21px;margin-top:6px;overflow-wrap:anywhere}
+.ps-tile small{display:block;color:#647089;font-size:11.5px;margin-top:4px}
+.ps-tile.green strong{color:#0f7a57}
+.ps-tile.orange strong{color:#a35a00}
+.ps-scope{background:#fff;border:1px solid #e1e6f2;border-radius:16px;padding:16px 18px}
+.ps-scope-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.ps-scope h3{margin:0;font-size:17px}
+.ps-scope h4{margin:14px 0 6px;font-size:13px;color:#3d4660}
+.ps-lines{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+.ps-wait{color:#647089}
+.ps-note{color:#647089;font-size:13px;margin:6px 0}
+.ps-official h2{margin-top:0}
+.ps-doc-group{font-size:14px;margin:16px 0 8px;color:#3d4660}
+.ps-doc-group:first-child{margin-top:4px}
+.ps-doc-list{display:grid;gap:8px}
+.ps-doc{display:flex;align-items:center;gap:12px;border:1px solid #e6eaf2;border-radius:12px;padding:10px 12px;background:#fff}
+.ps-doc>div{flex:1;min-width:0}
+.ps-doc strong{display:block;font-size:14px;overflow-wrap:anywhere}
+.ps-doc small{display:block;color:#647089;font-size:12px}
+.ps-doc-icon{color:#4361EE;font-size:18px}
+@media(max-width:760px){
+ .ps-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ps-client{flex-wrap:wrap}
+ .ps-client>div{flex:1 1 calc(100% - 60px)}
+ .ps-client .ps-badge{margin-left:58px}
+ .ps-tile strong{font-size:18px}
+}

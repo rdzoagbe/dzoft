@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
-const project=read('admin/project-finance.js');
+const project=read('admin/projet.html');
 const nav=read('admin/workspace-nav-v6.js');
 const chrome=read('admin/unified-app-shell.js');
 const home=read('admin/index.html');
@@ -15,22 +15,16 @@ test('only canonical v6 navigation owns sidebar routes',()=>{
  assert.doesNotMatch(chrome,/dzoft-global-overview|dzoft-project-nav|dzoft-mobile-project|nav\.replaceChildren/);
  assert.match(chrome,/href='#\/tableau-de-bord'/);
 });
-test('project financial rerenders do not overwrite v6 section hash links',()=>{
- assert.match(project,/if\(!window\.DzoftNavigationV6\)/);
- for(const id of ['pf-side-dashboard','pf-side-project','pf-side-invoices','pf-side-journal','pf-side-documents'])
-   assert.ok(project.includes('"'+id+'"'),id);
- assert.match(project,/setHref\("pf-side-project","#overview"\)/);
- assert.match(project,/setHref\("pf-side-journal","#journal"\)/);
- assert.match(project,/setHref\("pf-side-invoices","#invoices"\)/);
- assert.match(project,/window\.DzoftNavigationV6\.refresh\(\)/);
-});
-test('project switcher requires a complete UUID before any navigation',()=>{
- assert.match(project,/\^\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}/);
+// 17 Nov 2026: projet.html only redirects to the one project page; it no longer renders any data or menu.
+test('the old project address redirects only a complete project id',()=>{
+ assert.match(project,/\^\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}\$/);
  assert.doesNotMatch(project,/\{27,\}/);
+ assert.match(project,/location\.replace\('\.\/#\/projets'\)/);
 });
 test('new owner data cannot temporarily expose old private journal or documents',()=>{
  const begin=home.indexOf("data.unread=data.messages.filter");
- const done=home.indexOf("if(['journal','documents','catalogue'].includes(location.hash.split('/').pop()))loadRichPanels();",begin);
+ const done=home.indexOf("if(location.hash.split('/').pop()==='catalogue')loadRichPanels();",begin);
+ assert.ok(done>begin);
  const block=home.slice(begin,done);
  assert.ok(block.indexOf('richRequest++')>=0);
  assert.ok(block.indexOf('loadingDetails()')>=0);

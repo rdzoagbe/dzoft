@@ -49,7 +49,7 @@ test('dashboard retains existing navigation and projects, while its actionable p
  assert.match(html,/dashboardReceiptFailures/);
  assert.match(html,/sb\.rpc\('project_tracking'/);
  // Comptabilité opens each project's own payments tab (17 Nov 2026).
- assert.match(html,/href="projet\.html\?q='\+encodeURIComponent\(q\.id\)\+'#payments"/);
+ assert.match(html,/href="suivi\.html\?q='\+encodeURIComponent\(q\.id\)\+'#billing"/);
  assert.doesNotMatch(js,/sb\.rpc|fetch\(|localStorage|record_project_payment/);
  new vm.Script(js);
 });
