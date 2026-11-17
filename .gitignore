@@ -11,3 +11,7 @@ backup-exports/
 supabase/.temp/
 supabase/.profiles/
 supabase/.branches/
+
+# Local browser-test output
+test-results/
+playwright-report/
