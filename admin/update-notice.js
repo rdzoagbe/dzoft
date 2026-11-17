@@ -34,7 +34,7 @@ function show(){
  var update=document.createElement('button');
  update.type='button';
  update.textContent=tr('Mettre à jour','Update now');
- update.style.cssText='border:0;border-radius:8px;padding:10px 14px;background:#fff;color:#25203a;cursor:pointer;font-weight:700;margin-right:8px';
+ update.style.cssText='border:0;border-radius:8px;padding:10px 14px;background:#fff;color:#20253a;cursor:pointer;font-weight:700;margin-right:8px';
  update.addEventListener('click',refresh);
  var later=document.createElement('button');later.type='button';
  later.textContent=tr('Plus tard','Later');

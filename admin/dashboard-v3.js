@@ -41,7 +41,7 @@ function renderStats(data){
  $("sd-stats").innerHTML=
   stat(tr("Déjà encaissé","Received and verified"),fmt(sum.received),"✓","green","finance",valid?tr("dont "+money(sum.month)+" ce mois-ci",money(sum.month)+" this month"):"")+
   stat(tr("Reste à encaisser","Outstanding balance"),fmt(sum.remaining),"◷","orange","finance",valid&&sum.pending?tr("dont "+money(sum.pending)+" annoncés par le client, à vérifier",money(sum.pending)+" reported by clients, to check"):"")+
-  stat(tr("Prêt à facturer","Ready to invoice"),data.ready?money(sum.ready):"—","€","violet","finance",data.ready?(sum.readyCount?tr(sum.readyCount+" supplément(s) terminé(s), signé(s)",sum.readyCount+" signed extra(s) completed"):tr("Rien en attente","Nothing waiting")):"")+
+  stat(tr("Prêt à facturer","Ready to invoice"),data.ready?money(sum.ready):"—","€","violet","finance",data.ready?(sum.readyCount?tr(sum.readyCount>1?sum.readyCount+" suppléments signés et terminés":"1 supplément signé et terminé",sum.readyCount>1?sum.readyCount+" signed extras completed":"1 signed extra completed"):tr("Rien en attente","Nothing waiting")):"")+
   stat(tr("Total des contrats suivis","Tracked contracts total"),fmt(sum.signed),"▣","purple","finance")+
   stat(tr("Projets en cours","Active projects"),String(data.activeProjects||0),"▤","blue","projects");
  $("sd-verification").textContent=!ready?tr("Chargement des données financières vérifiées…","Loading verified financial data…"):

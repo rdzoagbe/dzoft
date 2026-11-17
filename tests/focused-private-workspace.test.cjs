@@ -13,8 +13,8 @@ test('project overview presents exactly four navigable sections and retains all 
  const base=read('admin/project-workspace.js');
  const css=read('admin/project-workspace-tabs.css');
  assert.match(html,/project-workspace\.js\?v=.*" defer/);
- assert.match(html,/project-workspace-tabs\.js\?v=20261117-quick" defer/);
- assert.match(html,/project-workspace-tabs\.css\?v=20261115-v2/);
+ assert.match(html,/project-workspace-tabs\.js\?v=(?:20261117-quick|20261117-blue)" defer/);
+ assert.match(html,/project-workspace-tabs\.css\?v=(?:20261115-v2|20261117-blue)/);
  for(const key of ["overview","work","billing","messages"])
   assert.match(js,new RegExp("id:'"+key+"'"));
  for(const id of ["c-steps","c-changes","c-inv","c-care","c-msg","c-note","c-activity","c-share","c-acc","c-env","c-rv","c-journal","c-docs","c-files"]){
@@ -48,8 +48,8 @@ test('new owner dashboard provides real client, quote, finance and case finder r
  const js=read('admin/dashboard-v3.js');
  const html=read('admin/index.html');
  const css=read('admin/dashboard-v3.css');
- assert.match(html,/dashboard-v3\.js\?v=20261117-dash2/);
- assert.match(html,/dashboard-v3\.css\?v=20261117-dash2/);
+ assert.match(html,/dashboard-v3\.js\?v=(?:20261117-dash2|20261117-blue)/);
+ assert.match(html,/dashboard-v3\.css\?v=(?:20261117-dash2|20261117-blue)/);
  assert.match(html,/case-finder\.js/);
  assert.match(html,/id="sd-dashboard"/);
  assert.match(html,/id="sd-project-list"/);

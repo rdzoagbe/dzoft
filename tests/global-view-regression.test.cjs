@@ -74,5 +74,5 @@ test('global page title and layout differ from the project dashboard',()=>{
  assert.match(css,/dzoft-global-view[^\n]*\.sd-selected\{display:none!important\}/);
  assert.match(css,/\.sd-shortcuts\{display:grid;grid-template-columns:repeat\(4/);
  assert.match(admin,/global-view-v5\.css/);
- assert.match(admin,/dashboard-v3\.js\?v=20261117-dash2/);
+ assert.match(admin,/dashboard-v3\.js\?v=(?:20261117-dash2|20261117-blue)/);
 });

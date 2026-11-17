@@ -8,8 +8,8 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 test('desktop Chrome and installed phone have the same current release controls',()=>{
  const main=read('admin/index.html'),project=read('admin/suivi.html');
  for(const html of [main,project]){
-  assert.match(html,/update-notice\.js\?v=20261115-update4/);
-  assert.match(html,/workspace-flow\.css\?v=20261115-update4/);
+  assert.match(html,/update-notice\.js\?v=(?:20261115-update4|20261117-blue)/);
+  assert.match(html,/workspace-flow\.css\?v=(?:20261115-update4|20261117-blue)/);
   assert.match(html,/updateViaCache: 'none'/);
  }
  const script=read('admin/update-notice.js');
@@ -51,7 +51,7 @@ test('invoice has visible calculation breakdown, reversible pre-issue review and
  assert.match(html,/issue_final_invoice_checked/);
  assert.match(html,/issue_interim_invoice/);
  assert.match(html,/if \(!confirm\(ask\)\) return/);
- assert.match(html,/invoice-workflow\.css\?v=(?:20261115-update4|20261115-receipt-card2)/);
+ assert.match(html,/invoice-workflow\.css\?v=(?:20261115-update4|20261115-receipt-card2|20261117-blue)/);
  const css=read('admin/invoice-workflow.css');
  assert.match(css,/invoice-draft-review\[hidden\]\{display:none!important\}/);
  for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){

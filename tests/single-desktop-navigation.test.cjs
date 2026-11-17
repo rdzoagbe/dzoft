@@ -8,7 +8,7 @@ test('Desktop account hamburger is hidden and logout remains reachable',()=>{
  assert.match(css,/@media \(min-width:981px\)\{/);
  assert.match(css,/body\.dzoft-admin #app \.top \.workspace-more\{display:none!important\}/);
  assert.match(css,/body\.dzoft-admin #app \.top \.in #b-out\{display:inline-flex!important/);
- assert.match(html,/workspace-epuree\.css\?v=20261115-single-desktop-nav/);
+ assert.match(html,/workspace-epuree\.css\?v=(?:20261115-single-desktop-nav|20261117-blue)/);
 });
 test('Narrow non-installed browser retains menu and installed mobile uses its own single menu',()=>{
  const simpler=fs.readFileSync(path.join(__dirname,'../admin/simplified-ui.css'),'utf8');

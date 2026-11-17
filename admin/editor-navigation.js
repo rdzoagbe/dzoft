@@ -19,12 +19,12 @@
   {route:'./#/dossiers',fr:'Clients',en:'Clients',icon:'♧'},
   {route:valid?'projet.html?q='+q:'./#/projets',fr:'Projets',en:'Projects',icon:'▱',active:!quotePage},
   {route:quotePage?'#':(valid?'devis.html?q='+q:'./#/devis'),fr:'Devis & Chiffrage',en:'Quotes & pricing',icon:'▤',active:quotePage},
-  {route:tools('#billing/c-inv')||'./#/factures',fr:'Factures',en:'Invoices',icon:'▧'},
-  {route:tools('#billing')||'./#/paiements',fr:'Paiements',en:'Payments',icon:'▣'},
+  {route:tools('#billing/c-inv')||'./#/factures',fr:'Factures',en:'Invoices',icon:'▧',scoped:true},
+  {route:tools('#billing')||'./#/paiements',fr:'Paiements',en:'Payments',icon:'▣',scoped:true},
   {route:'./#/messages',fr:'Messages',en:'Messages',icon:'☏'},
-  {route:tools('#work/c-journal')||'./#/journal',fr:'Journal & Suivi',en:'Journal & tracking',icon:'☷'},
-  {route:tools('#work/c-docs')||'./#/documents',fr:'Documents',en:'Documents',icon:'□'},
-  {route:'./#/catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',icon:'♧'},
+  {route:tools('#work/c-journal')||'./#/journal',fr:'Journal & Suivi',en:'Journal & tracking',icon:'☷',scoped:true},
+  {route:tools('#work/c-docs')||'./#/documents',fr:'Documents',en:'Documents',icon:'□',scoped:true},
+  {route:'./#/catalogue',fr:'Catalogue (Prestations)',en:'Service catalogue',icon:'◈'},
   {route:'./#/rapports',fr:'Rapports',en:'Reports',icon:'▥'},
   {divider:true},
   {route:'./#/parametres',fr:'Paramètres',en:'Settings',icon:'⚙'}
@@ -35,7 +35,8 @@
     if(p.divider)return '<div class="dzoft-editor-divider" aria-hidden="true"></div>';
     var url=p.route==='#'?(quotePage?'devis.html':'suivi.html')+location.search:p.route;
     return '<a href="'+esc(url)+'"'+(p.active?' aria-current="page" class="dzoft-editor-active"':'')+
-     ' data-fr="'+esc(p.fr)+'" data-en="'+esc(p.en)+'"><span aria-hidden="true">'+esc(p.icon)+'</span><span class="dzoft-editor-item-label">'+esc(p.fr)+'</span></a>';
+     ' data-fr="'+esc(p.fr)+'" data-en="'+esc(p.en)+'"><span aria-hidden="true">'+esc(p.icon)+'</span><span class="dzoft-editor-item-label">'+esc(p.fr)+'</span>'+
+     (p.scoped&&valid?'<small class="dzoft-editor-scope">ce projet</small>':'')+'</a>';
   }).join('')+'</nav>';
  var toggle=document.createElement('button');
  toggle.type='button';toggle.className='dzoft-editor-menu-toggle';toggle.setAttribute('aria-label','Ouvrir la navigation');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','dzoft-editor-sidebar');toggle.textContent='☰';
@@ -53,6 +54,7 @@
    var english=document.documentElement.lang==='en';
    aside.querySelectorAll('a[data-fr][data-en]').forEach(function(a){
      a.querySelector('.dzoft-editor-item-label').textContent=a.dataset[english?'en':'fr'];
+     var sc=a.querySelector('.dzoft-editor-scope');if(sc)sc.textContent=english?'this project':'ce projet';
    });
    toggle.setAttribute('aria-label',english?'Open navigation':'Ouvrir la navigation');
  }

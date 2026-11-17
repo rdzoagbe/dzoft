@@ -1,53 +1,53 @@
 /* DZOFT simplified workspace: one place for each client. Layered over existing styles. */
-:root{--studio-purple:#5137f0;--studio-dark:#171622;--studio-line:#e9e9f1;--studio-muted:#6c7185}
-body.dzoft-admin{background:#f8f8fb;color:#16182b}
+:root{--studio-purple:#3757f0;--studio-dark:#171622;--studio-line:#e9e9f1;--studio-muted:#6c7185}
+body.dzoft-admin{background:#f8f9fb;color:#16182b}
 #app .top{background:#171622;box-shadow:0 2px 12px rgba(15,18,37,.06)}
 #app .top .in{max-width:1520px;padding:14px 22px;gap:12px}
 #app .shell{max-width:1520px;grid-template-columns:225px minmax(0,1fr);gap:26px;padding:22px 22px 80px}
-#app .side{position:sticky;top:80px;min-height:360px;border:0;border-radius:19px;padding:18px 12px;background:#1b1b27;box-shadow:0 13px 35px rgba(27,25,45,.11)}
+#app .side{position:sticky;top:80px;min-height:360px;border:0;border-radius:19px;padding:18px 12px;background:#1b1b27;box-shadow:0 13px 35px rgba(25,29,45,.11)}
 #app .side .tab{color:#d5d4e1;border-radius:10px;font-size:13.5px;padding:12px 13px}
 #app .side .tab:hover{background:#303047;color:#fff}
-#app .side .tab[aria-selected=true]{background:#5037f0;color:white;box-shadow:0 3px 16px rgba(87,58,255,.26)}
+#app .side .tab[aria-selected=true]{background:#3757f0;color:white;box-shadow:0 3px 16px rgba(58,93,255,.26)}
 #app .side .tab svg{width:19px;height:19px}
 #app .side hr{border-color:#3b3c4a;margin:12px 5px}
 #app .shell>main{padding:8px 0;min-width:0}
 #app .bar h2,#app .simplified-heading h2{font-family:Sora,system-ui,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.04em}
-#app .panel,#app .kpi,#app .lead,#app .empty{border:1px solid var(--studio-line);border-radius:17px;box-shadow:0 5px 18px rgba(21,21,40,.03)}
+#app .panel,#app .kpi,#app .lead,#app .empty{border:1px solid var(--studio-line);border-radius:17px;box-shadow:0 5px 18px rgba(21,24,40,.03)}
 #app .panel{padding:20px 23px;margin-bottom:14px}
 #app .panel h3{font-size:16px}
 #app .kpis{gap:11px}
 #app .kpi{padding:18px}
 #app .kpi b{font-size:24px;color:#17192d}
-#app .kpi.hot b{color:#5137f0}
+#app .kpi.hot b{color:#3757f0}
 #app .bar{margin-bottom:15px}
-#app .btn.main{background:#5238f1;color:#fff}
+#app .btn.main{background:#3858f1;color:#fff}
 #app .btn.line{border-color:#e4e4ee}
 #app .dashboard-focus{border-radius:18px}
 #app .dashboard-shortcuts{margin:15px 0}
 #app .simplified-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
 #app .simplified-heading h2{margin:4px 0 5px}
 #app .simplified-heading p:not(.simplified-eyebrow){font-size:13px;color:var(--studio-muted)}
-#app .simplified-eyebrow{font-size:10px;color:#5a42ec;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+#app .simplified-eyebrow{font-size:10px;color:#4260ec;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 #app .workspace-search{margin:0;flex:0 1 330px}
 #app .workspace-search input{background:white;border-color:#dedfea;min-height:43px;border-radius:12px;font-size:13px}
-#app .dossier-switch{display:flex;flex-wrap:wrap;gap:8px;padding:6px;margin:0 0 19px;background:#ececf5;border-radius:14px;width:max-content;max-width:100%}
+#app .dossier-switch{display:flex;flex-wrap:wrap;gap:8px;padding:6px;margin:0 0 19px;background:#eceef5;border-radius:14px;width:max-content;max-width:100%}
 #app .dossier-pill{border:0;background:transparent;font-size:13px;font-weight:800;padding:10px 19px;color:#575c77;border-radius:10px;cursor:pointer}
-#app .dossier-pill[aria-pressed=true]{background:#fff;color:#3d28de;box-shadow:0 3px 11px rgba(13,13,37,.08)}
-#app .dossier-pill:hover{color:#3f2ede}
+#app .dossier-pill[aria-pressed=true]{background:#fff;color:#2848de;box-shadow:0 3px 11px rgba(13,17,37,.08)}
+#app .dossier-pill:hover{color:#2e4dde}
 #app #v-dossiers>section{min-width:0}
 #app #v-dossiers>section>.bar{padding:15px 18px;background:#fff;border:1px solid var(--studio-line);border-radius:14px}
 #app #v-dossiers>section>.bar h2{font-size:17px}
 #app #v-dossiers>section>.bar input{max-width:220px}
-#app #v-leads>.bar+p{background:#f8f8ff;padding:12px 16px;border-radius:10px;border:1px solid #ebeaf5}
+#app #v-leads>.bar+p{background:#f8f9ff;padding:12px 16px;border-radius:10px;border:1px solid #eaecf5}
 #app .simplified-archive{background:white;border:1px solid var(--studio-line);border-radius:16px;margin:14px 0}
 #app .simplified-archive>summary{list-style:none;cursor:pointer;font-weight:800;padding:17px 22px;color:#35364c}
 #app .simplified-archive>summary::-webkit-details-marker{display:none}
-#app .simplified-archive>summary:after{content:'＋';float:right;color:#543bed}
+#app .simplified-archive>summary:after{content:'＋';float:right;color:#3b5aed}
 #app .simplified-archive[open]>summary:after{content:'−'}
 #app .simplified-archive .panel{border:0;box-shadow:none;margin:0}
 #app .finance-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}
 #app .finance-kpis>div{background:#fff;border:1px solid var(--studio-line);padding:20px;border-radius:16px}
-#app .finance-kpis>div:last-child{background:#efecff;border-color:#ded7ff}
+#app .finance-kpis>div:last-child{background:#ecefff;border-color:#d7deff}
 #app .finance-kpis span{display:block;color:var(--studio-muted);font-size:12px}
 #app .finance-kpis b{display:block;font-size:25px;margin-top:9px;overflow-wrap:anywhere}
 #app .finance-list{display:grid;gap:9px}
@@ -62,7 +62,7 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 #app .workspace-more>summary::-webkit-details-marker{display:none}
 #app .workspace-more-menu{position:absolute;right:0;top:100%;padding:8px;background:#fff;box-shadow:0 7px 30px #0b102033;border-radius:11px;z-index:100;min-width:158px}
 #app .workspace-more-menu button{border:0;background:none;padding:12px;text-align:left;width:100%;cursor:pointer;color:#111727}
-#app .workspace-more-menu button:hover{background:#f1efff}
+#app .workspace-more-menu button:hover{background:#eff2ff}
 #app .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 @media(max-width:980px){
  #app .shell{grid-template-columns:1fr;padding:8px 16px 96px;gap:0}
@@ -119,13 +119,13 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 
 
 /* DZOFT Aujourd'hui — an action-first financial and client inbox view. */
-#app .today-action-center{background:#fff;border:1px solid #e9e8f4;border-radius:19px;padding:22px;margin:18px 0;box-shadow:0 7px 25px rgba(25,24,54,.045)}
+#app .today-action-center{background:#fff;border:1px solid #e8eaf4;border-radius:19px;padding:22px;margin:18px 0;box-shadow:0 7px 25px rgba(24,29,54,.045)}
 #app .today-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
 #app .today-title h3{font:700 clamp(19px,2.5vw,24px)/1.3 Sora,system-ui,sans-serif;letter-spacing:-.035em;margin:4px 0 6px}
 #app .today-title p:not(.simplified-eyebrow){font-size:13px;color:#67718a;line-height:1.5}
-#app .today-count{font-weight:800;color:#4732cb;background:#ede9ff;border-radius:40px;padding:7px 12px;font-size:12px;white-space:nowrap}
+#app .today-count{font-weight:800;color:#324dcb;background:#e9edff;border-radius:40px;padding:7px 12px;font-size:12px;white-space:nowrap}
 #app .today-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
-#app .today-stat{border:1px solid #e9eaf3;border-radius:13px;padding:15px 13px;min-width:0;background:#fafaff}
+#app .today-stat{border:1px solid #e9eaf3;border-radius:13px;padding:15px 13px;min-width:0;background:#fafbff}
 #app .today-stat span{font-size:11.8px;color:#626983;display:block;line-height:1.5;min-height:33px}
 #app .today-stat b{font-size:clamp(17px,1.8vw,23px);font-weight:800;line-height:1.35;display:block;overflow-wrap:anywhere;white-space:normal}
 #app .today-stat.pending{background:#fff7e8;border-color:#f5e3be}
@@ -133,9 +133,9 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 #app .today-data-note{font-size:12.5px;padding:10px 12px;border:1px solid #efdfbc;background:#fffaf0;color:#725000;border-radius:10px;margin-bottom:13px}
 #app .today-tasks{display:grid;gap:8px}
 #app .today-task{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e8e9f3;border-radius:13px;padding:12px 13px;min-width:0}
-#app .today-task-icon{width:10px;height:10px;background:#6a51ea;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 4px #eeeaff}
+#app .today-task-icon{width:10px;height:10px;background:#516cea;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 4px #eaeeff}
 #app .today-task-icon.reported{background:#d99330;box-shadow:0 0 0 4px #fff3da}
-#app .today-task-icon.invoice{background:#8e80d6;box-shadow:0 0 0 4px #f1eeff}
+#app .today-task-icon.invoice{background:#808fd6;box-shadow:0 0 0 4px #eef1ff}
 #app .today-task-icon.message{background:#3f89d7;box-shadow:0 0 0 4px #ebf4ff}
 #app .today-task-icon.pending{background:#b79c69;box-shadow:0 0 0 4px #f6f0e6}
 #app .today-task-copy{flex:1 1 auto;min-width:0}
@@ -145,10 +145,10 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
 #app .today-task .btn{flex:0 0 auto}
 #app .today-no-tasks{font-size:13px;color:#667188;padding:14px 3px}
 #app .today-task-more,#app .today-safety-note{font-size:11.5px;color:#667188;margin:11px 0 0;line-height:1.6}
-#app .today-advanced{margin:14px 0;background:#fff;border:1px solid #ececf4;border-radius:15px;overflow:hidden}
+#app .today-advanced{margin:14px 0;background:#fff;border:1px solid #ecedf4;border-radius:15px;overflow:hidden}
 #app .today-advanced>summary{padding:15px 18px;font-size:13px;font-weight:800;color:#3e4260;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
 #app .today-advanced>summary::-webkit-details-marker{display:none}
-#app .today-advanced>summary::after{content:'+';font-size:20px;color:#553aea}
+#app .today-advanced>summary::after{content:'+';font-size:20px;color:#3a59ea}
 #app .today-advanced[open]>summary::after{content:'−'}
 #app .today-advanced>.kpis{margin:0;padding:0 14px 14px}
 #app .today-advanced>.panel{border:0;box-shadow:none;margin:0;padding:0 12px 12px}
@@ -181,16 +181,16 @@ body.dzoft-admin{background:#f8f8fb;color:#16182b}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu{display:block;position:relative;margin-left:auto;color:#fff}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary{list-style:none;display:flex;justify-content:center;align-items:center;width:46px;height:46px;border:1px solid #57516e;border-radius:12px;background:#282438;color:#fff;cursor:pointer;touch-action:manipulation}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary::-webkit-details-marker{display:none}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu[open]>summary{background:#5137f0;border-color:#8a7bfc}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary:focus-visible{outline:3px solid #9b90ff;outline-offset:3px}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu-panel{position:absolute;top:calc(100% + 9px);right:0;z-index:60;display:block;width:min(350px,calc(100vw - 24px));max-height:min(76dvh,680px);overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#16182b;border:1px solid #e6e4ef;border-radius:17px;box-shadow:0 16px 45px rgba(10,9,28,.3);padding:10px;scrollbar-width:thin}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-section+.installed-menu-section{border-top:1px solid #eceaf4;margin-top:9px;padding-top:9px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu[open]>summary{background:#3757f0;border-color:#7b92fc}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu>summary:focus-visible{outline:3px solid #90a3ff;outline-offset:3px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-app-menu-panel{position:absolute;top:calc(100% + 9px);right:0;z-index:60;display:block;width:min(350px,calc(100vw - 24px));max-height:min(76dvh,680px);overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#16182b;border:1px solid #e4e6ef;border-radius:17px;box-shadow:0 16px 45px rgba(9,12,28,.3);padding:10px;scrollbar-width:thin}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-section+.installed-menu-section{border-top:1px solid #eaecf4;margin-top:9px;padding-top:9px}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-heading{padding:8px 10px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#777289}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item{display:flex;align-items:center;gap:13px;min-height:47px;width:100%;padding:10px 11px;border:0;border-radius:10px;background:transparent;color:#202238;font:700 14px/1.35 system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:left;text-decoration:none;cursor:pointer;box-sizing:border-box}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item[aria-current=page]{background:#ede9ff;color:#4531c8}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:hover{background:#f2efff}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:focus-visible{outline:2px solid #5137f0;outline-offset:2px}
- body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-icon{display:inline-flex;flex:0 0 21px;width:21px;align-items:center;justify-content:center;color:#5c56a3;font-size:22px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item[aria-current=page]{background:#e9edff;color:#314bc8}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:hover{background:#eff2ff}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-item:focus-visible{outline:2px solid #3757f0;outline-offset:2px}
+ body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-icon{display:inline-flex;flex:0 0 21px;width:21px;align-items:center;justify-content:center;color:#5664a3;font-size:22px}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-icon svg{width:20px;height:20px;stroke:currentColor}
  body.dzoft-admin.dzoft-installed-mobile #app .installed-menu-label{flex:1;min-width:0;overflow-wrap:anywhere}
  body.dzoft-admin.dzoft-installed-mobile #app [data-app-action=logout]{color:#ae3441}
