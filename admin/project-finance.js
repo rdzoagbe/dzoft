@@ -222,17 +222,52 @@ function privateJournal(){
   return '<article class="pf-journal-entry"><div><span class="pf-tag neutral">'+esc(labels[item.k]||tr("Note","Note"))+'</span><time>'+esc(day(item.d))+'</time></div><p>'+esc(item.t||"")+'</p></article>';
  }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucune note privée sur ce dossier.","No private notes for this project.")+'</div>');
 }
+/* Official documents (17 Nov 2026): contract, signed extra work, invoices and payment receipts, as PDF.
+   Same documents as in the client's space; generated from the records (assets/dzoft-documents.js). */
+function docEntry(title,sub,action){return '<article class="pf-document-entry"><span class="pf-document-icon" aria-hidden="true">▢</span><div><strong>'+esc(title)+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>'+(action||'')+'</article>';}
+function pdfButton(kind,id){return '<button type="button" class="pf-btn pf-btn-outline" data-pf-doc="'+kind+'"'+(id?' data-id="'+esc(id)+'"':'')+'>PDF</button>';}
+function receiptTotal(invoiceId){var all=(state.tracking&&state.tracking.receipts)||[];return all.filter(function(r){return r.invoice_id===invoiceId;}).reduce(function(n,r){return n+Number(r.amount||0);},0);}
+function signedChanges(){return (state.changes||[]).filter(function(r){return r.decided_at&&["approved","in_progress","completed"].includes(r.status);});}
+function officialDocuments(){
+ var q=state.quote,f=((q.accepted_data||q.data||{}).f)||{},h='';
+ var cgv=q.accepted_terms==="v2026-10"?"../cgv-2026-10.html":"../cgv.html";
+ h+='<h3 class="pf-doc-group">'+tr("Contrat","Contract")+'</h3><div class="pf-document-list">'+
+  docEntry(tr("Devis signé n° ","Signed quote no. ")+(f.num||q.numero||""),tr("Signé le ","Signed on ")+day(q.accepted_at)+(q.accepted_name?" · "+q.accepted_name:""),pdfButton("quote"))+
+  docEntry(tr("Conditions générales acceptées","Accepted terms of sale"),q.accepted_terms?tr("Version ","Version ")+String(q.accepted_terms).replace(/^v/,""):"",'<a href="'+cgv+'" target="_blank" rel="noopener">'+tr("Voir","View")+' ↗</a>')+'</div>';
+ var ch=signedChanges();
+ if(ch.length)h+='<h3 class="pf-doc-group">'+tr("Compléments signés","Signed extra work")+'</h3><div class="pf-document-list">'+ch.map(function(r){return docEntry((r.proposal_number?r.proposal_number+" · ":"")+(r.title||""),money(Number(r.extra_price))+" · "+tr("signé le ","signed on ")+day(r.decided_at),pdfButton("change",r.id));}).join("")+'</div>';
+ var inv=(q.invoices||[]).filter(function(x){return x&&(x.num||x.n);});
+ h+='<h3 class="pf-doc-group">'+tr("Factures","Invoices")+'</h3>'+(inv.length?'<div class="pf-document-list">'+inv.map(function(x){
+  // « Réglée » comes from the payments recorded on the server, never from the invoice's own flag.
+  var got=receiptTotal(x.id),settled=Number(x.amt)>0&&got>=Number(x.amt)-0.005;
+  return docEntry((x.num?x.num+" · ":"")+(x.n||tr("Facture","Invoice")),money(Number(x.amt))+" · "+(settled?tr("réglée","paid"):got>0?tr("reçu ","received ")+money(got):tr("à régler","to pay")),x.file?'<button type="button" class="pf-btn pf-btn-outline" data-pf-file="'+esc(x.file)+'">PDF</button>':'<small>'+tr("PDF pas encore archivé","PDF not archived yet")+'</small>');
+ }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucune facture pour le moment.","No invoice yet.")+'</div>');
+ var rc=(state.tracking&&Array.isArray(state.tracking.receipts))?state.tracking.receipts.slice().sort(function(a,b){return String(a.received_on).localeCompare(String(b.received_on));}):[];
+ h+='<h3 class="pf-doc-group">'+tr("Paiements reçus","Payments received")+'</h3>'+(rc.length?'<div class="pf-document-list">'+rc.map(function(r){return docEntry(money(Number(r.amount)),tr("Reçu le ","Received on ")+day(r.received_on),pdfButton("receipt",r.id));}).join("")+'</div>':'<div class="pf-empty">'+tr("Aucun paiement enregistré.","No payment recorded.")+'</div>');
+ return h;
+}
 function documents(){
  var docs=Array.isArray(state.quote&&state.quote.docs)?state.quote.docs:[];
- return '<div class="pf-private-note"><p>'+tr("Liens de documents associés au dossier. Vérifiez les droits de partage avant de communiquer un lien au client.","Document references for this project. Check sharing permissions before sending a link to a client.")+'</p>'+
+ return officialDocuments()+'<h3 class="pf-doc-group">'+tr("Fichiers du projet","Project files")+'</h3><div class="pf-private-note"><p>'+tr("Liens de documents associés au dossier. Vérifiez les droits de partage avant de communiquer un lien au client.","Document references for this project. Check sharing permissions before sending a link to a client.")+'</p>'+
  '<a class="pf-btn pf-btn-primary" href="'+esc(projectUrl("work/c-docs"))+'">'+tr("Gérer les documents","Manage documents")+' ↗</a></div>'+
  (docs.length?'<div class="pf-document-list">'+docs.map(function(doc){
   var name=doc.n||tr("Document","Document"),url=String(doc.u||"").trim(),valid=/^https:\/\//i.test(url);
   return '<article class="pf-document-entry"><span class="pf-document-icon" aria-hidden="true">▢</span>'+
    '<div><strong>'+esc(name)+'</strong><small>'+esc(valid?url:tr("Lien indisponible ou invalide","Missing or invalid link"))+'</small></div>'+
    (valid?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+tr("Ouvrir","Open")+' ↗</a>':'')+'</article>';
- }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucun document lié à ce dossier.","No documents attached to this project.")+'</div>');
+ }).join("")+'</div>':'<div class="pf-empty">'+tr("Aucun document lié à ce dossier.","No documents attached to this project.")+'</div>')+
+ '<h3 class="pf-doc-group">'+tr("Fichiers envoyés par le client","Files sent by the client")+'</h3><p class="pf-muted">'+tr("Logo, photos, textes : ils restent à part, dans « Outils du projet ».","Logo, photos, texts: they stay separate, in « Project tools ».")+' <a href="'+esc(projectUrl("work/c-files"))+'">'+tr("Ouvrir","Open")+' ↗</a></p>';
 }
+document.addEventListener("click",function(e){
+ var b=e.target.closest&&e.target.closest("[data-pf-doc],[data-pf-file]");if(!b||!state.quote)return;
+ if(b.dataset.pfFile){var w=window.open("about:blank","_blank");sb.files.link(b.dataset.pfFile,true).then(function(u){if(w)w.location=u;},function(){if(w)w.close();});return;}
+ var D=window.DzoftDocuments;if(!D)return;var q=state.quote,f=((q.accepted_data||q.data||{}).f)||{},num=f.num||q.numero||"";
+ try{
+  if(b.dataset.pfDoc==="quote")D.download(D.signedQuote(q),"Devis-signe-"+num);
+  else if(b.dataset.pfDoc==="change"){var r=signedChanges().filter(function(x){return x.id===b.dataset.id;})[0];if(r)D.download(D.signedChange(r,q),"Complement-signe-"+(r.proposal_number||num));}
+  else if(b.dataset.pfDoc==="receipt"){var all=(state.tracking&&state.tracking.receipts)||[],rc=all.filter(function(x){return x.id===b.dataset.id;})[0];if(rc)D.download(D.paymentReceipt(rc,q,all),"Recu-paiement-"+rc.received_on+"-"+num);}
+ }catch(err){alert(tr("Le document n’a pas pu être créé : ","The document could not be created: ")+(err&&err.message||""));}
+});
 var sections={overview:{fr:["◉ Périmètre du projet","Prestations, statut et montants associés."],en:["◉ Project scope","Services, statuses and amounts."]},
  quotes:{fr:["▤ Devis & accords","Contrat initial et propositions complémentaires."],en:["▤ Quotes & approvals","Original contract and supplementary proposals."]},
  invoices:{fr:["▧ Factures","Factures enregistrées, sans doublon des suppléments."],en:["▧ Invoices","Recorded invoices, with extras counted only once."]},
@@ -240,7 +275,7 @@ var sections={overview:{fr:["◉ Périmètre du projet","Prestations, statut et 
  extras:{fr:["◇ Suppléments","Demandes, propositions et accords du client."],en:["◇ Extras","Requests, proposals and approvals."]},
  activity:{fr:["⌁ Activité","Chronologie des étapes et décisions."],en:["⌁ Activity","Project milestones and decisions."]},
   journal:{fr:["☷ Journal privé","Notes et décisions internes au projet."],en:["☷ Private journal","Internal project notes and decisions."]},
-  documents:{fr:["▢ Documents du projet","Références et liens des documents associés au dossier."],en:["▢ Project documents","Document references and links for the project."]}};
+  documents:{fr:["▢ Documents du projet","Contrat, factures et reçus de paiement en PDF, puis les fichiers du projet."],en:["▢ Project documents","Contract, invoices and payment receipts as PDF, then the project files."]}};
 /* Each summary opens the real tool for it, on the « Outils du projet » page (17 Nov 2026). */
 var TOOLS={quotes:["devis.html?q=","","Ouvrir l’éditeur de devis →","Open the quote editor →"],
  invoices:["suivi.html?q=","#billing/c-inv","Créer ou envoyer une facture →","Create or send an invoice →"],

@@ -64,3 +64,7 @@ body.pf-page{background:var(--pf-bg)}
 .pf-document-entry small{color:#77768c;font-size:11px;overflow-wrap:anywhere}
 .pf-document-entry>a{color:#2241d5;font-weight:800;font-size:12px;white-space:nowrap}
 @media(max-width:600px){.pf-private-note{align-items:stretch}.pf-private-note .pf-btn{width:100%;justify-content:center}.pf-document-entry{gap:8px;padding:12px}.pf-document-entry>a{font-size:11px}}
+/* Documents tab (17 Nov 2026): contract, signed extra work, invoices, payment receipts, then project files. */
+.pf-doc-group{font:700 13px/1.4 Sora,system-ui,sans-serif;color:#16204a;margin:18px 0 9px}
+.pf-doc-group:first-child{margin-top:0}
+.pf-document-entry .pf-btn{flex:0 0 auto}

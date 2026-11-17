@@ -47,6 +47,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   les e-mails de paiement restent bilingues. Lien privé (sans compte) : chiffres et avancées via `portal_project_tracking`.
   Tout texte saisi s’affiche avec `raw()` (jamais réécrit par le dictionnaire). Tests `tests/client-email-language.test.cjs`,
   `tests/client-language-portal.sql`.
+  Documents (17 nov. 2026) : d’abord « Documents officiels » par projet signé = contrat (devis signé en PDF + CGV acceptées),
+  compléments signés, factures, paiements reçus (reçu PDF par paiement) ; puis fichiers du projet, puis fichiers envoyés par le client.
+  PDF dessinés dans le navigateur depuis les enregistrements (`assets/dzoft-documents.js`, en français, rien n’est écrit) ;
+  un reçu ne remplace jamais la facture. Même onglet dans l’admin (`projet.html#documents`). Test `tests/official-documents.test.cjs`.
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
   Deux pages par projet (17 nov. 2026, version légère choisie par Roland) : `projet.html` « Dossier client » (résumé, argent,

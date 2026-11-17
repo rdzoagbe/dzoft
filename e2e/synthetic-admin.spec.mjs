@@ -791,3 +791,18 @@ test('Phone bar shows four main entries and « Plus » opens the rest',async({pa
  await expect(bar.locator('[data-route="catalogue"]')).toBeHidden();
  expect(errors).toEqual([]);
 });
+
+test('Dossier client documents: contract, invoices and payments first, and the signed quote downloads as a PDF',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1#documents',{waitUntil:'domcontentloaded'});
+ const box=page.locator('#pf-panel-content');
+ await expect(box.locator('.pf-doc-group').first()).toHaveText(/Contrat|Contract/);
+ await expect(box).toContainText(/Factures|Invoices/);
+ await expect(box).toContainText(/Paiements reçus|Payments received/);
+ await expect(box).toContainText(/Fichiers envoyés par le client|Files sent by the client/);
+ await expect(box.locator('[data-pf-doc="receipt"]')).toHaveCount(2);
+ const [download]=await Promise.all([page.waitForEvent('download'),box.locator('[data-pf-doc="quote"]').click()]);
+ expect(download.suggestedFilename()).toMatch(/^Devis-signe-.*\.pdf$/);
+ expect(errors).toEqual([]);
+});

@@ -352,6 +352,7 @@ footer{max-width:1180px}
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
 <script src="../assets/project-tracking.js?v=20261117-client-tabs"></script>
+<script src="../assets/dzoft-documents.js?v=20261117-docs"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261117-discount">
 <script src="../assets/change-requests.js?v=20261117-prices"></script>
@@ -609,6 +610,7 @@ footer{max-width:1180px}
     var v = $('view');
     v.innerHTML = (VIEWS[page] || VIEWS.accueil)(id, sub);
     (WIRE[page] || function(){})(id, sub);
+    fillOfficialDocs();
     if (DzoftTracking.setPortalToken) DzoftTracking.setPortalToken(token);
     DzoftTracking.client(sb);
     if (focusInvoice && focusProject && page === 'projets' && id === focusProject) {
@@ -808,6 +810,55 @@ footer{max-width:1180px}
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function(){ prompt(L('À copier :', 'Copy this:'), t); }); else prompt(L('À copier :', 'Copy this:'), t);
   });
   function okDocs(q){ return (q.docs || []).filter(function(d){ return /^https:\/\//i.test(d.u || ''); }); }
+  /* Official documents (17 Nov 2026): for a signed project, the contract (signed quote + accepted CGV), the signed
+     extra work, the invoices and a receipt for each recorded payment. The PDFs are drawn from what is recorded
+     (assets/dzoft-documents.js); they are in French, the binding language. */
+  var OFFICIAL = {};
+  function officialDocs(q){
+    if (!q.accepted_at) return '';
+    var pdf = L('PDF', 'PDF (in French)'), f = (q.data && q.data.f) || {};
+    var inv = invoiceList(q).replace(/<h3 class="subh">[^<]*<\/h3>/, '');
+    return '<section class="card official-docs" data-official-docs="' + esc(q.id) + '"><h2>' + L('Documents officiels · ', 'Official documents · ') + raw(title(q)) + '</h2>' +
+      '<h3 class="subh">' + L('Contrat', 'Contract') + '</h3><ul class="invl"><li><div><b>' + L('Devis signé', 'Signed quote') + '</b> <span class="muted" data-no-translate>' + L('n° ', 'no. ') + esc(f.num || q.numero || '') + '</span><small class="muted"> · ' + L('signé le ', 'signed on ') + day(q.accepted_at) + '</small></div>' +
+      '<button class="btn line sm" type="button" data-doc-pdf="quote" data-q="' + esc(q.id) + '">' + pdf + '</button></li>' +
+      '<li><div><b>' + L('Conditions générales de vente acceptées', 'Accepted terms of sale') + '</b>' + (q.accepted_terms ? ' <span class="muted">' + L('version ', 'version ') + esc(String(q.accepted_terms).replace(/^v/, '')) + '</span>' : '') + '</div><a class="btn line sm" href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">' + L('Voir', 'View') + ' ↗</a></li></ul>' +
+      '<div data-doc-slot="changes"></div>' +
+      '<h3 class="subh">' + L('Factures', 'Invoices') + '</h3>' + (inv || '<p class="muted">' + L('Aucune facture pour le moment.', 'No invoice yet.') + '</p>') +
+      '<h3 class="subh">' + L('Paiements reçus', 'Payments received') + '</h3><div data-doc-slot="receipts"><p class="muted">' + L('Chargement…', 'Loading…') + '</p></div></section>';
+  }
+  function fillOfficialDocs(){
+    [].forEach.call(document.querySelectorAll('[data-official-docs]'), function(box){
+      var id = box.dataset.officialDocs, pdf = L('PDF', 'PDF (in French)');
+      var tracking = token ? sb.rpc('portal_project_tracking', { p_token: token, p_quote: id }) : sb.rpc('project_tracking', { p_quote: id }, true);
+      Promise.all([Promise.resolve(tracking).catch(function(){ return null; }), Promise.resolve(call('list_change_requests', { p_quote: id })).catch(function(){ return null; })]).then(function(res){
+        if (!box.isConnected) return;
+        var t = res[0], ch = Array.isArray(res[1]) ? res[1] : [];
+        var receipts = t && Array.isArray(t.receipts) ? t.receipts.slice().sort(function(a, b){ return String(a.received_on).localeCompare(String(b.received_on)); }) : null;
+        var signed = ch.filter(function(r){ return r.decided_at && ['approved', 'in_progress', 'completed'].indexOf(r.status) >= 0; });
+        OFFICIAL[id] = { receipts: receipts || [], changes: signed };
+        var cs = box.querySelector('[data-doc-slot="changes"]');
+        if (cs) cs.innerHTML = signed.length ? '<h3 class="subh">' + L('Compléments signés', 'Signed extra work') + '</h3><ul class="invl">' + signed.map(function(r){
+          return '<li><div><b data-no-translate>' + raw(r.title) + '</b>' + (r.proposal_number ? ' <span class="muted" data-no-translate>' + esc(r.proposal_number) + '</span>' : '') + '<small class="muted"> · ' + eur(r.extra_price) + ' · ' + L('signé le ', 'signed on ') + day(r.decided_at) + '</small></div>' +
+            '<button class="btn line sm" type="button" data-doc-pdf="change" data-q="' + esc(id) + '" data-r="' + esc(r.id) + '">' + pdf + '</button></li>';
+        }).join('') + '</ul>' : '';
+        var rs = box.querySelector('[data-doc-slot="receipts"]');
+        if (rs) rs.innerHTML = receipts === null ? '<p class="muted">' + L('Les paiements ne peuvent pas être affichés pour le moment.', 'Payments cannot be shown right now.') + '</p>' :
+          receipts.length ? '<ul class="invl">' + receipts.map(function(r){
+            return '<li><div><b>' + eur(r.amount) + '</b><small class="muted"> · ' + L('reçu le ', 'received on ') + day(r.received_on) + '</small></div><button class="btn line sm" type="button" data-doc-pdf="receipt" data-q="' + esc(id) + '" data-r="' + esc(r.id) + '">' + L('Reçu PDF', 'Receipt PDF (in French)') + '</button></li>';
+          }).join('') + '</ul>' : '<p class="muted">' + L('Aucun paiement enregistré pour le moment.', 'No payment recorded yet.') + '</p>';
+      });
+    });
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-doc-pdf]'); if (!b || !window.DzoftDocuments) return;
+    var q = quotes().filter(function(x){ return x.id === b.dataset.q; })[0]; if (!q) return;
+    var o = OFFICIAL[q.id] || { receipts: [], changes: [] }, D2 = window.DzoftDocuments, num = (q.data && q.data.f && q.data.f.num) || q.numero || '';
+    try {
+      if (b.dataset.docPdf === 'quote') D2.download(D2.signedQuote(q), 'Devis-signe-' + num);
+      else if (b.dataset.docPdf === 'change') { var r = o.changes.filter(function(x){ return x.id === b.dataset.r; })[0]; if (r) D2.download(D2.signedChange(r, q), 'Complement-signe-' + (r.proposal_number || num)); }
+      else if (b.dataset.docPdf === 'receipt') { var rc = o.receipts.filter(function(x){ return x.id === b.dataset.r; })[0]; if (rc) D2.download(D2.paymentReceipt(rc, q, o.receipts), 'Recu-paiement-' + rc.received_on + '-' + num); }
+    } catch (err) { alert(L('Le document n’a pas pu être créé : ', 'The document could not be created: ') + (err && err.message || '')); }
+  });
   function stepsList(q){
     var list = steps(q), now = -1;
     list.forEach(function(s, i){ if (now < 0 && !s.done) now = i; });
@@ -1043,7 +1094,8 @@ footer{max-width:1180px}
       h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '" data-tracking-part="payments" data-due="' + esc(JSON.stringify(dueList(q))) + '"><h2>' + L('Où en sont les paiements', 'Payment status') + '</h2><div class="tracking-slot"></div></section>';
       h += payBlock(q) + careBlock(q);
     } else {
-      h += '<section class="card"><h2>' + L('Documents partagés', 'Shared documents') + '</h2>' + (docs.length ? docsList(docs) : '<p class="muted">' + L('Les maquettes et documents du projet apparaîtront ici.', 'Designs and project documents will appear here.') + '</p>') +
+      h += officialDocs(q);
+      h += '<section class="card"><h2>' + L('Fichiers du projet', 'Project files') + '</h2>' + (docs.length ? docsList(docs) : '<p class="muted">' + L('Les maquettes et documents du projet apparaîtront ici.', 'Designs and project documents will appear here.') + '</p>') +
         '<p style="margin-top:12px"><a class="btn line sm" href="#/documents">' + L('Envoyer mes fichiers (logo, photos, textes)', 'Send my files (logo, photos, texts)') + '</a></p></section>';
       h += '<section class="card"><h2>' + L('Hébergement et comptes', 'Hosting & accounts') + '</h2>' + (env.length ? envTable(env) : '<p class="muted">' + L('Les accès de votre projet apparaîtront ici dès qu’ils seront créés.', 'Your project accounts will appear here as soon as they are created.') + '</p>') + '</section>';
     }
@@ -1056,12 +1108,14 @@ footer{max-width:1180px}
     return h + qs.map(function(q){ return '<section class="card"><h2>' + raw(title(q)) + '</h2>' + envTable(envOf(q)) + '</section>'; }).join('');
   };
   VIEWS.documents = function(){
-    // Order: what DZOFT shared for each project, the invoices, then the client's own uploads.
-    var qs = quotes().filter(function(q){ return okDocs(q).length; }), h = head('Documents', L('Maquettes, factures, fiche de remise et autres fichiers partagés.', 'Designs, invoices, handover sheet and other shared files.'));
-    h += qs.length ? qs.map(function(q){ return '<section class="card"><h2>' + L('Partagés par DZOFT · ', 'Shared by DZOFT · ') + raw(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('')
-      : empty(L('Les maquettes et documents de vos projets apparaîtront ici.', 'Designs and documents for your projects will appear here.'));
-    quotes().filter(function(q){ return invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>' + L('Factures · ', 'Invoices · ') + raw(title(q)) + '</h2>' + invoiceList(q).replace(/<h3 class="subh">[^<]*<\/h3>/, '') + '</section>'; });
-    h += '<section class="card" id="myfiles"><h2>' + L('Mes fichiers', 'My files') + '</h2>' + (token ?
+    // Order (17 Nov 2026): official documents of each signed project (contract, signed extra work, invoices,
+    // payment receipts), then the files DZOFT shared, then the client's own uploads, kept apart.
+    var signed = quotes().filter(function(q){ return q.accepted_at; }), qs = quotes().filter(function(q){ return okDocs(q).length; });
+    var h = head('Documents', L('Votre contrat, vos factures et vos reçus de paiement, puis les fichiers du projet.', 'Your contract, invoices and payment receipts, then the project files.'));
+    h += signed.length ? signed.map(officialDocs).join('') : empty(L('Votre contrat et vos factures apparaîtront ici dès la signature du devis.', 'Your contract and invoices will appear here once the quote is signed.'));
+    quotes().filter(function(q){ return !q.accepted_at && invoices(q).length; }).forEach(function(q){ h += '<section class="card"><h2>' + L('Factures · ', 'Invoices · ') + raw(title(q)) + '</h2>' + invoiceList(q).replace(/<h3 class="subh">[^<]*<\/h3>/, '') + '</section>'; });
+    h += qs.map(function(q){ return '<section class="card"><h2>' + L('Fichiers du projet · ', 'Project files · ') + raw(title(q)) + '</h2>' + docsList(okDocs(q)) + '</section>'; }).join('');
+    h += '<section class="card" id="myfiles"><h2>' + L('Fichiers que vous m’avez envoyés', 'Files you sent me') + '</h2>' + (token ?
       '<p class="muted">' + L('Pour m’envoyer vos fichiers (logo, photos, textes), connectez-vous à votre compte. En attendant, écrivez-moi depuis Messages.', 'To send me your files (logo, photos, texts), sign in to your account. Meanwhile, message me from Messages.') + '</p>' :
       '<p class="muted">' + L('Logo, photos, textes, anciens documents : envoyez-les ici, je les reçois directement. 20 Mo maximum par fichier (images, PDF, Word, Excel, ZIP).', 'Logo, photos, texts, old documents: upload them here and I receive them directly. 20 MB maximum per file (images, PDF, Word, Excel, ZIP).') + '</p>' +
       '<div class="qacts"><label class="btn main" style="cursor:pointer">' + L('Envoyer des fichiers', 'Upload files') + '<input type="file" id="up" multiple hidden accept="image/*,.pdf,.zip,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label></div>' +
