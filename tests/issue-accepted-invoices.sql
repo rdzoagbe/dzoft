@@ -125,7 +125,10 @@ begin
   begin perform public.issue_accepted_invoice(q_key,'supplement',flow_change);
   exception when others then failed:=true; end;
   if not failed then raise exception 'A proposal the client has not approved was invoiced'; end if;
+  update public.dzoft_change_requests set sent_at=now() where id=flow_change; -- sent to the client: a draft cannot be signed
+  perform set_config('dzoft.change_signed','yes',true); -- normally set by private.dzoft_sign_change after the e-mail code
   perform private.dzoft_decide_change(client_id,flow_change,1,true,'Test client');
+  perform set_config('dzoft.change_signed','no',true);
   perform public.owner_progress_change(flow_change,'in_progress');
   failed:=false;
   begin perform public.issue_accepted_invoice(q_key,'supplement',flow_change);

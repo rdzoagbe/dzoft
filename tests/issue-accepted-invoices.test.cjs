@@ -109,7 +109,7 @@ test('the owner can open a proposal, but only the client approval makes it billa
  assert.match(fn,/'proposed',\s*p_scope,p_extra_price,p_timeline,1,now\(\)/);
  assert.doesNotMatch(fn,/'approved'|decided_at\s*[,=]|decision_name\s*[,=]/);
  assert.match(changes,/data-change-offer/);
- assert.match(changes,/Rien n’est dû tant qu’il ne l’a pas approuvée lui-même/);
+ assert.match(changes,/Rien n’est dû tant qu’il ne l’a pas approuvée? lui-même/);
  assert.match(changes,/owner_create_priced_proposal/);
 });
 

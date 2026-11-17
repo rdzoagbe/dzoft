@@ -141,6 +141,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »
   (e-mail `change_proposed`), signature du client par code e-mail (fonction Edge `change-sign-code`, aucune approbation sans
   code), puis facture complémentaire du montant signé. Test `tests/priced-change-proposals.sql`.
+  Brouillon jusqu’à l’envoi (17 nov. 2026, migration `20261117200000_change_proposal_draft_until_sent.sql`) : une proposition
+  chiffrée reste un brouillon visible par Roland seul (`sent_at` vide) ; le client ne la voit pas (sa propre demande reste
+  « à l’étude », sans prix), ne peut ni recevoir de code ni la signer avant « Envoyer au client » ; la rechiffrer en refait un
+  brouillon. Test `tests/change-proposal-draft.test.cjs`.
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis le dernier supplément en cours ou signé
   (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; « Depuis le » permet de choisir la date ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).

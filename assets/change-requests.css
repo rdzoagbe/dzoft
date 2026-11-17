@@ -17,7 +17,8 @@
 .dzoft-change-actions{display:flex;gap:8px;flex-wrap:wrap}
 .dzoft-change-actions .btn,.dzoft-change-form>.btn{justify-self:start}
 .dzoft-change-check{display:flex;align-items:start;gap:8px;font-size:12px;line-height:1.6}
-.dzoft-change-check input{margin-top:3px;flex-shrink:0}
+.dzoft-change-check input{margin-top:3px;flex:0 0 auto;width:auto!important;min-width:0!important}
+.dzoft-change-check>span{flex:1 1 auto;min-width:0}
 .dzoft-change-confirm{background:#edf9f2;border-radius:9px;padding:10px;color:#22593c}
 .dzoft-change-history{margin-top:14px;font-size:12px;color:var(--muted,var(--mute,#4a5970))}
 .dzoft-change-history summary{cursor:pointer}
@@ -115,3 +116,7 @@
 .dzoft-calc-since{display:grid;gap:5px;font-size:13px;font-weight:600;max-width:240px}
 .dzoft-calc-since input{border:1px solid #cad3e1;border-radius:8px;padding:8px;font:inherit;min-height:40px;background:var(--card,#fff)}
 #dzoft-calc-since-help{color:#636e81;font-size:12px;margin-top:-4px}
+
+.dzoft-change-item.dzoft-change-draft{border-style:dashed;border-color:#4361EE;background:#f6f8ff}
+.dzoft-change-draft .dzoft-change-status{background:#e9edff;color:#2a3fbf}
+.dzoft-change-draft-note{background:#eef2ff;border-radius:8px;padding:8px 10px;color:#22306e!important}
