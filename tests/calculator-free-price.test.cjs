@@ -27,3 +27,11 @@ test('On a phone each calculator line fits the screen, total included',()=>{
  assert.match(css,/@media\(max-width:560px\)\{\n \.dzoft-calc \.dzoft-change-table\{overflow:visible\}/);
  assert.match(css,/\.dzoft-calc \.dzoft-change-table tbody tr\{display:grid/);
 });
+
+test('Prices and quantities keep two decimals at most, so the total shown is the total sent',()=>{
+ const m=js.match(/function amount\(v\)\{[^\n]*\}/);assert.ok(m);
+ const amount=new Function('num',m[0]+';return amount;')(v=>{const n=Number(String(v==null?'':v).replace(',','.'));return Number.isFinite(n)?n:NaN;});
+ assert.equal(amount('12,5'),12.5);assert.equal(amount('1.25'),1.25);assert.equal(amount(' 40 '),40);
+ for(const bad of ['1,234','0,001','12,5,0','abc','','1e3'])assert.ok(Number.isNaN(amount(bad)),bad);
+ assert.match(js,/qty:disc\?1:amount\(/);assert.match(js,/p=amount\(row\.querySelector\('\[name=price\]'\)\.value\);return \{label/);
+});
