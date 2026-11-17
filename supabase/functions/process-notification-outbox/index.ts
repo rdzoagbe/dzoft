@@ -84,6 +84,12 @@ function eventCopy(type: string, summary: string, quote: any, message: string, i
     const ref = (summary.match(/^Proposition (?:complémentaire )?(\S+)/) || [])[1] || "";
     const amount = (summary.match(/·\s*([0-9][0-9\s\u202f\u00a0.,]*€)/) || [])[1] || "";
     const what = `${ref ? "n° " + ref : ""}${ref && amount ? ", " : ""}${amount}`;
+    // Client copy: acknowledgement of the signature (Code civil art. 1127-2).
+    if (type === "change_signed" && !isOwner) return {
+      subject: `Votre signature est enregistrée : proposition ${ref}${amount ? " · " + amount : ""} · DZOFT`,
+      intro: `Nous avons bien reçu votre signature de la proposition de travaux complémentaires${what ? " (" + what + ")" : ""}${quote?.numero ? ", en complément du devis " + quote.numero : ""}.`,
+      body: `<p>Elle suit les mêmes conditions générales de vente que ce devis. Le détail signé reste consultable dans votre espace client. La facture complémentaire vous sera adressée une fois les travaux terminés.</p>`,
+    };
     if (type === "change_signed") return {
       subject: `Proposition ${ref} signée par le client${amount ? " (" + amount + ")" : ""} · DZOFT`,
       intro: `${summary}. Vous pouvez marquer les travaux terminés puis créer la facture complémentaire depuis la fiche projet.`,
@@ -255,7 +261,7 @@ Deno.serve(async (req) => {
       else if (!isOwner && client?.user_id) link = PORTAL + (event.event_type.includes("message") ? "#/messages" : quote?.id ? (event.event_type === "quote_published" ? `#/devis/${quote.id}` : `#/projets/${quote.id}`) : "#/messages");
       else if (!isOwner && client?.portal_token) link = PORTAL + "#" + client.portal_token;
       const hello = isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + esc(firstName) : ""},`;
-      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? "Une proposition complémentaire à signer" : "Une mise à jour de votre projet";
+      const heading = isOwner ? `Événement projet · ${esc(event.summary)}` : event.event_type === "change_proposed" ? "Une proposition complémentaire à signer" : event.event_type === "change_signed" ? "Votre signature est enregistrée" : "Une mise à jour de votre projet";
       let attachment: Array<{ name: string; content: string }> = [];
 
       if (job.attach_invoice_pdf) {
@@ -308,7 +314,7 @@ Deno.serve(async (req) => {
         <p>Roland Dzoagbe<br>DZOFT · <a href="mailto:${esc(sender)}" style="color:#3448D6">${esc(sender)}</a></p>
         <p style="font-size:12px;color:#5d6f83">E-mail de suivi de votre projet avec DZOFT. Les pièces jointes sont limitées aux factures PDF que Roland a explicitement choisi d’envoyer.</p>
       </div>`;
-      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
+      const textContent = `${isOwner ? "Bonjour Roland," : `Bonjour${firstName ? " " + firstName : ""},`}\n\n${copy.intro}\n\n${paymentEvent || event.event_type === "change_proposed" || event.event_type === "change_signed" ? copy.body.replace(/<[^>]*>/g, " ").trim() : digest.length ? digest.map((u) => `- ${DIGEST_GROUPS[u.category] || "Autres travaux"} · ${DIGEST_STATUS[u.status] || ""} : ${u.summary}`).join("\n") : ""}\n\n${message}\n\n${portalLine}\n${link}\n\nRoland Dzoagbe · DZOFT`;
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": brevoKey, "Content-Type": "application/json", Accept: "application/json" },

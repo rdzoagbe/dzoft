@@ -354,7 +354,7 @@ footer{max-width:1180px}
 <script src="../assets/project-tracking.js?v=20261117-client-tabs"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261117-discount">
-<script src="../assets/change-requests.js?v=20261117-discount"></script>
+<script src="../assets/change-requests.js?v=20261117-terms"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -953,7 +953,7 @@ footer{max-width:1180px}
   WIRE.projets = function(id){
     var q = id && byId(id); if (!q) return;
     wireReview(q);
-    if (typeof window !== 'undefined' && window.DzoftChanges && document.getElementById('dzoft-client-changes')) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:EN(),sendCode:function(changeId){ return sb.fn('change-sign-code', { change_id: changeId, token: token || undefined }); }});
+    if (typeof window !== 'undefined' && window.DzoftChanges && document.getElementById('dzoft-client-changes')) window.DzoftChanges.client(document.getElementById('dzoft-client-changes'),{call:call,quoteId:q.id,clientName:(D.client||{}).nom||'',en:EN(),terms:{version:q.accepted_terms||TERMS,url:quoteTermsUrl(q),quote:q.numero||''},sendCode:function(changeId){ return sb.fn('change-sign-code', { change_id: changeId, token: token || undefined }); }});
     if (/\/avis$/.test(location.hash) && $('avis')) $('avis').scrollIntoView();
     [].forEach.call(document.querySelectorAll('.valid'), function(box){
       var b = box.querySelector('[data-v]'), msg = box.querySelector('.msgline'), st = box.dataset.step;

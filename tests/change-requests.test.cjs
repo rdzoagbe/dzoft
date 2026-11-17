@@ -10,10 +10,10 @@ test('both client and admin render live change-request workflows',()=>{
  const owner=read('admin/suivi.html'),workspace=read('admin/project-workspace.js');
  assert.match(client,/dzoft-client-changes/);
  assert.match(client,/DzoftChanges\.client/);
- assert.match(client,/change-requests\.js\?v=20261117-discount/);
+ assert.match(client,/change-requests\.js\?v=20261117-terms/);
  assert.match(owner,/dzoft-owner-changes/);
  assert.match(owner,/DzoftChanges\.owner/);
- assert.match(owner,/change-requests\.js\?v=20261117-discount/);
+ assert.match(owner,/change-requests\.js\?v=20261117-terms/);
  assert.match(workspace,/move\('c-changes',primary\)/);
  for(const html of [client,owner]){
   for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
@@ -73,4 +73,23 @@ test('database restricts all state transitions to signed-project server function
  for(const n of ['owner_list_change_requests','owner_propose_change','owner_reject_change','my_list_change_requests','portal_list_change_requests']){
   assert.match(sql,new RegExp(n));
  }
+});
+
+test('signing extra work confirms the signed quote’s general terms and the client gets an acknowledgement (17 Nov)',()=>{
+ const js=read('assets/change-requests.js'),client=read('espace/index.html');
+ const sql=read('supabase/migrations/20261117200000_change_signature_terms_and_receipt.sql');
+ const mail=read('supabase/functions/process-notification-outbox/index.ts');
+ // Code civil art. 1119: the terms are shown, linked and accepted with the signature.
+ assert.match(js,/function termsLine\(en,terms\)/);
+ assert.match(js,/conditions générales de vente \(CGV\)/);
+ assert.match(js,/p_terms:\(options\.terms&&options\.terms\.version\)\|\|''/);
+ assert.match(client,/terms:\{version:q\.accepted_terms\|\|TERMS,url:quoteTermsUrl\(q\),quote:q\.numero\|\|''\}/);
+ // The server refuses a signature without the quote's terms version and records it.
+ assert.match(sql,/btrim\(p_terms\)<>quote_terms/);
+ assert.match(sql,/terms_version=btrim\(p_terms\)/);
+ // Code civil art. 1127-2: the client receives the acknowledgement (notify_client = true).
+ assert.match(sql,/c\.client_id,c\.quote_id,null,null,null,true,true,false\);/);
+ assert.match(mail,/type === "change_signed" && !isOwner/);
+ assert.match(mail,/Votre signature est enregistrée/);
+ assert.doesNotMatch(client,/journal/i);
 });
