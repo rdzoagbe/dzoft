@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const changes=read('assets/change-requests.js'),dash=read('admin/dashboard-v3.js'),index=read('admin/index.html'),
- panels=read('admin/workspace-panels-v7.js'),tracking=read('assets/project-tracking.js'),finance=read('admin/project-finance.js'),tabs=read('admin/project-workspace-tabs.js');
+ panels=read('admin/workspace-panels-v7.js'),tracking=read('assets/project-tracking.js'),tabs=read('admin/project-workspace-tabs.js');
 
 test('price list is edited only on the Catalogue page, and the project calculator still reads it',()=>{
  new vm.Script(changes);
@@ -24,7 +24,7 @@ test('quick buttons only navigate: they never write, and they open the existing 
  const quick=dash.slice(dash.indexOf('var QUICK='),dash.indexOf('translateQuick();\ndocument'));
  assert.doesNotMatch(quick,/\.rpc\(|\.update\(|\.insert\(|\.remove\(/,'no data is written from the dashboard');
  assert.match(quick,/suivi\.html\?q="\+encodeURIComponent\(id\)\+"#billing\/pay"/);
- assert.match(quick,/projet\.html\?q="\+encodeURIComponent\(id\)\+"#new-extra"/);
+ assert.match(quick,/suivi\.html\?q="\+encodeURIComponent\(id\)\+"#billing\/new-extra"/);
  assert.match(quick,/suivi\.html\?q="\+encodeURIComponent\(id\)\+"#work\/publish"/);
  assert.match(quick,/d\.returnValue==="go"/,'Cancel opens nothing');
  for(const k of ['pay','extra','publish'])assert.match(index,new RegExp('data-quick="'+k+'"'));
@@ -34,5 +34,6 @@ test('quick buttons only navigate: they never write, and they open the existing 
  // Opening a form never submits it: publishing still needs « Publier et notifier », a payment still needs its confirmation.
  const open=tracking.slice(tracking.indexOf('function openFromHash('),tracking.indexOf('function archiveInvoice('));
  assert.doesNotMatch(open,/\.click\(\)|submit|rpc\(/);
- assert.match(finance,/openExtraOnLoad=initialPanel==="new-extra"/);
+ assert.match(tabs,/'billing\/new-extra':\{extra:true\}/);
+ assert.match(tabs,/if\(deep&&deep\.extra\)\{newExtra\(\);return;\}/);
 });

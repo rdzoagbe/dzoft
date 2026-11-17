@@ -14,6 +14,9 @@ const syntheticSb = `
   shared:true,invoices:[],steps:[],journal:[{d:now.slice(0,10),k:'fait',t:'Synthetic journal check'}],
   care:{},env:{},data:{f:{delay:'',pay:'',fix:'',notes:''}}
  };
+ // One project page (17 Nov 2026): signed scope, one signed extra and one proposal still awaiting the client.
+ const summaryFixture=location.search.includes('summaryFixture=1');
+ if(summaryFixture)quote.accepted_data={f:{num:'D-SYNTHETIC-001'},lines:[{l:'Application web installable',q:1,p:1200},{l:'Comptes utilisateurs',q:1,p:300}]};
  if(location.search.includes('invoiceFixture=1')){
     quote.invoices=[
       {id:'paid-cash',n:'Facture d’acompte',num:'F-2026-0001',amt:450,basis:'receipt',generatedByDzoft:true,paid:true,issuedOn:'2026-11-04',file:'u/fictional/450.pdf',fileName:'F-2026-0001.pdf',fileSize:15500},
@@ -53,6 +56,8 @@ const syntheticSb = `
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
    if(name==='project_tracking'){
+      if(summaryFixture)return {total:1700,base_total:1500,supplements:200,received:800,remaining:900,legacy:0,payment_statuses:[],updates:[],
+        receipts:[{id:'rc-1',amount:450,method:'cash',received_on:'2026-11-04'},{id:'rc-2',amount:350,method:'transfer',received_on:'2026-11-14'}]};
       if(location.search.includes('invoiceFixture=1'))return {total:1500,base_total:1500,received:800,remaining:700,legacy:0,payment_statuses:[],
         receipts:[
           {id:'receipt-cash',invoice_id:'paid-cash',amount:450,method:'cash',received_on:'2026-11-04'},
@@ -60,6 +65,9 @@ const syntheticSb = `
         ],updates:[],supplements:0};
       return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
     }
+   if(name==='owner_list_change_requests')return summaryFixture?[
+     {id:'11111111-1111-4111-8111-111111111111',title:'Synthetic signed extra',status:'approved',extra_price:200,decided_at:now,created_at:now,proposal_number:'D-SYNTHETIC-001-C1',lines:[{label:'Page',qty:1,price:200}]},
+     {id:'22222222-2222-4222-8222-222222222222',title:'Synthetic pending proposal',status:'proposed',extra_price:500,created_at:now}]:[];
    if(name==='invoice_draft_amount')return {remaining:1050,has_final:false};
    if(name==='list_project_work_items')return work;
    if(name==='project_sync_overview')return {backend_enabled:true,last_success_at:now,last_checked:2,last_inserted:0};
@@ -354,47 +362,52 @@ test('One search finds clients, quotes and projects without leaving the private 
  expect(errors).toEqual([]);
 });
 
-test('Project quick links reveal real invoices, documents and activity without new backend calls',async({page})=>{
+test('Project quick actions open the payment, publish and message forms without new backend calls',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
- const docs=page.locator('[data-workspace-action="documents"]');
- await expect(docs).toBeVisible();
- await docs.click();
- await expect(page.locator('#c-docs')).toBeVisible();
- const history=page.locator('[data-workspace-action="history"]');
- await history.click();
- await expect(page.locator('#c-activity')).toBeVisible();
+ await expect(page.locator('[data-workspace-action]')).toHaveText(['€ Enregistrer un paiement','✓ Publier une avancée','✉ Écrire au client','＋ Ajouter un supplément']);
  await page.locator('[data-workspace-action="payment"]').click();
- await expect(page.locator('#c-inv')).toBeVisible();
+ await expect(page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)')).toHaveAttribute('open','');
+ await page.locator('[data-workspace-action="progress"]').click();
+ await expect(page.locator('#tracking-publish details.tracking-editor')).toHaveAttribute('open','');
+ await page.locator('[data-workspace-action="message"]').click();
+ await expect(page.locator('#c-msg')).toBeVisible();
+ const calls=await page.evaluate(()=>window.__syntheticCalls);
+ expect(calls.filter(c=>/issue_|record_project_payment|publish_project_updates/.test(c))).toEqual([]);
  expect(errors).toEqual([]);
 });
 
 
-test('Focused project navigation keeps overview, work, invoices and messages accessible',async({page})=>{
+test('Focused project navigation keeps overview, work, money, documents and messages accessible',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
  const tabs=page.locator('.project-focus-tab');
- await expect(tabs).toHaveCount(4);
+ await expect(tabs).toHaveCount(5);
  await expect(page.locator('#project-panel-overview')).toBeVisible();
  await expect(page.locator('#project-panel-work')).toBeHidden();
  await expect(page.locator('#project-panel-billing')).toBeHidden();
  await expect(page.locator('[data-project-tab="overview"]')).toHaveAttribute('aria-selected','true');
- // 17 Nov 2026: the overview cards were replaced by one line; the tabs are the way in.
+ // 17 Nov 2026: one project page; the overview shows the client card and the money tiles.
  await expect(page.locator('.project-overview-card')).toHaveCount(0);
+ await expect(page.locator('#ps-summary .ps-tile')).toHaveCount(4);
  await page.locator('[data-project-tab="work"]').click();
  await expect(page.locator('#project-panel-work')).toBeVisible();
  await expect(page.locator('#c-steps')).toBeVisible();
  await page.locator('[data-project-tab="billing"]').click();
  await expect(page.locator('#c-inv')).toBeVisible();
  await expect(page.locator('#iv-amount')).toBeEnabled();
+ await expect(page.locator('#c-changes')).toBeVisible();
+ await page.locator('[data-project-tab="documents"]').click();
+ await expect(page.locator('#ps-docs')).toContainText('Devis signé');
+ await expect(page.locator('#c-docs')).toBeVisible();
  await page.locator('[data-project-tab="messages"]').click();
  await expect(page.locator('#c-msg')).toBeVisible();
  await page.locator('#project-panel-messages .workspace-fold > summary').filter({hasText:/Historique des e-mails|Email and project activity/}).click();
  await expect(page.locator('#c-activity')).toBeVisible();
  await page.locator('[data-project-tab="overview"]').click();
- await expect(page.locator('#project-overview-balance')).not.toBeEmpty();
+ await expect(page.locator('#ps-summary .ps-tile').nth(3)).toContainText('€');
  await expect(page.locator('#project-panel-messages')).toBeHidden();
  const calls=await page.evaluate(()=>window.__syntheticCalls);
  expect(calls.filter(c=>/issue_|record_project_payment|publish_project_updates/.test(c))).toEqual([]);
@@ -627,40 +640,25 @@ test('Dashboard is the global finance page; a project opens on its own page from
  await expect(page.locator('#sd-stats')).toContainText('1 500');
  await expect(page.locator('#app .side [data-route="tableau-de-bord"]')).toHaveAttribute('aria-current','page');
  const projectLink=page.locator('#sd-project-list a.sd-project').first();
- await expect(projectLink).toHaveAttribute('href','projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await expect(projectLink).toHaveAttribute('href','suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
  await projectLink.click();
- await expect(page).toHaveURL(/\/admin\/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0/);
- await expect(page.locator('#pf-shell')).toBeVisible();
- await expect(page.locator('#pf-base')).toContainText('1 500');
+ await expect(page).toHaveURL(/\/admin\/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0/);
+ await expect(page.locator('#ps-summary .ps-tile').first()).toContainText('1 500');
  expect(errors).toEqual([]);
 });
 });
 
 test.describe('Cross-page synthetic finance navigation',()=>{
  test.use({serviceWorkers:'block'}); // Prevent registered PWA SW intercepting mocked sb.js on the next page.
- test('Project page tabs open its own documents, journal and invoices sections; the menu marks Projets',async({page})=>{
+ test('Old project addresses open the matching tab of the one project page; the menu marks Projets',async({page})=>{
  await syntheticOwner(page);
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
- const base='admin/projet.html?q='+q;
- for(const entry of [
-  {link:'pf-side-documents',fragment:'#documents',panel:'documents',title:/Documents/},
-  {link:'pf-side-journal',fragment:'#journal',panel:'journal',title:/Journal/},
-  {link:'pf-side-invoices',fragment:'#invoices',panel:'invoices',title:/Factures|Invoices/}
- ]){
-  await page.goto(base,{waitUntil:'domcontentloaded'});
-  try { await expect(page.locator('#pf-shell')).toBeVisible({timeout:5000}); }
-  catch(error){
-    throw new Error('Finance page navigation failed for '+entry.link+' at URL '+page.url()+
-      ' — '+JSON.stringify(await page.evaluate(()=>({title:document.title,body:document.body?.textContent?.slice(0,140),owner:!!window.RDsb?.session?.()})))+
-      ' — '+error.message);
-  }
-  // 17 Nov 2026: the menu has seven entries; a project's sections are its own tabs.
-  await expect(page.locator('#pf-sidebar [data-route="projets"]')).toHaveAttribute('aria-current','page');
-  await page.locator('#pf-tabs [data-panel="'+entry.panel+'"]').click();
-  await expect(page.locator('#pf-tabs [data-panel="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
-  expect(new URL(page.url()).hash).toBe(entry.fragment);
-  await expect(page.locator('#pf-panel-title')).toContainText(entry.title);
-  await expect(page.locator('#pf-panel-content')).toBeVisible();
+ for(const [old,tab,target] of [['#documents','Documents','#ps-docs'],['#journal','Travail','#c-journal'],['#invoices','Argent','#c-inv'],['#activity','Messages','#c-msg']]){
+  await page.goto('admin/projet.html?q='+q+old,{waitUntil:'domcontentloaded'});
+  await expect(page).toHaveURL(/\/admin\/suivi\.html\?q=/);
+  await expect(page.locator('.project-focus-tab[aria-selected="true"]')).toHaveText(tab);
+  await expect(page.locator(target)).toBeVisible();
+  await expect(page.locator('#dzoft-editor-sidebar a[aria-current="page"]')).toHaveAttribute('href','./#/projets');
  }
  });
 });
@@ -688,8 +686,8 @@ test('Dashboard quick buttons open the right form inside the project, after choo
  await page.locator('#sd-quick [data-quick="extra"]').click();
  await page.locator('#sd-pick-select').selectOption('c8a50cee-3856-4539-98a3-f5df201dbff0');
  await page.locator('#sd-pick-go').click();
- await expect(page).toHaveURL(/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#extras$/);
- await expect(page.locator('#pf-extra-dialog')).toBeVisible();
+ await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/);
+ await expect(page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
  expect(errors).toEqual([]);
 });
 
@@ -705,32 +703,25 @@ test('Price list lives on the Catalogue page; the project calculator links to it
  // Read-only fixture: saving reports an error instead of pretending it worked.
  await box.locator('[data-tier-save]').click();
  await expect(box.locator('.dzoft-change-message')).toContainText(/Read-only fixture/);
- await page.goto('admin/projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0#new-extra',{waitUntil:'domcontentloaded'});
- const dialog=page.locator('#pf-extra-dialog');
- await expect(dialog).toBeVisible();
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/new-extra',{waitUntil:'domcontentloaded'});
+ const dialog=page.locator('#dzoft-owner-changes');
+ await expect(dialog.locator('.dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
  await expect(dialog.locator('.dzoft-price-link a')).toHaveAttribute('href','./#/catalogue');
  await expect(dialog.locator('[data-tier-save]')).toHaveCount(0);
  expect(errors).toEqual([]);
 });
 
-test('Client file summaries open the real tools, and the tools page has the dashboard menu',async({page})=>{
+test('The project page has the dashboard menu and a way back to Projets',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
- await page.goto('admin/projet.html?q='+q+'#invoices',{waitUntil:'domcontentloaded'});
- const tool=page.locator('#pf-panel-tool');
- await expect(tool).toBeVisible();
- await expect(tool).toHaveAttribute('href','suivi.html?q='+q+'#billing/c-inv');
- await page.locator('#pf-tabs [data-panel="overview"]').click();
- await expect(tool).toBeHidden();
- await page.locator('#pf-tabs [data-panel="journal"]').click();
- await expect(tool).toHaveAttribute('href','suivi.html?q='+q+'#work/c-journal');
  await page.goto('admin/suivi.html?q='+q,{waitUntil:'domcontentloaded'});
  const side=page.locator('#dzoft-editor-sidebar');
  await expect(side.locator('a[aria-current="page"]')).toHaveAttribute('href','./#/projets');
  await expect(side.locator('nav a')).toHaveCount(7);
  await expect(side).toContainText('Comptabilité');
- await expect(page.locator('#suivi-back')).toHaveText(/Dossier client/);
+ await expect(page.locator('#suivi-back')).toHaveText(/Projets/);
+ await expect(page.locator('#ttl')).toHaveText(/^Projet · D-SYNTHETIC-001/);
  expect(errors).toEqual([]);
 });
 
@@ -751,18 +742,16 @@ test('Dashboard shows money at a glance and one to-do list, without the old shor
  expect(errors).toEqual([]);
 });
 
-test('Admin polish: one overview line, the add button only where it belongs, a quiet bin count',async({page})=>{
+test('Admin polish: no repeated summary line on the project page, a quiet bin count',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
  await page.goto('admin/suivi.html?q='+q,{waitUntil:'domcontentloaded'});
- await page.locator('.project-overview-money').click();
+ // The next step is shown once (above the tabs), the balance once (in the money tiles).
+ await expect(page.locator('.project-overview-money, .project-overview-line')).toHaveCount(0);
+ await expect(page.locator('#ps-summary .ps-tile')).toHaveCount(4);
+ await page.locator('#ps-summary [data-ps-new-extra]').click();
  await expect(page.locator('#project-panel-billing')).toBeVisible();
- await page.goto('admin/projet.html?q='+q+'#invoices',{waitUntil:'domcontentloaded'});
- await expect(page.locator('#pf-panel-tool')).toBeVisible();
- await expect(page.locator('.pf-panel-head [data-new-extra]')).toBeHidden();
- await page.locator('#pf-tabs [data-panel="extras"]').click();
- await expect(page.locator('.pf-panel-head [data-new-extra]')).toBeVisible();
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  const bin=page.locator('#app .side [data-count-for="parametres"]');
  if(await bin.count()&&await bin.isVisible()){
@@ -792,17 +781,63 @@ test('Phone bar shows four main entries and « Plus » opens the rest',async({pa
  expect(errors).toEqual([]);
 });
 
-test('Dossier client documents: contract, invoices and payments first, and the signed quote downloads as a PDF',async({page})=>{
+test('Project documents: contract, invoices and payments first, with archived invoice PDFs',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1#documents',{waitUntil:'domcontentloaded'});
- const box=page.locator('#pf-panel-content');
- await expect(box.locator('.pf-doc-group').first()).toHaveText(/Contrat|Contract/);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1#documents',{waitUntil:'domcontentloaded'});
+ const box=page.locator('#ps-docs');
+ await expect(box.locator('.ps-doc-group').first()).toHaveText(/Contrat|Contract/);
  await expect(box).toContainText(/Factures|Invoices/);
  await expect(box).toContainText(/Paiements reçus|Payments received/);
- await expect(box).toContainText(/Fichiers envoyés par le client|Files sent by the client/);
- await expect(box.locator('[data-pf-doc="receipt"]')).toHaveCount(2);
- const [download]=await Promise.all([page.waitForEvent('download'),box.locator('[data-pf-doc="quote"]').click()]);
+ await expect(box.locator('[data-ps-file]')).toHaveCount(3);
+ await expect(box.locator('[data-ps-doc="receipt"]')).toHaveCount(2);
+ // « réglée » comes from recorded payments: the 700 € invoice has none.
+ await expect(box.locator('.ps-doc',{hasText:'F-2026-0003'})).toContainText(/à régler|to pay/);
+ await expect(box.locator('.ps-doc',{hasText:'F-2026-0001'})).toContainText(/réglée|paid/);
+ const [download]=await Promise.all([page.waitForEvent('download'),box.locator('[data-ps-doc="quote"]').click()]);
  expect(download.suggestedFilename()).toMatch(/^Devis-signe-.*\.pdf$/);
+ expect(errors).toEqual([]);
+});
+
+test('One project page: summary, five tabs, signed extras only, official documents and the old address',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
+ await page.goto('admin/suivi.html?q='+q+'&summaryFixture=1',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('.project-focus-tab')).toHaveText(['Vue d’ensemble','Travail','Argent','Documents','Messages']);
+ const summary=page.locator('#ps-summary');
+ await expect(summary).toContainText('Synthetic Test Customer');
+ await expect(summary.locator('.ps-tile').nth(0)).toContainText('1 500');
+ // Only the signed extra counts; the proposal is shown apart, not added.
+ await expect(summary.locator('.ps-tile').nth(1)).toContainText('200');
+ await expect(summary.locator('.ps-tile').nth(1)).toContainText('500');
+ await expect(summary.locator('.ps-tile').nth(1)).toContainText('non signés');
+ await expect(summary.locator('.ps-tile').nth(2)).toContainText('800');
+ await expect(summary.locator('.ps-tile').nth(3)).toContainText('900');
+ await expect(summary).toContainText('Application web installable');
+ await expect(summary.locator('.ps-wait')).toContainText('Synthetic pending proposal');
+ // Documents: contract, the signed extra (not the proposal), the two payment receipts.
+ await page.locator('.project-focus-tab',{hasText:'Documents'}).click();
+ const docs=page.locator('#ps-docs');
+ await expect(docs).toContainText('Devis signé n° D-SYNTHETIC-001');
+ await expect(docs).toContainText('D-SYNTHETIC-001-C1');
+ await expect(docs).not.toContainText('Synthetic pending proposal');
+ await expect(docs.locator('[data-ps-doc="receipt"]')).toHaveCount(2);
+ const download=page.waitForEvent('download');
+ await docs.locator('[data-ps-doc="quote"]').click();
+ expect((await download).suggestedFilename()).toMatch(/^Devis-signe-D-SYNTHETIC-001/);
+ await expect(page.locator('#c-docs')).toBeVisible();
+ // « Ajouter un supplément » opens the priced proposal form in Argent.
+ await page.locator('[data-workspace-action="extra"]').click();
+ await expect(page.locator('.project-focus-tab[aria-selected="true"]')).toHaveText('Argent');
+ await expect(page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
+ // The old address opens the matching tab.
+ await page.goto('admin/projet.html?q='+q+'#documents',{waitUntil:'domcontentloaded'});
+ await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#documents$/);
+ await expect(page.locator('.project-focus-tab[aria-selected="true"]')).toHaveText('Documents');
+ if(testInfo.project.name.includes('mobile')){
+  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+ }
  expect(errors).toEqual([]);
 });

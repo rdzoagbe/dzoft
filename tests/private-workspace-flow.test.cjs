@@ -21,7 +21,7 @@ test('all existing private-workspace destinations remain available',()=>{
  assert.match(main,/case-finder\.js\?v=/);
  assert.match(main,/workspace-flow\.css\?v=/);
  assert.match(follow,/workspace-flow\.css\?v=/);
- assert.match(follow,/project-workspace\.js\?v=20261115-update4/);
+ assert.match(follow,/project-workspace\.js\?v=(?:20261115-update4|20261117-onepage)/);
 });
 
 test('search across four already rendered datasets, without calls or caching',()=>{
@@ -40,7 +40,8 @@ test('search across four already rendered datasets, without calls or caching',()
 });
 
 test('project quick actions open existing details without duplicating business logic',()=>{
- for(const action of ['payment','progress','message','documents','history']){
+ // 17 Nov 2026: actions only (record a payment, publish an update, message, add extra work); the tabs are the places.
+ for(const action of ['payment','progress','message','extra']){
    assert.match(project,new RegExp('data-workspace-action="'+action+'"'));
  }
  assert.match(project,/target==='documents'\?'c-docs'/);

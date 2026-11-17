@@ -52,6 +52,6 @@ test('revised assets load on both admin and client pages; core routing remains a
   assert.match(read(p),/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs|20261117-quick)/);
   assert.match(read(p),/project-tracking\.css\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs)/);
  }
- assert.match(read('admin/project-workspace.js'),/Invoices & payments/);
+ assert.match(read('admin/project-workspace.js'),/Record a payment/);
  assert.match(read('admin/index.html'),/simplified-ui\.css\?v=(?:20261115-one-menu|20261117-blue|20261117-nav7)/);
 });

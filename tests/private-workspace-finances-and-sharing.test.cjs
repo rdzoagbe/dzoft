@@ -16,8 +16,10 @@ test('issued invoices and payments remain distinct, including when all amounts a
  assert.match(tracking,/var confirmed=Number\(d\.received\),outstanding=Number\(d\.remaining\)/);
  assert.match(tracking,/due\.id='iv-payment-outstanding'/);
  assert.match(tracking,/Une facture émise n’est pas un paiement/);
- assert.match(tabs,/getElementById\('iv-payment-outstanding'\)/);
- assert.doesNotMatch(tabs,/getElementById\('iv-remaining'\)/);
+ // 17 Nov 2026: the overview shows the server's remaining balance (project-summary.js), never the « to invoice » figure.
+ const summary=read('admin/project-summary.js');
+ assert.match(summary,/t\?money\(num\(t\.remaining\)\)/);
+ assert.doesNotMatch(summary+tabs,/getElementById\('iv-remaining'\)/);
  const dashboard=read('admin/today-actions.js'),sandbox={window:{},Intl};
  vm.runInNewContext(dashboard,sandbox);
  const figures=sandbox.window.DzoftToday.build({

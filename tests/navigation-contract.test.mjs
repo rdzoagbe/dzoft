@@ -18,11 +18,10 @@ test('all cross-client navigation targets remain available', () => {
     assert.ok(admin.includes("'"+slug+"'"), 'Missing route: '+slug);
   }
 });
-test('project-specific finance keeps explicit project selection and admin return links', () => {
-  assert.match(project, /id="pf-project-switch"/);
-  assert.match(project, /href="\.\/#\/dossiers"/);
-  assert.match(project, /href="\.\/#\/vue-globale"/);
-  assert.match(project, /href="\.\/#\/comptabilite"/);
+// 17 Nov 2026: one project page (suivi.html); projet.html only redirects old links to the right tab.
+test('the old project address keeps a way back and redirects to the project page', () => {
+  assert.match(project, /href="\.\/#\/projets"/);
+  assert.match(project, /location\.replace\('suivi\.html\?q='/);
 });
 test('new visual layer is loaded by main admin entry', () => {
   assert.match(admin, /workspace-unified\.css/);
@@ -56,18 +55,14 @@ test('new dashboard has mobile responsive breakpoints', () => {
 
 test('client names open accepted project dossiers, not legacy editing modal', () => {
   assert.match(admin, /class="dzoft-client-link"/);
-  assert.match(admin, /href="projet\.html\?q=/);
+  assert.match(admin, /href="suivi\.html\?q=/);
   assert.match(admin, /data-client-edit/);
-  assert.match(admin, /if\(accepted\.length\)\{location\.href='projet\.html\?q='/);
+  assert.match(admin, /if\(accepted\.length\)\{location\.href='suivi\.html\?q='/);
 });
-test('project detail uses the same primary destinations as main workspace', () => {
-  assert.match(project, /id="pf-side-dashboard"/);
-  assert.match(project, /id="pf-side-cases"/);
-  assert.match(project, /href="\.\/#\/messages"/);
-  assert.match(project, /href="\.\/#\/comptabilite"/);
-  assert.match(project, /project-unified\.css/);
-  assert.match(project, /id="pf-side-project"/);
-  assert.match(project, /id="pf-side-invoices"/);
+test('project page uses the same primary destinations as main workspace', () => {
+  const editorNav=readFileSync(new URL('../admin/editor-navigation.js',import.meta.url),'utf8');
+  for(const path of ['./#/tableau-de-bord','./#/clients','./#/devis','./#/projets','./#/comptabilite','./#/messages','./#/parametres'])
+    assert.ok(editorNav.includes("route:'"+path+"'"),path);
 });
 
 test('every primary admin route shares the new DZOFT shell', () => {
@@ -132,13 +127,13 @@ test('new card actions keep existing client and quote handlers',()=>{
  assert.match(admin,/data-a="st"/);
  assert.match(admin,/data-a="del"/);
  assert.match(admin,/data-go="thread:/);
- assert.match(admin,/href="projet\.html\?q=/);
+ assert.match(admin,/href="suivi\.html\?q=/);
 });
 
-test('accepted quote links open the new project quote section, drafts remain editable', () => {
- assert.match(admin,/q&&q\.accepted_at\?'projet\.html\?q=':'devis\.html\?q='/);
- assert.match(admin,/q&&q\.accepted_at\?'#quotes':''/);
- assert.match(admin,/q\.accepted_at\?'#quotes':''/);
+test('accepted quote links open the project page, drafts remain editable', () => {
+ assert.match(admin,/q&&q\.accepted_at\?'suivi\.html\?q=':'devis\.html\?q='/);
+ assert.match(admin,/q&&q\.accepted_at\?'#overview':''/);
+ assert.match(admin,/q\.accepted_at\?'suivi\.html\?q=':'devis\.html\?q='/);
 });
 
 test('new project cards are searchable from the shared dossiers search', () => {
@@ -158,6 +153,5 @@ test('all visible sidebar destinations map to real app views', () => {
     assert.ok(admin.includes(value),'Unknown destination '+value);
   }
   // Inside a project the menu is the same seven entries; « Projets » is current (17 Nov 2026).
-  assert.match(readFileSync(new URL('../admin/workspace-nav-v6.js', import.meta.url),'utf8'),/selected=isProject\?'projets'/);
-  assert.match(project,/href="\.\/#\/vue-globale"/);
+  assert.match(readFileSync(new URL('../admin/editor-navigation.js', import.meta.url),'utf8'),/active:!quotePage/);
 });

@@ -1,6 +1,6 @@
 /* DZOFT single owner dashboard — presentation only, fed by the authenticated admin.
  * Financial figures come from verified project_tracking RPCs; no writes.
- * Project-specific contract and supplements are shown in projet.html. */
+ * Project-specific contract and supplements are shown in the project page (suivi.html). */
 (function(root){
 "use strict";
 var section=document.getElementById("sd-dashboard");
@@ -12,7 +12,7 @@ var esc=function(v){return String(v===undefined||v===null?"":v).replace(/[&<>"']
 var cents=function(v){if(v===null||v===undefined||v==="")return null;var n=Number(v);return Number.isFinite(n)?Math.round(n*100):null;};
 var tr=function(fr,en){return lastInput&&lastInput.english?en:fr;};
 var money=function(c){return c===null?"—":new Intl.NumberFormat(lastInput&&lastInput.english?"en-GB":"fr-FR",{style:"currency",currency:"EUR"}).format(c/100);};
-var projectUrl=function(id){return "projet.html?q="+encodeURIComponent(id);};
+var projectUrl=function(id){return "suivi.html?q="+encodeURIComponent(id);};
 // Money at a glance (17 Nov 2026). Only verified receipts count as received; "ready to invoice" is finished extra
 // work the client signed and that has no invoice yet (its amount is the signed one). Nothing here is ever written.
 var thisMonth=function(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
@@ -125,7 +125,7 @@ $("sd-new-quote").addEventListener("click",function(){
    Nothing is recorded here: the project page does the work with its usual checks. */
 var QUICK={
  pay:{fr:"Enregistrer un paiement",en:"Record a payment",helpFr:"Ouvre le formulaire « Paiement reçu » du projet. Enregistrez seulement un paiement vérifié sur votre compte.",helpEn:"Opens the project’s “Payment received” form. Only record a payment you have checked on your account.",url:function(id){return "suivi.html?q="+encodeURIComponent(id)+"#billing/pay";}},
- extra:{fr:"Créer un supplément",en:"Create extra work",helpFr:"Ouvre le calculateur du projet. Le client signe la proposition avec un code reçu par e-mail avant toute facture.",helpEn:"Opens the project’s calculator. The client signs the proposal with an e-mailed code before any invoice.",url:function(id){return "projet.html?q="+encodeURIComponent(id)+"#new-extra";}},
+ extra:{fr:"Créer un supplément",en:"Create extra work",helpFr:"Ouvre le calculateur du projet. Le client signe la proposition avec un code reçu par e-mail avant toute facture.",helpEn:"Opens the project’s calculator. The client signs the proposal with an e-mailed code before any invoice.",url:function(id){return "suivi.html?q="+encodeURIComponent(id)+"#billing/new-extra";}},
  publish:{fr:"Publier une avancée",en:"Publish an update",helpFr:"Ouvre « Publier une avancée » du projet. Rien n’est envoyé au client avant « Publier et notifier ».",helpEn:"Opens the project’s “Publish an update”. Nothing reaches the client before “Publish and notify”.",url:function(id){return "suivi.html?q="+encodeURIComponent(id)+"#work/publish";}}
 };
 var pickAction=null;

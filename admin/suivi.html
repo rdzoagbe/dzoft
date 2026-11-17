@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Fiche projet · DZOFT</title>
+<title>Projet · DZOFT</title>
 <link rel="icon" href="../assets/dzoft-favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0B1020">
@@ -247,7 +247,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <link rel="stylesheet" href="project-workspace.css?v=20261117-blue">
 <link rel="stylesheet" href="editor-unified.css?v=20261117-blue">
 <link rel="stylesheet" href="editor-navigation.css?v=20261117-blue">
-<link rel="stylesheet" href="project-workspace-tabs.css?v=20261117-blue">
+<link rel="stylesheet" href="project-workspace-tabs.css?v=20261117-onepage">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-flow.css?v=20261117-blue">
 <link rel="stylesheet" href="invoice-workflow.css?v=20261117-blue">
@@ -494,8 +494,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     return sb.select('quotes', 'select=*&id=eq.' + encodeURIComponent(QID)).then(function(r){
       Q = r && r[0];
       if (!Q) { $('loading').textContent = 'Devis introuvable.'; return; }
-      $('suivi-back').href=Q.accepted_at ? 'projet.html?q='+encodeURIComponent(QID) : './#/devis';
-      $('suivi-back').textContent=Q.accepted_at ? '← Dossier client' : '← Liste des devis';
+      $('suivi-back').href=Q.accepted_at ? './#/projets' : './#/devis';
+      $('suivi-back').textContent=Q.accepted_at ? '← Projets' : '← Liste des devis';
       $('to-devis').textContent=Q.accepted_at ? 'Consulter le devis' : 'Modifier le devis';
       return Promise.all([
         Q.client_id ? sb.select('clients', 'select=*&id=eq.' + Q.client_id) : Promise.resolve([]),
@@ -532,7 +532,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     $('iv-account-note').hidden = !!(C && C.user_id);
     $('ext').value = Q.ext_link || ''; $('ext-open').hidden = !Q.ext_link; if (Q.ext_link) $('ext-open').href = Q.ext_link;
     $('c-files').hidden = !(C && C.user_id);
-    $('ttl').textContent = 'Fiche projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
+    $('ttl').textContent = 'Projet · ' + (Q.numero || 'devis') + (C ? ' · ' + C.nom : '');
     $('no-client').hidden = !!C; $('has-client').hidden = !C; $('c-msg').hidden = !C;
     $('pick-client').innerHTML = '<option value="">… ou relier à un client existant</option>' + clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.nom + (c.entreprise ? ' · ' + c.entreprise : '')) + '</option>'; }).join('');
     if (C) { $('cl-name').textContent = (C.nom || 'sans nom') + (C.user_id ? ' (compte client actif : utilisez le lien de connexion ; l’ancien lien privé est révoqué)' : ''); $('url').value = url(); $('b-open').href = url(); }
@@ -566,6 +566,10 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
     if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en',invoices:Q.invoices||[],onInvoice:function(record,btn){ issueAccepted('supplement',record,btn); }});
     DzoftTracking.admin(Q, sb, load);
+    // Client card, money tiles, scope and official documents (project-summary.js), refreshed after every load.
+    // The module may load after this first render: it reads the last data from window.DzoftProjectData.
+    window.DzoftProjectData = { Q: Q, C: C, sb: sb, QID: QID };
+    if (window.DzoftProjectSummary) window.DzoftProjectSummary.update(window.DzoftProjectData);
     // Arriving from the project page with « Créer la facture complémentaire »: start that invoice once.
     var wanted = new URLSearchParams(location.search).get('issue_change');
     if (wanted && /^[0-9a-f-]{36}$/i.test(wanted) && !load.issuedFromLink) {
@@ -1514,9 +1518,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 /* Installable admin app: registers the background script (no private data is cached). */
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function(){}); });
 </script>
-<script src="project-workspace.js?v=20261115-update4" defer></script>
+<script src="project-workspace.js?v=20261117-onepage" defer></script>
 <script src="update-notice.js?v=20261117-blue" defer></script>
-<script src="project-workspace-tabs.js?v=20261117-docs" defer></script>
+<script src="../assets/dzoft-documents.js?v=20261117-docs"></script>
+<script src="project-summary.js?v=20261117-onepage"></script>
+<script src="project-workspace-tabs.js?v=20261117-onepage" defer></script>
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>
 <script src="weekly-review.js?v=20261117-sync" defer></script>

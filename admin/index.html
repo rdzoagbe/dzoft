@@ -945,7 +945,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         var awaitingAmount=awaiting.reduce(function(n,p){return n+Math.round((Number(p.amount)||0)*100);},0)/100;
         return '<article class="finance-line"><div><b>'+title+'</b><span>'+(en?'Accepted quote':'Devis accepté')+'</span>'+(pending?'<small class="finance-pending">'+pending+' '+(en?'invoice(s) to issue':'facture(s) à établir')+'</small>':'')+(awaiting.length?'<small class="finance-awaiting">'+(en?'Awaiting verification: ':'À confirmer : ')+eur(awaitingAmount)+'</small>':'')+'</div>'+
          (d?'<div class="finance-numbers"><strong>'+eur(d.received)+'</strong><small>'+(en?'received':'reçu')+'</small></div><div class="finance-numbers"><strong>'+eur(d.remaining)+'</strong><small>'+(en?'remaining':'restant')+'</small></div>':'<p>'+(en?'Unavailable':'Indisponible')+'</p>')+
-         '<a class="btn sm main" href="projet.html?q='+encodeURIComponent(q.id)+'#payments">'+(en?'Open the project':'Ouvrir le projet')+'</a></article>';
+         '<a class="btn sm main" href="suivi.html?q='+encodeURIComponent(q.id)+'#billing">'+(en?'Open the project':'Ouvrir le projet')+'</a></article>';
       }).join('')+'</div>';
     }).catch(function(){if(current===financeGeneration)box.innerHTML='<div class="empty">Paiements indisponibles pour le moment.</div>';});
   }
@@ -986,7 +986,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if(!dashboardDataLoaded)return false;
     var accepted=data.quotes.filter(function(q){return q.accepted_at&&q.id;});
     if(accepted.length!==1)return false;
-    location.replace('projet.html?q='+encodeURIComponent(accepted[0].id));
+    location.replace('suivi.html?q='+encodeURIComponent(accepted[0].id));
     return true;
   }
   function showView(v){
@@ -1203,7 +1203,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
        '<h3>'+esc(c.nom||'Client')+'</h3><p class="v4-card-sub">'+esc(nowStep(q))+'</p>'+
        '<div class="v4-progress"><span style="width:'+p+'%"></span></div>'+
        '<small>'+completed+' / '+steps(q).length+' étapes · '+p+'%</small></div>'+
-       '<div class="v4-card-actions"><a class="btn sm main" href="projet.html?q='+encodeURIComponent(q.id)+'">Ouvrir le dossier →</a></div></article>';
+       '<div class="v4-card-actions"><a class="btn sm main" href="suivi.html?q='+encodeURIComponent(q.id)+'">Ouvrir le projet →</a></div></article>';
     }).join('')+'</div>';
   }
   function renderProjects(){
@@ -1636,11 +1636,11 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   function openQuote(id){
     var q=data.quotes.filter(function(item){return item.id===id;})[0];
-    location.href=(q&&q.accepted_at?'projet.html?q=':'devis.html?q=')+encodeURIComponent(id)+(q&&q.accepted_at?'#quotes':'');
+    location.href=(q&&q.accepted_at?'suivi.html?q=':'devis.html?q=')+encodeURIComponent(id)+(q&&q.accepted_at?'#overview':'');
   }
   function openFollow(id){
     var q=data.quotes.filter(function(item){return item.id===id;})[0];
-    location.href=(q&&q.accepted_at?'projet.html?q=':'suivi.html?q=')+encodeURIComponent(id);
+    location.href='suivi.html?q='+encodeURIComponent(id);
   }
   // unread client messages for a quote (messages sent without a quote count on the client's latest quote)
   function unreadFor(q){
@@ -1684,7 +1684,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         (q.accepted_at?'<span class="v4-status-ok">Accepté en ligne</span>':q.shared?'<span class="v4-status-neutral">Partagé</span>':'')+'</div></div>'+
         '<div class="v4-card-side v4-quote-side"><b>'+eur(q.accepted_total||q.total)+'</b>'+
         '<div class="v4-card-actions"><button type="button" class="btn sm main" data-a="open">Devis</button>'+
-        (q.accepted_at?'<a href="projet.html?q='+encodeURIComponent(q.id)+'" class="btn sm line">Dossier →</a>':'<button type="button" class="btn sm line" data-a="follow">Suivi</button>')+
+        (q.accepted_at?'<a href="suivi.html?q='+encodeURIComponent(q.id)+'" class="btn sm line">Projet →</a>':'<button type="button" class="btn sm line" data-a="follow">Suivi</button>')+
         '<button type="button" class="btn sm ghost" data-a="del" title="Mettre le devis à la corbeille">×</button></div></div></article>';
     }).join('')+'</div>';
   }
@@ -1721,12 +1721,12 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       return '<article class="v4-list-card v4-client-card" data-id="'+esc(c.id)+'">'+
        '<span class="v4-avatar" aria-hidden="true">'+esc((c.nom||'C').trim().slice(0,1).toUpperCase())+'</span>'+
        '<div class="v4-card-core">'+
-       (latest?'<a class="dzoft-client-link" href="projet.html?q='+encodeURIComponent(latest.id)+'"><h3>'+name+'</h3></a>':'<button class="dzoft-client-link dzoft-client-link-button" type="button" data-client-open="'+esc(c.id)+'"><h3>'+name+'</h3></button>')+
+       (latest?'<a class="dzoft-client-link" href="suivi.html?q='+encodeURIComponent(latest.id)+'"><h3>'+name+'</h3></a>':'<button class="dzoft-client-link dzoft-client-link-button" type="button" data-client-open="'+esc(c.id)+'"><h3>'+name+'</h3></button>')+
        '<p class="v4-card-sub">'+esc(c.entreprise||c.contact||'Fiche client')+'</p><div class="v4-tags">'+
        (c.user_id?'<span class="v4-status-ok">Compte actif</span>':'')+
        (nu?'<span class="v4-unread">'+nu+' message'+(nu>1?'s':'')+'</span>':'')+
        '<span>'+n+' devis</span></div></div>'+
-       '<div class="v4-card-actions">'+(latest?'<a href="projet.html?q='+encodeURIComponent(latest.id)+'" class="btn sm main">Ouvrir →</a>':'')+
+       '<div class="v4-card-actions">'+(latest?'<a href="suivi.html?q='+encodeURIComponent(latest.id)+'" class="btn sm main">Ouvrir →</a>':'')+
        '<button type="button" class="btn sm line" data-client-edit="'+esc(c.id)+'">Modifier</button></div></article>';
     }).join('')+'</div>';
   }
@@ -1744,7 +1744,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var id=row.dataset.id;
     var accepted=data.quotes.filter(function(q){return q.client_id===id&&q.accepted_at;})
       .sort(function(a,b){return new Date(b.accepted_at)-new Date(a.accepted_at);});
-    if(accepted.length){location.href='projet.html?q='+encodeURIComponent(accepted[0].id);return;}
+    if(accepted.length){location.href='suivi.html?q='+encodeURIComponent(accepted[0].id);return;}
     editClient(client(id));
   };
   $('b-cnew').onclick = function(){ editClient(null); };
@@ -1759,7 +1759,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     $('mc-del').hidden = !c; $('mc-quote').hidden = !c; $('mc-print').hidden = !c; $('mc-portal').hidden = !c; $('mc-msgs').hidden = !c;
     if (c) { var cu = data.unread.filter(function(m){ return m.client_id === c.id; }).length; $('mc-msgs').textContent = 'Messages' + (cu ? ' (' + cu + ')' : ''); }
     var qs = c ? data.quotes.filter(function(q){ return q.client_id === c.id; }) : [];
-    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="' + (q.accepted_at?'projet.html?q=':'devis.html?q=') + encodeURIComponent(q.id) + (q.accepted_at?'#quotes':'') + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="' + (q.accepted_at ? 'projet.html?q=' : 'suivi.html?q=') + q.id + '">suivi</a>' + (q.accepted_at ? ' · <button type="button" class="btn sm line" data-go="remind:' + q.id + '">Relancer le paiement</button>' : '') + '</span></li>'; }).join('');
+    $('mc-quotes').innerHTML = qs.map(function(q){ return '<li><a href="' + (q.accepted_at?'suivi.html?q=':'devis.html?q=') + encodeURIComponent(q.id) + '">' + esc(q.numero) + '</a><span>' + eur(q.total) + ' · <span class="st ' + esc(q.status) + '">' + esc(q.status) + '</span> · <a href="' + 'suivi.html?q=' + q.id + '">suivi</a>' + (q.accepted_at ? ' · <button type="button" class="btn sm line" data-go="remind:' + q.id + '">Relancer le paiement</button>' : '') + '</span></li>'; }).join('');
     $('m-client').hidden = false; $('mc-nom').focus();
   }
   function clientRow(){ return { nom: $('mc-nom').value.trim(), entreprise: $('mc-ent').value.trim(), contact: $('mc-contact').value.trim(), adresse: $('mc-adr').value.trim(), email: $('mc-email').value.trim().toLowerCase(), notes: $('mc-notes').value }; }
@@ -1922,11 +1922,11 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261117-nav7"></script>
 <script src="update-notice.js?v=20261117-blue"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261117-blue"></script>
+<script src="dashboard-v3.js?v=20261117-onepage"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
 <script src="../assets/change-requests.js?v=20261117-freeprice"></script>
-<script src="workspace-panels-v7.js?v=20261117-nav7"></script>
-<script src="workspace-nav-v6.js?v=20261117-nav7"></script>
+<script src="workspace-panels-v7.js?v=20261117-onepage"></script>
+<script src="workspace-nav-v6.js?v=20261117-onepage"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>
 </body>
 </html>

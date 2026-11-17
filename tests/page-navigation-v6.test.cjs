@@ -8,7 +8,7 @@ const admin=file('admin/index.html');
 const project=file('admin/projet.html');
 const nav=file('admin/workspace-nav-v6.js');
 const panels=file('admin/workspace-panels-v6.js');
-const projectLogic=file('admin/project-finance.js');
+const tabs=file('admin/project-workspace-tabs.js'),editorNav=file('admin/editor-navigation.js');
 // 17 Nov 2026: seven entries; a project's invoices, payments, journal and documents live in the project page.
 const routes=['tableau-de-bord','clients','devis','projets','comptabilite','messages','parametres'];
 
@@ -21,7 +21,6 @@ test('one canonical navigation list with seven entries',()=>{
  assert.match(nav,/aria-current/);
  assert.doesNotMatch(nav,/location\.replace\(/);
  assert.match(admin,/workspace-nav-v6\.js/);
- assert.match(project,/workspace-nav-v6\.js/);
 });
 test('old addresses still lead somewhere useful',()=>{
  assert.match(admin,/var OLD_ROUTES = \{paiements:'comptabilite',factures:'comptabilite',rapports:'tableau-de-bord',journal:'projets',documents:'projets'\}/);
@@ -31,11 +30,11 @@ test('old addresses still lead somewhere useful',()=>{
  assert.match(admin,/id="b-qcatalogue" href="#\/catalogue"/);
 });
 test('inside a project the menu marks Projets and the project page keeps its own tabs',()=>{
- assert.match(nav,/var selected=isProject\?'projets':\(ALIAS\[current\]\|\|current\)/);
- assert.doesNotMatch(nav,/ce projet|projectPanel/);
- for(const panel of ['overview','quotes','invoices','payments','journal','documents'])
-  assert.ok(project.includes('data-panel="'+panel+'"'),'missing tab '+panel);
- assert.match(projectLogic,/DzoftNavigationV6\.refresh/);
+ assert.match(nav,/var selected=ALIAS\[current\]\|\|current;/);
+ assert.doesNotMatch(nav,/ce projet|projectPanel|isProject/);
+ assert.match(editorNav,/active:!quotePage/);
+ for(const id of ['overview','work','billing','documents','messages'])
+  assert.match(tabs,new RegExp("\\{id:'"+id+"'"),'missing tab '+id);
 });
 test('Comptabilité holds the receipts book, the balances and the invoice register',()=>{
  const current=file('admin/workspace-panels-v7.js');

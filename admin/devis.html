@@ -646,7 +646,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       var d = q.data || {};
       apply(d);
       $('b-follow').hidden = false;
-      $('b-follow').href = (q.accepted_at ? 'projet.html?q=' : 'suivi.html?q=') + encodeURIComponent(QID);
+      $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
       $('b-follow').textContent = q.accepted_at ? 'Dossier client' : 'Suivi du devis';
       if (q.accepted_at && q.accepted_terms !== 'v2026-11') {
          $('scope-change-quote').hidden = true;
