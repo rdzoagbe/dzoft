@@ -45,7 +45,7 @@ async function signatureCase(ok) {
   for(const id of ['q-print','acc','a-ok','a-go','a-name','a-mail','a-code','a-coderow','a-early']) nodes[id]={value:'',checked:false};
   nodes['a-name'].value='Test Client'; nodes['a-ok'].checked=true; nodes['a-code'].value='123456';
   let loaded=0, args, notice='';
-  const context={WIRE:{},byId:()=>({id:'sample-quote'}),$:id=>nodes[id],token:null,
+  const context={L:fr=>fr,EN:()=>false,WIRE:{},byId:()=>({id:'sample-quote'}),$:id=>nodes[id],token:null,
     document:{body:{classList:{add(){}}}},window:{print(){}},setTimeout(){},
     TERMS:'v-test',amsg:s=>notice=s,load(){loaded++;return Promise.resolve();},
     sb:{fn:()=>Promise.resolve({target:'test@example.invalid'})},
@@ -64,7 +64,7 @@ async function validationCase() {
   const source=html.slice(html.indexOf('  WIRE.projets = function(id){'),html.indexOf('  function projectDetail('));
   const button={},message={},box={dataset:{step:'design'},querySelector:s=>s==='[data-v]'?button:message};
   let loaded=0,args;
-  const context={WIRE:{},byId:()=>({id:'sample-quote',steps:[{k:'design',t:'Design review'}]}),
+  const context={L:fr=>fr,EN:()=>false,WIRE:{},byId:()=>({id:'sample-quote',steps:[{k:'design',t:'Design review'}]}),
     wireReview(){},location:{hash:'#/projets/sample-quote'},$:()=>null,
     document:{querySelectorAll:()=>[box]},steps:q=>q.steps,D:{client:{nom:'Test Client'}},
     call:(name,input)=>{args={name,input};return Promise.resolve({ok:true});},load(){loaded++;return Promise.resolve();}};
@@ -76,7 +76,7 @@ async function validationCase() {
 function invoiceCases() {
   const html=read('espace/index.html');
   const source=html.slice(html.indexOf('  function invoices(q){'),html.indexOf('  function careBlock(q){'));
-  const context={token:null,esc:x=>String(x),eur:x=>String(x),D:{payment:{}},
+  const context={L:fr=>fr,EN:()=>false,token:null,esc:x=>String(x),eur:x=>String(x),D:{payment:{}},
     amounts:()=>({ttc:800,dep:240}),depositDone:()=>true,balanceDone:()=>true,rib:()=>''};
   vm.createContext(context);vm.runInContext(source,context);
   const quote={id:'sample-project',invoices:[{id:'sample-invoice',num:'TEST-001',n:'Sample invoice',file:'u/sample/factures/test.pdf',paid:false,amt:240}]};

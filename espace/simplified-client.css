@@ -49,3 +49,49 @@ body.dzoft-client .content :focus-visible{outline:3px solid #a096ff;outline-offs
  body.dzoft-client .shell{padding-left:10px;padding-right:10px}
 }
 @media print{body.dzoft-client .client-more{display:none!important}}
+/* 17 Nov 2026 · project tabs, home summary, welcome steps, account details */
+body.dzoft-client .phead{flex-wrap:wrap}
+body.dzoft-client .phead-msg{margin-left:auto}
+body.dzoft-client .ptabs{display:flex;gap:4px;margin:6px 0 18px;padding:4px;background:#ecebf6;border-radius:14px;overflow-x:auto;scrollbar-width:none}
+body.dzoft-client .ptabs::-webkit-scrollbar{display:none}
+body.dzoft-client .ptabs a{flex:1 0 auto;text-align:center;padding:10px 14px;border-radius:10px;color:#3d3c55;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:6px}
+body.dzoft-client .ptabs a:hover{background:#fff}
+body.dzoft-client .ptabs a[aria-current]{background:#fff;color:#2a1fb8;box-shadow:0 2px 8px rgba(30,25,90,.1)}
+body.dzoft-client .ptabs i{font-style:normal;font-size:11px;background:#5137f0;color:#fff;border-radius:20px;padding:2px 7px}
+body.dzoft-client .overview-grid,body.dzoft-client .cp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+body.dzoft-client .overview-grid .card{margin:0}
+body.dzoft-client .overview-grid{margin-bottom:16px}
+body.dzoft-client .cp-grid{margin:16px 0}
+body.dzoft-client .cp-grid h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#5c5b74;margin:0 0 8px}
+body.dzoft-client .cp-due{display:flex;justify-content:space-between;align-items:baseline;gap:10px;background:#fff4e2;border:1px solid #f2d9ad;border-radius:12px;padding:12px 14px;margin:0 0 10px}
+body.dzoft-client .cp-due span{color:#6a4a10;font-weight:700;font-size:14px}
+body.dzoft-client .cp-due b{font-size:22px;color:#3a2a06}
+body.dzoft-client .current-project .ih{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+body.dzoft-client .current-project .ih h2{margin:0}
+body.dzoft-client .tracking-latest{border:1px solid #e0e5ef;border-radius:12px;padding:12px 14px;background:#fff}
+body.dzoft-client .tracking-latest>div{display:flex;justify-content:space-between;gap:10px}
+body.dzoft-client .tracking-latest p{margin:8px 0 4px;line-height:1.55}
+body.dzoft-client .tracking-stats.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+body.dzoft-client .tracking-stats>div.tracking-due,body.dzoft-client .tracking-stats>div.tracking-due:last-child{background:#fff4e2;border-color:#f2d9ad}
+body.dzoft-client .tracking-stats.four>div:nth-child(3){background:#f5f6fb;border-color:#e2e5ef}
+body.dzoft-client .welcome-steps{list-style:none;padding:0;margin:16px 0;display:grid;gap:12px}
+body.dzoft-client .welcome-steps li{display:flex;gap:12px;align-items:flex-start}
+body.dzoft-client .welcome-steps .dot{flex:0 0 28px;height:28px;border-radius:50%;background:#ecebf6;color:#2a1fb8;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
+body.dzoft-client .welcome-steps li.done .dot{background:#1f8a5b;color:#fff}
+body.dzoft-client .welcome-steps p{margin:2px 0 0;color:#5c5b74;font-size:14px;line-height:1.5}
+body.dzoft-client .kv{display:grid;gap:0;margin:8px 0 0}
+body.dzoft-client .kv>div{display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #eeeef5}
+body.dzoft-client .kv dt{color:#5c5b74;font-size:14px}
+body.dzoft-client .kv dd{margin:0;overflow-wrap:anywhere}
+body.dzoft-client .fr-binding{margin:6px 0 12px;font-size:13px;color:#5c5b74}
+body.dzoft-client .fr-binding summary{cursor:pointer;font-weight:700;min-height:32px;display:flex;align-items:center}
+body.dzoft-client .fr-binding p{margin:6px 0 0;padding:10px 12px;background:#f3f3f8;border-radius:10px;line-height:1.55}
+body.dzoft-client .quote-lang{margin:0 0 12px}
+@media(max-width:760px){
+ body.dzoft-client .overview-grid,body.dzoft-client .cp-grid{grid-template-columns:1fr}
+ body.dzoft-client .tracking-stats.four{grid-template-columns:1fr}
+ body.dzoft-client .kv>div{grid-template-columns:1fr;gap:2px}
+ body.dzoft-client .phead-msg{margin-left:0}
+ body.dzoft-client .ptabs{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+ body.dzoft-client .ptabs a{white-space:normal;font-size:13.5px;padding:8px 10px}
+}

@@ -28,10 +28,19 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   **Toute modification de texte sur une page du site doit être reportée dans `en/`.** Dans le formulaire anglais, les valeurs envoyées restent en français (admin) ;
   seuls les libellés sont traduits. `en/cgv.html` : traduction des CGV, pour information (bandeau :
   la version française fait foi), idem `en/confidentialite.html` ; **toute modification de `cgv.html` ou
-  `confidentialite.html` doit être reportée dans `en/`**. Espace client, admin et démos : en français seulement.
+  `confidentialite.html` doit être reportée dans `en/`**. Démos : en français seulement.
 - `espace/` espace client (connexion par compte ou par lien secret `#<portal_token>`) :
   devis signé avec un code e-mail, avancement, validation des étapes, factures, documents,
   messages, suivi mensuel, avis (+ renvoi vers l'avis Google, proposé quelle que soit la note).
+  Bilingue FR/EN (17 nov. 2026) : les phrases avec nom, montant ou date s’écrivent `L('français', 'English')`, l’écran
+  est redessiné au changement de langue ; les libellés fixes passent par `assets/dzoft-language.js`. Le devis lui-même
+  (`quoteView`) reste en français (fait foi) ; en anglais, les textes de signature montrent la traduction et le texte
+  français « fait foi ». Les contenus saisis (noms de projet, notes, messages) restent tels quels (`data-no-translate`).
+  Accueil : prochaine action, projet en cours (dernière avancée, « À régler maintenant »), accueil pas à pas pour un
+  nouveau client. Fiche projet en onglets `#/projets/<id>[/avancement|/paiements|/documents]` (Vue d’ensemble ·
+  Avancement et demandes · Paiements · Documents) ; Paiements : convenu, reçu, reste, à régler maintenant (factures
+  ouvertes moins paiements confirmés). Mon compte : coordonnées, facturation du dernier devis, demande de correction,
+  langue. Test `tests/client-portal-language.test.cjs`.
 - `admin/` espace privé : `index.html` tableau de bord, `suivi.html` fiche projet,
   `devis.html` éditeur de devis ; `admin/sb.js` client Supabase partagé (`window.RDsb`).
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
