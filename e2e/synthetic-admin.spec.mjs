@@ -82,12 +82,16 @@ const syntheticSb = `
 `;
 
 async function syntheticOwner(page) {
- await page.route(url => url.pathname.endsWith('/admin/sb.js'), async route=>{
+ // Routes are set on the whole browser context, not only the page: once admin/sw.js controls the pages,
+ // requests of the next page (e.g. after a dashboard quick button) go through the service worker,
+ // which page-level routes do not see. The real sb.js would then load and send the page to sign-in.
+ const ctx=page.context();
+ await ctx.route(url => url.pathname.endsWith('/admin/sb.js'), async route=>{
    await route.fulfill({status:200,contentType:'text/javascript; charset=utf-8',body:syntheticSb});
  });
  // Do not allow any private live API calls in these synthetic tests.
- await page.route('https://*.supabase.co/**', route=>route.abort('blockedbyclient'));
- await page.route('https://api.github.com/**', route=>route.fulfill({
+ await ctx.route('https://*.supabase.co/**', route=>route.abort('blockedbyclient'));
+ await ctx.route('https://api.github.com/**', route=>route.fulfill({
   status:200,contentType:'application/json',body:'[]'
  }));
 }
