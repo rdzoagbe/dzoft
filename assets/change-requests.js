@@ -53,7 +53,13 @@ function openForm(en){return '<details class="dzoft-change-new"><summary>'+tr(en
  '<label>'+tr(en,'Décrivez précisément ce que vous souhaitez ajouter ou modifier','Explain what you would like to add or change')+'<textarea name="description" minlength="10" maxlength="2000" rows="3" required></textarea></label>'+
  '<p>'+tr(en,'Vous ne payez rien en envoyant cette demande. DZOFT étudie le prix et le délai, puis vous soumet une proposition à signer avant tout supplément.','Submitting a request does not incur any charge. DZOFT will assess the cost and timeline, then ask for your signature before any extra work.')+'</p>'+
  '<button class="btn main" type="submit">'+tr(en,'Envoyer la demande','Submit request')+'</button></form></details>';}
-function clientCard(r,en,name){
+function termsLine(en,terms){
+ // The proposal extends the signed quote and follows its general terms (Code civil art. 1119).
+ var link='<a href="'+esc(terms&&terms.url||'../cgv.html')+'" target="_blank" rel="noopener">'+tr(en,'conditions générales de vente (CGV)','general terms of sale (CGV)')+'</a>';
+ var quote=terms&&terms.quote?' '+esc(terms.quote):'';
+ return tr(en,' Ce complément s’ajoute au devis'+quote+' et suit ses '+link+', que j’accepte.',' This addition extends quote'+quote+' and follows its '+link+', which I accept.');
+}
+function clientCard(r,en,name,terms){
  var status=labels(en)[r.status]||r.status;
  var h='<article class="dzoft-change-item"><header><b>'+esc(r.title)+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
  (r.description&&r.description!=='Proposition établie par DZOFT.'?'<p>'+esc(r.description)+'</p>':'')+
@@ -63,7 +69,7 @@ function clientCard(r,en,name){
    '<label>'+tr(en,'Nom de la personne qui signe','Name of the person signing')+
    '<input name="decisionName" maxlength="120" minlength="2" required autocomplete="name" value="'+esc(name||'')+'"></label>'+
    '<label class="dzoft-change-check"><input type="checkbox" name="consent" required><span>'+
-   tr(en,'J’ai lu les prestations, leur prix et le délai éventuel. Je comprends que ma signature autorise ces travaux et leur facturation, en complément du devis d’origine.','I have reviewed the items, their price and any timeline impact. I understand that my signature authorizes this additional work and its invoicing, on top of the original quote.')+
+   tr(en,'J’ai lu les prestations, leur prix et le délai éventuel. Je comprends que ma signature autorise ces travaux et leur facturation, en complément du devis d’origine.','I have reviewed the items, their price and any timeline impact. I understand that my signature authorizes this additional work and its invoicing, on top of the original quote.')+termsLine(en,terms)+
    '</span></label>'+
    '<div class="dzoft-change-actions"><button class="btn main" type="button" data-change-code="'+esc(r.id)+'">'+tr(en,'Recevoir mon code de signature par e-mail','Send my signing code by e-mail')+'</button></div>'+
    '<div class="dzoft-change-code" hidden><p data-code-sent></p><label>'+tr(en,'Code reçu par e-mail (6 chiffres)','Code received by e-mail (6 digits)')+
@@ -81,14 +87,14 @@ function bindClient(root,options){
  root.innerHTML=rootMarkup(en);var records=[];
  function refresh(){return call('list_change_requests',{p_quote:quoteId}).then(function(rows){records=Array.isArray(rows)?rows:[];root.querySelector('.dzoft-change-content').innerHTML=
   '<p class="dzoft-change-help">'+tr(en,'Les changements après signature sont étudiés séparément. Aucun supplément sans votre accord.','Changes after signing are reviewed separately. No extra charge without your agreement.')+'</p>'+
-  openForm(en)+(records.length?records.map(function(r){return clientCard(r,en,name);}).join(''):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
+  openForm(en)+(records.length?records.map(function(r){return clientCard(r,en,name,options.terms);}).join(''):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(promise,done){if(busy)return;busy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;});}
  root.addEventListener('submit',function(ev){var form=ev.target;if(!form.matches('[data-change-create],[data-change-sign]'))return;ev.preventDefault();if(busy||!form.reportValidity())return;
   if(form.hasAttribute('data-change-create')){perform(call('create_change_request',{p_quote:quoteId,p_title:form.elements.title.value.trim(),p_description:form.elements.description.value.trim()}));return;}
   var code=form.elements.code.value.replace(/\D/g,'');
   if(code.length!==6){form.elements.code.focus();banner(root,tr(en,'Saisissez les 6 chiffres reçus par e-mail.','Enter the 6 digits received by e-mail.'),true);return;}
-  perform(call('sign_change_request',{p_request:form.dataset.changeSign,p_version:Number(form.dataset.version),p_name:form.elements.decisionName.value.trim(),p_code:code}),
+  perform(call('sign_change_request',{p_request:form.dataset.changeSign,p_version:Number(form.dataset.version),p_name:form.elements.decisionName.value.trim(),p_code:code,p_terms:(options.terms&&options.terms.version)||''}),
    tr(en,'Proposition signée. Merci !','Proposal signed. Thank you!'));
  });
  root.addEventListener('click',function(ev){var btn=ev.target.closest('button');if(!btn||busy)return;
