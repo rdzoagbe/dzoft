@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 const routes=[
  ['tableau-de-bord','v-dash'],
  ['clients','v-dossiers'],['projets','v-dossiers'],['devis','v-dossiers'],
- ['factures','v-invoices'],['paiements','v-finance'],
+ ['factures','v-invoices'],['paiements','v-finance'],['messages','v-inbox'],
  ['journal','v-journal'],['documents','v-documents'],
  ['catalogue','v-catalogue'],['rapports','v-reports'],['parametres','v-settings']
 ];
@@ -14,7 +14,7 @@ async function reveal(page){
   document.querySelector('#app').hidden=false;
  });
 }
-test('all 11 global destinations open exactly one page within the new shell',async({page},info)=>{
+test('all 12 global destinations open exactly one page within the new shell',async({page},info)=>{
  test.skip(info.project.name.includes('mobile'),'Desktop sidebar navigation');
  await reveal(page);
  for(const [slug,panel] of routes){
