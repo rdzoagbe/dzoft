@@ -94,7 +94,9 @@ async function syntheticOwner(page) {
 test('Owner dashboard renders real navigation and action panel with synthetic data', async ({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
+ // Since the 16 Nov redesign the owner lands on the global dashboard (#/tableau-de-bord);
+ // the legacy "vue-classique" address forwards to the global overview.
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  await page.waitForTimeout(250);
  if (!(await page.locator('#app').isVisible())) {
    const state=await page.evaluate(()=>({mockPresent:!!window.RDsb,fromUrl:typeof window.RDsb?.fromUrl,loginVisible:!!document.querySelector('#auth')&&!document.querySelector('#auth').hidden}));
@@ -102,11 +104,13 @@ test('Owner dashboard renders real navigation and action panel with synthetic da
  }
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('#auth')).toBeHidden();
- await expect(page.locator('#today-action-center')).toBeVisible();
- await expect(page.locator('[data-tab="projects"]').first()).toBeAttached();
- await expect(page.locator('[data-tab="dash"]').first()).toBeAttached();
- const todayText=await page.locator('#today-action-center').textContent();
- if(!/450|Received|Reçu/.test(todayText||'')){
+ await expect(page.locator('#v-dash')).toBeVisible();
+ await expect(page.locator('#sd-action-list')).toBeVisible();
+ await expect(page.locator('#app .side [data-route="projets"]')).toBeAttached();
+ await expect(page.locator('#app .side [data-route="tableau-de-bord"]')).toBeAttached();
+ await expect(page.locator('#sd-stats')).toContainText('450');
+ const todayText=await page.locator('#sd-stats').textContent();
+ if(!/450/.test(todayText||'')){
   const diagnostic=await page.evaluate(()=>({mock:window.__syntheticVersion,calls:window.__syntheticCalls,toast:document.querySelector('#toast')?.textContent,panels:document.querySelector('#dash-focus')?.textContent?.slice(0,120)}));
   throw new Error('Synthetic dashboard did not render verified payments: '+JSON.stringify({diagnostic,errors}));
  }
@@ -195,7 +199,7 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  });
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  await expect(page.locator('body')).toHaveClass(/dzoft-installed-mobile/);
  await expect(page.locator('#app .side')).toBeHidden();
@@ -207,7 +211,7 @@ test('Installed mobile admin has exactly one top menu, all routes, no bottom doc
  await expect(toggle).toHaveAttribute('aria-expanded','false');
  await toggle.click();
  await expect(toggle).toHaveAttribute('aria-expanded','true');
- for(const route of ['tableau-de-bord','dossiers','demandes','clients','devis','projets','messages','paiements','parametres','corbeille'])
+ for(const route of ['tableau-de-bord','clients','projets','devis','factures','paiements','messages','journal','documents','catalogue','rapports','parametres'])
    await expect(menu.locator('button[data-app-route="'+route+'"]')).toBeVisible();
  await expect(menu.locator('a[href="../?workspace=admin"]')).toBeVisible();
  await expect(menu.locator('button[data-app-action="logout"]')).toBeVisible();
@@ -326,9 +330,9 @@ test('Invoice creator shows editable server-approved amount and prevents an exce
 test('One search finds clients, quotes and projects without leaving the private workspace',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
- await page.locator('#app .side [data-tab="dossiers"]').click();
+ await page.locator('#app .side [data-route="clients"]').click();
  await expect(page.locator('#v-dossiers')).toBeVisible();
  const field=page.locator('#dossier-search');
  await expect(field).toBeVisible();
@@ -393,19 +397,19 @@ test('Focused project navigation keeps overview, work, invoices and messages acc
 test('Owner home offers a single workspace search and safe quick actions',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
- await expect(page.locator('.owner-command-bar')).toBeVisible();
- const search=page.locator('#owner-global-search');
- await search.fill('Synthetic');
- await page.locator('.owner-command-search button[type="submit"]').click();
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#sd-find')).toBeVisible();
+ await page.locator('#sd-find').click();
  await expect(page.locator('#v-dossiers')).toBeVisible();
- await expect(page.locator('#dossier-search')).toHaveValue('Synthetic');
- // Legacy operational overview is intentionally retained for existing tools.
- // The Dashboard tab itself now navigates to the redesigned finance landing.
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
- await page.locator('[data-owner-quick="billing"]').click();
+ const search=page.locator('#dossier-search');
+ await expect(search).toBeVisible();
+ await search.fill('Synthetic');
+ await expect(page.locator('.dzoft-case-result').first()).toBeVisible();
+ // Shortcut to billing; the trash is not a menu entry (it sits in Settings).
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await page.locator('#v-dash .sd-shortcuts [data-go="finance"]').click();
  await expect(page.locator('#v-finance')).toBeVisible();
- await expect(page.locator('#app .side [data-tab="trash"]')).toBeHidden();
+ await expect(page.locator('#app .side [data-route="corbeille"]')).toHaveCount(0);
  expect(errors).toEqual([]);
 });
 
@@ -502,14 +506,15 @@ test.describe('Populated invoice layout and bilingual receipts',()=>{
 
 test('Desktop shows sidebar navigation once and keeps direct logout; mobile retains account menu',async({page},testInfo)=>{
  await syntheticOwner(page);
- await page.goto('admin/#/vue-classique',{waitUntil:'domcontentloaded'});
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  await expect(page.locator('#app')).toBeVisible();
  const side=page.locator('#app .side');
  const headerMenu=page.locator('#app .top .workspace-more');
  const logout=page.locator('#app .top #b-out');
  if(testInfo.project.name.includes('desktop')){
    await expect(side).toBeVisible();
-   await expect(side.locator('[data-tab="settings"]')).toBeVisible();
+   await expect(side.locator('[data-route="parametres"]')).toBeVisible();
+   await expect(side.locator('.dzoft-v6-link')).toHaveCount(12);
    await expect(headerMenu).toBeHidden();
    await expect(logout).toBeVisible();
    await expect(page.locator('#dzoft-installed-app-menu')).toBeHidden();
@@ -603,28 +608,37 @@ test('Standalone quote editor surfaces failed saves and supports Retry without r
  expect(errors).toEqual([]);
 });
 
-test('Dashboard now resolves to the redesigned finance page, not the legacy homepage',async({page})=>{
+test.describe('Dashboard to project page',()=>{
+ test.use({serviceWorkers:'block'}); // the admin service worker must not serve the real sb.js on the next page
+test('Dashboard is the global finance page; a project opens on its own page from it',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page).toHaveURL(/\/admin\/#\/tableau-de-bord$/);
+ await expect(page.locator('#v-dash')).toBeVisible();
+ await expect(page.locator('#sd-title')).toContainText(/Tableau de bord|Dashboard/);
+ await expect(page.locator('#sd-stats')).toContainText('1 500');
+ await expect(page.locator('#app .side [data-route="tableau-de-bord"]')).toHaveAttribute('aria-current','page');
+ const projectLink=page.locator('#sd-project-list a.sd-project').first();
+ await expect(projectLink).toHaveAttribute('href','projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await projectLink.click();
  await expect(page).toHaveURL(/\/admin\/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0/);
  await expect(page.locator('#pf-shell')).toBeVisible();
- await expect(page.locator('.pf-dashboard-lead')).toContainText(/Tableau de bord|Dashboard/);
  await expect(page.locator('#pf-base')).toContainText('1 500');
- await expect(page.locator('#pf-side-dashboard')).toHaveAttribute('aria-current','page');
  expect(errors).toEqual([]);
+});
 });
 
 test.describe('Cross-page synthetic finance navigation',()=>{
  test.use({serviceWorkers:'block'}); // Prevent registered PWA SW intercepting mocked sb.js on the next page.
- test('New Admin links open the precise existing work, documents and billing tabs',async({page})=>{
+ test('Project menu opens the project page\'s own documents, journal and invoices sections',async({page})=>{
  await syntheticOwner(page);
  const q='c8a50cee-3856-4539-98a3-f5df201dbff0';
  const base='admin/projet.html?q='+q;
  for(const entry of [
-  {link:'pf-side-documents',fragment:'#work/c-docs',panel:'work',node:'#c-docs'},
-  {link:'pf-side-journal',fragment:'#work/c-journal',panel:'work',node:'#c-journal'},
-  {link:'pf-side-invoices',fragment:'#billing',panel:'billing',node:'#c-inv'}
+  {link:'pf-side-documents',fragment:'#documents',panel:'documents',title:/Documents/},
+  {link:'pf-side-journal',fragment:'#journal',panel:'journal',title:/Journal/},
+  {link:'pf-side-invoices',fragment:'#invoices',panel:'invoices',title:/Factures|Invoices/}
  ]){
   await page.goto(base,{waitUntil:'domcontentloaded'});
   try { await expect(page.locator('#pf-shell')).toBeVisible({timeout:5000}); }
@@ -637,9 +651,10 @@ test.describe('Cross-page synthetic finance navigation',()=>{
   expect(target).toContain(entry.fragment);
   if(await page.locator('#pf-menu').isVisible())await page.locator('#pf-menu').click();
   await page.locator('#'+entry.link).click();
-  await expect(page.locator('[data-project-tab="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#pf-tabs [data-panel="'+entry.panel+'"]')).toHaveAttribute('aria-selected','true');
   expect(new URL(page.url()).hash).toBe(entry.fragment);
-  await expect(page.locator(entry.node)).toBeVisible();
+  await expect(page.locator('#pf-panel-title')).toContainText(entry.title);
+  await expect(page.locator('#pf-panel-content')).toBeVisible();
  }
  });
 });

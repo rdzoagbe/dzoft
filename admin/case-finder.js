@@ -11,15 +11,17 @@ var GROUPS=[
  {key:'leads',slug:'demandes',label:['Demande','Request'],selector:'#leads .lead',
   title:function(el){return (el.querySelector('.h b')||{}).textContent||'';},
   desc:function(el){return (el.querySelector('.meta .chip')||{}).textContent||'';}},
- {key:'clients',slug:'clients',label:['Client','Client'],selector:'#clients tbody tr',
-  title:function(el){return (el.querySelector('td:first-child b')||{}).textContent||'';},
-  desc:function(el){return (el.querySelector('td:nth-child(2)')||{}).textContent||'';}},
- {key:'quotes',slug:'devis',label:['Devis','Quote'],selector:'#quotes tbody tr',
-  title:function(el){return (el.querySelector('td:first-child b')||{}).textContent||'';},
-  desc:function(el){return (el.querySelector('td:nth-child(2)')||{}).textContent||'';}},
- {key:'projects',slug:'projets',label:['Projet','Project'],selector:'#projects tbody tr',
-  title:function(el){return (el.querySelector('td:first-child b')||{}).textContent||'';},
-  desc:function(el){return (el.querySelector('td:nth-child(2)')||{}).textContent||'';}}
+ // Since the 16 Nov redesign, clients, quotes and projects are cards (.v4-list-card); the former
+ // table rows are still recognised so an older layout keeps working.
+ {key:'clients',slug:'clients',label:['Client','Client'],selector:'#clients tbody tr, #clients .v4-list-card',
+  title:function(el){return (el.querySelector('td:first-child b, h3')||{}).textContent||'';},
+  desc:function(el){return (el.querySelector('td:nth-child(2), .v4-card-sub')||{}).textContent||'';}},
+ {key:'quotes',slug:'devis',label:['Devis','Quote'],selector:'#quotes tbody tr, #quotes .v4-list-card',
+  title:function(el){return (el.querySelector('td:first-child b, h3')||{}).textContent||'';},
+  desc:function(el){return (el.querySelector('td:nth-child(2), .v4-card-kicker')||{}).textContent||'';}},
+ {key:'projects',slug:'projets',label:['Projet','Project'],selector:'#projects tbody tr, #projects .v4-list-card',
+  title:function(el){return (el.querySelector('td:first-child b, h3')||{}).textContent||'';},
+  desc:function(el){return (el.querySelector('td:nth-child(2), .v4-card-kicker')||{}).textContent||'';}}
 ];
 var panel=document.createElement('section');
 panel.className='dzoft-case-finder';panel.id='dzoft-case-finder';

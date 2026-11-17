@@ -91,7 +91,8 @@ function mobile(){
  var panel=document.getElementById('dzoft-installed-menu-panel');
  if(!panel)return;
  // Existing installed-app-menu.js owns the toggle and delegated route handler.
- // Rebuild only its navigation destinations, retaining its safe logout control.
+ // Rebuild only its navigation destinations, retaining its "view website" link and safe logout control.
+ var site=panel.querySelector('a[href="../?workspace=admin"]');
  var old=Array.from(panel.querySelectorAll('[data-app-action="logout"]'))[0];
  panel.replaceChildren();
  var title=document.createElement('p');title.className='installed-menu-heading';title.textContent=english()?'Navigation':'Navigation';panel.appendChild(title);
@@ -101,6 +102,7 @@ function mobile(){
    var txt=document.createElement('span');txt.className='installed-menu-label';txt.dataset.fr=item.fr;txt.dataset.en=item.en;txt.textContent=english()?item.en:item.fr;
    b.append(icon,txt,countBadge(item.slug));panel.appendChild(b);
  });
+ if(site)panel.appendChild(site);
  if(old)panel.appendChild(old);
 }
 if(!isProject)mobile();
