@@ -123,6 +123,23 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   .totals table{width:100%}
   td input.pu{width:70px}
 }
+@media screen and (max-width:600px){
+  /* Phone: each quote line becomes a small card instead of a table wider than the screen. */
+  table:has(> #lines) > thead{display:none}
+  #lines tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:6px 8px;padding:12px 0;border-bottom:1px solid #e9e7f3}
+  #lines td{display:block;padding:0;border:0;min-width:0}
+  #lines tr:not(.grp) td:first-child{grid-column:1 / -1}
+  #lines tr.grp td:first-child{grid-column:1 / 4}
+  #lines td input,#lines td select{width:100%;max-width:100%;box-sizing:border-box}
+  #lines tr:not(.grp) td:nth-child(2)::before{content:'Qté'}
+  #lines tr:not(.grp) td:nth-child(3)::before{content:'Unité'}
+  #lines tr:not(.grp) td:nth-child(4)::before{content:'Prix unitaire'}
+  #lines tr:not(.grp) td:nth-child(5){grid-column:1 / 4;text-align:right;font-weight:700}
+  #lines tr:not(.grp) td:nth-child(5)::before{content:'Total ';font-weight:400}
+  #lines tr:not(.grp) td:nth-child(n+2):nth-child(-n+4)::before{display:block;font-size:11px;color:#6b6890;margin-bottom:2px}
+  #lines td.noprint{grid-column:4;grid-row:1;align-self:start}
+  #lines tr:not(.grp) td.noprint{grid-row:auto;grid-column:4}
+}
 @media print{
   @page{size:A4;margin:9mm}
   body,body.dzoft-admin{background:#fff!important;color:#0B1020!important}
@@ -154,7 +171,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=contrast-fix">
 <link rel="stylesheet" href="editor-unified.css?v=20261116-1">
-<link rel="stylesheet" href="editor-navigation.css?v=20261116-1">
+<link rel="stylesheet" href="editor-navigation.css?v=20261117-fit">
 </head>
 <body class="dzoft-admin dzoft-editor">
 <div class="tools">

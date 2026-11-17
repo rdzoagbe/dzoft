@@ -127,6 +127,11 @@ a{color:inherit}
 .pf-dialog input,.pf-dialog textarea{max-width:100%}
 .pf-overlay{display:none}
 :focus-visible{outline:3px solid #a995f7;outline-offset:2px}
+/* Five amounts side by side need a wide screen; below that they wrap to 3 + 2 instead of overflowing. */
+@media(max-width:1500px){.pf-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Short windows: the tip gives its place to the menu, so the last entry stays visible. */
+@media(min-width:761px) and (max-height:1000px){.pf-tip{display:none}}
+@media(min-width:761px) and (max-height:760px){.pf-side-links a,body.pf-page .pf-side-links .dzoft-v6-link{min-height:38px;padding-top:7px;padding-bottom:7px}.pf-logo{margin-bottom:20px}}
 @media(max-width:1280px){
  .pf-shell{grid-template-columns:205px minmax(0,1fr)}
  .pf-kpis{gap:9px}.pf-kpi{padding:12px 9px;gap:7px}
