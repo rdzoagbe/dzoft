@@ -215,7 +215,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="settings-redesign.css?v=20261115-2">
 <link rel="stylesheet" href="workspace-home.css?v=20261115-v2">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261115-single-desktop-nav">
-<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261117-quick">
+<link rel="stylesheet" href="workspace-flow.css?v=20261115-update4"><link rel="stylesheet" href="workspace-unified.css?v=20261116-1"><link rel="stylesheet" href="client-links.css?v=20261116-1"><link rel="stylesheet" href="dashboard-v3.css?v=20261117-dash2">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261117-prices"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-1">
 <link rel="stylesheet" href="workspace-pages-v4.css?v=20261116-1"><link rel="stylesheet" href="global-view-v5.css?v=20261116-1"><link rel="stylesheet" href="workspace-v6.css?v=20261117-counts">
 </head>
@@ -343,20 +343,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
             <div id="sd-project-list" class="sd-project-list"></div>
           </section>
           <aside class="sd-surface sd-actions" aria-labelledby="sd-actions-title">
-            <div class="sd-surface-head"><div><span class="sd-overline">À SUIVRE</span><h2 id="sd-actions-title">Actions prioritaires</h2><p>Validation des clients, paiements et échanges.</p></div></div>
+            <div class="sd-surface-head"><div><span class="sd-overline">À SUIVRE</span><h2 id="sd-actions-title">À faire</h2><p id="sd-actions-help">Le plus urgent en premier.</p></div></div>
             <div id="sd-action-list" class="sd-action-list" aria-live="polite"></div>
             <button type="button" class="sd-text-link" data-go="inbox">Ouvrir les messages →</button>
           </aside>
-        </div>
-        <div class="sd-content sd-bottom">
-          <section class="sd-surface sd-selected" aria-labelledby="sd-selected-title">
-            <div class="sd-surface-head"><div><span class="sd-overline">GESTION FINANCIÈRE</span><h2 id="sd-selected-title">Dossier sélectionné</h2><p>Le contrat initial et les suppléments sont détaillés dans le projet.</p></div><label class="sd-select-label"><span>Projet</span><select id="sd-project-select" aria-label="Choisir un projet"><option>Chargement…</option></select></label></div>
-            <div id="sd-project-summary" aria-live="polite"></div>
-          </section>
-          <section class="sd-surface sd-activity" aria-labelledby="sd-activity-title">
-            <div class="sd-surface-head"><div><span class="sd-overline">RACCOURCIS</span><h2 id="sd-activity-title">Gérer votre activité</h2></div></div>
-            <div class="sd-shortcuts"><button type="button" data-go="clients">Clients <span>→</span></button><button type="button" data-go="quotes">Devis <span>→</span></button><button type="button" data-go="finance">Factures & paiements <span>→</span></button><button type="button" data-go="leads">Demandes reçues <span>→</span></button></div>
-          </section>
         </div>
         <details class="sd-email-history"><summary>Historique des e-mails et notifications</summary><div id="email-delivery-health" role="status">Vérification de l'envoi…</div><div id="email-log"></div></details>
         <p class="sd-verification" id="sd-verification">Les encaissements affichés sont uniquement ceux confirmés dans le suivi du projet. Aucune réception n'est validée automatiquement.</p>
@@ -1098,6 +1088,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       unread:data.unread.map(function(m){return {client_id:m.client_id,clientName:(client(m.client_id)||{}).nom||"Client"};}),
       newLeads:nNew,waitingQuotes:waiting().length,activeProjects:running.length,
       todo:todo.map(function(t){return {text:t[0],target:t[1],action:t[2]};}),
+      changes:(data.changes||[]).map(function(c){return {status:c.status,invoiced:!!c.invoiced,extra_price:c.extra_price,quote_id:c.quote_id};}),
       english:document.documentElement.lang==="en"
     });
     if(window.DzoftWorkspacePanelsV6)window.DzoftWorkspacePanelsV6.setData({
@@ -1880,7 +1871,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261116-nav-audit1"></script>
 <script src="update-notice.js?v=20261115-update4"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261117-quick"></script>
+<script src="dashboard-v3.js?v=20261117-dash2"></script>
 <script src="unified-app-shell.js?v=20261116-v6"></script>
 <script src="../assets/change-requests.js?v=20261117-prices"></script>
 <script src="workspace-panels-v7.js?v=20261117-prices"></script>

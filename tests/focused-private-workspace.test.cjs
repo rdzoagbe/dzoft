@@ -48,15 +48,16 @@ test('new owner dashboard provides real client, quote, finance and case finder r
  const js=read('admin/dashboard-v3.js');
  const html=read('admin/index.html');
  const css=read('admin/dashboard-v3.css');
- assert.match(html,/dashboard-v3\.js\?v=20261117-quick/);
- assert.match(html,/dashboard-v3\.css\?v=20261117-quick/);
+ assert.match(html,/dashboard-v3\.js\?v=20261117-dash2/);
+ assert.match(html,/dashboard-v3\.css\?v=20261117-dash2/);
  assert.match(html,/case-finder\.js/);
  assert.match(html,/id="sd-dashboard"/);
  assert.match(html,/id="sd-project-list"/);
- assert.match(html,/id="sd-project-select"/);
+ // 17 Nov 2026: the « Dossier sélectionné » panel and the « Raccourcis » block were removed (project tools live in the project).
+ assert.doesNotMatch(html,/id="sd-project-select"|class="sd-shortcuts"/);
  assert.match(js,/location\.hash="#\/devis"/);
- assert.match(html,/data-go="finance"/);
- assert.match(html,/data-go="clients"/);
+ assert.match(js,/"orange","finance"/,'the money tiles lead to billing');
+ assert.match(js,/"Prêt à facturer","Ready to invoice"/);
  assert.match(js,/projectUrl/);
  assert.doesNotMatch(js,/\.rpc\(|\.update\(|\.insert\(|fetch\(|service_role|localStorage/);
  assert.match(css,/max-width:600px/);
