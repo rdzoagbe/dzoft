@@ -136,6 +136,7 @@ function select(id,opt){
   b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;
  });
  sections.forEach(function(item){panes[item.id].hidden=item.id!==id;});
+ if((id==='overview'||id==='documents')&&window.DzoftProjectSummary&&window.DzoftProjectSummary.refreshIfStale)window.DzoftProjectSummary.refreshIfStale();
  if(opt.replaceHash!==false){
   var path=location.pathname+location.search;
   history.replaceState(history.state,'',path+'#'+id);

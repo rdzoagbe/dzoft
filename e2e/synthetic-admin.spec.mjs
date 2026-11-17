@@ -56,7 +56,8 @@ const syntheticSb = `
   rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
    if(name==='is_owner')return true;
    if(name==='project_tracking'){
-      if(summaryFixture)return {total:1700,base_total:1500,supplements:200,received:800,remaining:900,legacy:0,payment_statuses:[],updates:[],
+      // The server counts an extra only once invoiced: here the signed 200 € extra is not invoiced yet (remaining 700).
+      if(summaryFixture)return {total:1500,base_total:1500,supplements:0,received:800,remaining:700,legacy:0,payment_statuses:[],updates:[],
         receipts:[{id:'rc-1',amount:450,method:'cash',received_on:'2026-11-04'},{id:'rc-2',amount:350,method:'transfer',received_on:'2026-11-14'}]};
       if(location.search.includes('invoiceFixture=1'))return {total:1500,base_total:1500,received:800,remaining:700,legacy:0,payment_statuses:[],
         receipts:[
@@ -367,8 +368,11 @@ test('Project quick actions open the payment, publish and message forms without 
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
  await expect(page.locator('[data-workspace-action]')).toHaveText(['€ Enregistrer un paiement','✓ Publier une avancée','✉ Écrire au client','＋ Ajouter un supplément']);
+ // Even with the payment details folded, the action unfolds them and opens the form.
+ await page.evaluate(()=>{const d=document.getElementById('iv-payments-advanced');if(d)d.open=false;});
  await page.locator('[data-workspace-action="payment"]').click();
  await expect(page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)')).toHaveAttribute('open','');
+ await expect(page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)')).toBeVisible();
  await page.locator('[data-workspace-action="progress"]').click();
  await expect(page.locator('#tracking-publish details.tracking-editor')).toHaveAttribute('open','');
  await page.locator('[data-workspace-action="message"]').click();
@@ -813,6 +817,7 @@ test('One project page: summary, five tabs, signed extras only, official documen
  await expect(summary.locator('.ps-tile').nth(1)).toContainText('500');
  await expect(summary.locator('.ps-tile').nth(1)).toContainText('non signés');
  await expect(summary.locator('.ps-tile').nth(2)).toContainText('800');
+ // 1 500 + 200 (signed, not yet invoiced) − 800 received = 900, not the server's invoice-based 700.
  await expect(summary.locator('.ps-tile').nth(3)).toContainText('900');
  await expect(summary).toContainText('Application web installable');
  await expect(summary.locator('.ps-wait')).toContainText('Synthetic pending proposal');

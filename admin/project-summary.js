@@ -23,6 +23,13 @@ function scope(){
 }
 function tile(label,value,tone,sub){return '<div class="ps-tile'+(tone?' '+tone:'')+'"><span>'+label+'</span><strong>'+value+'</strong>'+(sub?'<small>'+sub+'</small>':'')+'</div>';}
 
+/* Still to receive = signed contract + signed extras − verified payments (never below 0). The server's own « remaining »
+   counts an extra only once it is invoiced, so a signed extra not yet invoiced would be missing from it. */
+function due(){
+ var t=state.tracking,q=state.quote;if(!t||!state.changes||num(q.accepted_total)===null||num(t.received)===null)return null;
+ var extras=approved().reduce(function(n,r){return n+Math.round(num(r.extra_price)*100);},0);
+ return Math.max(0,Math.round(num(q.accepted_total)*100)+extras-Math.round(num(t.received)*100))/100;
+}
 function renderSummary(){
  var box=document.getElementById('ps-summary');if(!box||!state.quote)return;
  var q=state.quote,c=state.client||{},t=state.tracking;
@@ -37,7 +44,7 @@ function renderSummary(){
    tile(tr('Contrat initial','Original contract'),money(num(q.accepted_total)))+
    tile(tr('Suppléments acceptés','Approved extras'),money(extras),'',proposed?tr('+ ','+ ')+money(proposed)+tr(' proposés, non signés',' proposed, not signed'):'')+
    tile(tr('Déjà encaissé','Received'),t?money(num(t.received)):'—','green')+
-   tile(tr('Reste à encaisser','Still to receive'),t?money(num(t.remaining)):'—','orange')+'</div>'+
+   tile(tr('Reste à encaisser','Still to receive'),money(due()),'orange')+'</div>'+
    (!t||!state.changes?'<p class="ps-note">'+tr('Certains chiffres sont indisponibles : actualisez la page.','Some figures are unavailable: reload the page.')+'</p>':'');
   var items=scope(),acc=approved(),wait=pending();
   h+='<div class="ps-scope"><div class="ps-scope-head"><h3>'+tr('Périmètre du projet','Project scope')+'</h3>'+
@@ -95,6 +102,14 @@ document.addEventListener('click',function(e){
 });
 
 function render(){renderSummary();renderDocuments();}
+/* The extra-work widget (Argent) redraws itself after creating, repricing or withdrawing a proposal. Mark the summary
+   stale then, and fetch again when Vue d'ensemble or Documents is shown (not on every keystroke in the calculator). */
+var stale=false;
+function watchChanges(){
+ var w=document.getElementById('dzoft-owner-changes');if(!w||w._psWatched||typeof MutationObserver!=='function')return;
+ w._psWatched=true;new MutationObserver(function(){stale=true;}).observe(w,{childList:true,subtree:true});
+}
+function refreshIfStale(){watchChanges();if(stale&&window.DzoftProjectData){stale=false;update(window.DzoftProjectData);}}
 function update(input){
  state.sb=input.sb;state.quote=input.Q;state.client=input.C;render();
  if(!input.Q||!input.Q.accepted_at){state.tracking=null;state.changes=[];render();return;}
@@ -108,6 +123,6 @@ function update(input){
  });
 }
 document.addEventListener('dzoft:locale-change',render);
-window.DzoftProjectSummary={update:update,render:render};
+window.DzoftProjectSummary={update:update,render:render,refreshIfStale:refreshIfStale};
 if(window.DzoftProjectData)update(window.DzoftProjectData);
 })();
