@@ -142,7 +142,7 @@ function calculator(en,blocks,target,tiers){
   '<label>'+tr(en,'Texte de la demande','Request text')+'<textarea name="request" rows="3" maxlength="4000">'+esc(target?(r.title+'\n'+(r.description||'')):'')+'</textarea></label>'+
   '<button class="btn line sm" type="button" data-calc-detect>'+tr(en,'Repérer dans ma liste de prix','Find in my price list')+'</button></details>'+
   (target?'':'<div class="dzoft-calc-auto"><button class="btn main" type="button" data-calc-journal>'+tr(en,'⚡ Calculer depuis le suivi du projet','⚡ Calculate from project tracking')+'</button>'+
-  '<p>'+tr(en,'Reprend les demandes du client réalisées depuis la signature du devis (journal du projet), chiffrées dans cet ordre : le niveau noté dans le journal, sinon une prestation de votre liste dont les mots figurent dans la demande, sinon votre prix par défaut. Vérifiez chaque ligne : retirez ce qui était prévu au devis ou ce qui venait de vous, et tapez votre prix si besoin (« Prix libre »).','Takes the client requests completed since the quote was signed (project journal), priced in this order: the level noted in the journal, else an item of your list whose words appear in the request, else your default price. Check every line: remove what the quote already covered or what was your own idea, and type your own price if needed (“Free price”).')+'</p>'+
+  '<p>'+tr(en,'Reprend les demandes du client réalisées depuis votre dernier supplément (ou depuis la signature s’il n’y en a pas), chiffrées dans cet ordre : le niveau noté dans le journal, sinon une prestation de votre liste dont les mots figurent dans la demande, sinon votre prix par défaut. Vérifiez chaque ligne : retirez ce qui était prévu au devis ou ce qui venait de vous, et tapez votre prix si besoin (« Prix libre »).','Takes the client requests completed since your last extra-work proposal (or since signature if there is none), priced in this order: the level noted in the journal, else an item of your list whose words appear in the request, else your default price. Check every line: remove what the quote already covered or what was your own idea, and type your own price if needed (“Free price”).')+'</p>'+
   '<div data-calc-summary class="dzoft-calc-summary" hidden></div></div>')+
   '<div class="dzoft-calc-pick"><label>'+tr(en,'Ajouter depuis ma liste de prix','Add from my price list')+'<select name="block"><option value="">'+(blocks.length?tr(en,'— Choisir —','— Choose —'):tr(en,'Liste vide : ajoutez une ligne libre','Empty list: add a free line'))+'</option>'+
   blocks.map(function(b,i){return '<option value="'+i+'">'+esc(b.label)+' · '+cash(b.price)+'</option>';}).join('')+'</select></label>'+
@@ -235,12 +235,21 @@ function bindOwner(root,options){
    // The client's name is removed from the start of journal lines ("<prénom> … : notifications…").
    return (q.client_id?Promise.resolve(sb.select('clients','select=nom&id=eq.'+encodeURIComponent(q.client_id))).catch(function(){return [];}):Promise.resolve([])).then(function(c){q.clientName=c&&c[0]&&c[0].nom||'';return [q,res[1]];});
   }).then(function(res){
-   var q=res[0],work=Array.isArray(res[1])?res[1]:[],since=String(q.accepted_at||'').slice(0,10);
-   var used={};records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0)(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});});
+   var q=res[0],work=Array.isArray(res[1])?res[1]:[],signed=String(q.accepted_at||'').slice(0,10),since=signed;
+   var used={},lastDay='';records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0){(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});
+     // Only priced extra work moves the start (a client's unpriced request does not), dated when it was proposed.
+     if(['proposed','approved','in_progress','completed'].indexOf(r.status)>=0){var c=String(r.proposed_at||r.created_at||'').slice(0,10);if(c>lastDay)lastDay=c;}}});
+   /* Only what is new (17 Nov 2026): requests done since the last extra-work proposal still open or signed (or since
+      the signature when there is none). Proposals made before the calculator, or typed by hand, carry no link to the
+      journal: without this, their requests would come back every time. Older requests are listed apart, never added. */
+   if(lastDay>since)since=lastDay;
    readLines(form).forEach(function(l){if(l.source)used[l.source]=1;});
    var clientName=plain(q.clientName||'').split(/\s+/)[0];
-   var added=0,priced=0,skipped=0,offered=0,byLevel=0,byList=0,byDefault=0,later=[],included=[];
-   (Array.isArray(q.journal)?q.journal:[]).filter(function(e){return e&&e.k==='demande'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d||'')&&(!since||e.d>=since);})
+   var added=0,priced=0,skipped=0,offered=0,byLevel=0,byList=0,byDefault=0,later=[],included=[],earlier=[];
+   (Array.isArray(q.journal)?q.journal:[]).filter(function(e){
+     if(!(e&&e.k==='demande'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d||'')&&(!signed||e.d>=signed)))return false;
+     if(since&&e.d<since){var t=String(e.t||'').trim();if(/:\s*fait\b/i.test(t)&&!/^pas encore/i.test(t))earlier.push(t.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
+     return true;})
     .sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;}).forEach(function(e){
      var text=String(e.t||'').trim(),done=/:\s*fait\b/i.test(text)&&!/^pas encore/i.test(text);
      // Drop "<client name> : " at the start and ": fait…" at the end.
@@ -268,13 +277,15 @@ function bindOwner(root,options){
      var qty=Number(e.qty)>0&&Number(e.qty)<=1000?Number(e.qty):1;
      addLine(form,{label:label.length>=2?label:tr(en,'Demande du ','Request of ')+day,qty:qty,price:price,source:source,level:level,when:when,origin:origin,detail:tier?tierDetail(tier,when):tr(en,'Demandé et ','Requested and ')+when});added++;
    });
-   var days={};work.forEach(function(w){if(w.source_date&&(!since||w.source_date>=since))days[w.source_date]=1;});
+   var days={};work.forEach(function(w){if(w.source_date&&(!signed||w.source_date>=signed))days[w.source_date]=1;});
    var box=form.querySelector('[data-calc-summary]');box.hidden=false;
    box.innerHTML='<p><strong>'+added+' '+tr(en,'demande(s) réalisée(s) ajoutée(s)','completed request(s) added')+'</strong>'+
     (added?' · '+priced+' '+tr(en,'chiffrée(s)','priced')+(added-priced?' · <span class="dzoft-calc-warn">'+(added-priced)+' '+tr(en,'à chiffrer (prix vide)','to price (empty price)')+'</span>':''):'')+
     (offered?' · '+offered+' '+tr(en,'offerte(s)','offered'):'')+(skipped?' · '+skipped+' '+tr(en,'déjà dans une proposition','already in a proposal'):'')+'</p>'+
     (priced?'<p>'+tr(en,'Origine des prix : ','Where prices come from: ')+[byLevel?byLevel+' '+tr(en,'par le niveau noté dans le journal','from the level noted in the journal'):'',byList?byList+' '+tr(en,'par votre liste de prix','from your price list'):'',byDefault?byDefault+' '+tr(en,'par le prix par défaut','from the default price'):''].filter(Boolean).join(' · ')+tr(en,'. Le détail est sous chaque ligne (visible par vous seul).','. Details under each line (only you see them).')+'</p>':'')+
     (included.length?'<details><summary>'+included.length+' '+tr(en,'demande(s) incluse(s) au devis ou corrections, non facturée(s)','request(s) included in the quote or fixes, not billed')+'</summary><ul>'+included.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
+    (since!==signed?'<p>'+tr(en,'Depuis le dernier supplément, du ','Since the last extra-work proposal, of ')+since.split('-').reverse().join('/')+'.</p>':'')+
+    (earlier.length?'<details><summary>'+earlier.length+' '+tr(en,'demande(s) réalisée(s) avant le dernier supplément, non reprise(s)','request(s) done before the last extra-work proposal, not added')+'</summary><ul>'+earlier.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
     '<p>'+tr(en,'Activité Git sur le projet depuis la signature : ','Git activity on the project since signature: ')+Object.keys(days).length+' '+tr(en,'jour(s) de travail.','working day(s).')+'</p>'+
     (later.length?'<details><summary>'+later.length+' '+tr(en,'demande(s) pas encore réalisée(s), non incluse(s)','request(s) not done yet, not included')+'</summary><ul>'+later.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'');
    if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value=tr(en,'Ajouts demandés depuis la signature du devis','Additions requested since the quote was signed');

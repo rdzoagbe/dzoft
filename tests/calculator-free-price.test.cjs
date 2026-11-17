@@ -35,3 +35,16 @@ test('Prices and quantities keep two decimals at most, so the total shown is the
  for(const bad of ['1,234','0,001','12,5,0','abc','','1e3'])assert.ok(Number.isNaN(amount(bad)),bad);
  assert.match(js,/qty:disc\?1:amount\(/);assert.match(js,/p=amount\(row\.querySelector\('\[name=price\]'\)\.value\);return \{label/);
 });
+
+test('« Calculer depuis le suivi » only adds requests done since the last extra-work proposal',()=>{
+ const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
+ // The start is the latest of the signature and the last live proposal (declined, rejected or withdrawn ones do not count).
+ assert.match(fj,/if\(\['declined','rejected','withdrawn'\]\.indexOf\(r\.status\)<0\)\{/);
+ // Only priced extra work counts (not an unpriced client request), dated when it was proposed.
+ assert.match(fj,/if\(\['proposed','approved','in_progress','completed'\]\.indexOf\(r\.status\)>=0\)\{var c=String\(r\.proposed_at\|\|r\.created_at\|\|''\)\.slice\(0,10\);if\(c>lastDay\)lastDay=c;\}/);
+ assert.match(fj,/if\(lastDay>since\)since=lastDay;/);
+ // Older done requests are listed apart, never added; lines already in a live proposal are still skipped.
+ assert.match(fj,/if\(since&&e\.d<since\)\{[^]*?earlier\.push\([^]*?return false;\}/);
+ assert.match(fj,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
+ assert.match(fj,/avant le dernier supplément, non reprise\(s\)/);
+});
