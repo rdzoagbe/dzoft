@@ -61,6 +61,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Admin installable sur téléphone (PWA, 10 nov. 2026) : `admin/manifest.webmanifest`, `admin/icons/`,
   `admin/sw.js` (portée `/dzoft/admin/`, ne met AUCUNE donnée Supabase en cache, seulement `admin/offline.html`),
   bouton « Installer l’app » affiché quand le navigateur le propose.
+  Boutons rapides du tableau de bord (17 nov. 2026) : Enregistrer un paiement (`suivi.html?q=…#billing/pay`), Créer un supplément
+  (`projet.html?q=…#new-extra`), Publier une avancée (`suivi.html?q=…#work/publish`) ; ils demandent le projet s’il y en a plusieurs
+  et ouvrent seulement le formulaire, sans rien enregistrer (test `tests/admin-prices-quick-actions.test.cjs`).
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.
@@ -119,6 +122,8 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis la signature ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).
   En ajoutant une demande réalisée au journal, renseigner `lvl`, `qty` et `why` (commits, base, tests) d’après ces règles.
+  « Mes tarifs » (niveaux, prestations connues, prix par défaut) se modifie uniquement dans Catalogue (Prestations)
+  (`admin/#/catalogue`, `DzoftChanges.prices`) ; le calculateur du projet les lit et renvoie vers cette page (17 nov. 2026).
 - Sécurité client : la liaison d'un compte révoque le jeton d'accès secret ; les RPC publiques
   n'acceptent ces jetons que pour les fiches sans compte. Les codes de signature sont réservés
   sous verrou SQL avant l'envoi, afin que les quotas résistent aux appels simultanés.

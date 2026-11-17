@@ -9,6 +9,8 @@ var id=new URLSearchParams(location.search).get("q");
 var validId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||"");
 if(!sb||!sb.session()||!validId){location.replace("./");return;}
 var initialPanel=location.hash.slice(1);
+/* "#new-extra" (dashboard quick button): open the extra-work calculator once the project is loaded. */
+var openExtraOnLoad=initialPanel==="new-extra";if(openExtraOnLoad)initialPanel="extras";
 var validPanels=["overview","quotes","invoices","payments","extras","activity","journal","documents"];
 var state={quote:null,client:null,changes:null,tracking:null,events:[],section:validPanels.includes(initialPanel)?initialPanel:"overview",busy:false,modalInitialized:false,readError:null};
 var acceptedStates=["approved","in_progress","completed"];
@@ -281,7 +283,8 @@ function readData(){
    q.client_id?sb.select("clients","select=*&id=eq."+encodeURIComponent(q.client_id)).then(function(x){return x&&x[0]||null;}):Promise.resolve(null),
    sb.rpc("owner_list_change_requests",{p_quote:id},true),
    sb.rpc("project_tracking",{p_quote:id},true)
-  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();loadProjectSwitcher();loadMenuCounts();},
+  ]).then(function(res){state.client=res[0];state.changes=Array.isArray(res[1])?res[1]:null;state.tracking=res[2]||null;state.readError=null;render();loadProjectSwitcher();loadMenuCounts();
+   if(openExtraOnLoad){openExtraOnLoad=false;history.replaceState(null,"",location.pathname+location.search+"#extras");openExtra();}},
    function(err){state.readError=err;state.changes=null;state.tracking=null;render();setText("pf-finance-note",tr("Certaines données financières sont indisponibles. Aucun total non vérifié n'est présenté.","Some financial data is unavailable. Unverified totals are hidden."));});
  }).catch(function(){state.readError=true;conceal();showError(tr("Accès impossible au projet. Vérifiez votre session administrateur.","Unable to access project. Check your admin session."));})
  .finally(function(){state.busy=false;});

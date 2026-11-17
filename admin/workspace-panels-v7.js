@@ -6,7 +6,7 @@ var definitions=[
  ['invoices','Factures','Invoices','Registre des factures émises','Issued invoice register'],
  ['journal','Journal & Suivi','Journal & tracking','Notes privées des projets','Private project notes'],
  ['documents','Documents','Documents','Références de documents des projets','Project document references'],
- ['catalogue','Catalogue (Prestations)','Service catalogue','Prestations issues des devis','Services extracted from quotations'],
+ ['catalogue','Catalogue (Prestations)','Service catalogue','Mes tarifs et prestations de vos devis','My prices and the services in your quotes'],
  ['reports','Rapports','Reports','Suivi des dossiers et des encaissements','Case and receipt reporting']
 ];
 var el=id=>document.getElementById(id),en=()=>document.documentElement.lang==='en',tr=(fr,eng)=>en()?eng:fr;
@@ -18,9 +18,17 @@ var projects=[],clients=[],quotes=[],details=[],trackings={},trackingReady=false
 definitions.forEach(function(d){
  var section=el('v-'+d[0]);
  if(!section){section=document.createElement('section');section.id='v-'+d[0];section.hidden=true;section.className='v6-workspace-section';
- section.innerHTML='<div class="v6-page-head"><p>DZOFT · ADMIN</p><h1></h1><span></span></div><div class="v6-page-body" aria-live="polite"></div>';
+ section.innerHTML='<div class="v6-page-head"><p>DZOFT · ADMIN</p><h1></h1><span></span></div>'+(d[0]==='catalogue'?'<div class="dzoft-prices-admin" id="dzoft-prices" data-no-translate></div>':'')+'<div class="v6-page-body" aria-live="polite"></div>';
  root.insertBefore(section,el('v-settings'));}
 });
+/* « Mes tarifs » (price levels, known items, default price) lives on the Catalogue page, shared by every project.
+   Loaded when the page is opened; settings are owner-only (RLS). */
+function mountPrices(){
+ var box=el('dzoft-prices');if(!box||!/^#\/?catalogue$/.test(location.hash))return;
+ if(!window.DzoftChanges||!window.DzoftChanges.prices||!window.RDsb||!window.RDsb.session||!window.RDsb.session())return;
+ window.DzoftChanges.prices(box,{sb:window.RDsb,en:en()});
+}
+window.addEventListener('hashchange',mountPrices);document.addEventListener('dzoft:locale-change',mountPrices);
 var clientName=id=>{var c=clients.find(x=>x.id===id);return c&&c.nom||tr('Client','Client');};
 var link=(q,panel)=>q&&uuid.test(q.id)?(q.accepted_at?'projet.html?q='+encodeURIComponent(q.id)+'#'+panel:panel==='quotes'?'devis.html?q='+encodeURIComponent(q.id):panel==='invoices'||panel==='payments'?'suivi.html?q='+encodeURIComponent(q.id)+'#billing':'suivi.html?q='+encodeURIComponent(q.id)+'#work/c-'+(panel==='journal'?'journal':'docs')):'#/dossiers';
 var empty=(fr,eng)=>'<p class="v6-empty">'+tr(fr,eng)+'</p>';
@@ -54,7 +62,7 @@ function catalogue(){
   });
  });
  if(!rows.length)return empty('Aucune prestation figurant dans les devis accessibles.','No service lines in accessible quotes.');
- return '<p class="v6-note">'+tr('Prestations extraites des devis : prix indicatifs par devis, pas un tarif catalogue approuvé.','Services extracted from quotes: per-quote indicative prices, not approved catalogue prices.')+'</p><div class="v6-card-list">'+rows.map(({q,l})=>
+ return '<h2 class="v6-report-subtitle">'+tr('Prestations figurant dans vos devis','Services in your quotes')+'</h2><p class="v6-note">'+tr('Prestations extraites des devis : prix indicatifs par devis, pas un tarif catalogue approuvé.','Services extracted from quotes: per-quote indicative prices, not approved catalogue prices.')+'</p><div class="v6-card-list">'+rows.map(({q,l})=>
   card(link(q,'quotes'),'▤',l.l,esc(clientName(q.client_id))+' · '+esc(q.numero||'')+(l.u?' · '+esc(l.u):'')+(l.s?' · '+esc(l.s):''),l.p==null?'—':money(l.p))).join('')+'</div>';
 }
 function reports(){
@@ -74,11 +82,11 @@ function render(){definitions.forEach(d=>{var section=el('v-'+d[0]);section.quer
 function setData(input){
  projects=(input.projects||[]).filter(p=>p&&uuid.test(p.id));clients=input.clients||[];quotes=input.quotes||[];
  trackings=input.trackings||{};trackingReady=!!input.ready;
- clientsError=!!input.clientsError;quotesError=!!input.quotesError;render();
+ clientsError=!!input.clientsError;quotesError=!!input.quotesError;render();mountPrices();
 }
 function loadingDetails(){detailState='loading';render();}
 function setDetails(rows,failed){details=Array.isArray(rows)?rows:[];detailState=failed?'error':'ready';render();}
 document.addEventListener('dzoft:locale-change',render);
 window.DzoftWorkspacePanelsV6={setData,loadingDetails,setDetails,render};
-render();
+render();mountPrices();
 })();

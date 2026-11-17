@@ -39,9 +39,10 @@ const syntheticSb = `
   aal:()=> 'aal2',mfaFresh:()=>true,
   mfa:{passkey:{supported:()=>false},challenge:()=>Promise.reject('disabled'),verify:()=>Promise.reject('disabled')},
   select:async (table)=>{window.__syntheticCalls.push('select:'+table);
-   if(table==='quotes')return [quote];
+   if(table==='quotes')return location.search.includes('twoProjects=1')?[quote,Object.assign({},quote,{id:'d1e2f3a4-0000-4000-8000-000000000002',numero:'D-SYNTHETIC-002'})]:[quote];
    if(table==='clients')return [client];
-   if(table==='settings')return [{id:1,payment:{}}];
+   if(table==='settings')return [{id:1,payment:{},default_line_price:25,price_blocks:[{label:'Page supplémentaire',price:120,words:['page']}],
+    price_tiers:[{key:'retouche',label:'Retouche',rule:'Moins de 30 minutes',price:10},{key:'petite',label:'Petite',rule:'Une demi-journée au plus',price:25}]}];
    if(table==='project_events')return [{id:'synthetic-email-event',event_type:'payment_received',summary:'Synthetic payment notification',quote_id:qid,created_at:now}];
    if(table==='email_outbox')return [
     {id:'synthetic-client-email',event_id:'synthetic-email-event',recipient_role:'client',status:'sent',delivery_status:'delivered',sent_at:now,created_at:now},
@@ -657,4 +658,52 @@ test.describe('Cross-page synthetic finance navigation',()=>{
   await expect(page.locator('#pf-panel-content')).toBeVisible();
  }
  });
+});
+
+test('Dashboard quick buttons open the right form inside the project, after choosing it',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ // One accepted project: the button goes straight to it.
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#sd-quick [data-quick]')).toHaveCount(3);
+ await page.locator('#sd-quick [data-quick="pay"]').click();
+ await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing$/);
+ await expect(page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)')).toHaveAttribute('open','');
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0#work/publish',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#tracking-publish details.tracking-editor')).toHaveAttribute('open','');
+ await expect(page).toHaveURL(/#work$/);
+ // Several projects: a dialog asks which one; Cancel goes nowhere.
+ await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await page.locator('#sd-quick [data-quick="extra"]').click();
+ await expect(page.locator('#sd-pick')).toBeVisible();
+ await expect(page.locator('#sd-pick-select option')).toHaveCount(2);
+ await page.locator('#sd-pick-cancel').click();
+ await expect(page.locator('#sd-pick')).toBeHidden();
+ await expect(page).toHaveURL(/#\/tableau-de-bord$/);
+ await page.locator('#sd-quick [data-quick="extra"]').click();
+ await page.locator('#sd-pick-select').selectOption('c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await page.locator('#sd-pick-go').click();
+ await expect(page).toHaveURL(/projet\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#extras$/);
+ await expect(page.locator('#pf-extra-dialog')).toBeVisible();
+ expect(errors).toEqual([]);
+});
+
+test('Price list lives on the Catalogue page; the project calculator links to it',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/#/catalogue',{waitUntil:'domcontentloaded'});
+ const box=page.locator('#dzoft-prices');
+ await expect(box).toBeVisible();
+ await expect(box.locator('[data-tier-price]')).toHaveCount(2);
+ await expect(box.locator('[data-block-price]')).toHaveCount(1);
+ await expect(box.locator('[data-default-price]')).toHaveValue('25');
+ // Read-only fixture: saving reports an error instead of pretending it worked.
+ await box.locator('[data-tier-save]').click();
+ await expect(box.locator('.dzoft-change-message')).toContainText(/Read-only fixture/);
+ await page.goto('admin/projet.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0#new-extra',{waitUntil:'domcontentloaded'});
+ const dialog=page.locator('#pf-extra-dialog');
+ await expect(dialog).toBeVisible();
+ await expect(dialog.locator('.dzoft-price-link a')).toHaveAttribute('href','./#/catalogue');
+ await expect(dialog.locator('[data-tier-save]')).toHaveCount(0);
+ expect(errors).toEqual([]);
 });

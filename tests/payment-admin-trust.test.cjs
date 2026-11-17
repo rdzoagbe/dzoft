@@ -49,7 +49,7 @@ test('admin displays truthful email outcomes and auditable corrections, client r
 
 test('revised assets load on both admin and client pages; core routing remains available',()=>{
  for(const p of ['admin/suivi.html','espace/index.html']){
-  assert.match(read(p),/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs)/);
+  assert.match(read(p),/project-tracking\.js\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs|20261117-quick)/);
   assert.match(read(p),/project-tracking\.css\?v=(?:20261114-(?:auto-number|archive|github-auto)|20261115-pay-template|20261115-verified-receipts2|20261117-client-tabs)/);
  }
  assert.match(read('admin/project-workspace.js'),/Invoices & payments/);

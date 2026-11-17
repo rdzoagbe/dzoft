@@ -195,6 +195,8 @@ var deepLinks={
  'work/c-journal':{pane:'work',target:'c-journal'},
  'work/c-changes':{pane:'work',target:'c-changes'},
  'billing/c-inv':{pane:'billing',target:'c-inv'},
+ 'billing/pay':{pane:'billing',target:'c-inv'},
+ 'work/publish':{pane:'work',target:'c-steps'},
  'messages/c-msg':{pane:'messages',target:'c-msg'}
 };
 function applyLocationHash(){

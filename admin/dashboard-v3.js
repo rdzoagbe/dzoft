@@ -128,13 +128,44 @@ function translateShell(){
  $("sd-activity-title").textContent=tr("Gérer votre activité","Manage your work");
 }
 function render(input){
- lastInput=input;translateShell();renderStats(input);renderProjects(input);renderActions(input);renderSelected(input);
+ lastInput=input;translateShell();translateQuick();renderStats(input);renderProjects(input);renderActions(input);renderSelected(input);
 }
 $("sd-project-select").addEventListener("change",function(){selectedId=this.value;if(lastInput)renderSelected(lastInput);});
 $("sd-new-quote").addEventListener("click",function(){
  location.hash="#/devis";
  requestAnimationFrame(function(){var b=document.getElementById("b-qnew");if(b)b.click();});
 });
+/* Quick actions: pick the project (skipped when there is only one), then open the form inside it.
+   Nothing is recorded here: the project page does the work with its usual checks. */
+var QUICK={
+ pay:{fr:"Enregistrer un paiement",en:"Record a payment",helpFr:"Ouvre le formulaire « Paiement reçu » du projet. Enregistrez seulement un paiement vérifié sur votre compte.",helpEn:"Opens the project’s “Payment received” form. Only record a payment you have checked on your account.",url:function(id){return "suivi.html?q="+encodeURIComponent(id)+"#billing/pay";}},
+ extra:{fr:"Créer un supplément",en:"Create extra work",helpFr:"Ouvre le calculateur du projet. Le client signe la proposition avec un code reçu par e-mail avant toute facture.",helpEn:"Opens the project’s calculator. The client signs the proposal with an e-mailed code before any invoice.",url:function(id){return "projet.html?q="+encodeURIComponent(id)+"#new-extra";}},
+ publish:{fr:"Publier une avancée",en:"Publish an update",helpFr:"Ouvre « Publier une avancée » du projet. Rien n’est envoyé au client avant « Publier et notifier ».",helpEn:"Opens the project’s “Publish an update”. Nothing reaches the client before “Publish and notify”.",url:function(id){return "suivi.html?q="+encodeURIComponent(id)+"#work/publish";}}
+};
+var pickAction=null;
+function quickProjects(){return ((lastInput&&lastInput.projects)||[]).filter(function(p){return p&&/^[0-9a-f-]{36}$/i.test(p.id);});}
+function translateQuick(){
+ Array.prototype.forEach.call(section.querySelectorAll("[data-quick]"),function(b){var q=QUICK[b.dataset.quick];if(q)b.querySelector("b").textContent=tr(q.fr,q.en);});
+ var g=$("sd-quick");if(g)g.setAttribute("aria-label",tr("Actions rapides","Quick actions"));
+ $("sd-pick-title").textContent=tr("Pour quel projet ?","Which project?");$("sd-pick-label").textContent=tr("Projet","Project");
+ $("sd-pick-cancel").textContent=tr("Annuler","Cancel");$("sd-pick-go").textContent=tr("Ouvrir","Open");
+}
+section.addEventListener("click",function(ev){
+ var b=ev.target.closest("[data-quick]");if(!b)return;var q=QUICK[b.dataset.quick];if(!q)return;
+ var list=quickProjects();
+ if(!list.length){$("sd-pick-help").textContent=tr("Aucun projet accepté pour l’instant : cette action sera disponible après l’accord d’un devis.","No accepted project yet: this action becomes available once a quote is accepted.");}
+ else if(list.length===1){location.assign(q.url(list[0].id));return;}
+ else $("sd-pick-help").textContent=tr(q.helpFr,q.helpEn);
+ pickAction=b.dataset.quick;
+ var sel=$("sd-pick-select");sel.innerHTML=list.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===selectedId?' selected':'')+'>'+esc((p.clientName||"")+" · "+(p.numero||""))+'</option>';}).join("");
+ sel.disabled=!list.length;$("sd-pick-go").disabled=!list.length;$("sd-pick-title").textContent=tr(q.fr,q.en)+" · "+tr("pour quel projet ?","which project?");
+ var d=$("sd-pick");if(typeof d.showModal==="function")d.showModal();else d.setAttribute("open","");
+});
+$("sd-pick").addEventListener("close",function(){
+ var d=$("sd-pick"),q=QUICK[pickAction],id=$("sd-pick-select").value;pickAction=null;
+ if(d.returnValue==="go"&&q&&id)location.assign(q.url(id));
+});
+translateQuick();
 document.addEventListener("dzoft:locale-change",function(){if(lastInput)render(lastInput);});
 window.addEventListener("hashchange",function(){if(lastInput)translateShell();});
 root.DzoftWorkspaceDashboard={render:render};
