@@ -1,6 +1,8 @@
 # DZOFT : site, espace client et outil de gestion
 
-Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sans jargon ; le site et l’admin restent en français. Il valide ce qui touche
+Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sans jargon ; le site et l’admin restent en français.
+Fusion (18 nov. 2026, choix de Roland) : quand tout est vert (CI, revue traitée, tests locaux), fusionner sans attendre son accord
+et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les règles d’argent ou les textes juridiques. Il valide ce qui touche
 à ses comptes (Google, Supabase, Revolut, OVH…) ; toi, tu fais le code et tu le guides pas à pas.
 
 ## L'entreprise
