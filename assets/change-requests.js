@@ -191,7 +191,7 @@ function priceList(en,blocks,defaultPrice,tiers){
 }
 function adminCard(r,en,invoice,blocks,tiers){
  // A proposal is a draft, seen only by the owner, until « Envoyer au client » (17 Nov 2026, server-side too).
- var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(labels(en)[r.status]||r.status);
+ var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(r.status==='proposed'&&r.sent_at?tr(en,'Partagée · signature attendue','Shared · awaiting signature'):(labels(en)[r.status]||r.status));
  var h='<article class="dzoft-change-item'+(draft?' dzoft-change-draft':'')+'" data-change-card="'+esc(r.id)+'"><header><b>'+esc(r.title)+(r.proposal_number?' · '+esc(r.proposal_number):'')+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
  (r.description&&r.description!=='Proposition établie par DZOFT.'?'<p>'+esc(r.description)+'</p>':'')+
  '<p class="dzoft-change-meta">'+tr(en,'Créée le ','Created on ')+esc(when(r.created_at))+'</p>'+proposalBlock(r,en);
@@ -425,7 +425,16 @@ function bindOwner(root,options){
     if(!q('[data-share-checked]').checked||busy)return;
     if(!global.confirm(tr(en,'Avez-vous réellement envoyé ce message vous-même ? Le client pourra ensuite consulter et signer la proposition. DZOFT n’enverra pas d’e-mail.','Did you really send the message yourself? The client can then view and sign the proposal. DZOFT will send no email.')))return;
     q('[data-share-confirm]').disabled=true;
-    perform(sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true),tr(en,'Partage manuel confirmé sans envoi automatique.','Manual sharing confirmed without automatic sending.')).then(function(){if(d.open)d.close();});
+    busy=true;
+    sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true)
+     .then(function(){
+       if(d.open)d.close();
+       banner(root,tr(en,'Partage manuel confirmé, sans e-mail automatique.','Manual sharing confirmed without automatic email.'),false);
+       return refresh();
+     }).catch(function(err){
+       q('[data-share-status]').textContent=stateError(err,en);
+       q('[data-share-confirm]').disabled=false;
+     }).finally(function(){busy=false;});
    };
   }
   d.showModal();
