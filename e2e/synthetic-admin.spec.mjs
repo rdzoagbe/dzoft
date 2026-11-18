@@ -699,6 +699,40 @@ test('Dashboard quick buttons open the right form inside the project, after choo
  expect(errors).toEqual([]);
 });
 
+test('« + Nouveau devis ou supplément » asks first: new project, or extra on a project in progress',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#sd-new-quote')).toHaveText('+ Nouveau devis ou supplément');
+ // Cancel: nothing happens.
+ await page.locator('#sd-new-quote').click();
+ await expect(page.locator('#sd-new')).toBeVisible();
+ await expect(page.locator('#sd-new .sd-new-choice')).toHaveCount(2);
+ if(testInfo.project.name.includes('mobile')){
+  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+ }
+ await page.locator('#sd-new-cancel').click();
+ await expect(page.locator('#sd-new')).toBeHidden();
+ await expect(page).toHaveURL(/#\/tableau-de-bord$/);
+ // New project: the usual new-quote screen.
+ await page.locator('#sd-new-quote').click();
+ await page.locator('#sd-new-quote-choice').click();
+ await expect(page).toHaveURL(/#\/devis/);
+ // Extra: choose the project, then its calculator opens (nothing created yet).
+ await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const before=await page.evaluate(()=>(window.__syntheticCalls||[]).filter(c=>/create_priced|price_change|change_proposal/.test(c)).length);
+ await page.locator('#sd-new-quote').click();
+ await page.locator('#sd-new-extra-choice').click();
+ await expect(page.locator('#sd-pick')).toBeVisible();
+ expect(await page.evaluate(()=>(window.__syntheticCalls||[]).filter(c=>/create_priced|price_change|change_proposal/.test(c)).length)).toBe(before);
+ await page.locator('#sd-pick-select').selectOption('c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await page.locator('#sd-pick-go').click();
+ await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/);
+ await expect(page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
+ expect(errors).toEqual([]);
+});
+
 test('Price list lives on the Catalogue page; the project calculator links to it',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));

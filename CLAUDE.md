@@ -74,6 +74,9 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Boutons rapides du tableau de bord (17 nov. 2026) : Enregistrer un paiement (`suivi.html?q=…#billing/pay`), Créer un supplément
   (`suivi.html?q=…#billing/new-extra`), Publier une avancée (`suivi.html?q=…#work/publish`) ; ils demandent le projet s’il y en a plusieurs
   et ouvrent seulement le formulaire, sans rien enregistrer (test `tests/admin-prices-quick-actions.test.cjs`).
+  « + Nouveau devis ou supplément » (18 nov. 2026, demande de Roland) : demande d’abord « Nouveau projet » (devis habituel) ou
+  « Supplément sur un projet en cours » (choix du projet puis calculateur : calcul depuis le suivi, remise au choix, brouillon à relire,
+  « Envoyer au client », signature par code avant toute facture) ; ce choix ne crée ni n’envoie rien (e2e « asks first »).
   Tableau de bord (17 nov. 2026) : chiffres (déjà encaissé dont ce mois-ci, reste à encaisser dont annoncé par le client,
   prêt à facturer = suppléments signés terminés sans facture, total des contrats, projets en cours), « Projets en cours » et « À faire » ;
   plus de « Dossier sélectionné » ni de « Raccourcis » (les outils d’un projet sont dans le projet).
