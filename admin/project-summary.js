@@ -28,7 +28,8 @@ function tile(label,value,tone,sub){return '<div class="ps-tile'+(tone?' '+tone:
 function due(){
  var t=state.tracking,q=state.quote;if(!t||!state.changes||num(q.accepted_total)===null||num(t.received)===null)return null;
  var extras=approved().reduce(function(n,r){return n+Math.round(num(r.extra_price)*100);},0);
- return Math.max(0,Math.round(num(q.accepted_total)*100)+extras-Math.round(num(t.received)*100))/100;
+ // Credit notes that reduce what the client owes (« le client doit moins ») come off too.
+ return Math.max(0,Math.round(num(q.accepted_total)*100)+extras-Math.round((num(t.credits)||0)*100)-Math.round(num(t.received)*100))/100;
 }
 function renderSummary(){
  var box=document.getElementById('ps-summary');if(!box||!state.quote)return;
@@ -62,6 +63,8 @@ function renderSummary(){
 function entry(title,sub,action){return '<article class="ps-doc"><span class="ps-doc-icon" aria-hidden="true">▢</span><div><strong data-no-translate>'+esc(title)+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>'+(action||'')+'</article>';}
 function pdf(kind,id){return '<button type="button" class="btn sm line" data-ps-doc="'+kind+'"'+(id?' data-id="'+esc(id)+'"':'')+'>PDF</button>';}
 function receipts(){return (state.tracking&&Array.isArray(state.tracking.receipts))?state.tracking.receipts:[];}
+function credits(){return (state.tracking&&Array.isArray(state.tracking.credit_notes))?state.tracking.credit_notes:[];}
+function creditFor(invoiceId){return credits().filter(function(c){return c.invoice_id===invoiceId;}).reduce(function(n,c){return n+Number(c.amount||0);},0);}
 function paidFor(invoiceId){return receipts().filter(function(r){return r.invoice_id===invoiceId;}).reduce(function(n,r){return n+Number(r.amount||0);},0);}
 function renderDocuments(){
  var box=document.getElementById('ps-docs');if(!box||!state.quote)return;
@@ -76,10 +79,13 @@ function renderDocuments(){
  var inv=(Array.isArray(q.invoices)?q.invoices:[]).filter(function(x){return x&&(x.num||x.n);});
  h+='<h3 class="ps-doc-group">'+tr('Factures','Invoices')+'</h3>'+(inv.length?'<div class="ps-doc-list">'+inv.map(function(x){
   // « Réglée » comes from the payments recorded on the server, never from the invoice's own flag.
-  var got=paidFor(x.id),settled=Number(x.amt)>0&&got>=Number(x.amt)-0.005;
-  return entry((x.num?x.num+' · ':'')+(x.n||tr('Facture','Invoice')),money(num(x.amt))+' · '+(settled?tr('réglée','paid'):got>0?tr('reçu ','received ')+money(got):tr('à régler','to pay')),
+  var got=paidFor(x.id),cr=creditFor(x.id),settled=Number(x.amt)>0&&got+cr>=Number(x.amt)-0.005;
+  return entry((x.num?x.num+' · ':'')+(x.n||tr('Facture','Invoice')),money(num(x.amt))+' · '+(cr>=Number(x.amt)-0.005&&Number(x.amt)>0?tr('annulée par avoir','cancelled by credit note'):settled?tr('réglée','paid'):(got>0?tr('reçu ','received ')+money(got):tr('à régler','to pay'))+(cr>0?' · '+tr('avoir ','credit note ')+money(cr):'')),
    x.file?'<button type="button" class="btn sm line" data-ps-file="'+esc(x.file)+'">PDF</button>':'<small class="ps-note">'+tr('PDF pas encore archivé','PDF not archived yet')+'</small>');
  }).join('')+'</div>':'<p class="ps-note">'+tr('Aucune facture pour le moment.','No invoice yet.')+'</p>');
+ // Credit notes (« avoirs », 18 Nov 2026): each cites its invoice; PDF drawn from the recorded credit note.
+ var cn=credits();
+ if(cn.length)h+='<h3 class="ps-doc-group">'+tr('Avoirs','Credit notes')+'</h3><div class="ps-doc-list">'+cn.map(function(c){return entry(c.number+' · '+tr('facture ','invoice ')+c.invoice_number,'−'+money(num(c.amount))+' · '+day(c.issued_on)+' · '+c.reason,pdf('credit',c.number));}).join('')+'</div>';
  var rc=receipts().slice().sort(function(a,b){return String(a.received_on).localeCompare(String(b.received_on));});
  h+='<h3 class="ps-doc-group">'+tr('Paiements reçus','Payments received')+'</h3>'+(rc.length?'<div class="ps-doc-list">'+rc.map(function(r){return entry(money(num(r.amount)),tr('Reçu le ','Received on ')+day(r.received_on),pdf('receipt',r.id));}).join('')+'</div>':'<p class="ps-note">'+tr('Aucun paiement enregistré.','No payment recorded.')+'</p>');
  box.innerHTML=h;
@@ -92,6 +98,7 @@ document.addEventListener('click',function(e){
  try{
   if(b.dataset.psDoc==='quote')D.download(D.signedQuote(q),'Devis-signe-'+n);
   else if(b.dataset.psDoc==='change'){var r=approved().filter(function(x){return x.id===b.dataset.id;})[0];if(r)D.download(D.signedChange(r,q),'Complement-signe-'+(r.proposal_number||n));}
+  else if(b.dataset.psDoc==='credit'){var cs=credits(),c1=cs.filter(function(x){return x.number===b.dataset.id;})[0];if(c1)D.download(D.creditNote(c1,q,cs),'Avoir-'+c1.number);}
   else if(b.dataset.psDoc==='receipt'){var all=receipts(),rc=all.filter(function(x){return x.id===b.dataset.id;})[0];if(rc)D.download(D.paymentReceipt(rc,q,all),'Recu-paiement-'+rc.received_on+'-'+n);}
  }catch(err){alert(tr('Le document n’a pas pu être créé : ','The document could not be created: ')+(err&&err.message||''));}
 });

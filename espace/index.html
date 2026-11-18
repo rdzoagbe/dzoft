@@ -351,8 +351,8 @@ footer{max-width:1180px}
 <script src="../admin/sb.js?v=20261118-mfa7d"></script>
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
-<script src="../assets/project-tracking.js?v=20261117-onepage"></script>
-<script src="../assets/dzoft-documents.js?v=20261117-docs"></script>
+<script src="../assets/project-tracking.js?v=20261118-avoirs"></script>
+<script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261118-range">
 <script src="../assets/change-requests.js?v=20261118-cancel"></script>
@@ -519,7 +519,7 @@ footer{max-width:1180px}
     if (token) {
       return sb.rpc('portal_get', { p_token: token }).then(function(d){
         if (!d) { try { localStorage.removeItem('rd-espace'); } catch(e){} show('s-bad'); return; }
-        D = d; show('app'); syncLanguage(); route();
+        D = d; show('app'); syncLanguage(); route(); loadCredits();
       }, function(){ show('s-err'); });
     }
     if (!sb.session()) { form(createAccount ? 'f-signup' : 'f-login'); return Promise.resolve(); }
@@ -527,7 +527,7 @@ footer{max-width:1180px}
       if (owner) return;
       return sb.rpc('my_space', {}, true).then(function(d){
       D = d; var current = sb.session(); activeClientUserId = current && current.user && current.user.id;
-      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); syncLanguage(); route();
+      $('b-out').hidden = false; show('app'); restoreRequestedRoute(); syncLanguage(); route(); loadCredits();
     }, function(err){
       if (/administrateur/.test(err.message)) { form('f-login', L('Impossible de vérifier votre accès administrateur. Réessayez.', 'Your admin access could not be checked. Please try again.')); return; }
       if (/confirm/.test(err.message)) { sb.signOut(); form('f-login', L('Adresse pas encore confirmée : cliquez sur le lien reçu par e-mail.', 'Email address not confirmed yet: click the link in the email we sent you.')); return; }
@@ -623,6 +623,8 @@ footer{max-width:1180px}
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', route);
+  // Figures loaded by a project card also bring its credit notes: redraw once if they change what is to pay.
+  document.addEventListener('dzoft:tracking', function(e){ var d = e.detail || {}; if (d.quote && d.data && rememberCredits(d.quote, d.data) && D && !$('app').hidden) route(); });
   // Redraw the current screen in the newly chosen language (dynamic sentences use L()).
   // The language script announces its first language when it starts (it may start after the
   // client's data has arrived): that first announcement applies the saved language, it never saves.
@@ -690,6 +692,23 @@ footer{max-width:1180px}
   function depositDone(q){ return steps(q).some(function(s){ return s.k === 'deposit' && s.done; }); }
   function completedStages(q){ return steps(q).filter(function(s){ return s.done; }).length + ' / ' + steps(q).length + L(' étapes terminées', ' stages completed'); }
   function invoices(q){ return (q.invoices || []).filter(function(x){ return x.n || x.num; }); }
+  // Credit notes (avoirs) per project: {invoiceId: amount credited}. Filled from the project's figures.
+  var CREDITED = {};
+  function creditOf(q, x){ return x && x.id && CREDITED[q.id] ? +(CREDITED[q.id][x.id] || 0) : 0; }
+  function cancelledInv(q, x){ var c = creditOf(q, x); return c > 0 && c >= +x.amt - 0.005; }
+  function openInv(q, x){ return !x.paid && !cancelledInv(q, x); }
+  function rememberCredits(id, t){
+    var m = {}; (t && Array.isArray(t.credit_notes) ? t.credit_notes : []).forEach(function(c){ if (c.invoice_id) m[c.invoice_id] = Math.round(((m[c.invoice_id] || 0) + +c.amount) * 100) / 100; });
+    var changed = JSON.stringify(CREDITED[id] || {}) !== JSON.stringify(m); CREDITED[id] = m; return changed;
+  }
+  // Loads the credit notes of every project with invoices, then redraws once if anything changed.
+  function loadCredits(){
+    var list = projects().filter(function(q){ return invoices(q).length; });
+    return Promise.all(list.map(function(q){
+      var p = token ? sb.rpc('portal_project_tracking', { p_token: token, p_quote: q.id }) : sb.rpc('project_tracking', { p_quote: q.id }, true);
+      return p.then(function(t){ return rememberCredits(q.id, t); }, function(){ return false; });
+    })).then(function(r){ if (r.some(Boolean) && D && !$('app').hidden) route(); });
+  }
   // Standard invoice labels in English; any other label is shown as Roland wrote it.
   function invoiceName(x){ var n = x.n || L('Facture', 'Invoice'); if (!EN()) return n; return n.replace(/^Facture d’acompte/i, 'Deposit invoice').replace(/^Facture de solde/i, 'Final invoice').replace(/^Facture intermédiaire/i, 'Interim invoice').replace(/^Facture complémentaire/i, 'Additional invoice').replace(/^Suivi mensuel/i, 'Monthly maintenance').replace(/^Facture$/i, 'Invoice'); }
   function invoiceList(q){
@@ -699,13 +718,13 @@ footer{max-width:1180px}
       var accountUrl = './?inscription=1&projet=' + encodeURIComponent(q.id) + (x.id ? '&facture=' + encodeURIComponent(x.id) : '');
       var pdf = x.file ? (token ? '<a class="btn line sm" href="' + accountUrl + '">' + L('Créer mon espace pour télécharger le PDF', 'Create my account to download the PDF') + '</a>' : '<button class="btn line sm" type="button" data-invoice-file="' + esc(x.file) + '" aria-label="' + L('Télécharger ', 'Download ') + esc(x.fileName || x.n || L('la facture', 'the invoice')) + '">' + L('Télécharger le PDF ↓', 'Download PDF ↓') + '</button>') : '';
       return '<li' + (x.id ? ' data-invoice-id="' + esc(x.id) + '" data-invoice-total="' + esc(x.amt) + '"' : '') + '><div><b>' + esc(invoiceName(x)) + '</b>' + (x.num ? ' <span class="muted">' + L('n° ', 'no. ') + esc(x.num) + '</span>' : '') + (x.amt ? '<span class="amt">' + eur(x.amt) + '</span>' : '') + '</div>' +
-        '<span class="pill ' + (x.paid ? 'ok' : 'warn') + '">' + (x.paid ? L('Paiement reçu et confirmé', 'Payment received and confirmed') : x.payment_reported_at ? L('Paiement envoyé — en attente de confirmation', 'Payment sent — awaiting confirmation') : L('À régler', 'To pay')) + '</span>' +
-        (url ? '<a class="btn ' + (x.paid ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (x.paid ? L('Voir la facture', 'View invoice') : L('Voir et payer', 'View and pay')) + ' ↗</a>' : '') + pdf + (x.payment_confirmed_at ? '<p class="muted">' + L('Confirmé par Roland le ', 'Confirmed by Roland on ') + esc(day(x.payment_confirmed_at)) + '</p>' : x.payment_reported_at ? '<p class="muted">' + L('Merci ! Votre déclaration du ' + esc(day(x.payment_reported_at)) + ' a été transmise. Roland confirmera la réception après vérification.', 'Thank you! Your notice of ' + esc(day(x.payment_reported_at)) + ' has been sent. Roland will confirm receipt once he has checked.') + '</p>' : !token && q.accepted_at && !x.paid && x.id && x.num && +x.amt > 0 ? '<button class="btn main sm" type="button" data-report-payment="' + esc(x.id) + '" data-payment-quote="' + esc(q.id) + '">' + (/acompte/i.test(x.n || '') ? L('J’ai envoyé l’acompte', 'I’ve sent the deposit') : L('J’ai effectué le paiement', 'I’ve sent the payment')) + '</button>' : '') + '</li>';
+        '<span class="pill ' + (x.paid || cancelledInv(q, x) ? 'ok' : 'warn') + '">' + (cancelledInv(q, x) ? L('Annulée par avoir', 'Cancelled by credit note') : x.paid ? L('Paiement reçu et confirmé', 'Payment received and confirmed') : x.payment_reported_at ? L('Paiement envoyé — en attente de confirmation', 'Payment sent — awaiting confirmation') : L('À régler', 'To pay')) + '</span>' +
+        (url ? '<a class="btn ' + (!openInv(q, x) ? 'line' : 'main') + ' sm" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (!openInv(q, x) ? L('Voir la facture', 'View invoice') : L('Voir et payer', 'View and pay')) + ' ↗</a>' : '') + pdf + (x.payment_confirmed_at ? '<p class="muted">' + L('Confirmé par Roland le ', 'Confirmed by Roland on ') + esc(day(x.payment_confirmed_at)) + '</p>' : x.payment_reported_at ? '<p class="muted">' + L('Merci ! Votre déclaration du ' + esc(day(x.payment_reported_at)) + ' a été transmise. Roland confirmera la réception après vérification.', 'Thank you! Your notice of ' + esc(day(x.payment_reported_at)) + ' has been sent. Roland will confirm receipt once he has checked.') + '</p>' : !token && q.accepted_at && openInv(q, x) && x.id && x.num && +x.amt > 0 ? '<button class="btn main sm" type="button" data-report-payment="' + esc(x.id) + '" data-payment-quote="' + esc(q.id) + '">' + (/acompte/i.test(x.n || '') ? L('J’ai envoyé l’acompte', 'I’ve sent the deposit') : L('J’ai effectué le paiement', 'I’ve sent the payment')) + '</button>' : '') + '</li>';
     }).join('') + '</ul>';
   }
   function payBlock(q){
     var P = D.payment || {}, a = amounts(q), dep = depositDone(q);
-    var open = invoices(q).filter(function(x){ return !x.paid; });
+    var open = invoices(q).filter(function(x){ return openInv(q, x); });
     if (open.length) {
       var online = open.some(function(x){ return /^https:\/\//i.test(x.u || ''); }) || /^https:\/\//i.test(P.link || '');
       var how = online ? L('Vous pouvez régler en ligne avec le bouton de paiement.', 'You can pay online with the payment button.') : L('Téléchargez la facture ci-dessous pour la régler.', 'Download the invoice below to pay it.');
@@ -824,6 +843,7 @@ footer{max-width:1180px}
       '<li><div><b>' + L('Conditions générales de vente acceptées', 'Accepted terms of sale') + '</b>' + (q.accepted_terms ? ' <span class="muted">' + L('version ', 'version ') + esc(String(q.accepted_terms).replace(/^v/, '')) + '</span>' : '') + '</div><a class="btn line sm" href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">' + L('Voir', 'View') + ' ↗</a></li></ul>' +
       '<div data-doc-slot="changes"></div>' +
       '<h3 class="subh">' + L('Factures', 'Invoices') + '</h3>' + (inv || '<p class="muted">' + L('Aucune facture pour le moment.', 'No invoice yet.') + '</p>') +
+      '<div data-doc-slot="credits"></div>' +
       '<h3 class="subh">' + L('Paiements reçus', 'Payments received') + '</h3><div data-doc-slot="receipts"><p class="muted">' + L('Chargement…', 'Loading…') + '</p></div></section>';
   }
   function fillOfficialDocs(){
@@ -835,7 +855,15 @@ footer{max-width:1180px}
         var t = res[0], ch = Array.isArray(res[1]) ? res[1] : [];
         var receipts = t && Array.isArray(t.receipts) ? t.receipts.slice().sort(function(a, b){ return String(a.received_on).localeCompare(String(b.received_on)); }) : null;
         var signed = ch.filter(function(r){ return r.decided_at && ['approved', 'in_progress', 'completed'].indexOf(r.status) >= 0; });
-        OFFICIAL[id] = { receipts: receipts || [], changes: signed };
+        var credits = t && Array.isArray(t.credit_notes) ? t.credit_notes : [];
+        OFFICIAL[id] = { receipts: receipts || [], changes: signed, credits: credits };
+        if (rememberCredits(id, t)) setTimeout(route, 0);
+        // Credit notes (« avoirs »): each cancels or reduces an invoice; the invoice itself never changes.
+        var cr = box.querySelector('[data-doc-slot="credits"]');
+        if (cr) cr.innerHTML = credits.length ? '<h3 class="subh">' + L('Avoirs', 'Credit notes') + '</h3><ul class="invl">' + credits.map(function(c){
+          return '<li><div><b data-no-translate>' + esc(c.number) + '</b> <span class="muted">' + L('facture ', 'invoice ') + '<span data-no-translate>' + esc(c.invoice_number) + '</span></span><small class="muted"> · −' + eur(c.amount) + ' · ' + day(c.issued_on) + (c.full_cancel ? ' · ' + L('annule la facture', 'cancels the invoice') : '') + '</small><br><small class="muted" data-no-translate>' + raw(c.reason) + '</small></div>' +
+            '<button class="btn line sm" type="button" data-doc-pdf="credit" data-q="' + esc(id) + '" data-r="' + esc(c.number) + '">' + pdf + '</button></li>';
+        }).join('') + '</ul>' : '';
         var cs = box.querySelector('[data-doc-slot="changes"]');
         if (cs) cs.innerHTML = signed.length ? '<h3 class="subh">' + L('Compléments signés', 'Signed extra work') + '</h3><ul class="invl">' + signed.map(function(r){
           return '<li><div><b data-no-translate>' + raw(r.title) + '</b>' + (r.proposal_number ? ' <span class="muted" data-no-translate>' + esc(r.proposal_number) + '</span>' : '') + '<small class="muted"> · ' + eur(r.extra_price) + ' · ' + L('signé le ', 'signed on ') + day(r.decided_at) + '</small></div>' +
@@ -856,6 +884,7 @@ footer{max-width:1180px}
     try {
       if (b.dataset.docPdf === 'quote') D2.download(D2.signedQuote(q), 'Devis-signe-' + num);
       else if (b.dataset.docPdf === 'change') { var r = o.changes.filter(function(x){ return x.id === b.dataset.r; })[0]; if (r) D2.download(D2.signedChange(r, q), 'Complement-signe-' + (r.proposal_number || num)); }
+      else if (b.dataset.docPdf === 'credit') { var cn = (o.credits || []).filter(function(x){ return x.number === b.dataset.r; })[0]; if (cn) D2.download(D2.creditNote(cn, q, o.credits), 'Avoir-' + cn.number); }
       else if (b.dataset.docPdf === 'receipt') { var rc = o.receipts.filter(function(x){ return x.id === b.dataset.r; })[0]; if (rc) D2.download(D2.paymentReceipt(rc, q, o.receipts), 'Recu-paiement-' + rc.received_on + '-' + num); }
     } catch (err) { alert(L('Le document n’a pas pu être créé : ', 'The document could not be created: ') + (err && err.message || '')); }
   });
@@ -888,7 +917,7 @@ footer{max-width:1180px}
       if (!started) todo.push([L('Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', 'To move “' + title(q) + '” forward: send your texts, photos and logo'), '#/documents', L('Envoyer', 'Send'), 4]);
     });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push([L('Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', 'Your approval is needed: “' + stepT(s) + '” (' + title(q) + ')'), '#/projets/' + q.id, L('Voir et valider', 'Review and approve'), 0]); }); });
-    projects().forEach(function(q){ invoices(q).filter(function(x){ return !x.paid && !x.payment_reported_at; }).forEach(function(x){ todo.push([L('Facture à régler : ', 'Invoice to pay: ') + invoiceName(x) + (x.amt ? ' (' + eur(x.amt) + ')' : ''), '#/projets/' + q.id + '/paiements', L('Voir et payer', 'View and pay'), 3]); }); });
+    projects().forEach(function(q){ invoices(q).filter(function(x){ return openInv(q, x) && !x.payment_reported_at; }).forEach(function(x){ var left = Math.round((+x.amt - creditOf(q, x)) * 100) / 100; todo.push([L('Facture à régler : ', 'Invoice to pay: ') + invoiceName(x) + (x.amt ? ' (' + eur(left) + ')' : ''), '#/projets/' + q.id + '/paiements', L('Voir et payer', 'View and pay'), 3]); }); });
     projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push([L('« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '“' + title(q) + '” is live: give your feedback in two minutes'), '#/projets/' + q.id + '/avis', L('Donner mon avis', 'Give my feedback'), 5]); });
     if (un) todo.push([L(un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', un + ' new message' + (un > 1 ? 's' : '') + ' from Roland'), '#/messages', L('Lire', 'Read'), 2]);
     if (!qs.length && (D.requests || []).length) todo.push([L('Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', 'Your request has been received: I’m preparing your quote, and it will appear in “My quotes”.'), '#/demandes', L('Voir ma demande', 'View my request'), 6]);
@@ -896,7 +925,7 @@ footer{max-width:1180px}
   }
   // Open invoices as [{id, amt}] (deposit before any invoice), for the "due now" figure.
   function dueList(q){
-    var open = invoices(q).filter(function(x){ return !x.paid && +x.amt > 0; }).map(function(x){ return { id: x.id || '', amt: +x.amt }; });
+    var open = invoices(q).filter(function(x){ return openInv(q, x) && +x.amt > 0; }).map(function(x){ return { id: x.id || '', amt: Math.round((+x.amt - creditOf(q, x)) * 100) / 100 }; });
     if (!open.length && !invoices(q).length && !depositDone(q) && amounts(q).dep > 0) open = [{ id: '', amt: Math.round(amounts(q).dep * 100) / 100 }];
     return open;
   }

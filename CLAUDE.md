@@ -144,7 +144,14 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Envoi d’une facture (18 nov. 2026) : à la création, puis via « Envoyer (e-mail ou WhatsApp) » visible sur chaque facture, une fenêtre
   propose l’e-mail (PDF archivé + copie de Roland, file d’envoi habituelle) et/ou WhatsApp (message prêt, FR/EN, lien vers la facture
   dans l’espace client, Roland appuie sur Envoyer) ; rien ne part sans « Envoyer ». « Relancer le paiement (e-mail ou WhatsApp) » est
-  aussi visible sur chaque facture impayée. Test e2e « Invoice send window ». `owner_create_change_proposal` : DZOFT ouvre
+  aussi visible sur chaque facture impayée. Test e2e « Invoice send window ».
+  Avoirs (18 nov. 2026, migration `20261118120000_credit_notes.sql`) : une facture émise ne se modifie ni ne se supprime ;
+  « Annuler ou réduire (avoir) » sur chaque facture émise par DZOFT (reste à payer > 0) émet un avoir `issue_credit_note`
+  (série A-AAAA-NNNN, cite numéro et date de la facture, motif obligatoire, total ou partiel, jamais plus que le reste impayé,
+  immuable). Deux effets : « le client doit moins » (`reduce`, baisse le montant du projet) ou « erreur sur la facture »
+  (`reissue`, facture entière sans paiement, libère la place pour la facture corrigée). `project_tracking` renvoie
+  `credits` et `credit_notes` ; paiements et soldes en tiennent compte. PDF `DzoftDocuments.creditNote`, listé dans
+  Documents (admin et client) et « Registre des avoirs » (Comptabilité). Tests `tests/credit-notes.{sql,test.cjs}`, e2e. `owner_create_change_proposal` : DZOFT ouvre
   lui-même une proposition, que seul le client peut approuver. Tests `tests/issue-accepted-invoices.{test.cjs,sql}`.
 - Compléments chiffrés (17 nov. 2026, `docs/accepted-invoices.md`) : calculateur dans « Créer un supplément » (lignes ×
   prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »

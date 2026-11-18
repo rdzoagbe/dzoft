@@ -53,7 +53,11 @@ const syntheticSb = `
    ];
    return [];
   },
-  rpc:async(name)=>{window.__syntheticCalls.push('rpc:'+name);
+  rpc:async(name,args)=>{window.__syntheticCalls.push('rpc:'+name);
+   // Credit notes (« avoirs »): recorded in memory only.
+   if(name==='issue_credit_note'){window.__credits=window.__credits||[];window.__creditArgs=args;
+     const c={id:'cn-'+(window.__credits.length+1),number:'A-2026-000'+(window.__credits.length+1),quote_id:args.p_quote,invoice_id:args.p_invoice,invoice_number:'F-2026-0003',invoice_issued_on:'2026-11-15',invoice_amount:700,invoice_kind:'base',amount:args.p_amount==null?700:args.p_amount,effect:args.p_effect,full_cancel:args.p_amount==null,reason:args.p_reason,issued_on:'2026-11-18',issued_at:now};
+     window.__credits.push(c);return c;}
    if(name==='is_owner')return true;
    if(name==='project_tracking'){
       // The server counts an extra only once invoiced: here the signed 200 € extra is not invoiced yet (remaining 700).
@@ -63,7 +67,7 @@ const syntheticSb = `
         receipts:[
           {id:'receipt-cash',invoice_id:'paid-cash',amount:450,method:'cash',received_on:'2026-11-04'},
           {id:'receipt-transfer',invoice_id:'paid-transfer',amount:350,method:'transfer',received_on:'2026-11-14'}
-        ],updates:[],supplements:0};
+        ],updates:[],supplements:0,credit_notes:window.__credits||[],credits:(window.__credits||[]).filter(c=>c.effect==='reduce').reduce((n,c)=>n+c.amount,0)};
       return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
     }
    if(name==='owner_list_change_requests')return summaryFixture?[
@@ -924,6 +928,53 @@ test('Extra calculator: « Du … Au … » dates and a commercial discount in p
  await expect(form.locator('[data-calc-total]')).toContainText('315,00');
  await disc.scrollIntoViewIfNeeded();
  await page.screenshot({path:testInfo.outputPath('discount-percent.png')});
+ if(testInfo.project.name.includes('mobile')){
+  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('Invoice credit note: « Annuler ou réduire (avoir) » with full/partial and reason, then listed with its PDF',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('dialog',d=>d.accept());
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="billing"]').click();
+ const final=page.locator('#invs .invr').filter({hasText:'F-2026-0003'});
+ const btn=final.locator('[data-a="credit-note"]');
+ await expect(btn).toBeVisible();
+ // Paid invoices have nothing left to cancel.
+ await expect(page.locator('#invs .invr').filter({hasText:'F-2026-0001'}).locator('[data-a="credit-note"]')).toHaveCount(0);
+ await btn.click();
+ const d=page.locator('#credit-note-dialog');
+ await expect(d).toBeVisible();
+ await expect(d).toContainText('la loi demande un avoir');
+ await expect(d).toContainText('reste : 700,00');
+ // Cancel closes without issuing anything.
+ await d.locator('[data-cancel]').click();
+ await expect(d).toHaveCount(0);
+ expect(await page.evaluate(()=>window.__creditArgs||null)).toBeNull();
+ await btn.click();
+ await d.locator('[name=kind][value=part]').check();
+ await expect(d.locator('[name=effect][value=reissue]')).toBeDisabled();
+ await d.locator('[name=amount]').fill('800');
+ await d.locator('[name=reason]').fill('Remise accordée pour le retard');
+ await d.locator('[data-go]').click();
+ await expect(d.locator('[data-out]')).toContainText('entre 0,01');
+ await d.locator('[name=amount]').fill('50');
+ await page.screenshot({path:testInfo.outputPath('credit-dialog.png')});
+ await d.locator('[data-go]').click();
+ await expect(d).toHaveCount(0);
+ const args=await page.evaluate(()=>window.__creditArgs);
+ expect(args).toMatchObject({p_invoice:'unpaid-final',p_amount:50,p_effect:'reduce',p_reason:'Remise accordée pour le retard'});
+ expect(args.p_request_key).toMatch(/^[0-9a-f-]{36}$/);
+ await expect(final.locator('.invoice-credits')).toContainText('A-2026-0001');
+ await expect(final.locator('.invoice-credits')).toContainText('50,00');
+ const download=page.waitForEvent('download');
+ await final.locator('[data-a="credit-pdf"]').click();
+ expect((await download).suggestedFilename()).toBe('Avoir-A-2026-0001.pdf');
+ await page.screenshot({path:testInfo.outputPath('credit-listed.png')});
  if(testInfo.project.name.includes('mobile')){
   const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
   expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
