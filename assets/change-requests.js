@@ -220,7 +220,7 @@ function bindOwner(root,options){
  function invoiceOf(r){var list=(root.__dzoftOwnerOptions||{}).invoices||[];for(var i=0;i<list.length;i++)if(list[i]&&list[i].change===r.id)return list[i];return null;}
  root.innerHTML=rootMarkup(en);var records=[],blocks=[],defaultPrice=null,tiers=[];
  function loadBlocks(){return Promise.resolve(sb.select('settings','select=price_blocks,default_line_price,price_tiers&id=eq.1')).then(function(rows){var row=rows&&rows[0]||{},b=row.price_blocks;blocks=Array.isArray(b)?b.filter(function(x){return x&&x.label;}):[];defaultPrice=row.default_line_price==null?null:Number(row.default_line_price);
-  tiers=Array.isArray(row.price_tiers)?row.price_tiers.filter(function(t){return t&&t.key&&t.label;}).map(function(t){return {key:String(t.key),label:String(t.label),rule:String(t.rule||''),price:Number(t.price)||0};}):[];}).catch(function(){blocks=[];tiers=[];});}
+  tiers=Array.isArray(row.price_tiers)?row.price_tiers.filter(function(t){return t&&t.key&&t.label;}).map(function(t){return {key:String(t.key),label:String(t.label),rule:String(t.rule||''),price:Number(t.price)||0};}):[];root.__dzoftTiers=tiers;}).catch(function(){blocks=[];tiers=[];});}
  function tierOf(key){for(var i=0;i<tiers.length;i++)if(tiers[i].key===key)return tiers[i];return null;}
  function saveBlocks(next){return Promise.resolve(sb.update('settings',1,{price_blocks:next.slice(0,200)})).then(function(){blocks=next.slice(0,200);});}
  function refresh(){return Promise.all([sb.rpc('owner_list_change_requests',{p_quote:quoteId},true),loadBlocks()]).then(function(res){records=Array.isArray(res[0])?res[0]:[];
@@ -455,8 +455,10 @@ if(global.document)global.document.addEventListener('click',function(ev){
   var rows=f.querySelectorAll('[data-calc-lines] [data-line]'),filled=Array.prototype.some.call(rows,function(r){return (r.querySelector('[name=label]')||{}).value;});
   if(filled&&!global.confirm(tr(en,'Effacer ce calcul ? Rien n’a été enregistré.','Clear this calculation? Nothing was saved.')))return;
   // Reset first (it restores pre-filled lines), then empty the kept row, defaults included, so nothing comes back.
+  // A fresh blank line replaces them all: no note, origin, period or discount kept from a removed line.
   f.reset();
-  Array.prototype.forEach.call(rows,function(r,i){if(i)r.remove();else r.querySelectorAll('input').forEach(function(x){x.value=x.defaultValue=x.name==='qty'?'1':'';});});
+  var owner=b.closest('#dzoft-owner-changes'),fresh=document.createElement('tbody');fresh.innerHTML=lineRow({},en,owner&&owner.__dzoftTiers||[]);
+  Array.prototype.forEach.call(rows,function(r,i){if(i)r.remove();else r.parentNode.replaceChild(fresh.firstChild,r);});
   var sum=f.querySelector('[data-calc-summary]');if(sum){sum.hidden=true;sum.innerHTML='';}
   f.dispatchEvent(new Event('input',{bubbles:true}));
  }else if(kind==='later'){

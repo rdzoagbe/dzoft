@@ -7,7 +7,9 @@ test('admin: two-step setup, payment settings and new-password screen can be lef
  const html=read('admin/index.html');
  assert.match(html,/id="mfa-cancel" type="button">Annuler</);
  // Cancelling the setup removes the unfinished factor; nothing else changes.
- assert.match(html,/\$\('mfa-cancel'\)\.onclick = function\(\)\{\n\s+var id = enrolling; enrolling = null;\n\s+sb\.mfa\.remove\(id\)/);
+ assert.match(html,/\$\('mfa-cancel'\)\.onclick = function\(\)\{[\s\S]{0,200}if \(mfaBusy \|\| !enrolling\) return;\n\s+var id = enrolling; enrolling = null;\n\s+sb\.mfa\.remove\(id\)/);
+ // Cancel is locked while a code is being checked, so it can never delete a factor just verified.
+ assert.match(html,/mfaBusy = true; \$\('mfa-ok'\)\.disabled = \$\('mfa-cancel'\)\.disabled = true;/);
  assert.match(html,/id="p-cancel" type="button">Annuler les modifications</);
  assert.match(html,/\$\('p-cancel'\)\.onclick = function\(\)\{ PAY\.forEach\(function\(k\)\{ \$\('p-' \+ k\)\.value = savedPay\[k\] \|\| ''; \}\);/);
  const np=html.slice(html.indexOf('<form id="f-newpass"'),html.indexOf('</form>',html.indexOf('<form id="f-newpass"')));

@@ -70,3 +70,13 @@ test('client space: an invoice cancelled by a credit note is no longer to pay', 
   const admin = fs.readFileSync(require('path').join(__dirname, '..', 'admin', 'suivi.html'), 'utf8');
   assert.ok(admin.includes('invoices:liveInvoices()') && admin.includes("c.effect === 'reissue'"), 'extras ignore re-issued invoices');
 });
+
+test('review follow-ups: credit notes counted once, cancelled invoices leave to-dos, final invoice can be re-issued', () => {
+  const portal = read('espace/index.html'), admin = read('admin/index.html'), suivi = read('admin/suivi.html');
+  // The payments card takes credit notes off itself: it receives gross amounts.
+  assert.ok(portal.includes("data-due=\"' + esc(JSON.stringify(dueList(q, true)))"), 'payments card gets gross amounts');
+  assert.ok(portal.includes('amt: gross ? +x.amt :'), 'dueList gross option');
+  assert.ok(admin.includes("sb.rpc('owner_list_credit_notes',{},true).catch("), 'dashboard reads credit notes');
+  assert.ok(admin.includes("!(credited(x) > 0 && credited(x) >= (Number(x.amt) || 0) - 0.005)"), 'credited invoices leave « À faire »');
+  assert.ok(suivi.includes("if (Q.accepted_at && !liveInvoices().some(function(x){ return x.basis === 'final'; }))"), 'final invoice bar comes back');
+});
