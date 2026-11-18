@@ -381,7 +381,9 @@ function bindOwner(root,options){
   var number=String(opt.clientPhone||'').replace(/[\s().-]/g,'').replace(/^00/,'').replace(/^\+/,'');
   if(/^0[67]\d{8}$/.test(number))number='33'+number.slice(1);
   if(!/^[1-9]\d{7,14}$/.test(number))number='';
-  var url=(sb.PORTAL||'')+'?projet='+encodeURIComponent(quoteId);
+  var secretMode=!opt.clientUserId&&!!opt.clientPortalToken;
+  var url=secretMode?(sb.PORTAL||'')+'#'+encodeURIComponent(String(opt.clientPortalToken)):
+    (sb.PORTAL||'')+'?projet='+encodeURIComponent(quoteId);
   var title='Proposition complémentaire '+String(proposal.proposal_number||'')+' · DZOFT';
   var lines=(Array.isArray(proposal.lines)?proposal.lines:[]).map(function(x){return '– '+String(x.label||'')+' : '+cash(Number(x.qty||1)*Number(x.price||0));}).join('\n');
   var msg='Bonjour,\n\nJe vous présente une proposition complémentaire au devis initial '+String(opt.quoteNumber||'')+'.\n\n'+
@@ -392,7 +394,8 @@ function bindOwner(root,options){
   var d=document.createElement('dialog');d.id='dzoft-change-manual-share';d.className='dzoft-change-manual-dialog';
   d.innerHTML='<h2>'+tr(en,'Relire avant de partager','Review before sharing')+' · '+esc(proposal.proposal_number||'')+'</h2>'+
    '<p>'+tr(en,'Ceci est une <b>proposition de travaux complémentaires</b>, pas une nouvelle facture. Aucun envoi automatique.','This is an <b>extra-work proposal</b>, not a new invoice. Nothing is automatically sent.')+'</p>'+
-   '<label>'+tr(en,'Destinataire e-mail','Email recipient')+'<input data-share-email type="email" value="'+esc(email)+'" placeholder="client@example.com"></label>'+
+   '<label>'+tr(en,'Destinataire e-mail','Email recipient')+'<input data-share-email type="email" value="'+esc(email)+'" placeholder="client@example.com"'+(secretMode?' readonly':'')+'></label>'+ 
+   (secretMode?'<p class="dzoft-change-help">'+tr(en,'Lien privé : le destinataire e-mail est verrouillé sur la fiche client afin de ne pas divulguer le lien secret. Pour changer cette adresse, modifiez la fiche client.','Private link: email recipient is locked to the client record to avoid exposing the secret link. Edit the client record to change the address.')+'</p>':'')+
    '<label>'+tr(en,'Objet','Subject')+'<input data-share-subject type="text" maxlength="240" value="'+esc(title)+'"></label>'+
    '<label>'+tr(en,'Votre explication (modifiable)','Your explanation (editable)')+'<textarea data-share-body rows="13" maxlength="12000">'+esc(msg)+'</textarea></label>'+
    '<div class="dzoft-change-actions"><button type="button" class="btn main" data-share-outlook>'+tr(en,'Ouvrir dans Outlook (Hotmail)','Open in Outlook (Hotmail)')+'</button></div>'+
@@ -417,6 +420,7 @@ function bindOwner(root,options){
    if(/^0[67]\d{8}$/.test(digits))digits='33'+digits.slice(1);
    if(!/^[1-9]\d{7,14}$/.test(digits)){q('[data-share-status]').textContent=tr(en,'Indiquez un numéro WhatsApp valide.','Enter a valid WhatsApp number.');return;}
    var body=q('[data-share-body]').value.trim();if(!body)return;
+   if(secretMode&&!global.confirm(tr(en,'Ce message contient un lien privé donnant accès au dossier. Avez-vous vérifié que ce numéro est bien celui du client ?','This message contains a private case-access link. Have you verified the WhatsApp number belongs to the client?')))return;
    var w=global.open('https://wa.me/'+digits+'?text='+encodeURIComponent(body),'_blank');if(w)w.opener=null;
   };
   if(!proposal.sent_at){
