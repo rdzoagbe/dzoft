@@ -36,7 +36,9 @@ test('the admin says « Brouillon » until sent, and the buttons say what happen
  assert.match(js,/var draft=r\.status==='proposed'&&!r\.sent_at/);
  assert.match(js,/Brouillon · visible par vous seul/);
  assert.match(js,/Créer ce brouillon de '\+cash\(total\)\+' \? Vous seul le voyez/);
- assert.match(js,/Elle deviendra visible dans son espace et il recevra un e-mail/);
+ assert.match(js,/Brouillon privé : relisez le supplément, envoyez votre explication/);
+ assert.match(js,/data-change-send/);
+ assert.doesNotMatch(js,/owner_send_change_proposal/);
  assert.doesNotMatch(js,/Elle sera visible dans l’espace du client, qui devra la signer/);
 });
 test('phone: the calculator checkboxes keep their size and their text has the room',()=>{
