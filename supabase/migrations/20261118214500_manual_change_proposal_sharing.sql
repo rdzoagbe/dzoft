@@ -11,13 +11,13 @@ language plpgsql security definer set search_path='' as $fn$
 declare
   c public.dzoft_change_requests;
 begin
-  if auth.uid() is null or not public.is_owner() then
+  if auth.uid() is null or not coalesce(public.is_owner(),false) then
     raise exception 'Owner access required';
   end if;
   select * into c from public.dzoft_change_requests
     where id=p_request for update;
   if not found or c.status<>'proposed'
-    or c.proposal_version<>p_version or p_version<1
+    or p_version is null or c.proposal_version is distinct from p_version or p_version<1
     or c.sent_at is not null then
     raise exception 'Proposal is already shared or was revised';
   end if;
