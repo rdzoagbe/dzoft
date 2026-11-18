@@ -981,3 +981,31 @@ test('Invoice credit note: « Annuler ou réduire (avoir) » with full/partial a
  }
  expect(errors).toEqual([]);
 });
+
+test('Calculator « Annuler » clears the lines and closes the form without saving anything',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('dialog',d=>d.accept());
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&summaryFixture=1',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-workspace-action="extra"]').click();
+ const det=page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]');
+ await expect(det).toHaveAttribute('open','');
+ const form=det.locator('form[data-change-offer]');
+ // Pre-filled line, as one added from the price list or the journal (values in the HTML attributes).
+ await form.evaluate(f=>{const r=f.querySelector('[data-line]');r.querySelector('[name=label]').setAttribute('value','Ligne de la liste');r.querySelector('[name=price]').setAttribute('value','80');});
+ await form.locator('[data-line] [name=label]').first().fill('Page supplémentaire');
+ await form.locator('[data-line] [name=price]').first().fill('120');
+ await expect(form.locator('[data-calc-total]')).toContainText('120,00');
+ const before=await page.evaluate(()=>window.__syntheticCalls.filter(c=>/create_priced|price_change/.test(c)).length);
+ await form.locator('[data-form-cancel="calc"]').click();
+ await expect(det).not.toHaveAttribute('open','');
+ await expect(form.locator('[data-line]')).toHaveCount(1);
+ await expect(form.locator('[data-line] [name=label]').first()).toHaveValue('');
+ await expect(form.locator('[data-calc-total]')).toContainText('0,00');
+ // A later reset must not bring the pre-filled line back.
+ await form.evaluate(f=>f.reset());
+ await expect(form.locator('[data-line] [name=label]').first()).toHaveValue('');
+ await expect(form.locator('[data-line] [name=price]').first()).toHaveValue('');
+ expect(await page.evaluate(()=>window.__syntheticCalls.filter(c=>/create_priced|price_change/.test(c)).length)).toBe(before);
+ expect(errors).toEqual([]);
+});

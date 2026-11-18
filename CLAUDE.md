@@ -89,6 +89,11 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.
+- Boutons Annuler / Retour (18 nov. 2026, choix de Roland : seulement les formulaires qui enregistrent sur un bouton, pas ceux qui
+  enregistrent en direct) : activation du code (Annuler supprime le facteur inachevé), Moyens de paiement (Annuler les modifications),
+  nouveau mot de passe (Retour à la connexion), tâches (Modifier / Relire et publier), demande de modification du client, signature
+  d’une proposition (« Plus tard »), calculateur de supplément et motif de refus (`data-form-cancel` dans `assets/change-requests.js`,
+  jamais d’appel au serveur), confirmation avant « + Facture du suivi ». Test `tests/cancel-back-buttons.test.cjs`.
 - `assets/rd-booking.js` (lien Google Agenda), `assets/rd-reviews.js` (avis publiés),
   `assets/rd-steps.js`, `assets/dzoft-experience.css` (charte de l’espace client et de l’admin),
   `assets/dzoft-studio-pages.css` (style studio de Services, Méthode, FAQ, Devis et leurs versions `en/`), `assets/dzoft-motion.js` (apparitions au défilement, désactivées
