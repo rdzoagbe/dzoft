@@ -140,7 +140,9 @@ test('priced proposals: server totals and numbers the lines, client signs with a
  assert.match(espace,/sb\.fn\('change-sign-code', \{ change_id: changeId, token: token \|\| undefined, lang: EN\(\) \? 'en' : 'fr' \}\)/);
  // Sending is an explicit owner action and goes through the outbox.
  assert.match(mig,/'change_proposed',/);
- assert.match(changes,/owner_send_change_proposal/);
+ assert.match(changes,/owner_mark_change_shared_manually/);
+  assert.doesNotMatch(changes,/owner_send_change_proposal/);
+  assert.match(read('supabase/migrations/20261118214500_manual_change_proposal_sharing.sql'),/revoke execute on function public\.owner_send_change_proposal/);
  // Signed and completed work is invoiced on the project page itself, through the existing invoice tool.
  assert.match(read('admin/suivi.html'),/onInvoice:function\(record,btn\)\{ issueAccepted\('supplement',record,btn\); \}/);
  assert.match(admin,/issueAccepted\('supplement', c, null\)/);
