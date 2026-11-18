@@ -109,6 +109,8 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   Le « À faire » du tableau de bord rappelle : nouvelles demandes, relances (`next_at`), devis
   sans réponse (≥ 5 j) ou expirés, brouillons, acomptes, étapes validées par le client,
   factures de suivi dues, avis à publier, messages non lus.
+- « Préparer l’e-mail » (`devis.html`) et « Mon e-mail » (`suivi.html`) ouvrent la boîte Hotmail de Roland (Outlook.com, page de rédaction
+  pré-remplie), jamais l’application de messagerie par défaut de l’ordinateur (18 nov. 2026). Test `tests/email-buttons-hotmail.test.cjs`, e2e.
 - Boutons Annuler / Retour (18 nov. 2026, choix de Roland : seulement les formulaires qui enregistrent sur un bouton, pas ceux qui
   enregistrent en direct) : activation du code (Annuler supprime le facteur inachevé), Moyens de paiement (Annuler les modifications),
   nouveau mot de passe (Retour à la connexion), tâches (Modifier / Relire et publier), demande de modification du client, signature

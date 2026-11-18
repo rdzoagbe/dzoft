@@ -699,11 +699,20 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       return sb.fn('process-notification-outbox', {}).then(function(){ toast('E-mail du devis traité. Consultez l’historique pour son statut.'); return load(); }, function(){ toast('E-mail ajouté à la file : il sera relancé automatiquement.'); return load(); });
     }, fail);
   };
+  // « Envoyer par e-mail » opens Roland's business mailbox (Outlook.com / Hotmail) in a new tab, whatever the
+  // computer's default mail app is (choice of Roland, 18 Nov 2026: the business address is the Hotmail one).
+  function openHotmail(to, subject, body){
+    var url = 'https://outlook.live.com/mail/0/deeplink/compose?to=' + encodeURIComponent(to) +
+      '&subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    // Not 'noopener' here: with it window.open always returns null and the fallback would leave this page.
+    var w = window.open(url, '_blank');
+    if (w) w.opener = null; else location.href = url;
+  }
   $('b-mymail').onclick = function(){
     if (Q.accepted_at) return window.DzoftReminder.open(QID);
     if (!guard()) return;
     var c = mailTo();
-    location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + Q.numero + ' · DZOFT') + '&body=' + encodeURIComponent(invite());
+    openHotmail(c.indexOf('@') > 0 ? c : '', 'Votre devis ' + Q.numero + ' · DZOFT', invite());
   };
   $('b-newlink').onclick = function(){
     if (!confirm('Changer le lien de ' + C.nom + ' ? L’ancien lien cessera de fonctionner : il faudra lui envoyer le nouveau.')) return;

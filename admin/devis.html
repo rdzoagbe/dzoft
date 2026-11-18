@@ -715,9 +715,18 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     $('importtext').value = $('desc').innerText; $('desc').innerText = ''; doImport();
   }
   if (!QID && !$('c-name').value && !$('desc').innerText.trim()) $('importbox').classList.add('open');
+  // « Envoyer par e-mail » opens Roland's business mailbox (Outlook.com / Hotmail) in a new tab, whatever the
+  // computer's default mail app is (choice of Roland, 18 Nov 2026: the business address is the Hotmail one).
+  function openHotmail(to, subject, body){
+    var url = 'https://outlook.live.com/mail/0/deeplink/compose?to=' + encodeURIComponent(to) +
+      '&subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    // Not 'noopener' here: with it window.open always returns null and the fallback would leave this page.
+    var w = window.open(url, '_blank');
+    if (w) w.opener = null; else location.href = url;
+  }
   $('b-mail').onclick = function(){
     var c = ($('c-contact').value || '').trim();
-    location.href = 'mailto:' + (c.indexOf('@') > 0 ? encodeURIComponent(c) : '') + '?subject=' + encodeURIComponent('Votre devis ' + $('num').value) + '&body=' + encodeURIComponent(summary());
+    openHotmail(c.indexOf('@') > 0 ? c : '', 'Votre devis ' + $('num').value, summary());
   };
   $('b-wa').onclick = function(){
     var c = ($('c-contact').value || '').replace(/[^\d+]/g, '');
