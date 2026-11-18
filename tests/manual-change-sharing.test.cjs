@@ -24,8 +24,8 @@ test('message is editable and only external Outlook or WhatsApp opens on button 
  assert.doesNotMatch(body,/process-notification-outbox|owner_send_change_proposal|queue_project_event/);
 });
 test('manual-sharing RPC is server-enforced owner-only and never queues client email',()=>{
- assert.match(sql,/auth\.uid\(\) is null or not public\.is_owner\(\)/);
- assert.match(sql,/c\.proposal_version<>p_version/);
+ assert.match(sql,/auth\.uid\(\) is null or not coalesce\(public\.is_owner\(\),false\)/);
+ assert.match(sql,/p_version is null or c\.proposal_version is distinct from p_version/);
  assert.match(sql,/c\.sent_at is not null/);
  assert.match(sql,/accepted_at is not null/);
  assert.match(sql,/update public\.dzoft_change_requests[\s\S]*?set sent_at=now\(\)/);
