@@ -135,7 +135,11 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
 - Factures créées depuis ce que le client a accepté (15 nov. 2026, `docs/accepted-invoices.md`) : `issue_accepted_invoice` émet la
   facture de solde du devis accepté (à la livraison) ou la facture complémentaire d’une demande de modification approuvée dont les
   travaux sont terminés ; le serveur calcule montant et numéro (série F-AAAA-NNNN), la page archive le PDF puis propose l’envoi.
-  Les factures d’acompte restent émises à réception du paiement (CGI art. 289). `owner_create_change_proposal` : DZOFT ouvre
+  Les factures d’acompte restent émises à réception du paiement (CGI art. 289).
+  Envoi d’une facture (18 nov. 2026) : à la création, puis via « Envoyer (e-mail ou WhatsApp) » visible sur chaque facture, une fenêtre
+  propose l’e-mail (PDF archivé + copie de Roland, file d’envoi habituelle) et/ou WhatsApp (message prêt, FR/EN, lien vers la facture
+  dans l’espace client, Roland appuie sur Envoyer) ; rien ne part sans « Envoyer ». « Relancer le paiement (e-mail ou WhatsApp) » est
+  aussi visible sur chaque facture impayée. Test e2e « Invoice send window ». `owner_create_change_proposal` : DZOFT ouvre
   lui-même une proposition, que seul le client peut approuver. Tests `tests/issue-accepted-invoices.{test.cjs,sql}`.
 - Compléments chiffrés (17 nov. 2026, `docs/accepted-invoices.md`) : calculateur dans « Créer un supplément » (lignes ×
   prix, liste de prix `settings.price_blocks`), numéro `<devis>-C<n>` et total calculés par le serveur, « Envoyer au client »

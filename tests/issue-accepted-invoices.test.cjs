@@ -52,18 +52,19 @@ test('deposit invoices keep their own rule: issued when the deposit is received'
 test('the page asks before issuing and before sending, and sending reuses the existing invoice e-mail',()=>{
  const fn=admin.slice(admin.indexOf('function issueAccepted('),admin.indexOf('function updateInvoice('));
  assert.match(fn,/if \(!confirm\(ask\)\) return;/);
- assert.match(fn,/Envoyer son PDF au client et une copie à votre adresse de suivi/);
- assert.match(fn,/return mailInvoice\(x, null\);/);
+ // After creation: a window to send by e-mail (PDF + owner copy) and/or WhatsApp, nothing sent before « Envoyer ».
+ assert.match(fn,/return sendInvoiceDialog\(x, true\);/);
+ assert.match(admin,/if \(mail\) mailInvoice\(x, null\)\.then\(done\)/);
  assert.ok(fn.indexOf('sb.rpc(rpc, payload, true)')<fn.indexOf('archiveIssued(x)'));
- assert.ok(fn.indexOf('archiveIssued(x)')<fn.indexOf('mailInvoice(x, null)'));
+ assert.ok(fn.indexOf('archiveIssued(x)')<fn.indexOf('sendInvoiceDialog(x, true)'));
  assert.match(admin,/data-iv="final" disabled>Vérifier le montant/);
  assert.match(admin,/data-iv="confirm">Confirmer et émettre officiellement/);
  assert.match(admin,/data-iv="cancel">Annuler le brouillon/);
- assert.match(admin,/data-a="invoice-email"/);
+ assert.match(admin,/data-a="invoice-send"/);
  // The shortcuts sit outside the folded list, so they are visible without opening it.
  assert.match(admin,/var bar = \$\('iv-actions'\), h = '';/);
  assert.match(read('admin/project-workspace.js'),/Do not hide invoice issuance or sending/);
- assert.match(admin,/if \(b\.dataset\.a === 'invoice-email'\) return mailInvoice\(x, b\);/);
+ assert.match(admin,/if \(b\.dataset\.a === 'invoice-send'\) return sendInvoiceDialog\(x, false\);/);
 });
 
 test('change card offers the invoice only for completed work with a price, and shows it once issued',()=>{
