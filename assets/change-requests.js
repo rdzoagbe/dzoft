@@ -124,6 +124,9 @@ function plain(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[
 function tierDetail(t,when){return t?(t.label+' : '+t.rule+(when?' · '+when:'')).slice(0,300):(when||'');}
 // Percentage of a discount line: given, or read from its label « … (10 %) » when an existing proposal is edited.
 function discountPct(l){if(l.pct!=null&&l.pct!=='')return String(l.pct).replace('.',',');var m=/\((\d+(?:[.,]\d{1,2})?)\s*%\)\s*$/.exec(String(l.label||''));return m?m[1]:'';}
+// A discount saved in euros (older proposals, no « (x %) » in its label) keeps its exact amount while the percentage
+// shown for it is left as is; typing another percentage switches it to a percentage discount (Codex review, 18 Nov 2026).
+function fixedCents(row){var pf=row.querySelector('[name=pct]');return pf&&pf.dataset.fixed&&pf.value===pf.dataset.shown?Math.round(Number(pf.dataset.fixed)*100):NaN;}
 function lineRow(l,en,tiers){
  l=l||{};tiers=tiers||[];var discount=Number(l.price)<0||l.discount;
  var level=discount?'':'<select name="level" aria-label="'+tr(en,'Niveau de la prestation','Level of the item')+'"><option value="">'+tr(en,'Prix libre','Free price')+'</option>'+
@@ -139,14 +142,15 @@ function lineRow(l,en,tiers){
    :'<td><input name="price" type="text" inputmode="decimal" autocomplete="off" required value="'+esc(l.price==null||l.price===''?'':String(Math.abs(Number(l.price))).replace('.',','))+'" aria-label="'+tr(en,'Prix unitaire (€)','Unit price (€)')+'"'+(l.price==null||l.price===''?' data-unpriced':'')+'></td>')+
   '<td data-line-total>'+cash(0)+'</td><td><button class="btn line sm" type="button" data-line-remove aria-label="'+tr(en,'Retirer la ligne','Remove line')+'">×</button></td></tr>';
 }
-function calculator(en,blocks,target,tiers){
+function calculator(en,blocks,target,tiers,edit){
  // target: null for a new proposal, or the client request being priced.
- var r=target||{};
- return '<form class="dzoft-change-form dzoft-calc" data-change-offer'+(target?' data-for="'+esc(r.id)+'"':'')+'>'+
+ // edit (18 Nov 2026): the unsent draft itself, opened with its lines so the owner can change them; same number kept.
+ var r=target||{},rows=edit&&Array.isArray(r.lines)&&r.lines.length?r.lines.map(function(l){return lineRow(l,en,tiers);}).join(''):lineRow(null,en,tiers);
+ return '<form class="dzoft-change-form dzoft-calc" data-change-offer'+(target?' data-for="'+esc(r.id)+'"':'')+(edit?' data-edit':'')+'>'+
   (target?'':'<label>'+tr(en,'Titre de la proposition','Proposal title')+'<input name="title" maxlength="120" minlength="3" required placeholder="'+tr(en,'Ex. : Ajouts réalisés depuis le devis','E.g. additions since the quote')+'"></label>')+
-  '<details class="dzoft-calc-request"'+(target?' open':'')+'><summary>'+tr(en,'Repérer depuis la demande du client (facultatif)','Detect from the client request (optional)')+'</summary>'+
+  (edit?'':'<details class="dzoft-calc-request"'+(target?' open':'')+'><summary>'+tr(en,'Repérer depuis la demande du client (facultatif)','Detect from the client request (optional)')+'</summary>'+
   '<label>'+tr(en,'Texte de la demande','Request text')+'<textarea name="request" rows="3" maxlength="4000">'+esc(target?(r.title+'\n'+(r.description||'')):'')+'</textarea></label>'+
-  '<button class="btn line sm" type="button" data-calc-detect>'+tr(en,'Repérer dans ma liste de prix','Find in my price list')+'</button></details>'+
+  '<button class="btn line sm" type="button" data-calc-detect>'+tr(en,'Repérer dans ma liste de prix','Find in my price list')+'</button></details>')+
   (target?'':'<div class="dzoft-calc-auto"><div class="dzoft-calc-dates"><label class="dzoft-calc-since">'+tr(en,'Du (facultatif)','From (optional)')+'<input type="date" name="since" aria-describedby="dzoft-calc-since-help"></label>'+
   '<label class="dzoft-calc-since">'+tr(en,'Au (facultatif)','To (optional)')+'<input type="date" name="until" aria-describedby="dzoft-calc-since-help"></label></div>'+
   '<small id="dzoft-calc-since-help">'+tr(en,'« Du » vide : depuis votre dernier supplément, ou depuis la signature. « Au » vide : jusqu’à aujourd’hui.','Empty “From”: since your last extra-work proposal, or since signature. Empty “To”: up to today.')+'</small>'+
@@ -159,12 +163,14 @@ function calculator(en,blocks,target,tiers){
   '<button class="btn line sm" type="button" data-calc-add-line>'+tr(en,'＋ Ligne libre','＋ Free line')+'</button>'+
   '<button class="btn line sm" type="button" data-calc-discount>'+tr(en,'－ Remise commerciale','－ Commercial discount')+'</button></div>'+
   '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Prestation','Item')+'</th><th>'+tr(en,'Qté','Qty')+'</th><th>'+tr(en,'Prix unitaire','Unit price')+'</th><th>'+tr(en,'Total','Total')+'</th><th><span class="sr-only">'+tr(en,'Retirer','Remove')+'</span></th></tr></thead>'+
-  '<tbody data-calc-lines>'+lineRow(null,en,tiers)+'</tbody><tfoot><tr><th colspan="3">'+tr(en,'Total du complément','Extra total')+'</th><th data-calc-total>'+cash(0)+'</th><th></th></tr></tfoot></table></div>'+
-  '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" placeholder="'+tr(en,'Ex. : aucun changement ; + 3 jours','E.g. no change; +3 days')+'"></label>'+
-  '<label class="dzoft-change-check"><input type="checkbox" name="done"><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
-  '<label class="dzoft-change-check"><input type="checkbox" name="keep" checked><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
+  '<tbody data-calc-lines>'+rows+'</tbody><tfoot><tr><th colspan="3">'+tr(en,'Total du complément','Extra total')+'</th><th data-calc-total>'+cash(0)+'</th><th></th></tr></tfoot></table></div>'+
+  // Cancel on an edited draft puts its saved lines back (nothing was sent to the server).
+  (edit?'<template data-calc-original>'+rows+'</template>':'')+
+  '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" value="'+esc(edit?r.timeline_impact||'':'')+'" placeholder=""'+tr(en,'Ex. : aucun changement ; + 3 jours','E.g. no change; +3 days')+'"></label>'+
+  '<label class="dzoft-change-check"><input type="checkbox" name="done"'+(edit&&r.already_done?' checked':'')+'><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
+  '<label class="dzoft-change-check"><input type="checkbox" name="keep"'+(edit?'':' checked')+'><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
   '<p>'+tr(en,'« Créer le brouillon » : vous seul le voyez, pour le relire. « Envoyer au client » : il apparaît dans son espace et il le signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvé lui-même.','“Create the draft”: only you see it, to check it. “Send to client”: it appears in their space and they sign it with a code sent by e-mail. Nothing is owed until they approve it themselves.')+'</p>'+
-  '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button><button class="btn line" type="button" data-form-cancel="calc">'+tr(en,'Annuler','Cancel')+'</button></div></form>';
+  '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+(edit?tr(en,'Enregistrer le brouillon modifié','Save the edited draft'):target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button><button class="btn line" type="button" data-form-cancel="calc">'+tr(en,'Annuler','Cancel')+'</button></div></form>';
 }
 function priceList(en,blocks,defaultPrice,tiers){
  return '<div class="dzoft-price-list">'+
@@ -191,9 +197,11 @@ function adminCard(r,en,invoice,blocks,tiers){
  '<p class="dzoft-change-meta">'+tr(en,'Créée le ','Created on ')+esc(when(r.created_at))+'</p>'+proposalBlock(r,en);
  if(r.status==='proposed'){
   h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Renvoyer au client par e-mail','Send again by e-mail'):tr(en,'Envoyer au client','Send to client'))+'</button></div>'+
-   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta dzoft-change-draft-note">'+tr(en,'Brouillon : le client ne le voit pas encore. Relisez les lignes et le total ci-dessus (c’est ce qu’il verra), retirez-le pour le refaire si besoin, puis « Envoyer au client » : il apparaîtra dans son espace et il recevra un e-mail pour le signer.','Draft: the client cannot see it yet. Check the lines and total above (this is what they will see), withdraw it to redo it if needed, then “Send to client”: it appears in their space and they get an e-mail to sign it.')+'</p>');
+   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta dzoft-change-draft-note">'+tr(en,'Brouillon : le client ne le voit pas encore. Relisez les lignes et le total ci-dessus (c’est ce qu’il verra), modifiez-le si besoin (« Modifier ce brouillon »), puis « Envoyer au client » : il apparaîtra dans son espace et il recevra un e-mail pour le signer.','Draft: the client cannot see it yet. Check the lines and total above (this is what they will see), change it if needed (“Edit this draft”), then “Send to client”: it appears in their space and they get an e-mail to sign it.')+'</p>');
  }
  if(r.status==='requested')h+='<details class="dzoft-change-new"><summary>'+tr(en,'Chiffrer cette demande','Price this request')+'</summary>'+calculator(en,blocks,r,tiers)+'</details>';
+ // An unsent draft can be changed in place (lines, prices, discount): the server keeps its number and it stays a draft.
+ if(draft)h+='<details class="dzoft-change-new dzoft-change-edit"><summary>'+tr(en,'✎ Modifier ce brouillon','✎ Edit this draft')+'</summary>'+calculator(en,blocks,r,tiers,true)+'</details>';
  if(r.status==='requested'||r.status==='proposed'){
   h+='<form data-change-reject="'+esc(r.id)+'" class="dzoft-change-form dzoft-change-reject"><label>'+tr(en,'Motif si la proposition est retirée ou la demande non retenue','Reason if withdrawn or declined')+
    '<input name="reason" minlength="5" maxlength="600" placeholder="'+tr(en,'Ex. : remplacée par une nouvelle proposition','E.g. replaced by a new proposal')+'" required></label>'+
@@ -236,6 +244,8 @@ function bindOwner(root,options){
  function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
    // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
    // The base label is shortened so the label with its percentage stays within the server's 160 characters.
+   var fx=disc?fixedCents(row):NaN;
+   if(disc&&Number.isFinite(fx))return {label:lb,qty:1,price:-fx/100,source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:''};
    if(disc&&Number.isFinite(pc)){var suf=' ('+String(pc).replace('.',',')+' %)';lb=lb.replace(/\s*\(\d+(?:[.,]\d{1,2})?\s*%\)\s*$/,'').slice(0,160-suf.length).trim()+suf;}
    if(disc&&!(pc>0&&pc<100))p=NaN;
    return {label:lb,qty:disc?1:amount(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):(p<0?NaN:p),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
@@ -335,8 +345,8 @@ function bindOwner(root,options){
    var disc=row.hasAttribute('data-discount'),q=disc?1:amount(row.querySelector('[name=qty]').value),p;
    if(disc){var pi0=row.querySelector('[name=price]'),pf=row.querySelector('[name=pct]');
     // An older discount saved in euros: shown once as the matching percentage.
-    if(pf&&pf.value===''&&pi0.dataset.amount&&sub>0){pf.value=String(Math.round(Number(pi0.dataset.amount)*10000/sub)/100).replace('.',',');delete pi0.dataset.amount;}
-    var pc=amount(pf?pf.value:''),c=pc>0&&pc<100?Math.round(sub*pc/100):NaN;
+    if(pf&&pf.value===''&&pi0.dataset.amount&&sub>0){pf.value=String(Math.round(Number(pi0.dataset.amount)*10000/sub)/100).replace('.',',');pf.dataset.fixed=pi0.dataset.amount;pf.dataset.shown=pf.value;delete pi0.dataset.amount;}
+    var pc=amount(pf?pf.value:''),fx=fixedCents(row),c=Number.isFinite(fx)?fx:pc>0&&pc<100?Math.round(sub*pc/100):NaN;
     pi0.value=Number.isFinite(c)?String(c/100):'';p=Number.isFinite(c)?-c/100:NaN;}
    else p=amount(row.querySelector('[name=price]').value);
    var t=Number.isFinite(q)&&Number.isFinite(p)?Math.round(q*p*100):0;total+=t;
@@ -385,18 +395,18 @@ function bindOwner(root,options){
  root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-offer],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
   if(f.hasAttribute('data-change-offer')){
    recalc(f);
-   if(Array.prototype.some.call(f.querySelectorAll('[data-discount] [name=pct]'),function(x){var v=amount(x.value);return !(v>0&&v<100);})){banner(root,tr(en,'La remise est un pourcentage : tapez un nombre entre 0 et 100 (ex. 10).','The discount is a percentage: type a number between 0 and 100 (e.g. 10).'),true);return;}
+   if(Array.prototype.some.call(f.querySelectorAll('[data-discount] [name=pct]'),function(x){var v=amount(x.value);return !Number.isFinite(fixedCents(x.closest('[data-line]')))&&!(v>0&&v<100);})){banner(root,tr(en,'La remise est un pourcentage : tapez un nombre entre 0 et 100 (ex. 10).','The discount is a percentage: type a number between 0 and 100 (e.g. 10).'),true);return;}
    var lines=readLines(f).filter(function(l){return l.label||Number.isFinite(l.price);});
    if(!lines.length||lines.some(function(l){return l.label.length<2||!(l.qty>0)||l.qty>1000||!Number.isFinite(l.price)||Math.abs(l.price)>1000000;})){banner(root,stateError({message:'Each line needs a label, a quantity and a price'},en),true);return;}
    lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});
    var total=lines.reduce(function(n,l){return n+Math.round(l.qty*l.price*100);},0)/100;
    if(!(total>0)){banner(root,tr(en,'Le total doit rester positif après la remise.','The total must stay positive after the discount.'),true);return;}
-   if(!global.confirm(tr(en,'Créer ce brouillon de '+cash(total)+' ? Vous seul le voyez : rien n’est visible par le client avant « Envoyer au client ».','Create this '+cash(total)+' draft? Only you can see it: nothing is visible to the client before “Send to client”.')))return;
+   if(!global.confirm(f.hasAttribute('data-edit')?tr(en,'Enregistrer ce brouillon à '+cash(total)+' ? Il reste visible par vous seul jusqu’à « Envoyer au client ».','Save this draft at '+cash(total)+'? It stays visible to you only until “Send to client”.'):tr(en,'Créer ce brouillon de '+cash(total)+' ? Vous seul le voyez : rien n’est visible par le client avant « Envoyer au client ».','Create this '+cash(total)+' draft? Only you can see it: nothing is visible to the client before “Send to client”.')))return;
    var known=blocks.map(function(bl){return bl.label;}),fresh=f.elements.keep.checked?lines.filter(function(l){return l.price>0&&!l.source&&known.indexOf(l.label)<0;}).map(function(l){return {label:l.label,price:l.price,words:words(l.label).slice(0,6)};}):[];
    var call=f.dataset.for?sb.rpc('owner_price_change_request',{p_request:f.dataset.for,p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true)
     :sb.rpc('owner_create_priced_proposal',{p_quote:quoteId,p_title:f.elements.title.value.trim(),p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true);
    perform(call.then(function(r){return fresh.length?saveBlocks(blocks.concat(fresh)).catch(function(){}).then(function(){return r;}):r;}),
-    tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
+    f.hasAttribute('data-edit')?tr(en,'Brouillon modifié : relisez-le ci-dessous, puis « Envoyer au client ».','Draft updated: check it below, then “Send to client”.'):tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
    return;
   }
   if(f.dataset.changeReject){if(!global.confirm(tr(en,'Retirer ou refuser cette proposition ?','Withdraw or reject this proposal?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
@@ -451,7 +461,11 @@ if(global.document)global.document.addEventListener('click',function(ev){
  var b=ev.target.closest&&ev.target.closest('[data-form-cancel]');if(!b)return;
  var f=b.closest('form'),d=b.closest('details'),kind=b.dataset.formCancel;if(!f)return;
  var en=document.documentElement.lang==='en';
- if(kind==='calc'){
+ if(kind==='calc'&&f.hasAttribute('data-edit')){
+  var orig=f.querySelector('template[data-calc-original]');
+  f.reset();if(orig)f.querySelector('[data-calc-lines]').innerHTML=orig.innerHTML;
+  f.dispatchEvent(new Event('input',{bubbles:true}));
+ }else if(kind==='calc'){
   var rows=f.querySelectorAll('[data-calc-lines] [data-line]'),filled=Array.prototype.some.call(rows,function(r){return (r.querySelector('[name=label]')||{}).value;});
   if(filled&&!global.confirm(tr(en,'Effacer ce calcul ? Rien n’a été enregistré.','Clear this calculation? Nothing was saved.')))return;
   // Reset first (it restores pre-filled lines), then empty the kept row, defaults included, so nothing comes back.
