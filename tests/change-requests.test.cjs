@@ -13,7 +13,7 @@ test('both client and admin render live change-request workflows',()=>{
  assert.match(client,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel|review|editdraft|editdraft2|frlines)/);
  assert.match(owner,/dzoft-owner-changes/);
  assert.match(owner,/DzoftChanges\.owner/);
- assert.match(owner,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel|review|editdraft|editdraft2|frlines)/);
+ assert.match(owner,/change-requests\.js\?v=20261118-manual-review/);
  assert.match(workspace,/move\('c-changes',primary\)/);
  for(const html of [client,owner]){
   for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
