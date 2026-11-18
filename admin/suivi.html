@@ -250,6 +250,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   .invoice-send .invoice-send-check{display:flex;gap:10px;align-items:flex-start;font-weight:400;padding:10px 12px;border:1px solid #dbe3f0;border-radius:12px}
   .invoice-send .invoice-send-check input{margin-top:3px;flex:0 0 auto;width:auto}
   .invoice-send .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .invoice-credits{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px;font-size:13px}
+  .invoice-credits li{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 10px}
+  .invoice-send fieldset.credit-choice{border:0;padding:0;margin:12px 0 0;display:grid;gap:8px}
+  .invoice-send fieldset.credit-choice legend{font-weight:700;font-size:14px;margin-bottom:6px}
+  .invoice-send input[name=amount]{display:block;width:100%;box-sizing:border-box;margin-top:4px;font:inherit}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal"><script src="../assets/dzoft-language.js?v=20261115-billing-fr-en&reactive=20261116" defer></script>
@@ -264,7 +269,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="../assets/vendor/qrcode-generator.js?v=20261115-offline"></script>
 <script src="../assets/invoice-preview.js?v=20261115-pay-template"></script>
 <script src="../assets/invoice-pdf.js?v=20261115-pay-template&multi=20261115&accepted=20261115&recap=20261115"></script>
-<script src="../assets/project-tracking.js?v=20261117-onepage"></script>
+<script src="../assets/project-tracking.js?v=20261118-avoirs"></script>
 </head>
 <body class="dzoft-admin dzoft-editor">
 <header class="top">
@@ -488,7 +493,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   setInterval(checkMfaExpiry, 60000);
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
-  var Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
+  var TRK = null, Q = null, C = null, clients = [], msgs = [], sent = [], events = [], outbox = [], timer = null, RV = null;
   var draftPreviewToken = 0, draftMax = null, draftInfo = null;
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var il = function(fr,en){return document.documentElement.lang==='en'?en:fr;};
@@ -513,10 +518,11 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         sb.select('notifications', 'select=kind,ref,created_at&ok=eq.true&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc').catch(function(){ return []; }),
         sb.select('reviews', 'select=*&quote_id=eq.' + encodeURIComponent(QID)).catch(function(){ return []; }),
         sb.select('project_events', 'select=id,event_type,summary,created_at,message_id,invoice_id,file_name&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=40').catch(function(){ return []; }),
+        sb.rpc('project_tracking', { p_quote: QID }, true).catch(function(){ return null; }),
         sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,invoice_id,attach_invoice_pdf,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&quote_id=eq.' + encodeURIComponent(QID) + '&order=created_at.desc&limit=80').catch(function(){ return []; })
       ]).then(function(x){
         C = x[0][0] || null; clients = x[1] || []; msgs = x[2] || []; sent = x[3] || []; RV = (x[4] || [])[0] || null;
-        events = x[5] || []; outbox = x[6] || [];
+        events = x[5] || []; TRK = x[6] || null; outbox = x[7] || [];
         if (!(Q.steps || []).length) Q.steps = fresh();
         render(); markRead();
       });
@@ -938,11 +944,13 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<span class="invoice-record-status' + (x.paid ? ' is-paid' : '') + '">' + esc(status) + '</span>'+
         '<span class="invoice-document-status">' + esc(pdfStatus) + '</span>'+
         (official ? '<p class="invoice-record-delivery">' + esc(invoiceDeliverySummary(x)) + '</p>' : '')+
+        creditLines(x)+
         '<div class="invoice-record-actions">' +
           (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">'+il('Télécharger le PDF','Download PDF')+'</button>' : '')+
           (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">'+il('Archiver le PDF','Archive PDF')+'</button>' : '')+
-          (x.file ? '<button class="btn sm main" type="button" data-a="invoice-send">' + (x.emailAt ? il('Renvoyer (e-mail ou WhatsApp)','Resend (email or WhatsApp)') : il('Envoyer (e-mail ou WhatsApp)','Send (email or WhatsApp)')) + '</button>' : '')+
-          (!x.paid && !x.payment_reported_at && Q.accepted_at && official ? '<button class="btn sm line" type="button" data-a="payment-reminder">'+il('Relancer le paiement (e-mail ou WhatsApp)','Payment reminder (email or WhatsApp)')+'</button>' : '')+
+          (x.file && !creditInfo(x).cancelled ? '<button class="btn sm main" type="button" data-a="invoice-send">' + (x.emailAt ? il('Renvoyer (e-mail ou WhatsApp)','Resend (email or WhatsApp)') : il('Envoyer (e-mail ou WhatsApp)','Send (email or WhatsApp)')) + '</button>' : '')+
+          (official && creditInfo(x).open > 0 ? '<button class="btn sm line" type="button" data-a="credit-note">'+il('Annuler ou réduire (avoir)','Cancel or reduce (credit note)')+'</button>' : '')+
+          (!x.paid && !x.payment_reported_at && Q.accepted_at && official && creditInfo(x).open > 0 ? '<button class="btn sm line" type="button" data-a="payment-reminder">'+il('Relancer le paiement (e-mail ou WhatsApp)','Payment reminder (email or WhatsApp)')+'</button>' : '')+
           (!x.file && !official ? '<span class="muted">Ajoutez le PDF dans les détails pour activer l’envoi.</span>' : '')+
         '</div>'+
         '<details class="invoice-record-more"><summary>' + (official ? il('Informations de la facture','Invoice details') : il('Modifier la facture externe','Edit external invoice')) + '</summary>'+
@@ -1139,6 +1147,86 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     p = p.replace(/^00/, '').replace(/^\+/, '');
     return /^[1-9]\d{7,14}$/.test(p) ? p : '';
   }
+  /* Credit notes (« avoirs », 18 Nov 2026). An issued invoice is never changed or deleted (CGI art. 289-I-5):
+     it is cancelled or reduced by a numbered credit note (A-AAAA-NNNN) that cites it. Figures come from the server. */
+  function creditInfo(x){
+    var cents = function(v){ return Math.round((Number(v) || 0) * 100); };
+    var notes = ((TRK && TRK.credit_notes) || []).filter(function(c){ return c.invoice_id === x.id; });
+    var paid = ((TRK && TRK.receipts) || []).filter(function(r){ return r.invoice_id === x.id; }).reduce(function(n, r){ return n + cents(r.amount); }, 0);
+    var credited = notes.reduce(function(n, c){ return n + cents(c.amount); }, 0), amt = cents(x.amt);
+    return { notes: notes, paid: paid / 100, credited: credited / 100, open: TRK ? Math.max(0, amt - paid - credited) / 100 : 0,
+      cancelled: amt > 0 && credited >= amt };
+  }
+  function creditLines(x){
+    var info = creditInfo(x); if (!info.notes.length) return '';
+    var d = function(v){ return v ? new Date(v + 'T12:00:00').toLocaleDateString('fr-FR') : ''; };
+    return '<ul class="invoice-credits">' + info.notes.map(function(c){
+      return '<li><b>' + il('Avoir ','Credit note ') + esc(c.number) + '</b> · ' + esc(d(c.issued_on)) + ' · −' + esc(eur(c.amount)) +
+        (c.full_cancel ? il(' · annule la facture',' · cancels the invoice') : '') + '<br><small>' + esc(c.reason) + '</small>' +
+        ' <button class="btn sm ghost" type="button" data-a="credit-pdf" data-cn="' + esc(c.number) + '">' + il('PDF de l’avoir','Credit note PDF') + '</button></li>';
+    }).join('') + '</ul>';
+  }
+  function creditNoteDialog(x){
+    if (document.getElementById('credit-note-dialog')) return;
+    var info = creditInfo(x);
+    if (!(info.open > 0)) { toast('Rien à annuler : cette facture est déjà réglée ou annulée.'); return; }
+    var canReissue = info.paid === 0 && info.credited === 0;
+    var key = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : null;
+    if (!key) { toast('Navigateur trop ancien pour émettre un avoir en sécurité.'); return; }
+    var d = document.createElement('dialog'); d.id = 'credit-note-dialog'; d.className = 'invoice-send';
+    d.innerHTML =
+      '<h2>Annuler ou réduire la facture ' + esc(x.num) + '</h2>' +
+      '<p class="muted">Une facture émise ne se modifie pas et ne se supprime pas : la loi demande un <b>avoir</b>, numéroté (A-…), qui cite cette facture. Il ne pourra plus être modifié ; le client le voit dans son espace.</p>' +
+      '<p class="muted">Facture : ' + esc(eur(x.amt)) + (info.paid ? ' · déjà payé : ' + esc(eur(info.paid)) : '') + (info.credited ? ' · avoirs déjà émis : ' + esc(eur(info.credited)) : '') + ' · <b>reste : ' + esc(eur(info.open)) + '</b></p>' +
+      '<fieldset class="credit-choice"><legend>Combien ?</legend>' +
+      '<label class="invoice-send-check"><input type="radio" name="kind" value="full" checked><span><b>' + (info.paid || info.credited ? 'Tout ce qui reste' : 'Toute la facture') + '</b> : ' + esc(eur(info.open)) + '</span></label>' +
+      '<label class="invoice-send-check"><input type="radio" name="kind" value="part"><span><b>Une partie</b> (par exemple une remise après coup)</span></label>' +
+      '<label data-part hidden>Montant de l’avoir (€)<input name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex. : 50"></label></fieldset>' +
+      '<fieldset class="credit-choice"><legend>Pourquoi ?</legend>' +
+      '<label class="invoice-send-check"><input type="radio" name="effect" value="reduce" checked><span><b>Le client doit moins</b> : geste commercial, travaux non réalisés, projet arrêté. Le montant du projet baisse d’autant.</span></label>' +
+      '<label class="invoice-send-check"><input type="radio" name="effect" value="reissue"' + (canReissue ? '' : ' disabled') + '><span><b>Erreur sur la facture</b> : elle est annulée en entier et vous émettez ensuite une facture correcte. Le montant du projet ne change pas.' + (canReissue ? '' : ' <em>(impossible : un paiement ou un avoir existe déjà sur cette facture)</em>') + '</span></label></fieldset>' +
+      '<label>Motif (écrit sur l’avoir)<textarea name="reason" rows="3" maxlength="600" placeholder="Ex. : remise accordée pour le retard de livraison"></textarea></label>' +
+      '<p data-out role="status" class="muted"></p>' +
+      '<div class="row"><button type="button" class="btn main" data-go>Émettre l’avoir</button><button type="button" class="btn line" data-cancel>Annuler</button></div>';
+    document.body.appendChild(d);
+    var q = function(sel){ return d.querySelector(sel); }, out = q('[data-out]');
+    var sync = function(){
+      var part = q('[name=kind][value=part]').checked;
+      q('[data-part]').hidden = !part;
+      var re = q('[name=effect][value=reissue]');
+      if (part && re.checked) { re.checked = false; q('[name=effect][value=reduce]').checked = true; }
+      re.disabled = part || !canReissue;
+    };
+    d.addEventListener('change', sync); sync();
+    q('[data-cancel]').onclick = function(){ d.close(); };
+    d.addEventListener('close', function(){ d.remove(); });
+    q('[data-go]').onclick = function(){
+      var part = q('[name=kind][value=part]').checked, effect = q('[name=effect]:checked').value, reason = q('[name=reason]').value.trim();
+      var amount = null;
+      if (part) {
+        var raw = q('[name=amount]').value.trim().replace(/\s/g, '').replace(',', '.');
+        amount = /^\d+(\.\d{1,2})?$/.test(raw) ? Number(raw) : NaN;
+        if (!(amount > 0) || amount > info.open) { out.textContent = 'Tapez un montant entre 0,01 € et ' + eur(info.open) + '.'; return; }
+      }
+      if (reason.length < 5) { out.textContent = 'Écrivez le motif (5 caractères au moins) : il figure sur l’avoir.'; return; }
+      var value = part ? amount : info.open;
+      if (!confirm('Émettre un avoir de ' + eur(value) + ' sur la facture ' + x.num + ' ?\n\n' + (effect === 'reissue' ? 'La facture sera annulée en entier ; vous pourrez ensuite émettre la facture correcte.' : 'Le client devra ' + eur(value) + ' de moins.') + '\n\nL’avoir ne pourra plus être modifié ni supprimé.')) return;
+      q('[data-go]').disabled = true; out.textContent = 'Émission de l’avoir…';
+      sb.rpc('issue_credit_note', { p_quote: QID, p_invoice: x.id, p_amount: part ? amount : null, p_effect: effect, p_reason: reason, p_request_key: key }, true).then(function(cn){
+        d.close();
+        toast('Avoir ' + cn.number + ' émis (' + eur(cn.amount) + ').' + (effect === 'reissue' ? ' Vous pouvez maintenant émettre la facture correcte.' : ''));
+        return load();
+      }).catch(function(err){
+        q('[data-go]').disabled = false;
+        var m = String(err && err.message || '');
+        out.textContent = /unpaid balance|Nothing left/.test(m) ? 'Le montant dépasse ce qui reste à payer sur cette facture. Rechargez la page.' :
+          /re-issue/.test(m) ? 'Pour refaire la facture, elle doit être annulée en entier et sans paiement.' :
+          /issued by DZOFT/.test(m) ? 'Seule une facture émise ici (numéro F-…) peut recevoir un avoir. Pour une facture externe, faites l’avoir dans votre outil de facturation.' :
+          'Avoir non émis : ' + (m || 'erreur') + '. Rien n’a été enregistré.';
+      });
+    };
+    d.showModal();
+  }
   function sendInvoiceDialog(x, fresh){
     if (document.getElementById('invoice-send')) return;
     var hasMail = !!(C && [C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); }));
@@ -1330,6 +1418,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
       }
       if (b.dataset.a === 'invoice-email') return mailInvoice(x, b);
       if (b.dataset.a === 'invoice-send') return sendInvoiceDialog(x, false);
+      if (b.dataset.a === 'credit-note') return creditNoteDialog(x);
+      if (b.dataset.a === 'credit-pdf') { var cnr = creditInfo(x).notes.filter(function(c){ return c.number === b.dataset.cn; })[0]; if (cnr) window.DzoftDocuments.download(window.DzoftDocuments.creditNote(cnr, Q, (TRK && TRK.credit_notes) || []), 'Avoir-' + cnr.number); return; }
       if (b.dataset.a === 'pdf-archive') {
         b.disabled = true; toast('Archivage du PDF…');
         return archiveIssued(x).then(load).then(function(){ toast('PDF archivé et accessible au client.'); }, function(err){ b.disabled = false; fail(err); });
@@ -1596,8 +1686,8 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 </script>
 <script src="project-workspace.js?v=20261117-onepage" defer></script>
 <script src="update-notice.js?v=20261117-blue" defer></script>
-<script src="../assets/dzoft-documents.js?v=20261117-docs"></script>
-<script src="project-summary.js?v=20261117-onepage2"></script>
+<script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
+<script src="project-summary.js?v=20261118-avoirs"></script>
 <script src="project-workspace-tabs.js?v=20261117-onepage2" defer></script>
 <script src="github-journal.js?v=20261114-github-auto" defer></script>
 <script src="work-items.js?v=20261114-summary" defer></script>

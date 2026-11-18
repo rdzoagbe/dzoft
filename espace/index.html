@@ -351,8 +351,8 @@ footer{max-width:1180px}
 <script src="../admin/sb.js?v=20261118-mfa7d"></script>
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
-<script src="../assets/project-tracking.js?v=20261117-onepage"></script>
-<script src="../assets/dzoft-documents.js?v=20261117-docs"></script>
+<script src="../assets/project-tracking.js?v=20261118-avoirs"></script>
+<script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261118-range">
 <script src="../assets/change-requests.js?v=20261118-range"></script>
@@ -824,6 +824,7 @@ footer{max-width:1180px}
       '<li><div><b>' + L('Conditions générales de vente acceptées', 'Accepted terms of sale') + '</b>' + (q.accepted_terms ? ' <span class="muted">' + L('version ', 'version ') + esc(String(q.accepted_terms).replace(/^v/, '')) + '</span>' : '') + '</div><a class="btn line sm" href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">' + L('Voir', 'View') + ' ↗</a></li></ul>' +
       '<div data-doc-slot="changes"></div>' +
       '<h3 class="subh">' + L('Factures', 'Invoices') + '</h3>' + (inv || '<p class="muted">' + L('Aucune facture pour le moment.', 'No invoice yet.') + '</p>') +
+      '<div data-doc-slot="credits"></div>' +
       '<h3 class="subh">' + L('Paiements reçus', 'Payments received') + '</h3><div data-doc-slot="receipts"><p class="muted">' + L('Chargement…', 'Loading…') + '</p></div></section>';
   }
   function fillOfficialDocs(){
@@ -835,7 +836,14 @@ footer{max-width:1180px}
         var t = res[0], ch = Array.isArray(res[1]) ? res[1] : [];
         var receipts = t && Array.isArray(t.receipts) ? t.receipts.slice().sort(function(a, b){ return String(a.received_on).localeCompare(String(b.received_on)); }) : null;
         var signed = ch.filter(function(r){ return r.decided_at && ['approved', 'in_progress', 'completed'].indexOf(r.status) >= 0; });
-        OFFICIAL[id] = { receipts: receipts || [], changes: signed };
+        var credits = t && Array.isArray(t.credit_notes) ? t.credit_notes : [];
+        OFFICIAL[id] = { receipts: receipts || [], changes: signed, credits: credits };
+        // Credit notes (« avoirs »): each cancels or reduces an invoice; the invoice itself never changes.
+        var cr = box.querySelector('[data-doc-slot="credits"]');
+        if (cr) cr.innerHTML = credits.length ? '<h3 class="subh">' + L('Avoirs', 'Credit notes') + '</h3><ul class="invl">' + credits.map(function(c){
+          return '<li><div><b data-no-translate>' + esc(c.number) + '</b> <span class="muted">' + L('facture ', 'invoice ') + '<span data-no-translate>' + esc(c.invoice_number) + '</span></span><small class="muted"> · −' + eur(c.amount) + ' · ' + day(c.issued_on) + (c.full_cancel ? ' · ' + L('annule la facture', 'cancels the invoice') : '') + '</small><br><small class="muted" data-no-translate>' + raw(c.reason) + '</small></div>' +
+            '<button class="btn line sm" type="button" data-doc-pdf="credit" data-q="' + esc(id) + '" data-r="' + esc(c.number) + '">' + pdf + '</button></li>';
+        }).join('') + '</ul>' : '';
         var cs = box.querySelector('[data-doc-slot="changes"]');
         if (cs) cs.innerHTML = signed.length ? '<h3 class="subh">' + L('Compléments signés', 'Signed extra work') + '</h3><ul class="invl">' + signed.map(function(r){
           return '<li><div><b data-no-translate>' + raw(r.title) + '</b>' + (r.proposal_number ? ' <span class="muted" data-no-translate>' + esc(r.proposal_number) + '</span>' : '') + '<small class="muted"> · ' + eur(r.extra_price) + ' · ' + L('signé le ', 'signed on ') + day(r.decided_at) + '</small></div>' +
@@ -856,6 +864,7 @@ footer{max-width:1180px}
     try {
       if (b.dataset.docPdf === 'quote') D2.download(D2.signedQuote(q), 'Devis-signe-' + num);
       else if (b.dataset.docPdf === 'change') { var r = o.changes.filter(function(x){ return x.id === b.dataset.r; })[0]; if (r) D2.download(D2.signedChange(r, q), 'Complement-signe-' + (r.proposal_number || num)); }
+      else if (b.dataset.docPdf === 'credit') { var cn = (o.credits || []).filter(function(x){ return x.number === b.dataset.r; })[0]; if (cn) D2.download(D2.creditNote(cn, q, o.credits), 'Avoir-' + cn.number); }
       else if (b.dataset.docPdf === 'receipt') { var rc = o.receipts.filter(function(x){ return x.id === b.dataset.r; })[0]; if (rc) D2.download(D2.paymentReceipt(rc, q, o.receipts), 'Recu-paiement-' + rc.received_on + '-' + num); }
     } catch (err) { alert(L('Le document n’a pas pu être créé : ', 'The document could not be created: ') + (err && err.message || '')); }
   });

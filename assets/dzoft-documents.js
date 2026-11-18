@@ -182,11 +182,36 @@ function paymentReceipt(rc,q,allReceipts){
  return doc.blob();
 }
 
+// ---------- a credit note (« avoir », 18 Nov 2026) ----------
+/* CGI art. 289-I-5 and BOI-TVA-DECLA-30-20-20-20 § V: it refers explicitly to the original invoice (number and date)
+   and carries the usual invoice mentions. Drawn from the recorded credit note, which can never be changed. */
+function creditNote(cn,q,allCredits){
+ if(!cn||!cn.number||!(Number(cn.amount)>0))throw new Error('Avoir incomplet.');
+ var f=quoteData(q).f||{},novat=f.novat!==false&&f.novat!=='false';
+ var doc=Doc('AVOIR',cn.number);
+ doc.title('Avoir n° '+cn.number);
+ doc.kv('Date de l’avoir',frDate(cn.issued_on));
+ doc.text('Avoir se rapportant à la facture n° '+cn.invoice_number+(cn.invoice_issued_on?' du '+frDate(cn.invoice_issued_on):'')+'.',{bold:true});
+ provider(doc,f);customer(doc,f);
+ doc.h(cn.full_cancel?'Annulation de la facture':'Réduction de la facture');
+ doc.text('Motif : '+cn.reason);
+ doc.row('Montant de la facture n° '+cn.invoice_number,money(cn.invoice_amount));
+ doc.row('Montant de cet avoir','-'+' '+money(cn.amount),{bold:true,size:11});
+ var before=(allCredits||[]).filter(function(x){return x&&x.invoice_id===cn.invoice_id&&x.number!==cn.number&&String(x.issued_at||'')<String(cn.issued_at||'');}).reduce(function(n,x){return n+Number(x.amount||0);},0);
+ if(before>0)doc.row('Avoirs précédents sur cette facture','-'+' '+money(before));
+ doc.row('Montant de la facture après avoir(s)',money(Math.max(0,Number(cn.invoice_amount||0)-before-Number(cn.amount||0))),{bold:true});
+ doc.kv('Devis',q&&q.numero);
+ if(novat)doc.text('TVA non applicable, art. 293 B du CGI.',{size:9});
+ doc.gap(6);
+ doc.text(cn.full_cancel?'La facture n° '+cn.invoice_number+' est annulée en totalité par cet avoir.'+(cn.effect==='reissue'?' Une facture corrigée la remplace.':''):'La facture n° '+cn.invoice_number+' reste due pour le montant indiqué ci-dessus, déduction faite des paiements déjà reçus.',{size:9,color:'0.35 0.38 0.48'});
+ return doc.blob();
+}
+
 function safeName(v){return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'document';}
 function download(blob,name){
  var url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=safeName(name).replace(/\.pdf$/i,'')+'.pdf';a.rel='noopener';document.body.appendChild(a);a.click();
  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1500);
 }
-global.DzoftDocuments={signedQuote:signedQuote,signedChange:signedChange,paymentReceipt:paymentReceipt,download:download,fileName:safeName,_amounts:amounts};
+global.DzoftDocuments={signedQuote:signedQuote,signedChange:signedChange,paymentReceipt:paymentReceipt,creditNote:creditNote,download:download,fileName:safeName,_amounts:amounts};
 })(window);

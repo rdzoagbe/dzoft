@@ -43,10 +43,10 @@ test('the summary and the documents are read-only and use server figures',()=>{
  // Only extras the client signed count; « réglée » comes from recorded payments, never from the invoice's own flag.
  assert.match(summary,/var ACCEPTED=\['approved','in_progress','completed'\]/);
  assert.match(summary,/r\.decided_at&&num\(r\.extra_price\)!==null/);
- assert.match(summary,/settled=Number\(x\.amt\)>0&&got>=Number\(x\.amt\)-0\.005/);
+ assert.match(summary,/settled=Number\(x\.amt\)>0&&got\+cr>=Number\(x\.amt\)-0\.005/);
  assert.doesNotMatch(summary,/x\.paid/);
  // Still to receive = contract + signed extras − verified payments: a signed extra not yet invoiced is included.
- assert.match(summary,/Math\.max\(0,Math\.round\(num\(q\.accepted_total\)\*100\)\+extras-Math\.round\(num\(t\.received\)\*100\)\)\/100/);
+ assert.match(summary,/Math\.max\(0,Math\.round\(num\(q\.accepted_total\)\*100\)\+extras-Math\.round\(\(num\(t\.credits\)\|\|0\)\*100\)-Math\.round\(num\(t\.received\)\*100\)\)\/100/);
  assert.match(summary,/tile\(tr\('Reste à encaisser','Still to receive'\),money\(due\(\)\),'orange'\)/);
  // The summary is fetched again after the extra-work widget changed, when Vue d'ensemble or Documents is shown.
  assert.match(summary,/new MutationObserver\(function\(\)\{stale=true;\}\)/);

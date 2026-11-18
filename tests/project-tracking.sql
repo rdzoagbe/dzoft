@@ -1,4 +1,5 @@
--- Run after the migration, inside BEGIN/ROLLBACK. No fixture or email survives.
+-- Run after the migration. Wrapped in BEGIN/ROLLBACK: no fixture or email survives.
+begin;
 do $test$
 declare owner_id uuid:=gen_random_uuid(); client_user uuid:=gen_random_uuid(); stranger uuid:=gen_random_uuid();
  c uuid:=gen_random_uuid(); q uuid:=gen_random_uuid(); receipt uuid:=gen_random_uuid(); update_id uuid:=gen_random_uuid(); batch uuid:=gen_random_uuid(); items jsonb; state jsonb; n integer;
@@ -110,3 +111,4 @@ begin
  begin perform public.record_project_payment(q,gen_random_uuid(),'inv-c','{"n":"Autre","num":"T-7","amt":1}',1,current_date,'card','',true);
   raise exception 'FAIL: client recorded a payment'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
 end $test$;
+rollback;

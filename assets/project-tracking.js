@@ -14,7 +14,7 @@
  function label(map,key){return map[key]?map[key][en()?1:0]:key;}
  function options(map){return Object.keys(map).map(function(k){return '<option value="'+k+'">'+esc(label(map,k))+'</option>';}).join('');}
  // due: optional amount payable now (client view), shown as a fourth, highlighted figure.
- function stats(d,due){var rows=[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]];if(due!=null)rows.push([t('À régler maintenant','Due now'),due,'due']);return '<div class="tracking-stats'+(due!=null?' four':'')+'">'+rows.map(function(x){return '<div'+(x[2]?' class="tracking-due"':'')+'><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div>'+(Number(d.supplements)>0?'<p class="tracking-help">'+t('Montant convenu = devis accepté '+money(d.base_total)+' + compléments approuvés et facturés '+money(d.supplements)+'.','Agreed total = accepted quote '+money(d.base_total)+' + approved, invoiced additions '+money(d.supplements)+'.')+'</p>':'')+'<p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
+ function stats(d,due){var rows=[[t('Montant convenu','Agreed total'),d.total],[t('Reçu et confirmé','Received and confirmed'),d.received],[t('Reste à recevoir','Remaining balance'),d.remaining]];if(due!=null)rows.push([t('À régler maintenant','Due now'),due,'due']);return '<div class="tracking-stats'+(due!=null?' four':'')+'">'+rows.map(function(x){return '<div'+(x[2]?' class="tracking-due"':'')+'><span>'+x[0]+'</span><strong>'+money(x[1])+'</strong></div>';}).join('')+'</div>'+(Number(d.credits)>0?'<p class="tracking-help">'+t('Montant convenu après avoir(s) : '+money(d.credits)+' déduit(s).','Agreed total after credit note(s): '+money(d.credits)+' deducted.')+'</p>':'')+(Number(d.supplements)>0?'<p class="tracking-help">'+t('Montant convenu = devis accepté '+money(d.base_total)+' + compléments approuvés et facturés '+money(d.supplements)+'.','Agreed total = accepted quote '+money(d.base_total)+' + approved, invoiced additions '+money(d.supplements)+'.')+'</p>':'')+'<p class="tracking-help">'+t('Le solde suit l’échéancier convenu ; il n’est pas forcément exigible maintenant. Le suivi mensuel est séparé.','The balance follows the agreed schedule; it is not necessarily due now. Monthly maintenance is separate.')+'</p>';}
  function invoiceArchiveAction(r,q){
    if(!r.invoice_id)return '<button class="btn sm main tracking-issue-btn" type="button" data-open-receipt-link="'+esc(r.id)+'">'+t('Générer une facture','Generate an invoice')+'</button>';
    var inv=(q&&q.invoices||[]).find(function(x){return x.id===r.invoice_id;});
@@ -288,21 +288,30 @@
      var amount=cents(inv.amt);
      var confirmed=(d.receipts||[]).filter(function(receipt){return receipt.invoice_id===inv.id;})
        .reduce(function(n,receipt){return n+cents(receipt.amount);},0);
+     // Credit notes (« avoirs ») reduce what is due on the invoice; the invoice itself never changes.
+     var credited=(d.credit_notes||[]).filter(function(c){return c.invoice_id===inv.id;}).reduce(function(n,c){return n+cents(c.amount);},0);
      pill.classList.remove('is-paid');
      card.classList.remove('paid');
-     if(amount>0&&confirmed>=amount){
+     if(amount>0&&credited>=amount){
+       pill.textContent=t('Annulée par avoir','Cancelled by credit note');
+       pill.classList.add('is-paid');card.classList.add('paid');
+     }else if(amount>0&&credited>0&&confirmed+credited>=amount){
+       pill.textContent=t('Réglée : paiements ','Settled: payments ')+money(confirmed/100)+t(' + avoir(s) ',' + credit note(s) ')+money(credited/100);
+       pill.classList.add('is-paid');card.classList.add('paid');
+     }else if(amount>0&&confirmed>=amount){
        pill.textContent=t('Paiement reçu et confirmé','Payment received and confirmed');
        pill.classList.add('is-paid');card.classList.add('paid');
      }else if(confirmed>0){
-       pill.textContent=t('Paiement partiel confirmé : ','Partial payment confirmed: ')+money(confirmed);
+       pill.textContent=t('Paiement partiel confirmé : ','Partial payment confirmed: ')+money(confirmed/100)+(credited?t(' · avoir(s) : ',' · credit note(s): ')+money(credited/100):'');
      }else if(Number(d.legacy)>0&&inv.paid){
        pill.textContent=t('Paiement historique : vérifier le détail','Historical payment: check records');
      }else{
-       pill.textContent=t('Aucun paiement reçu sur cette facture','No payment confirmed for this invoice');
+       pill.textContent=credited?t('Réduite par avoir(s) : ','Reduced by credit note(s): ')+money(credited/100)+t(' · reste ',' · remaining ')+money((amount-credited)/100):t('Aucun paiement reçu sur cette facture','No payment confirmed for this invoice');
      }
    });
-   var paidOn=function(id){return d.receipts.filter(function(r){return r.invoice_id===id;}).reduce(function(n,r){return n+cents(r.amount);},0)/100;};
-   var open=(q.invoices||[]).filter(function(i){return i.id&&i.num&&!i.paid&&!i.care;});
+   // What is already settled on an invoice: confirmed payments plus credit notes.
+   var paidOn=function(id){return (d.receipts.filter(function(r){return r.invoice_id===id;}).reduce(function(n,r){return n+cents(r.amount);},0)+(d.credit_notes||[]).filter(function(c){return c.invoice_id===id;}).reduce(function(n,c){return n+cents(c.amount);},0))/100;};
+   var open=(q.invoices||[]).filter(function(i){return i.id&&i.num&&!i.paid&&!i.care&&Math.round((Number(i.amt)-paidOn(i.id))*100)>0;});
    var invoiced=(q.invoices||[]).filter(function(i){return !i.care;}).reduce(function(n,i){return n+cents(i.amt);},0)/100;
    var total=Number(d.total)||0,f=((q.accepted_data||q.data||{}).f)||{},pct=parseFloat(f.deppct)||30;
    var suggest=invoiced?Math.max(0,Math.round((total-invoiced)*100)/100):Math.round(total*pct)/100;
@@ -581,7 +590,7 @@
   }
   function notify(sb){sb.fn('process-notification-outbox',{}).catch(function(){/* Durable queue retries; never report delivery without provider confirmation. */});}
  // Amount payable now: open invoices (data-due='[{"id","amt"}]') minus receipts already confirmed on each.
- function dueNow(box,d){var list;try{list=JSON.parse(box.dataset.due||'null');}catch(e){list=null;}if(!Array.isArray(list))return null;return list.reduce(function(n,i){var paid=i.id?d.receipts.filter(function(r){return r.invoice_id===i.id;}).reduce(function(s,r){return s+cents(r.amount);},0):0;return n+Math.max(0,cents(i.amt)-paid);},0)/100;}
+ function dueNow(box,d){var list;try{list=JSON.parse(box.dataset.due||'null');}catch(e){list=null;}if(!Array.isArray(list))return null;return list.reduce(function(n,i){var paid=i.id?d.receipts.filter(function(r){return r.invoice_id===i.id;}).reduce(function(s,r){return s+cents(r.amount);},0):0;var credited=i.id?(d.credit_notes||[]).filter(function(c){return c.invoice_id===i.id;}).reduce(function(s,c){return s+cents(c.amount);},0):0;return n+Math.max(0,cents(i.amt)-paid-credited);},0)/100;}
  function latest(d){var u=d.updates[0];return u?'<article class="tracking-latest"><div><b>'+esc(label(categories,u.category))+'</b><span class="tracking-status">'+esc(label(statuses,u.status))+'</span></div><p>'+esc(u.summary)+'</p><small>'+day(u.created_at)+'</small></article>':'<p class="tracking-help">'+t('Les prochains résumés publiés apparaîtront ici.','Published progress summaries will appear here.')+'</p>';}
  // data-tracking-part: "payments", "updates" or "latest" draws one part (client tabs); none draws the whole card.
  // Private link (client without an account): figures are read with the link, never with a session.
