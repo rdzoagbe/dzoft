@@ -903,6 +903,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   // Legacy « paid » invoices have no receipt row. Re-recording them would count them twice, so the note only asks
   // to copy them by hand into the receipts book (date and method from the bank statement).
+  /* Credit notes (« avoirs », 18 Nov 2026): series A-AAAA-NNNN, each citing the invoice it cancels or reduces. */
+  function creditsBook(valid,en){
+    var rows=[];valid.forEach(function(r){(r.summary.credit_notes||[]).forEach(function(c){rows.push({c:c,q:r.q});});});
+    if(!rows.length)return '';
+    rows.sort(function(a,b){return String(a.c.number).localeCompare(String(b.c.number));});
+    var total=rows.reduce(function(n,x){return n+Math.round((Number(x.c.amount)||0)*100);},0)/100;
+    return '<h3 class="finance-subtitle">'+(en?'Credit notes':'Registre des avoirs')+'</h3><section class="finance-book"><div class="finance-book-table" data-no-translate><table><thead><tr><th>'+(en?'No.':'N°')+'</th><th>Date</th><th>'+(en?'Client · quote':'Client · devis')+'</th><th>'+(en?'Invoice':'Facture')+'</th><th>'+(en?'Amount':'Montant')+'</th><th>'+(en?'Reason':'Motif')+'</th></tr></thead><tbody>'+
+      rows.map(function(x){var c=x.c,cl=client(x.q.client_id)||{};return '<tr><td>'+esc(c.number)+'</td><td>'+esc(String(c.issued_on||'').split('-').reverse().join('/'))+'</td><td>'+esc((cl.nom||'Client')+' · '+(x.q.numero||''))+'</td><td>'+esc(c.invoice_number)+'</td><td>−'+eur(c.amount)+'</td><td>'+esc(c.reason)+(c.full_cancel?(en?' (cancels the invoice)':' (annule la facture)'):'')+'</td></tr>';}).join('')+
+      '</tbody></table></div><p class="finance-note">'+(en?'Total of credit notes: ':'Total des avoirs : ')+'−'+eur(total)+'</p></section>';
+  }
   function legacyNote(cents,en){return '<p class="finance-warning-inline">'+(en?'Invoices marked paid before payments were recorded ('+eur(cents/100)+') are counted in « received » but are not listed here. Do not record them again (they would be counted twice): copy them by hand into your receipts book, with the date and method from your bank statement.':'Des factures marquées réglées avant l’enregistrement des paiements ('+eur(cents/100)+') comptent dans « reçu » mais ne sont pas listées ici. Ne les enregistrez pas à nouveau (elles compteraient deux fois) : reportez-les à la main dans votre livre des recettes, avec la date et le mode de règlement de votre relevé bancaire.')+'</p>';}
   function bookCsv(){
     var cell=function(v){v=String(v==null?'':v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
@@ -938,7 +948,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
        '<p class="finance-note">'+(en?'Pending transfers are included in the remaining balance until received.':'Les virements annoncés restent dans le solde à recevoir tant que leur réception n’est pas confirmée.')+'</p>';
       var book=receiptsBook(valid,en);
       var warning=valid.length===rows.length?'':'<div class="panel finance-warning">'+(en?'Some project balances are unavailable; totals include only accessible projects.':'Certains soldes sont indisponibles : les totaux comprennent uniquement les projets accessibles.')+'</div>';
-      box.innerHTML=summary+warning+book+'<h3 class="finance-subtitle">'+(en?'Balance by project':'Soldes par projet')+'</h3><div class="finance-list">'+rows.map(function(item){
+      box.innerHTML=summary+warning+book+creditsBook(valid,en)+'<h3 class="finance-subtitle">'+(en?'Balance by project':'Soldes par projet')+'</h3><div class="finance-list">'+rows.map(function(item){
         var q=item.q,d=item.summary,c=client(q.client_id)||{},title=esc(c.nom||'Client')+' · '+esc(q.numero||'—');
         var pending=d&&d.receipts?d.receipts.filter(function(r){return !r.invoice_id;}).length:0;
         var awaiting=d?(d.payment_statuses||[]).filter(function(p){return p.status==='pending'||p.status==='sent_by_client';}):[];
