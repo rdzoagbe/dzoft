@@ -59,7 +59,7 @@ test('« Depuis le » lets the owner choose the start date (never before the sig
 test('Calculating again with a later start removes journal lines now before it, keeps hand-typed lines',()=>{
  const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
  assert.match(fj,/m=\/\^journal:\(\\d\{4\}-\\d\{2\}-\\d\{2\}\):\/\.exec\(src\)/);
- assert.match(fj,/if\(m&&\(\(since&&m\[1\]<since\)\|\|\(until&&m\[1\]>until\)\)\)/);
+ assert.match(fj,/if\(m&&\(\(since&&m\[1\]<since\)\|\|m\[1\]>upto\)\)/);
  // Removal happens before the form's remaining lines are marked as used.
  assert.ok(fj.indexOf('m[1]<since')<fj.indexOf('readLines(form).forEach(function(l){if(l.source)used[l.source]=1;})'));
 });
@@ -68,7 +68,9 @@ test('« Du … Au … »: an optional end date, and the proposal holding a skip
  assert.match(js,/<input type="date" name="until"/);
  const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
  // Only requests done up to the end date are added; later ones are listed apart, never added.
- assert.match(fj,/if\(until&&e\.d>until\)\{[^]*?after\.push\([^]*?return false;\}/);
+ assert.match(fj,/if\(e\.d>upto\)\{[^]*?after\.push\([^]*?return false;\}/);
+ // Empty « Au » = today, so a future-dated line is never added.
+ assert.match(fj,/upto=until\|\|\(today\.getFullYear\(\)/);
  // An end date before the start date stops the calculation with a message.
  assert.match(fj,/if\(until&&since&&until<since\)\{[^]*?return;\}/);
  // Skipped requests say which proposal holds them, an unsent draft included.
@@ -83,6 +85,8 @@ test('Commercial discount is a percentage of the items, sent as its euro amount 
  assert.ok(rc.indexOf('sub+=')<rc.indexOf('Math.round(sub*pc/100)'));
  assert.match(rc,/pc>0&&pc<100\?Math\.round\(sub\*pc\/100\):NaN/);
  // The label tells the client the percentage; an invalid percentage blocks saving.
- assert.ok(js.includes("+' ('+String(pc).replace('.',',')+' %)';"));
+ assert.ok(js.includes("var suf=' ('+String(pc).replace('.',',')+' %)'"));
+ // The label with its percentage never exceeds the server's 160 characters.
+ assert.ok(js.includes('.slice(0,160-suf.length).trim()+suf'));
  assert.match(js,/La remise est un pourcentage : tapez un nombre entre 0 et 100/);
 });

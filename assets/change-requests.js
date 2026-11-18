@@ -235,7 +235,8 @@ function bindOwner(root,options){
  function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
  function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
    // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
-   if(disc&&Number.isFinite(pc))lb=lb.replace(/\s*\(\d+(?:[.,]\d{1,2})?\s*%\)\s*$/,'')+' ('+String(pc).replace('.',',')+' %)';
+   // The base label is shortened so the label with its percentage stays within the server's 160 characters.
+   if(disc&&Number.isFinite(pc)){var suf=' ('+String(pc).replace('.',',')+' %)';lb=lb.replace(/\s*\(\d+(?:[.,]\d{1,2})?\s*%\)\s*$/,'').slice(0,160-suf.length).trim()+suf;}
    if(disc&&!(pc>0&&pc<100))p=NaN;
    return {label:lb,qty:disc?1:amount(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):(p<0?NaN:p),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
  /* « Calculer depuis le suivi » : the client requests completed since signature, from the private journal.
@@ -265,11 +266,13 @@ function bindOwner(root,options){
    if(chosen)since=signed&&chosen<signed?signed:chosen;
    // Optional end date (18 Nov 2026): only requests done up to that day; empty = up to today.
    var until=form.elements.until&&/^\d{4}-\d{2}-\d{2}$/.test(form.elements.until.value)?form.elements.until.value:'';
+   // Empty « Au » means today (local date): a journal line dated in the future is never added.
+   var today=new Date(),upto=until||(today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'));
    if(until&&since&&until<since){var bad=form.querySelector('[data-calc-summary]');bad.hidden=false;bad.innerHTML='<p class="dzoft-calc-warn">'+tr(en,'La date « Au » est avant la date « Du ». Corrigez les dates puis recalculez.','The “To” date is before the “From” date. Fix the dates, then calculate again.')+'</p>';return;}
    // Calculating again with a later start: lines imported earlier from the journal and now before the start are removed
    // (lines typed by hand have no journal origin and stay).
    Array.prototype.forEach.call(form.querySelectorAll('[data-line]'),function(row){var src=(row.querySelector('[name=source]')||{}).value||'',m=/^journal:(\d{4}-\d{2}-\d{2}):/.exec(src);
-     if(m&&((since&&m[1]<since)||(until&&m[1]>until))){if(form.querySelectorAll('[data-line]').length>1)row.remove();else row.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}});
+     if(m&&((since&&m[1]<since)||m[1]>upto)){if(form.querySelectorAll('[data-line]').length>1)row.remove();else row.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}});
    recalc(form);
    readLines(form).forEach(function(l){if(l.source)used[l.source]=1;});
    var clientName=plain(q.clientName||'').split(/\s+/)[0];
@@ -277,7 +280,7 @@ function bindOwner(root,options){
    (Array.isArray(q.journal)?q.journal:[]).filter(function(e){
      if(!(e&&e.k==='demande'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d||'')&&(!signed||e.d>=signed)))return false;
      if(since&&e.d<since){var t=String(e.t||'').trim();if(/:\s*fait\b/i.test(t)&&!/^pas encore/i.test(t))earlier.push(t.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
-     if(until&&e.d>until){var u=String(e.t||'').trim();if(/:\s*fait\b/i.test(u)&&!/^pas encore/i.test(u))after.push(u.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
+     if(e.d>upto){var u=String(e.t||'').trim();if(/:\s*fait\b/i.test(u)&&!/^pas encore/i.test(u))after.push(u.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
      return true;})
     .sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;}).forEach(function(e){
      var text=String(e.t||'').trim(),done=/:\s*fait\b/i.test(text)&&!/^pas encore/i.test(text);
