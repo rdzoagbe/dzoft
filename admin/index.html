@@ -215,6 +215,8 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 .backup-check{margin-top:12px}.backup-check summary{cursor:pointer;font-weight:700;font-size:14px;min-height:44px;display:flex;align-items:center}
 .backup-check input[type=file]{display:block;margin:4px 0 10px;max-width:100%}
 .backup-full-title{font-size:15px;margin:0 0 8px}
+.backup-drive-state{font-size:13.5px;color:var(--ink2);margin:10px 0 0}
+#backup-drive-client{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
@@ -498,15 +500,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           <div class="settings-fold-body" id="backup-readiness">
             <div class="settings-subsection backup-quick" id="backup-box">
               <h3>Sauvegarde rapide, depuis ce navigateur</h3>
-              <p class="settings-body-help">Télécharge en un fichier toutes vos données de gestion : clients, devis, factures et leur registre, paiements, avoirs, suppléments, messages, journal. Le fichier est chiffré ici avec le mot de passe que vous choisissez ; personne ne peut l’ouvrir sans lui, pas même DZOFT. Les codes d’accès secrets ne sont pas inclus. Les PDF archivés et les comptes de connexion restent couverts par la sauvegarde complète ci-dessous.</p>
+              <p class="settings-body-help">Enregistre en un fichier, dans votre Google Drive ou sur cet appareil, toutes vos données de gestion : clients, devis, factures et leur registre, paiements, avoirs, suppléments, messages, journal. Le fichier est chiffré ici avec le mot de passe que vous choisissez ; personne ne peut l’ouvrir sans lui, pas même DZOFT. Les codes d’accès secrets ne sont pas inclus. Les PDF archivés et les comptes de connexion restent couverts par la sauvegarde complète ci-dessous.</p>
               <p class="backup-status" id="backup-status" aria-live="polite">…</p>
               <div class="grid2">
                 <div><label for="backup-pass">Mot de passe du fichier (10 caractères ou plus)</label><input id="backup-pass" type="password" autocomplete="new-password" minlength="10"></div>
                 <div><label for="backup-pass2">Retapez le mot de passe</label><input id="backup-pass2" type="password" autocomplete="new-password" minlength="10"></div>
               </div>
-              <div class="acts"><button class="btn main" id="backup-save" type="button">Télécharger la sauvegarde chiffrée</button></div>
+              <p class="backup-drive-state" id="backup-drive-state"></p>
+              <div class="acts"><button class="btn main" id="backup-drive" type="button" hidden>Sauvegarder sur Google Drive</button><button class="btn line" id="backup-save" type="button">Télécharger le fichier chiffré</button></div>
               <div class="backup-msg" id="backup-msg" role="status" aria-live="polite"></div>
-              <details class="backup-check"><summary>Vérifier une sauvegarde</summary>
+              <details class="backup-check" id="backup-drive-setup"><summary>Relier Google Drive (une seule fois)</summary>
+                <p class="settings-body-help">Pour que le bouton « Sauvegarder sur Google Drive » envoie le fichier directement dans votre Drive, collez ici l’« ID client » créé dans votre compte Google Cloud (guide : <a href="https://github.com/rdzoagbe/dzoft/blob/main/docs/google-drive-backup.md" target="_blank" rel="noopener noreferrer">relier Google Drive</a>). La première fois, Google vous demande l’autorisation ; l’accès se limite aux fichiers créés par DZOFT, jamais au reste de votre Drive.</p>
+                <label for="backup-drive-client">ID client Google (…apps.googleusercontent.com)</label><input id="backup-drive-client" type="text" autocomplete="off" spellcheck="false" inputmode="url" placeholder="123456789012-abc….apps.googleusercontent.com">
+                <div class="acts"><button class="btn line" id="backup-drive-save" type="button">Enregistrer</button></div>
+                <div class="backup-msg" id="backup-drive-msg" role="status" aria-live="polite"></div>
+              </details>
+              <details class="backup-check" id="backup-verify-box"><summary>Vérifier une sauvegarde</summary>
                 <p class="settings-body-help">Ouvre un fichier de sauvegarde avec son mot de passe et montre ce qu’il contient. Rien n’est envoyé ni modifié.</p>
                 <label for="backup-file">Fichier de sauvegarde (.dzoftbak)</label><input id="backup-file" type="file" accept=".dzoftbak,application/json,application/octet-stream">
                 <label for="backup-check-pass">Mot de passe du fichier</label><input id="backup-check-pass" type="password" autocomplete="off">
@@ -604,7 +613,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div class="toast" id="toast" hidden></div>
 
 <script src="sb.js?v=20261118-mfa7d"></script>
-<script src="backup.js?v=20261118-backup2"></script>
+<script src="backup.js?v=20261118-drive2"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>

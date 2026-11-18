@@ -206,6 +206,11 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   « Vérifier une sauvegarde » l’ouvre localement. L’export lit tout en une seule requête (instantané cohérent) et n’enregistre rien ;
   la page appelle `owner_backup_confirm()` une fois le fichier chiffré et téléchargé (migration `20261118170000_…`). Journal privé `private.owner_backup_log` ; `owner_backup_status()` alimente le
   rappel « Sauvegarde » de « À faire » (aucune, plus vieille qu’une signature / un paiement / une facture / un avoir, ou > 30 jours).
+  Google Drive (18 nov. 2026, demande de Roland) : « Sauvegarder sur Google Drive » envoie le même fichier chiffré dans le dossier
+  « DZOFT – Sauvegardes » de son Drive (Google Identity Services, portée `drive.file` : seulement les fichiers créés par DZOFT) ;
+  réglage unique « Relier Google Drive » = ID client OAuth (public, colonne `settings.google_client_id`, migration `20261118180000_…`),
+  à créer dans son compte Google Cloud : guide `docs/google-drive-backup.md` (origine `https://rdzoagbe.github.io`, à compléter si
+  le domaine change). Jamais de « client secret ». « Télécharger le fichier chiffré » reste possible. E2e « Google Drive backup ».
   Pas de restauration depuis le site (volontaire). La sauvegarde complète Windows (`tools/backup-dzoft-windows.ps1`, PDF et comptes
   de connexion compris) reste à part. Tests `tests/owner-backup.sql`, e2e « Quick backup ».
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans

@@ -44,7 +44,7 @@ const syntheticSb = `
   select:async (table)=>{window.__syntheticCalls.push('select:'+table);
    if(table==='quotes')return location.search.includes('twoProjects=1')?[quote,Object.assign({},quote,{id:'d1e2f3a4-0000-4000-8000-000000000002',numero:'D-SYNTHETIC-002'})]:[quote];
    if(table==='clients')return [client];
-   if(table==='settings')return [{id:1,payment:{},default_line_price:25,price_blocks:[{label:'Page supplémentaire',price:120,words:['page']}],
+   if(table==='settings')return [{id:1,google_client_id:window.__gcid||null,payment:{},default_line_price:25,price_blocks:[{label:'Page supplémentaire',price:120,words:['page']}],
     price_tiers:[{key:'retouche',label:'Retouche',rule:'Moins de 30 minutes',price:10},{key:'petite',label:'Petite',rule:'Une demi-journée au plus',price:25}]}];
    if(table==='project_events')return [{id:'synthetic-email-event',event_type:'payment_received',summary:'Synthetic payment notification',quote_id:qid,created_at:now}];
    if(table==='email_outbox')return [
@@ -91,6 +91,7 @@ const syntheticSb = `
   insert:()=>Promise.reject(Error('Read-only fixture')),
   update:(table,id,values)=>{window.__syntheticCalls.push('update:'+table);
     if(table==='quotes'&&values&&values.progress_draft){quote.progress_draft=values.progress_draft;return Promise.resolve({});}
+    if(table==='settings'&&values&&'google_client_id' in values){window.__gcid=values.google_client_id;return Promise.resolve({});}
     return Promise.reject(Error('Read-only fixture'));
   },
   remove:()=>Promise.reject(Error('Read-only fixture')),
@@ -759,7 +760,7 @@ test('Quick backup: encrypted download, readable with its password only, and a d
  // Save: one encrypted file, nothing readable in it.
  await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-mot-de-passe-long');
  const [dl]=await Promise.all([page.waitForEvent('download'),page.click('#backup-save')]);
- expect(dl.suggestedFilename()).toMatch(/^dzoft-sauvegarde-\d{4}-\d{2}-\d{2}\.dzoftbak$/);
+ expect(dl.suggestedFilename()).toMatch(/^dzoft-sauvegarde-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.dzoftbak$/);
  const file=testInfo.outputPath('backup.dzoftbak');await dl.saveAs(file);
  const raw=(await import('node:fs')).readFileSync(file,'utf8');const json=JSON.parse(raw);
  expect(json.format).toBe('dzoft-backup-encrypted');expect(json.cipher).toBe('AES-256-GCM');expect(json.kdf.iterations).toBe(310000);
@@ -770,7 +771,7 @@ test('Quick backup: encrypted download, readable with its password only, and a d
  await expect(page.locator('#backup-pass')).toHaveValue('');
  await expect(page.locator('#backup-status')).toContainText('Dernière sauvegarde');
  // Check: right password shows the contents; wrong password does not.
- await page.locator('.backup-check summary').click();
+ await page.locator('#backup-verify-box summary').click();
  await page.setInputFiles('#backup-file',file);
  await page.fill('#backup-check-pass','mauvais-mot-de-passe');await page.click('#backup-verify');
  await expect(page.locator('#backup-check-result')).toContainText('Mot de passe incorrect');
@@ -781,6 +782,86 @@ test('Quick backup: encrypted download, readable with its password only, and a d
   const w=await page.evaluate(()=>({s:document.documentElement.scrollWidth,v:document.documentElement.clientWidth}));
   expect(w.s).toBeLessThanOrEqual(w.v+4);
  }
+ expect(errors).toEqual([]);
+});
+
+test('Google Drive backup: one-time link, then one click sends the encrypted file to the DZOFT folder',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ // Google is simulated: no real sign-in, no real Drive.
+ await page.addInitScript(()=>{
+  window.__tokenRequests=0;
+  window.google={accounts:{oauth2:{initTokenClient:(cfg)=>({requestAccessToken:()=>{window.__tokenRequests++;window.__scope=cfg.scope;window.__clientUsed=cfg.client_id;
+    setTimeout(()=>window.__denyNext?(window.__denyNext=false,cfg.callback({error:'access_denied'})):cfg.callback({access_token:'synthetic-token'}),10);}})}}};
+ });
+ const uploads=[];let folderCreated=0;
+ await page.context().route('https://accounts.google.com/**',r=>r.fulfill({status:200,contentType:'application/javascript',body:''}));
+ await page.context().route('https://www.googleapis.com/**',async r=>{
+  const req=r.request(),url=req.url();
+  expect(req.headers()['authorization']).toBe('Bearer synthetic-token');
+  if(url.includes('/upload/drive/v3/files')){uploads.push(req.postData()||'');return r.fulfill({json:{id:'file-1',name:'dzoft-sauvegarde.dzoftbak',webViewLink:'https://drive.google.com/file/d/file-1/view'}});}
+  if(req.method()==='GET')return r.fulfill({json:{files:folderCreated?[{id:'folder-1'}]:[]}});
+  folderCreated++;return r.fulfill({json:{id:'folder-1'}});
+ });
+ await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
+ await page.locator('#settings-backup summary').first().click();
+ // Not linked yet: no Drive button, the one-time setting is open.
+ await expect(page.locator('#backup-drive')).toBeHidden();
+ await expect(page.locator('#backup-drive-setup')).toHaveAttribute('open','');
+ await page.fill('#backup-drive-client','not-a-client-id');await page.click('#backup-drive-save');
+ await expect(page.locator('#backup-drive-msg')).toContainText('ne ressemble pas');
+ await page.fill('#backup-drive-client','123456789012-abcdef123.apps.googleusercontent.com');await page.click('#backup-drive-save');
+ await expect(page.locator('#backup-drive-msg')).toContainText('relié');
+ await expect(page.locator('#backup-drive')).toBeVisible();
+ // Refused by Google: nothing recorded, clear message.
+ await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-mot-de-passe-long');
+ await page.evaluate(()=>{window.__denyNext=true;});
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('Google n’a pas donné l’accès');
+ expect(uploads.length).toBe(0);
+ expect(await page.evaluate(()=>window.__backupConfirmed||0)).toBe(0);
+ // Allowed: one click, the encrypted file lands in the DZOFT folder, then the backup is recorded.
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('Sauvegarde enregistrée dans Google Drive');
+ await expect(page.locator('#backup-msg a')).toHaveAttribute('href','https://drive.google.com/file/d/file-1/view');
+ expect(await page.evaluate(()=>window.__scope)).toBe('https://www.googleapis.com/auth/drive.file');
+ expect(folderCreated).toBe(1);expect(uploads.length).toBe(1);
+ expect(uploads[0]).toContain('"parents":["folder-1"]');
+ expect(uploads[0]).toContain('dzoft-backup-encrypted');
+ expect(uploads[0]).not.toContain('Synthetic Test Customer');
+ await expect.poll(()=>page.evaluate(()=>window.__backupConfirmed||0)).toBe(1);
+ await expect(page.locator('#backup-pass')).toHaveValue('');
+ if(testInfo.project.name.includes('mobile')){
+  const w=await page.evaluate(()=>({s:document.documentElement.scrollWidth,v:document.documentElement.clientWidth}));
+  expect(w.s).toBeLessThanOrEqual(w.v+4);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('Google Drive backup recovers when Google’s script failed to load once',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{window.__gcid='123456789012-abcdef123.apps.googleusercontent.com';});
+ let scriptLoads=0;
+ // First request for Google's script fails (network), the next one works and defines a simulated Google.
+ await page.context().route('https://accounts.google.com/**',r=>{scriptLoads++;
+  if(scriptLoads===1)return r.abort('failed');
+  return r.fulfill({status:200,contentType:'application/javascript',body:"window.google={accounts:{oauth2:{initTokenClient:function(c){return {requestAccessToken:function(){setTimeout(function(){c.callback({access_token:'synthetic-token'});},10);}};}}}};"});});
+ await page.context().route('https://www.googleapis.com/**',r=>{const url=r.request().url();
+  if(url.includes('/upload/'))return r.fulfill({json:{id:'f',name:'x.dzoftbak',webViewLink:'https://drive.google.com/file/d/f/view'}});
+  return r.fulfill({json:r.request().method()==='GET'?{files:[{id:'folder-1'}]}:{id:'folder-1'}});});
+ await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
+ await page.locator('#settings-backup summary').first().click();
+ await expect(page.locator('#backup-drive')).toBeVisible();
+ await expect.poll(()=>scriptLoads).toBe(1);
+ await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-mot-de-passe-long');
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('pas encore fini de se charger');
+ // That click restarted the loading; the next click succeeds.
+ await expect.poll(()=>scriptLoads).toBe(2);
+ await expect.poll(()=>page.evaluate(()=>!!(window.google&&window.google.accounts))).toBe(true);
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('Sauvegarde enregistrée dans Google Drive');
  expect(errors).toEqual([]);
 });
 

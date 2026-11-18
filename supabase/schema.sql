@@ -4534,3 +4534,7 @@ begin
 end $f$;
 revoke all on function public.owner_backup_confirm(jsonb) from public, anon;
 grant execute on function public.owner_backup_confirm(jsonb) to authenticated;
+
+-- Google Drive backup (migration 20261118180000_settings_google_client_id.sql, applied 18 Nov 2026)
+alter table public.settings add column if not exists google_client_id text
+  check (google_client_id is null or google_client_id ~ '^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$');
