@@ -1029,42 +1029,40 @@ test('One project page: summary, five tabs, signed extras only, official documen
  expect(errors).toEqual([]);
 });
 
-test('Invoice send window: e-mail and/or WhatsApp with the message ready, visible on each invoice, nothing sent before « Envoyer »',async({page},testInfo)=>{
+test('Invoice send window prepares editable Outlook and WhatsApp drafts without sending',async({page},testInfo)=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&invoiceFixture=1',{waitUntil:'domcontentloaded'});
  await page.evaluate(()=>{window.__opened=[];window.open=(u)=>{window.__opened.push(String(u));return {opener:null,closed:false,close(){}};};});
  await page.locator('[data-project-tab="billing"]').click();
  const final=page.locator('#invs .invr').filter({hasText:'F-2026-0003'});
- // Both actions are on the invoice itself, not folded.
  await expect(final.locator('[data-a="invoice-send"]')).toBeVisible();
- await expect(final.locator('[data-a="payment-reminder"]')).toBeVisible();
- await expect(page.locator('#invs .invr').filter({hasText:'F-2026-0001'}).locator('[data-a="payment-reminder"]')).toHaveCount(0);
  await final.locator('[data-a="invoice-send"]').click();
  const d=page.locator('#invoice-send');
  await expect(d).toBeVisible();
- await expect(d.locator('[data-mail]')).toBeChecked();
- await expect(d.locator('[data-msg]')).toHaveValue(/facture n° F-2026-0003 d’un montant de 700,00/);
- await expect(d.locator('[data-msg]')).toHaveValue(/espace\/\?projet=c8a50cee-3856-4539-98a3-f5df201dbff0&facture=unpaid-final&inscription=1/);
+ await expect(d.locator('[data-subject]')).toHaveValue(/Facture F-2026-0003/);
+ await expect(d.locator('[data-email-body]')).toHaveValue(/facture n° F-2026-0003 d’un montant de 700,00/);
+ await expect(d.locator('[data-email-body]')).toHaveValue(/espace\/\?projet=c8a50cee-3856-4539-98a3-f5df201dbff0&facture=unpaid-final&inscription=1/);
+ await expect(d.locator('[data-msg]')).toHaveValue(/facture n° F-2026-0003/);
  await d.locator('[data-lang]').selectOption('en');
  await expect(d.locator('[data-msg]')).toHaveValue(/Here is your invoice F-2026-0003 for €700\.00/);
  await d.locator('[data-lang]').selectOption('fr');
  await page.screenshot({path:testInfo.outputPath('invoice-send.png')});
- // WhatsApp only: needs a number, then opens WhatsApp with the message; no e-mail is queued.
- await d.locator('[data-mail]').uncheck();
- await d.locator('[data-wa]').check();
- await d.locator('[data-go]').click();
- await expect(d.locator('[data-out]')).toContainText('numéro WhatsApp');
  const before=await page.evaluate(()=>window.__syntheticCalls.length);
+ await d.locator('[data-recipient]').fill('demo@example.com');
+ await d.locator('[data-outlook]').click();
+ await expect(d.locator('[data-out]')).toContainText('Brouillon ouvert');
+ await expect.poll(()=>page.evaluate(()=>window.__opened.length)).toBe(1);
  await d.locator('[data-phone]').fill('06 12 34 56 78');
- await d.locator('[data-go]').click();
- await expect(d.locator('[data-out]')).toContainText('WhatsApp : message préparé');
+ await d.locator('[data-wa-open]').click();
+ await expect(d.locator('[data-out]')).toContainText('WhatsApp prêt');
  const opened=await page.evaluate(()=>window.__opened);
- expect(opened).toHaveLength(1);
- expect(opened[0]).toMatch(/^https:\/\/wa\.me\/33612345678\?text=/);
- expect(decodeURIComponent(opened[0].split('text=')[1])).toContain('F-2026-0003');
+ expect(opened).toHaveLength(2);
+ expect(opened[0]).toMatch(/^https:\/\/outlook\.live\.com\/mail\/0\/deeplink\/compose\?to=demo%40example\.com/);
+ expect(opened[1]).toMatch(/^https:\/\/wa\.me\/33612345678\?text=/);
+ expect(decodeURIComponent(opened[1].split('text=')[1])).toContain('F-2026-0003');
  const calls=await page.evaluate(n=>window.__syntheticCalls.slice(n),before);
- expect(JSON.stringify(calls)).not.toMatch(/emailAt|process-notification-outbox/);
+ expect(JSON.stringify(calls)).not.toMatch(/emailAt|process-notification-outbox|invoice_shared/);
  await d.locator('[data-later]').click();
  await expect(d).toHaveCount(0);
  if(testInfo.project.name.includes('mobile')){
