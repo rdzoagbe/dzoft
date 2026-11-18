@@ -75,6 +75,14 @@ const syntheticSb = `
         ],updates:[],supplements:0,credit_notes:window.__credits||[],credits:(window.__credits||[]).filter(c=>c.effect==='reduce').reduce((n,c)=>n+c.amount,0)};
       return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
     }
+   // Unsent draft proposal (18 Nov 2026): « Modifier ce brouillon » re-prices it in place.
+   if(location.search.includes('draftFixture=1')){
+     window.__draft=window.__draft||{id:'33333333-3333-4333-8333-333333333333',title:'Ajouts demandés',status:'proposed',sent_at:null,proposal_number:'D-SYNTHETIC-001-C1',proposal_version:1,extra_price:400,already_done:true,timeline_impact:'',created_at:now,
+       lines:[{label:'Logo plus grand',qty:1,price:25,source:'j1'},{label:'Photo floutée avant le pass',qty:1,price:100,source:'j2'},{label:'Écran d’administration',qty:1,price:275},{label:'Vidéo de présentation',qty:1,price:0}]};
+     if(name==='owner_list_change_requests')return [window.__draft];
+     if(name==='owner_price_change_request'){window.__priceArgs=args;const t=args.p_lines.reduce((n,l)=>n+Math.round(l.qty*l.price*100),0)/100;
+       window.__draft=Object.assign({},window.__draft,{lines:args.p_lines,extra_price:t,proposal_version:window.__draft.proposal_version+1,already_done:args.p_already_done});return window.__draft;}
+   }
    if(name==='owner_list_change_requests')return summaryFixture?[
      {id:'11111111-1111-4111-8111-111111111111',title:'Synthetic signed extra',status:'approved',extra_price:200,decided_at:now,created_at:now,proposal_number:'D-SYNTHETIC-001-C1',lines:[{label:'Page',qty:1,price:200}]},
      {id:'22222222-2222-4222-8222-222222222222',title:'Synthetic pending proposal',status:'proposed',extra_price:500,created_at:now}]:[];
@@ -1182,6 +1190,48 @@ test('Calculator « Annuler » clears the lines and closes the form without savi
  expect(errors).toEqual([]);
 });
 
+test('An unsent draft extra can be edited in place: add a line and a 30 % discount, same number, still a draft',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('dialog',d=>d.accept());
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&draftFixture=1#billing',{waitUntil:'domcontentloaded'});
+ const card=page.locator('#dzoft-owner-changes [data-change-card="33333333-3333-4333-8333-333333333333"]');
+ await expect(card).toContainText('400,00');
+ const edit=card.locator('details.dzoft-change-edit');
+ await expect(edit.locator('summary')).toHaveText(/Modifier ce brouillon|Edit this draft/);
+ await edit.locator('summary').click();
+ const form=edit.locator('form[data-change-offer][data-edit]');
+ await expect(form.locator('[data-line]')).toHaveCount(4);
+ await expect(form.locator('[data-calc-total]')).toContainText('400,00');
+ await expect(form.locator('[name=done]')).toBeChecked();
+ // Cancel puts the saved lines back.
+ await form.locator('[data-line]').first().locator('[data-line-remove]').click();
+ await expect(form.locator('[data-line]')).toHaveCount(3);
+ await form.locator('[data-form-cancel="calc"]').click();
+ await expect(edit).not.toHaveAttribute('open','');
+ await expect(form.locator('[data-line]')).toHaveCount(4);
+ await expect(form.locator('[data-calc-total]')).toContainText('400,00');
+ // Edit: add a 100 € line and a 30 % discount → 500 − 150 = 350.
+ await edit.locator('summary').click();
+ await form.locator('[data-calc-add-line]').click();
+ const last=form.locator('[data-line]').last();
+ await last.locator('[name=label]').fill('Comptes professionnels');
+ await last.locator('[name=price]').fill('100');
+ await form.locator('[data-calc-discount]').click();
+ await form.locator('[data-discount] [name=pct]').fill('30');
+ await expect(form.locator('[data-calc-total]')).toContainText('350,00');
+ await form.locator('button[type=submit]').click();
+ await expect.poll(()=>page.evaluate(()=>window.__priceArgs&&window.__priceArgs.p_request)).toBe('33333333-3333-4333-8333-333333333333');
+ const args=await page.evaluate(()=>window.__priceArgs);
+ expect(args.p_lines.find(l=>/Remise commerciale/.test(l.label))).toMatchObject({qty:1,price:-150});
+ expect(args.p_lines.find(l=>l.label==='Logo plus grand').source).toBe('j1');
+ expect(args.p_already_done).toBe(true);
+ expect(args.p_lines.reduce((n,l)=>n+l.qty*l.price,0)).toBe(350);
+ await expect(card).toContainText('350,00');
+ await expect(card).toContainText('D-SYNTHETIC-001-C1');
+ await expect(card.locator('[data-change-send]')).toBeVisible();
+ expect(errors).toEqual([]);
+});
 test('Project page menu on a phone: closed = unreachable, open = focus inside, Escape gives focus back',async({page},testInfo)=>{
  test.skip(!testInfo.project.name.includes('mobile'),'Only the mobile layout is relevant');
  await syntheticOwner(page);
