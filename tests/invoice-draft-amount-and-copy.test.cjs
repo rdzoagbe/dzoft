@@ -86,7 +86,9 @@ test('sending invoice includes its archived PDF for BOTH client and owner',()=>{
  assert.match(emailWorker,/attachment = \[\{/);
  assert.match(emailWorker,/\.download\(path\)/);
  assert.match(html,/x\.attachPdf = true/);
- assert.match(html,/<b>E-mail<\/b> avec le PDF de la facture, et une copie à votre adresse de suivi/);
+ assert.match(html,/data-outlook/);
+ assert.match(html,/data-pdf/);
+ assert.match(html,/Outlook s’ouvre dans votre navigateur/);
  assert.match(html,/!x\.num \|\| !x\.file/);
  assert.match(html,/invoiceDeliverySummary\(x\)/);
  assert.match(html,/job\.status === 'sent'/);
@@ -96,9 +98,13 @@ test('sending invoice includes its archived PDF for BOTH client and owner',()=>{
 
 test('PDF renderer and email worker source are parseable and no auto-send on creation',()=>{
  assert.match(html,/if \(!confirm\(ask\)\) return;/);
- // Creation opens the send window; e-mail or WhatsApp only on « Envoyer ».
+ // Creation opens a review window; nothing is transmitted by DZOFT when preparing a draft.
  assert.match(html,/return sendInvoiceDialog\(x, true\);/);
- assert.match(html,/q\('\[data-go\]'\)\.onclick = function\(\)\{[\s\S]*?if \(mail\) mailInvoice\(x, null\)/);
+ const dialog=html.slice(html.indexOf('function sendInvoiceDialog('),html.indexOf('function mailInvoice('));
+ assert.match(dialog,/data-outlook/);
+ assert.match(dialog,/data-wa-open/);
+ assert.doesNotMatch(dialog,/mailInvoice\(/);
+ assert.doesNotMatch(dialog,/process-notification-outbox/);
  assert.doesNotMatch(sql,/queue_project_event|email_outbox|fetch\(/);
  // Extract the inline page script (not external scripts) for syntactic validity.
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];

@@ -246,7 +246,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   .invoice-send::backdrop{background:rgba(11,16,32,.45)}
   .invoice-send h2{margin:0 0 6px;font-size:1.25rem}
   .invoice-send label{display:block;margin:12px 0 0;font-weight:600;font-size:14px}
-  .invoice-send input[type=tel],.invoice-send select,.invoice-send textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;font:inherit;font-weight:400}
+  .invoice-send input[type=tel],.invoice-send input[type=email],.invoice-send input[type=text],.invoice-send select,.invoice-send textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;font:inherit;font-weight:400}
   .invoice-send .invoice-send-check{display:flex;gap:10px;align-items:flex-start;font-weight:400;padding:10px 12px;border:1px solid #dbe3f0;border-radius:12px}
   .invoice-send .invoice-send-check input{margin-top:3px;flex:0 0 auto;width:auto}
   .invoice-send .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
@@ -963,7 +963,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         '<div class="invoice-record-actions">' +
           (x.file ? '<button class="btn sm line" type="button" data-a="pdf-get">'+il('Télécharger le PDF','Download PDF')+'</button>' : '')+
           (!x.file && official ? '<button class="btn sm main" type="button" data-a="pdf-archive">'+il('Archiver le PDF','Archive PDF')+'</button>' : '')+
-          (x.file && !creditInfo(x).cancelled ? '<button class="btn sm main" type="button" data-a="invoice-send">' + (x.emailAt ? il('Renvoyer (e-mail ou WhatsApp)','Resend (email or WhatsApp)') : il('Envoyer (e-mail ou WhatsApp)','Send (email or WhatsApp)')) + '</button>' : '')+
+          (x.file && !creditInfo(x).cancelled ? '<button class="btn sm main" type="button" data-a="invoice-send">' + (x.emailAt ? il('Préparer (Outlook ou WhatsApp)','Prepare in Outlook or WhatsApp') : il('Préparer (Outlook ou WhatsApp)','Prepare in Outlook or WhatsApp')) + '</button>' : '')+
           (official && creditInfo(x).open > 0 ? '<button class="btn sm line" type="button" data-a="credit-note">'+il('Annuler ou réduire (avoir)','Cancel or reduce (credit note)')+'</button>' : '')+
           (!x.paid && !x.payment_reported_at && Q.accepted_at && official && creditInfo(x).open > 0 ? '<button class="btn sm line" type="button" data-a="payment-reminder">'+il('Relancer le paiement (e-mail ou WhatsApp)','Payment reminder (email or WhatsApp)')+'</button>' : '')+
           (!x.file && !official ? '<span class="muted">Ajoutez le PDF dans les détails pour activer l’envoi.</span>' : '')+
@@ -1242,49 +1242,52 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     };
     d.showModal();
   }
+  /* Review-first: opening Outlook and WhatsApp never queues invoice email. */
   function sendInvoiceDialog(x, fresh){
-    if (document.getElementById('invoice-send')) return;
-    var hasMail = !!(C && [C.email, C.contact].some(function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || '').trim()); }));
-    var phone = waNumber(C && C.contact), lang = C && C.lang === 'en' ? 'en' : 'fr';
-    var d = document.createElement('dialog'); d.id = 'invoice-send'; d.className = 'invoice-send';
-    d.innerHTML =
-      '<h2>' + (fresh ? 'Facture ' + esc(x.num) + ' créée' : 'Envoyer la facture ' + esc(x.num)) + '</h2>' +
-      '<p class="muted">' + esc(invoiceTitle(x)) + ' · ' + eur(x.amt) + (fresh ? ' · PDF archivé' : '') + '. Choisissez comment l’envoyer, puis « Envoyer ».</p>' +
-      '<label class="invoice-send-check"><input type="checkbox" data-mail' + (hasMail && x.file ? ' checked' : ' disabled') + '><span><b>E-mail</b> avec le PDF de la facture, et une copie à votre adresse de suivi' +
-        (!hasMail ? ' · <em>ajoutez une adresse e-mail à la fiche client</em>' : !x.file ? ' · <em>archivez d’abord le PDF</em>' : x.emailAt ? ' · <em>déjà envoyé le ' + esc(new Date(x.emailAt).toLocaleDateString('fr-FR')) + '</em>' : '') + '</span></label>' +
-      '<label class="invoice-send-check"><input type="checkbox" data-wa' + (phone ? ' checked' : '') + '><span><b>WhatsApp</b> : le message ci-dessous s’ouvre dans WhatsApp, vous appuyez sur Envoyer</span></label>' +
-      '<label>Numéro WhatsApp du client (+33…)<input data-phone type="tel" value="' + esc(phone ? '+' + phone : '') + '"></label>' +
-      '<label>Langue du message<select data-lang><option value="fr"' + (lang === 'fr' ? ' selected' : '') + '>Français</option><option value="en"' + (lang === 'en' ? ' selected' : '') + '>English</option></select></label>' +
-      '<label>Message WhatsApp<textarea data-msg rows="8" maxlength="3000">' + esc(invoiceMessage(x, lang)) + '</textarea></label>' +
-      '<p class="muted" style="font-size:13px">WhatsApp utilise le compte connecté sur cet appareil : vérifiez qu’il s’agit de votre numéro professionnel.</p>' +
-      '<p data-out role="status" class="muted"></p>' +
-      '<div class="row"><button type="button" class="btn main" data-go>Envoyer</button><button type="button" class="btn line" data-later>' + (fresh ? 'Plus tard' : 'Fermer') + '</button></div>';
+    if(document.getElementById('invoice-send'))return;
+    var recipient=mailTo(), phone=waNumber(C&&C.contact), lang=C&&C.lang==='en'?'en':'fr';
+    var d=document.createElement('dialog');d.id='invoice-send';d.className='invoice-send';
+    d.innerHTML=
+      '<h2>'+il('Préparer l’envoi de la facture ','Prepare sending invoice ')+esc(x.num)+'</h2>'+
+      '<p class="muted">'+esc(invoiceTitle(x))+' · '+eur(x.amt)+' · '+il('Aucun envoi automatique : vous relisez et envoyez depuis Outlook ou WhatsApp.','Nothing is sent automatically: review and send in Outlook or WhatsApp.')+'</p>'+
+      '<label>'+il('Destinataire e-mail','Email recipient')+'<input type="email" data-recipient value="'+esc(recipient)+'" placeholder="client@example.com"></label>'+
+      '<label>'+il('Objet','Subject')+'<input type="text" data-subject maxlength="240" value="'+esc('Facture '+x.num+' · DZOFT')+'"></label>'+
+      '<label>'+il('Message e-mail à relire','Email message to review')+'<textarea data-email-body rows="7" maxlength="6000">'+esc(invoiceMessage(x,lang))+'</textarea></label>'+
+      '<p class="muted">'+il('Outlook s’ouvre dans votre navigateur sur le compte actuellement connecté. Vérifiez votre adresse Hotmail. Le PDF ne se joint pas automatiquement : ouvrez-le et joignez-le avant Envoi.','Outlook opens in your browser in the currently signed-in account. Check your Hotmail address. The PDF cannot be attached automatically: open and attach it before sending.')+'</p>'+
+      '<div class="row"><button type="button" class="btn sm line" data-pdf>'+il('Voir le PDF à joindre','View PDF to attach')+'</button><button type="button" class="btn main" data-outlook>'+il('Ouvrir dans Outlook','Open in Outlook')+'</button></div>'+
+      '<hr><label>'+il('WhatsApp du client (+33…)','Client WhatsApp (+33…)')+'<input type="tel" data-phone value="'+esc(phone?'+'+phone:'')+'"></label>'+
+      '<label>'+il('Langue du WhatsApp','WhatsApp language')+'<select data-lang><option value="fr"'+(lang==='fr'?' selected':'')+'>Français</option><option value="en"'+(lang==='en'?' selected':'')+'>English</option></select></label>'+
+      '<label>'+il('Message WhatsApp à relire','WhatsApp message to review')+'<textarea data-msg rows="6" maxlength="3000">'+esc(invoiceMessage(x,lang))+'</textarea></label>'+
+      '<p class="muted">'+il('WhatsApp peut proposer d’ouvrir l’application installée. Vérifiez le destinataire avant d’envoyer.','WhatsApp may offer to open the installed app. Check the recipient before sending.')+'</p>'+
+      '<div class="row"><button type="button" class="btn main" data-wa-open>'+il('Ouvrir WhatsApp','Open WhatsApp')+'</button><button type="button" class="btn line" data-later>'+il('Fermer','Close')+'</button></div>'+
+      '<p data-out role="status" class="muted"></p>';
     document.body.appendChild(d);
-    var q = function(s){ return d.querySelector(s); };
-    q('[data-lang]').onchange = function(e){ q('[data-msg]').value = invoiceMessage(x, e.target.value); };
-    q('[data-later]').onclick = function(){ d.close(); };
-    d.addEventListener('close', function(){
-      d.remove();
-      if (fresh && !d.dataset.sent) toast('Facture ' + x.num + ' créée. Vous pourrez l’envoyer depuis « Factures ».');
-    });
-    q('[data-go]').onclick = function(){
-      var mail = q('[data-mail]').checked, wa = q('[data-wa]').checked, out = q('[data-out]');
-      if (!mail && !wa) { out.textContent = 'Choisissez au moins un moyen d’envoi.'; return; }
-      var number = waNumber(q('[data-phone]').value), msg = q('[data-msg]').value.trim();
-      if (wa && !number) { out.textContent = 'Indiquez le numéro WhatsApp avec son indicatif (+33…).'; return; }
-      if (wa && !msg) { out.textContent = 'Ajoutez un message.'; return; }
-      // Opened during the click: browsers block windows opened after a network call.
-      if (wa) { var w = window.open('https://wa.me/' + number + '?text=' + encodeURIComponent(msg), '_blank'); if (w) w.opener = null; }
-      d.dataset.sent = '1';
-      q('[data-go]').disabled = true;
-      var done = function(ok){
-        var lines = [];
-        if (mail) lines.push(ok ? '✓ E-mail mis en file pour le client et votre copie (statut dans « Factures »).' : 'E-mail : non envoyé, voir le message d’erreur.');
-        if (wa) lines.push('WhatsApp : message préparé. Appuyez sur Envoyer dans WhatsApp (le site ne peut pas le confirmer).');
-        out.textContent = lines.join('\n'); out.style.whiteSpace = 'pre-wrap';
-        q('[data-later]').textContent = 'Terminer';
-      };
-      if (mail) mailInvoice(x, null).then(done); else done(true);
+    var q=function(sel){return d.querySelector(sel);};
+    q('[data-lang]').onchange=function(e){q('[data-msg]').value=invoiceMessage(x,e.target.value);};
+    q('[data-later]').onclick=function(){d.close();};
+    d.addEventListener('close',function(){d.remove();});
+    q('[data-pdf]').onclick=function(){
+      if(!x.file){q('[data-out]').textContent=il('Archivez le PDF officiel avant de l’ouvrir.','Archive the official PDF before opening it.');return;}
+      var w=window.open('about:blank','_blank');
+      if(!w){q('[data-out]').textContent=il('Autorisez les fenêtres contextuelles pour ouvrir le PDF.','Allow pop-ups to open the PDF.');return;}
+      w.opener=null;
+      sb.files.link(x.file,true).then(function(url){w.location=url;},function(err){
+        w.close();q('[data-out]').textContent=il('PDF indisponible : ','PDF unavailable: ')+(err.message||'erreur');
+      });
+    };
+    q('[data-outlook]').onclick=function(){
+      var to=q('[data-recipient]').value.trim(),subject=q('[data-subject]').value.trim(),message=q('[data-email-body]').value.trim();
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){q('[data-out]').textContent=il('Vérifiez le destinataire e-mail.','Check the email recipient.');return;}
+      if(!subject||!message){q('[data-out]').textContent=il('Renseignez l’objet et le message.','Enter the subject and message.');return;}
+      openHotmail(to,subject,message);
+      q('[data-out]').textContent=il('Brouillon ouvert. Vérifiez que vous êtes connecté à Hotmail et joignez le PDF. DZOFT ne sait pas si vous avez envoyé le message.','Draft opened. Check your Hotmail sign-in and attach the PDF. DZOFT cannot confirm manual sending.');
+    };
+    q('[data-wa-open]').onclick=function(){
+      var number=waNumber(q('[data-phone]').value),message=q('[data-msg]').value.trim();
+      if(!number||!message){q('[data-out]').textContent=il('Vérifiez le numéro et le message WhatsApp.','Check WhatsApp number and message.');return;}
+      var w=window.open('https://wa.me/'+number+'?text='+encodeURIComponent(message),'_blank');
+      if(w)w.opener=null;
+      q('[data-out]').textContent=il('WhatsApp prêt : relisez puis appuyez sur Envoyer. DZOFT ne peut pas confirmer un envoi manuel.','WhatsApp ready: review then press Send. DZOFT cannot confirm manual delivery.');
     };
     d.showModal();
   }
@@ -1431,7 +1434,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
         clearTimeout(timer); b.disabled = true;
         return save({ client_note: $('note').value, steps: Q.steps, docs: Q.docs || [], env: Q.env || [], invoices: Q.invoices }).then(function(ok){ b.disabled = false; if(ok) window.DzoftReminder.open(QID, x.id); });
       }
-      if (b.dataset.a === 'invoice-email') return mailInvoice(x, b);
+      if (b.dataset.a === 'invoice-email') return sendInvoiceDialog(x, false);
       if (b.dataset.a === 'invoice-send') return sendInvoiceDialog(x, false);
       if (b.dataset.a === 'credit-note') return creditNoteDialog(x);
       if (b.dataset.a === 'credit-pdf') { var cnr = creditInfo(x).notes.filter(function(c){ return c.number === b.dataset.cn; })[0]; if (cnr) window.DzoftDocuments.download(window.DzoftDocuments.creditNote(cnr, Q, (TRK && TRK.credit_notes) || []), 'Avoir-' + cnr.number); return; }
