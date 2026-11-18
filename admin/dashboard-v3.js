@@ -109,7 +109,7 @@ function translateShell(){
    tr("Votre activité en un coup d'œil. Ouvrez un dossier pour retrouver les outils propres à chaque projet.","Your business at a glance. Open a case for its project-specific tools."):
    tr("Clients, projets, facturation et encaissements au même endroit.","Clients, projects, invoices and receipts in one place.");
  $("sd-find").textContent=tr("Rechercher un dossier","Find a case");
- $("sd-new-quote").textContent=tr("+ Nouveau devis","+ New quote");
+ $("sd-new-quote").textContent=tr("+ Nouveau devis ou supplément","+ New quote or extra");
  $("sd-projects-title").textContent=tr("Projets en cours","Projects in progress");
  $("sd-actions-title").textContent=tr("À faire","To do");var ah=$("sd-actions-help");if(ah)ah.textContent=tr("Le plus urgent en premier.","Most urgent first.");
 }
@@ -117,9 +117,31 @@ function render(input){
  lastInput=input;translateShell();translateQuick();renderStats(input);renderProjects(input);renderActions(input);
  if(pendingQuick&&input.ready)runQuick(pendingQuick);
 }
-$("sd-new-quote").addEventListener("click",function(){
+function newQuote(){
  location.hash="#/devis";
  requestAnimationFrame(function(){var b=document.getElementById("b-qnew");if(b)b.click();});
+}
+/* « + Nouveau devis ou supplément » (18 Nov 2026, Roland's flow): first choose a new project or an extra on a
+   project in progress. It is the dashboard's only way into an extra (no separate quick button), and it opens that
+   project's calculator:
+   calculate from the project's follow-up, optional commercial discount, draft to read, then « Envoyer au client ».
+   Nothing is created or sent by this choice. With no accepted project yet, it goes straight to a new quote. */
+function translateNew(){
+ $("sd-new-title").textContent=tr("Que voulez-vous préparer ?","What do you want to prepare?");
+ var q=$("sd-new-quote-choice"),x=$("sd-new-extra-choice");
+ q.querySelector("b").textContent=tr("Nouveau projet","New project");
+ q.querySelector("span").textContent=tr("Un devis pour un nouveau client ou un nouveau projet.","A quote for a new client or a new project.");
+ x.querySelector("b").textContent=tr("Supplément sur un projet en cours","Extra work on a project in progress");
+ x.querySelector("span").textContent=tr("Calcul depuis le suivi du projet, remise au choix, brouillon à relire, puis envoi au client qui le signe.","Calculated from the project’s follow-up, optional discount, a draft to read, then sent to the client to sign.");
+ $("sd-new-cancel").textContent=tr("Annuler","Cancel");
+}
+$("sd-new-quote").addEventListener("click",function(){
+ if(lastInput&&lastInput.ready&&!quickProjects().length){newQuote();return;}
+ translateNew();var d=$("sd-new");if(typeof d.showModal==="function")d.showModal();else d.setAttribute("open","");
+});
+$("sd-new").addEventListener("close",function(){
+ var v=$("sd-new").returnValue;$("sd-new").returnValue="";
+ if(v==="quote")newQuote();else if(v==="extra")runQuick("extra");
 });
 /* Quick actions: pick the project (skipped when there is only one), then open the form inside it.
    Nothing is recorded here: the project page does the work with its usual checks. */

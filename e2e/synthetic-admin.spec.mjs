@@ -676,7 +676,7 @@ test('Dashboard quick buttons open the right form inside the project, after choo
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  // One accepted project: the button goes straight to it.
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
- await expect(page.locator('#sd-quick [data-quick]')).toHaveCount(3);
+ await expect(page.locator('#sd-quick [data-quick]')).toHaveCount(2);
  await page.locator('#sd-quick [data-quick="pay"]').click();
  await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing$/);
  await expect(page.locator('#tracking-admin details.tracking-editor:not(.tracking-report-editor)')).toHaveAttribute('open','');
@@ -685,13 +685,47 @@ test('Dashboard quick buttons open the right form inside the project, after choo
  await expect(page).toHaveURL(/#work$/);
  // Several projects: a dialog asks which one; Cancel goes nowhere.
  await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
- await page.locator('#sd-quick [data-quick="extra"]').click();
+ await page.locator('#sd-new-quote').click();await page.locator('#sd-new-extra-choice').click();
  await expect(page.locator('#sd-pick')).toBeVisible();
  await expect(page.locator('#sd-pick-select option')).toHaveCount(2);
  await page.locator('#sd-pick-cancel').click();
  await expect(page.locator('#sd-pick')).toBeHidden();
  await expect(page).toHaveURL(/#\/tableau-de-bord$/);
- await page.locator('#sd-quick [data-quick="extra"]').click();
+ await page.locator('#sd-new-quote').click();await page.locator('#sd-new-extra-choice').click();
+ await page.locator('#sd-pick-select').selectOption('c8a50cee-3856-4539-98a3-f5df201dbff0');
+ await page.locator('#sd-pick-go').click();
+ await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/);
+ await expect(page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
+ expect(errors).toEqual([]);
+});
+
+test('« + Nouveau devis ou supplément » asks first: new project, or extra on a project in progress',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#sd-new-quote')).toHaveText('+ Nouveau devis ou supplément');
+ // Cancel: nothing happens.
+ await page.locator('#sd-new-quote').click();
+ await expect(page.locator('#sd-new')).toBeVisible();
+ await expect(page.locator('#sd-new .sd-new-choice')).toHaveCount(2);
+ if(testInfo.project.name.includes('mobile')){
+  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+ }
+ await page.locator('#sd-new-cancel').click();
+ await expect(page.locator('#sd-new')).toBeHidden();
+ await expect(page).toHaveURL(/#\/tableau-de-bord$/);
+ // New project: the usual new-quote screen.
+ await page.locator('#sd-new-quote').click();
+ await page.locator('#sd-new-quote-choice').click();
+ await expect(page).toHaveURL(/#\/devis/);
+ // Extra: choose the project, then its calculator opens (nothing created yet).
+ await page.goto('admin/?twoProjects=1#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const before=await page.evaluate(()=>(window.__syntheticCalls||[]).filter(c=>/create_priced|price_change|change_proposal/.test(c)).length);
+ await page.locator('#sd-new-quote').click();
+ await page.locator('#sd-new-extra-choice').click();
+ await expect(page.locator('#sd-pick')).toBeVisible();
+ expect(await page.evaluate(()=>(window.__syntheticCalls||[]).filter(c=>/create_priced|price_change|change_proposal/.test(c)).length)).toBe(before);
  await page.locator('#sd-pick-select').selectOption('c8a50cee-3856-4539-98a3-f5df201dbff0');
  await page.locator('#sd-pick-go').click();
  await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/);
@@ -758,7 +792,10 @@ test('Admin polish: no repeated summary line on the project page, a quiet bin co
  // The next step is shown once (above the tabs), the balance once (in the money tiles).
  await expect(page.locator('.project-overview-money, .project-overview-line')).toHaveCount(0);
  await expect(page.locator('#ps-summary .ps-tile')).toHaveCount(4);
- await page.locator('#ps-summary [data-ps-new-extra]').click();
+ // One way into an extra on the project page: the action at the top, not a second button in the summary.
+ await expect(page.locator('#ps-summary [data-ps-new-extra]')).toHaveCount(0);
+ await expect(page.locator('[data-workspace-action="extra"]')).toHaveCount(1);
+ await page.locator('[data-workspace-action="extra"]').click();
  await expect(page.locator('#project-panel-billing')).toBeVisible();
  await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
  const bin=page.locator('#app .side [data-count-for="parametres"]');

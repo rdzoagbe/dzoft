@@ -48,8 +48,8 @@ function renderSummary(){
    tile(tr('Reste à encaisser','Still to receive'),money(due()),'orange')+'</div>'+
    (!t||!state.changes?'<p class="ps-note">'+tr('Certains chiffres sont indisponibles : actualisez la page.','Some figures are unavailable: reload the page.')+'</p>':'');
   var items=scope(),acc=approved(),wait=pending();
-  h+='<div class="ps-scope"><div class="ps-scope-head"><h3>'+tr('Périmètre du projet','Project scope')+'</h3>'+
-   '<button type="button" class="btn sm main" data-ps-new-extra>'+tr('＋ Ajouter un supplément','＋ Add extra work')+'</button></div>'+
+  // One way into an extra on this page: « ＋ Ajouter un supplément » in the actions at the top.
+  h+='<div class="ps-scope"><div class="ps-scope-head"><h3>'+tr('Périmètre du projet','Project scope')+'</h3></div>'+
    '<h4>'+tr('Prestations du devis signé','Services in the signed quote')+'</h4>'+
    (items.length?'<ul class="ps-lines" data-no-translate>'+items.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'<p class="ps-note">'+tr('Voir le détail dans le devis signé.','See the signed quote for details.')+'</p>')+
    (acc.length?'<h4>'+tr('Suppléments signés','Signed extra work')+'</h4><ul class="ps-lines">'+acc.map(function(r){return '<li><span data-no-translate>'+esc(r.title||'')+'</span> · <strong>'+money(num(r.extra_price))+'</strong></li>';}).join('')+'</ul>':'')+
@@ -101,11 +101,6 @@ document.addEventListener('click',function(e){
   else if(b.dataset.psDoc==='credit'){var cs=credits(),c1=cs.filter(function(x){return x.number===b.dataset.id;})[0];if(c1)D.download(D.creditNote(c1,q,cs),'Avoir-'+c1.number);}
   else if(b.dataset.psDoc==='receipt'){var all=receipts(),rc=all.filter(function(x){return x.id===b.dataset.id;})[0];if(rc)D.download(D.paymentReceipt(rc,q,all),'Recu-paiement-'+rc.received_on+'-'+n);}
  }catch(err){alert(tr('Le document n’a pas pu être créé : ','The document could not be created: ')+(err&&err.message||''));}
-});
-// « Ajouter un supplément » opens the priced proposal form in Argent.
-document.addEventListener('click',function(e){
- var b=e.target.closest&&e.target.closest('[data-ps-new-extra]');if(!b)return;
- if(window.DzoftProjectWorkspace&&window.DzoftProjectWorkspace.newExtra)window.DzoftProjectWorkspace.newExtra();
 });
 
 function render(){renderSummary();renderDocuments();}
