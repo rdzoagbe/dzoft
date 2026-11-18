@@ -1314,3 +1314,17 @@ test('Editing a draft keeps an older discount saved in euros exact until its per
  expect(args.p_lines[1]).toMatchObject({label:'Remise commerciale (10 %)',price:-3000});
  expect(errors).toEqual([]);
 });
+
+test('« Préparer l’e-mail » opens Hotmail (Outlook.com) with the quote, not the default mail app',async({page})=>{
+ await syntheticOwner(page);
+ await page.addInitScript(()=>{window.__opened=[];window.open=(u,t)=>{window.__opened.push(u);return {opener:1};};});
+ await page.goto('admin/devis.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#b-mail')).toBeEnabled();
+ await page.locator('#b-mail').click();
+ await expect.poll(()=>page.evaluate(()=>window.__opened.length)).toBe(1);
+ const url=new URL(await page.evaluate(()=>window.__opened[0]));
+ expect(url.origin+url.pathname).toBe('https://outlook.live.com/mail/0/deeplink/compose');
+ expect(url.searchParams.get('subject')).toMatch(/^Votre devis /);
+ expect(url.searchParams.get('body').length).toBeGreaterThan(20);
+ expect(page.url()).toContain('admin/devis.html');
+});
