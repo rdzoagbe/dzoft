@@ -39,17 +39,50 @@
  body.prepend(aside);
  var overlay=document.createElement('button');
  overlay.type='button';overlay.className='dzoft-editor-overlay';overlay.setAttribute('aria-label','Fermer la navigation');overlay.hidden=true;body.appendChild(overlay);
- function close(){body.classList.remove('dzoft-editor-menu-open');toggle.setAttribute('aria-expanded','false');overlay.hidden=true;}
- toggle.addEventListener('click',function(){var open=!body.classList.contains('dzoft-editor-menu-open');body.classList.toggle('dzoft-editor-menu-open',open);toggle.setAttribute('aria-expanded',String(open));overlay.hidden=!open;});
- overlay.addEventListener('click',close);
- document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
- aside.addEventListener('click',function(e){if(e.target.closest('a'))close();});
+ /* On a phone (≤ 950 px, same limit as editor-navigation.css) the closed menu slides off screen: it is made inert so
+    neither the keyboard nor a screen reader can reach it. When open, focus moves into it, Tab stays inside, and
+    Escape or the overlay closes it and gives focus back to the ☰ button (18 Nov 2026). */
+ var mobile=window.matchMedia('(max-width:950px)');
+ function isOpen(){return body.classList.contains('dzoft-editor-menu-open');}
+ function sync(){
+   var open=isOpen();
+   aside.inert=mobile.matches&&!open;
+   overlay.hidden=!mobile.matches||!open;
+   toggle.setAttribute('aria-expanded',String(mobile.matches&&open));
+ }
+ function close(giveFocusBack){
+   var was=isOpen();
+   body.classList.remove('dzoft-editor-menu-open');sync();
+   if(giveFocusBack&&was)toggle.focus();
+ }
+ toggle.addEventListener('click',function(){
+   var open=!isOpen();
+   body.classList.toggle('dzoft-editor-menu-open',open);sync();
+   if(open){var first=aside.querySelector('a[href]');if(first)first.focus();}
+ });
+ overlay.addEventListener('click',function(){close(true);});
+ document.addEventListener('keydown',function(e){
+   if(!mobile.matches||!isOpen())return;
+   if(e.key==='Escape'){e.preventDefault();close(true);return;}
+   if(e.key!=='Tab')return;
+   var links=Array.prototype.slice.call(aside.querySelectorAll('a[href]'));
+   var first=links[0],last=links[links.length-1],inside=aside.contains(document.activeElement);
+   if(!first)return;
+   if(e.shiftKey&&(!inside||document.activeElement===first)){e.preventDefault();last.focus();}
+   else if(!e.shiftKey&&(!inside||document.activeElement===last)){e.preventDefault();first.focus();}
+ });
+ aside.addEventListener('click',function(e){if(e.target.closest('a'))close(false);});
+ if(mobile.addEventListener)mobile.addEventListener('change',function(){close(false);});
+ sync();
  function translate(){
    var english=document.documentElement.lang==='en';
    aside.querySelectorAll('a[data-fr][data-en]').forEach(function(a){
      a.querySelector('.dzoft-editor-item-label').textContent=a.dataset[english?'en':'fr'];
    });
    toggle.setAttribute('aria-label',english?'Open navigation':'Ouvrir la navigation');
+   overlay.setAttribute('aria-label',english?'Close navigation':'Fermer la navigation');
+   aside.setAttribute('aria-label',english?'DZOFT navigation':'Navigation DZOFT');
+   aside.querySelector('nav').setAttribute('aria-label',english?'Main navigation':'Navigation principale');
  }
  document.addEventListener('dzoft:locale-change',translate);translate();
 })();
