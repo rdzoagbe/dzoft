@@ -152,7 +152,7 @@ test('calculate from tracking: done client requests from the journal, each bille
  assert.match(changes,/done=\/:\\s\*fait\\b\/i\.test\(text\)&&!\/\^pas encore\/i\.test\(text\)/);
  // A request already in a live proposal is skipped.
  assert.match(changes,/\['declined','rejected','withdrawn'\]\.indexOf\(r\.status\)<0/);
- assert.match(changes,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
+ assert.match(changes,/if\(used\[source\]\)\{skipped\+\+;[^}]*?return;\}/);
  // The server keeps the origin, accepts a discount, and refuses a negative total.
  assert.match(mig,/'\^journal:\[0-9\]\{4\}-\[0-9\]\{2\}-\[0-9\]\{2\}:\[a-z0-9\]\{1,16\}\$'/);
  assert.match(mig,/if positive<=0 or total<0 then raise exception/);

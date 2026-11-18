@@ -151,7 +151,7 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   brouillon. Reste privé même retiré ou refusé sans avoir été envoyé (migration `20261117210000_…`).
   Tests `tests/change-proposal-draft.test.cjs`, `tests/change-draft-private-after-close.sql`.
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis le dernier supplément en cours ou signé
-  (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; « Depuis le » permet de choisir la date ; niveaux de prix
+  (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; « Du … Au … » (18 nov. 2026) permet de choisir la période (Au vide = aujourd’hui) ; les demandes déjà dans une autre proposition, brouillon compris, sont nommées avec cette proposition ; « Remise commerciale » en pourcentage des lignes (montant en euros calculé et envoyé, libellé « (10 %) ») ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).
   En ajoutant une demande réalisée au journal, renseigner `lvl`, `qty` et `why` (commits, base, tests) d’après ces règles.
   Origine du prix (17 nov. 2026) : niveau noté au journal, sinon prestation de la liste dont les mots sont dans la demande, sinon prix par défaut ;

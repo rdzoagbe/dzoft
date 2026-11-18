@@ -33,7 +33,7 @@ test('Prices and quantities keep two decimals at most, so the total shown is the
  const amount=new Function('num',m[0]+';return amount;')(v=>{const n=Number(String(v==null?'':v).replace(',','.'));return Number.isFinite(n)?n:NaN;});
  assert.equal(amount('12,5'),12.5);assert.equal(amount('1.25'),1.25);assert.equal(amount(' 40 '),40);
  for(const bad of ['1,234','0,001','12,5,0','abc','','1e3'])assert.ok(Number.isNaN(amount(bad)),bad);
- assert.match(js,/qty:disc\?1:amount\(/);assert.match(js,/p=amount\(row\.querySelector\('\[name=price\]'\)\.value\);return \{label/);
+ assert.match(js,/qty:disc\?1:amount\(/);assert.match(js,/p=amount\(row\.querySelector\('\[name=price\]'\)\.value\),pc=/);assert.match(js,/return \{label:lb,/);
 });
 
 test('« Calculer depuis le suivi » only adds requests done since the last extra-work proposal',()=>{
@@ -45,7 +45,7 @@ test('« Calculer depuis le suivi » only adds requests done since the last extr
  assert.match(fj,/if\(lastDay>since\)since=lastDay;/);
  // Older done requests are listed apart, never added; lines already in a live proposal are still skipped.
  assert.match(fj,/if\(since&&e\.d<since\)\{[^]*?earlier\.push\([^]*?return false;\}/);
- assert.match(fj,/if\(used\[source\]\)\{skipped\+\+;return;\}/);
+ assert.match(fj,/if\(used\[source\]\)\{skipped\+\+;[^}]*?return;\}/);
  assert.match(fj,/avant le dernier supplément, non reprise\(s\)/);
 });
 
@@ -53,13 +53,36 @@ test('« Depuis le » lets the owner choose the start date (never before the sig
  assert.match(js,/<input type="date" name="since"/);
  const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
  assert.match(fj,/if\(chosen\)since=signed&&chosen<signed\?signed:chosen;/);
- assert.match(fj,/\(date choisie\)/);
+ assert.match(fj,/\(dates choisies\)/);
 });
 
 test('Calculating again with a later start removes journal lines now before it, keeps hand-typed lines',()=>{
  const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
  assert.match(fj,/m=\/\^journal:\(\\d\{4\}-\\d\{2\}-\\d\{2\}\):\/\.exec\(src\)/);
- assert.match(fj,/if\(m&&since&&m\[1\]<since\)/);
+ assert.match(fj,/if\(m&&\(\(since&&m\[1\]<since\)\|\|\(until&&m\[1\]>until\)\)\)/);
  // Removal happens before the form's remaining lines are marked as used.
  assert.ok(fj.indexOf('m[1]<since')<fj.indexOf('readLines(form).forEach(function(l){if(l.source)used[l.source]=1;})'));
+});
+
+test('« Du … Au … »: an optional end date, and the proposal holding a skipped request is named (18 Nov 2026)',()=>{
+ assert.match(js,/<input type="date" name="until"/);
+ const fj=js.slice(js.indexOf('function fromJournal('),js.indexOf('function recalc('));
+ // Only requests done up to the end date are added; later ones are listed apart, never added.
+ assert.match(fj,/if\(until&&e\.d>until\)\{[^]*?after\.push\([^]*?return false;\}/);
+ // An end date before the start date stops the calculation with a message.
+ assert.match(fj,/if\(until&&since&&until<since\)\{[^]*?return;\}/);
+ // Skipped requests say which proposal holds them, an unsent draft included.
+ assert.match(fj,/brouillon non envoyé du /);
+ assert.match(fj,/modifiez ou refusez d’abord cette proposition/);
+});
+
+test('Commercial discount is a percentage of the items, sent as its euro amount (18 Nov 2026)',()=>{
+ assert.match(js,/<input name="pct" type="text" inputmode="decimal"/);
+ // Items are totalled first; the discount is a percentage of that subtotal, rounded to the cent.
+ const rc=js.slice(js.indexOf('function recalc('),js.indexOf('function addLine('));
+ assert.ok(rc.indexOf('sub+=')<rc.indexOf('Math.round(sub*pc/100)'));
+ assert.match(rc,/pc>0&&pc<100\?Math\.round\(sub\*pc\/100\):NaN/);
+ // The label tells the client the percentage; an invalid percentage blocks saving.
+ assert.ok(js.includes("+' ('+String(pc).replace('.',',')+' %)';"));
+ assert.match(js,/La remise est un pourcentage : tapez un nombre entre 0 et 100/);
 });
