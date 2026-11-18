@@ -4171,6 +4171,11 @@ begin
   if p_effect = 'reissue' and (paid > 0 or credited > 0 or v_amount <> reg.amount) then
     raise exception 'To re-issue, cancel the whole unpaid invoice';
   end if;
+  if p_effect = 'reissue' and reg.change_id is null and coalesce(reg.basis,'') <> 'final'
+     and exists(select 1 from private.dzoft_issued_invoice_registry f
+                 where f.quote_id = p_quote and f.basis = 'final' and not f.cancelled_for_reissue) then
+    raise exception 'A final invoice is already issued: cancel it first to re-issue this invoice';
+  end if;
   today_paris := (now() at time zone 'Europe/Paris')::date;
   yr := extract(year from today_paris)::integer;
   insert into private.dzoft_credit_note_sequences(credit_year,last_number) values(yr,0) on conflict(credit_year) do nothing;
@@ -4218,6 +4223,7 @@ end $function$
 
 revoke all on function private.dzoft_base_reissue_credits(uuid) from public, anon, authenticated;
 revoke all on function private.issue_credit_note(uuid,text,numeric,text,text,uuid) from public, anon, authenticated;
+grant execute on function private.issue_credit_note(uuid,text,numeric,text,text,uuid) to authenticated;
 revoke all on function public.issue_credit_note(uuid,text,numeric,text,text,uuid) from public, anon;
 revoke all on function public.owner_list_credit_notes() from public, anon;
 grant execute on function public.issue_credit_note(uuid,text,numeric,text,text,uuid) to authenticated;

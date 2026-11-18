@@ -84,4 +84,42 @@ begin
   if not failed then raise exception 'A non-owner listed credit notes'; end if;
 end
 $test$;
+
+-- 8. As the real `authenticated` role (what the admin page uses): the RPC works, and re-issuing an interim invoice
+--    while a final invoice is active is refused before anything is created.
+create temp table t_ids as select gen_random_uuid() owner_id, gen_random_uuid() cid, gen_random_uuid() q;
+grant select on t_ids to authenticated;
+insert into public.clients(id,nom,email) select cid,'TEST credit role','credit-role@example.invalid' from t_ids;
+insert into public.quotes(id,client_id,numero,total,accepted_total,accepted_at,shared,invoices,accepted_data)
+ select q,cid,'TEST-CREDIT-ROLE',1000,1000,now(),true,'[]','{"f":{"myaddr":"Test seller, France","cname":"Test client","caddr":"Test buyer, France","novat":true}}' from t_ids;
+set local role authenticated;
+select set_config('request.jwt.claims',jsonb_build_object('sub',(select owner_id from t_ids),'role','authenticated','app_metadata',jsonb_build_object('dzoft_owner',true))::text,true);
+do $role$
+declare q uuid:=(select q from t_ids); interim jsonb; fin jsonb; cn jsonb; failed boolean; msg text;
+begin
+  interim:=public.issue_interim_invoice(q,300,gen_random_uuid());
+  fin:=public.issue_final_invoice_checked(q,700);
+  cn:=public.issue_credit_note(q,fin->>'invoice_id',50,'reduce','Remise après coup sur le solde',gen_random_uuid());
+  if cn->>'number' is null then raise exception 'FAIL credit note not issued as authenticated'; end if;
+  failed:=false; begin perform public.issue_credit_note(q,interim->>'invoice_id',null,'reissue','Erreur sur la facture intermédiaire',gen_random_uuid());
+  exception when others then failed:=true; msg:=sqlerrm; end;
+  if not failed or msg not like 'A final invoice is already issued%' then raise exception 'FAIL interim re-issue with an active final: %',msg; end if;
+end $role$;
+-- 9. A supplementary invoice cancelled for re-issue (« erreur sur la facture ») can be issued again for the same extra.
+reset role;
+alter table t_ids add column ch uuid default gen_random_uuid();
+insert into public.dzoft_change_requests(id,quote_id,client_id,title,description,status,
+  proposed_scope,extra_price,proposal_version,proposed_at,decision_name,decided_at,sent_at)
+select ch,q,cid,'Ajout de test','Description de test assez longue','completed',
+  'Périmètre de test assez long',150,1,now(),'Test client',now(),now() from t_ids;
+set local role authenticated;
+do $sup$
+declare v_q uuid:=(select q from t_ids); v_ch uuid:=(select ch from t_ids); s1 jsonb; s2 jsonb;
+begin
+  s1:=public.issue_accepted_invoice(v_q,'supplement',v_ch);
+  perform public.issue_credit_note(v_q,s1->>'invoice_id',null,'reissue','Erreur sur la facture complémentaire',gen_random_uuid());
+  s2:=public.issue_accepted_invoice(v_q,'supplement',v_ch);
+  if s2->>'number'=s1->>'number' or (s2->>'already_issued')::boolean or (s2->>'amount')::numeric<>150 then
+    raise exception 'FAIL supplementary invoice not re-issued: %',s2; end if;
+end $sup$;
 rollback;

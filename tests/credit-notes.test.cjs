@@ -58,3 +58,15 @@ test('PDF and lists: credit note cites its invoice; listed for admin, client and
  // What is due takes credit notes off.
  assert.match(read('assets/project-tracking.js'),/return n\+Math\.max\(0,cents\(i\.amt\)-paid-credited\);/);
 });
+
+test('client space: an invoice cancelled by a credit note is no longer to pay', () => {
+
+  const portal = fs.readFileSync(require('path').join(__dirname, '..', 'espace', 'index.html'), 'utf8');
+  for (const s of ['function openInv(q, x)', 'function loadCredits()', "L('Annulée par avoir', 'Cancelled by credit note')",
+    'filter(function(x){ return openInv(q, x); })', 'openInv(q, x) && !x.payment_reported_at', 'openInv(q, x) && +x.amt > 0',
+    'q.accepted_at && openInv(q, x) && x.id']) assert.ok(portal.includes(s), s);
+  const tracking = fs.readFileSync(require('path').join(__dirname, '..', 'assets', 'project-tracking.js'), 'utf8');
+  assert.ok(tracking.includes("if(!amount&&!credit)return"), 'per-invoice note counts credit notes');
+  const admin = fs.readFileSync(require('path').join(__dirname, '..', 'admin', 'suivi.html'), 'utf8');
+  assert.ok(admin.includes('invoices:liveInvoices()') && admin.includes("c.effect === 'reissue'"), 'extras ignore re-issued invoices');
+});
