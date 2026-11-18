@@ -184,6 +184,7 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   Tests `tests/change-proposal-draft.test.cjs`, `tests/change-draft-private-after-close.sql`.
   « ✎ Modifier ce brouillon » (18 nov. 2026) : un brouillon non envoyé se modifie sur place (lignes, prix, remise ; même numéro,
   reste brouillon, `owner_price_change_request`) ; Annuler remet ses lignes enregistrées. E2e « edited in place ».
+  Textes envoyés au client toujours en français, quelle que soit la langue de l’admin (« Remise commerciale », titre par défaut).
   « ⚡ Calculer depuis le suivi » reprend les « demande » du journal réalisées depuis le dernier supplément en cours ou signé
   (sinon depuis la signature ; les plus anciennes sont listées à part, jamais ajoutées) ; « Du … Au … » (18 nov. 2026) permet de choisir la période (Au vide = aujourd’hui) ; les demandes déjà dans une autre proposition, brouillon compris, sont nommées avec cette proposition ; « Remise commerciale » en pourcentage des lignes (montant en euros calculé et envoyé, libellé « (10 %) ») ; niveaux de prix
   `settings.price_tiers` (retouche 10, petite 25, moyenne 50, importante 100, offert 0 ; « inclus » jamais facturé).

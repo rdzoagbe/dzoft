@@ -332,7 +332,7 @@ function bindOwner(root,options){
     '<p>'+tr(en,'Activité Git sur le projet depuis la signature : ','Git activity on the project since signature: ')+Object.keys(days).length+' '+tr(en,'jour(s) de travail.','working day(s).')+'</p>'+
     (after.length?'<details><summary>'+after.length+' '+tr(en,'demande(s) réalisée(s) après la date « Au », non reprise(s)','request(s) done after the “To” date, not added')+'</summary><ul>'+after.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
     (later.length?'<details><summary>'+later.length+' '+tr(en,'demande(s) pas encore réalisée(s), non incluse(s)','request(s) not done yet, not included')+'</summary><ul>'+later.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'');
-   if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value=tr(en,'Ajouts demandés depuis la signature du devis','Additions requested since the quote was signed');
+   if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value='Ajouts demandés depuis la signature du devis';
    form.elements.done.checked=true;
    var firstEmpty=form.querySelector('[data-unpriced]');if(firstEmpty)firstEmpty.focus();
   }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;btn.disabled=false;});
@@ -379,7 +379,7 @@ function bindOwner(root,options){
   if(b.hasAttribute('data-calc-add-line')&&form){addLine(form,null).querySelector('[name=label]').focus();return;}
   if(b.hasAttribute('data-calc-add-block')&&form){var i=form.elements.block.value;if(i===''||!blocks[+i])return;var bl=blocks[+i];addLine(form,{label:bl.label,qty:1,price:bl.price});form.elements.block.value='';return;}
   if(b.hasAttribute('data-line-remove')&&form){var rows=form.querySelectorAll('[data-line]');if(rows.length>1)b.closest('[data-line]').remove();else{b.closest('[data-line]').querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}recalc(form);return;}
-  if(b.hasAttribute('data-calc-discount')&&form){var d=addLine(form,{label:tr(en,'Remise commerciale','Commercial discount'),qty:1,price:'',discount:true});d.querySelector('[name=pct]').focus();return;}
+  if(b.hasAttribute('data-calc-discount')&&form){/* Text sent to the client stays in French (the proposal, like the quote, is in French), whatever the admin language. */var d=addLine(form,{label:'Remise commerciale',qty:1,price:'',discount:true});d.querySelector('[name=pct]').focus();return;}
   if(b.hasAttribute('data-calc-journal')&&form){fromJournal(form,b);return;}
   if(b.hasAttribute('data-calc-detect')&&form){
    var text=plain(form.elements.request.value),present=readLines(form).map(function(l){return l.label;}),found=0;
