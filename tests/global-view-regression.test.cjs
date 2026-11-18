@@ -75,5 +75,5 @@ test('global page title and layout differ from the project dashboard',()=>{
  // so their old hiding/layout rules were deleted in the 18 Nov clean-up.
  assert.doesNotMatch(dashboard+admin,/class="sd-selected|class="sd-shortcuts|'sd-selected|"sd-selected/);
  assert.match(admin,/global-view-v5\.css/);
- assert.match(admin,/dashboard-v3\.js\?v=(?:20261117-dash2|20261117-blue|20261117-onepage|20261118-newchoice)/);
+ assert.match(admin,/dashboard-v3\.js\?v=(?:20261117-dash2|20261117-blue|20261117-onepage|20261118-newchoice|20261118-backup)/);
 });

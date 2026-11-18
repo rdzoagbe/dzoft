@@ -207,6 +207,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   #print p,#print li{font-size:13px}
   #print table{border:1px solid var(--line)}
 }
+/* Quick backup (18 Nov 2026) */
+.backup-quick{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px}
+.backup-status{font-weight:700;font-size:14px;margin:6px 0 10px}.backup-status.is-ok{color:var(--ok)}.backup-status.is-due{color:var(--warn)}
+.backup-msg{font-size:13.5px;margin-top:8px;overflow-wrap:anywhere}
+.backup-counts{border-collapse:collapse;margin-top:8px;font-size:13px;min-width:min(320px,100%)}.backup-counts th{text-align:left;font-weight:500;padding:3px 12px 3px 0;color:var(--ink2)}.backup-counts td{text-align:right;font-variant-numeric:tabular-nums}
+.backup-check{margin-top:12px}.backup-check summary{cursor:pointer;font-weight:700;font-size:14px;min-height:44px;display:flex;align-items:center}
+.backup-check input[type=file]{display:block;margin:4px 0 10px;max-width:100%}
+.backup-full-title{font-size:15px;margin:0 0 8px}
 </style>
 
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=20261104-portal">
@@ -488,6 +496,25 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           <span class="settings-fold-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         </summary>
           <div class="settings-fold-body" id="backup-readiness">
+            <div class="settings-subsection backup-quick" id="backup-box">
+              <h3>Sauvegarde rapide, depuis ce navigateur</h3>
+              <p class="settings-body-help">Télécharge en un fichier toutes vos données de gestion : clients, devis, factures et leur registre, paiements, avoirs, suppléments, messages, journal. Le fichier est chiffré ici avec le mot de passe que vous choisissez ; personne ne peut l’ouvrir sans lui, pas même DZOFT. Les codes d’accès secrets ne sont pas inclus. Les PDF archivés et les comptes de connexion restent couverts par la sauvegarde complète ci-dessous.</p>
+              <p class="backup-status" id="backup-status" aria-live="polite">…</p>
+              <div class="grid2">
+                <div><label for="backup-pass">Mot de passe du fichier (10 caractères ou plus)</label><input id="backup-pass" type="password" autocomplete="new-password" minlength="10"></div>
+                <div><label for="backup-pass2">Retapez le mot de passe</label><input id="backup-pass2" type="password" autocomplete="new-password" minlength="10"></div>
+              </div>
+              <div class="acts"><button class="btn main" id="backup-save" type="button">Télécharger la sauvegarde chiffrée</button></div>
+              <div class="backup-msg" id="backup-msg" role="status" aria-live="polite"></div>
+              <details class="backup-check"><summary>Vérifier une sauvegarde</summary>
+                <p class="settings-body-help">Ouvre un fichier de sauvegarde avec son mot de passe et montre ce qu’il contient. Rien n’est envoyé ni modifié.</p>
+                <label for="backup-file">Fichier de sauvegarde (.dzoftbak)</label><input id="backup-file" type="file" accept=".dzoftbak,application/json,application/octet-stream">
+                <label for="backup-check-pass">Mot de passe du fichier</label><input id="backup-check-pass" type="password" autocomplete="off">
+                <div class="acts"><button class="btn line" id="backup-verify" type="button">Vérifier</button></div>
+                <div class="backup-msg" id="backup-check-result" role="status" aria-live="polite"></div>
+              </details>
+            </div>
+            <h3 class="backup-full-title">Sauvegarde complète, depuis votre ordinateur Windows</h3>
             <p class="today-backup-warning"><b>Sauvegarde récupérable : non vérifiée.</b> La présence des données dans Supabase ne constitue pas une sauvegarde indépendante.</p>
             <p class="today-backup-caption">Supabase Free ne fournit pas de sauvegardes automatiques gérées. Utilisez le script de sauvegarde chiffrée DZOFT sur votre ordinateur Windows, puis copiez et vérifiez l’archive sur un support indépendant. Les sauvegardes de la base ne contiennent pas les fichiers Storage.</p>
             <p class="settings-backup-instructions"><b>Sauvegarde locale sécurisée :</b> ouvrez le guide, puis lancez l’outil Windows avec un dossier de destination hors du PC. Aucun mot de passe n’est transmis au site. Une restauration complète reste à vérifier sur un environnement isolé.</p>
@@ -577,6 +604,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div class="toast" id="toast" hidden></div>
 
 <script src="sb.js?v=20261118-mfa7d"></script>
+<script src="backup.js?v=20261118-backup2"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
@@ -789,7 +817,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var clientBox=$('clients');if(clientBox)clientBox.innerHTML='<div class="v4-empty" role="status">Chargement des clients…</div>';
     // Independent reads: a timeout in Messages or another ancillary service
     // must never hide Clients, issued invoices, or accepted quotations.
-    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor','change_requests','credit_notes'];
+    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor','change_requests','credit_notes','backup_status'];
     var reads=[
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
@@ -813,7 +841,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.rpc('brevo_delivery_monitor',{},true),
       sb.rpc('owner_open_change_requests',{},true),
       // Credit notes: a cancelled invoice leaves « À faire ». Optional read: a failure only keeps the old list.
-      sb.rpc('owner_list_credit_notes',{},true).catch(function(){return [];})
+      sb.rpc('owner_list_credit_notes',{},true).catch(function(){return [];}),
+      // Backup reminder (optional read).
+      sb.rpc('owner_backup_status',{},true).catch(function(){return null;})
     ];
     return Promise.allSettled(reads).then(function(results){
       if(generation!==loadGeneration)return;
@@ -838,6 +868,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.emailOutbox=Array.isArray(r[6])?r[6]:[];
       data.deliveryMonitor=r[7]||null;
       data.changes=Array.isArray(r[8])?r[8]:[];
+      data.backup=r[10]||null;
       data.credited={};(Array.isArray(r[9])?r[9]:[]).forEach(function(c){if(c.invoice_id)data.credited[c.invoice_id]=(data.credited[c.invoice_id]||0)+Math.round((Number(c.amount)||0)*100);});
       ['leads','clients','quotes','messages'].forEach(function(name,i){
         if(!Array.isArray(r[i])&&!loadErrors[name])loadErrors[name]=new Error('Réponse serveur inattendue');
@@ -1131,6 +1162,13 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var trashCount = (data.trashLeads || []).length + (data.trashQuotes || []).length;
     if (trashCount) todo.push([trashCount + ' élément' + (trashCount > 1 ? 's' : '') + ' dans la corbeille : à restaurer ou supprimer définitivement', 'trash', 'Ouvrir']);
     // Put conversations and scheduled follow-ups before routine administration.
+    // Backup reminder: none yet, older than the last signature / payment / invoice / credit note / extra decision, or over 30 days.
+    if (data.backup) {
+      var lastB = data.backup.last_backup_at, lastC = data.backup.last_change_at;
+      var old = lastB && (Date.now() - new Date(lastB).getTime()) > 30 * 864e5;
+      if ((!lastB && lastC) || (lastB && lastC && lastC > lastB) || old)
+        todo.push([lastB ? 'Sauvegarde à refaire : ' + (old ? 'la dernière date de plus de 30 jours' : 'des factures, paiements ou signatures ont changé depuis') : 'Aucune sauvegarde de vos données : faites la première', 'backup', 'Sauvegarder']);
+    }
     todo = todo.map(function(t, i){ return { task:t, order:i, rank:t[0].indexOf('Virement signalé par le client') === 0 ? 0 : t[1].indexOf('thread:') === 0 || t[0].indexOf('Demande de modification') === 0 ? 1 : t[1] === 'leads' ? 2 : t[0].indexOf('Échec') === 0 ? 3 : 4 }; })
       .sort(function(a,b){ return a.rank - b.rank || a.order - b.order; }).map(function(x){ return x.task; });
     var firstAction = todo[0];
@@ -1206,6 +1244,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     if (g.indexOf('thread:') === 0) return openThread(client(g.slice(7)) || { id: g.slice(7) });
     if (g.indexOf('quote:') === 0) return openQuote(g.slice(6));
     if (g.indexOf('follow:') === 0) return openFollow(g.slice(7));
+    if (g === 'backup') { location.hash = '#/parametres'; setTimeout(function(){ var d = $('settings-backup'); if (d) { d.open = true; d.scrollIntoView({ block: 'start' }); } }, 60); return; }
     location.hash = '#/' + SLUG[g];
   });
 
@@ -1245,6 +1284,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   /* ---------------- settings ---------------- */
   var PAY = ['holder', 'bank', 'iban', 'bic', 'link', 'note'];
   function loadSettings(){
+    if (window.DzoftBackup) window.DzoftBackup.bind(sb);
     sb.select('settings', 'select=payment&id=eq.1').then(function(r){
       var p = (r && r[0] && r[0].payment) || {};
       PAY.forEach(function(k){ $('p-' + k).value = p[k] || ''; });
@@ -1953,7 +1993,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="installed-app-menu.js?v=20261117-nav7"></script>
 <script src="update-notice.js?v=20261117-blue"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
-<script src="dashboard-v3.js?v=20261118-newchoice"></script>
+<script src="dashboard-v3.js?v=20261118-backup"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
 <script src="../assets/change-requests.js?v=20261118-review"></script>
 <script src="workspace-panels-v7.js?v=20261117-onepage"></script>

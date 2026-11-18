@@ -4425,3 +4425,112 @@ begin
 end $fn$;
 revoke all on function public.portal_project_tracking(uuid, uuid) from public;
 grant execute on function public.portal_project_tracking(uuid, uuid) to anon, authenticated;
+
+-- Owner backup (migration 20261118160000_owner_backup.sql, applied 18 Nov 2026)
+
+create table if not exists private.owner_backup_log (
+  id bigint generated always as identity primary key,
+  made_at timestamptz not null default now(),
+  made_by uuid not null,
+  counts jsonb not null default '{}'::jsonb
+);
+alter table private.owner_backup_log enable row level security;
+revoke all on private.owner_backup_log from public, anon, authenticated;
+
+create or replace function public.owner_backup_export()
+ returns jsonb language plpgsql volatile security definer set search_path to '' as $f$
+declare
+  t jsonb := '{}'::jsonb; c jsonb := '{}'::jsonb; rows jsonb; name text;
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  foreach name in array array['leads','clients','quotes','messages','reviews','notifications','project_receipts',
+    'project_receipt_method_audit','project_payment_statuses','project_updates','project_work_items','project_events',
+    'email_outbox','dzoft_change_requests','dzoft_change_events','dzoft_credit_notes','settings'] loop
+    execute format('select coalesce(jsonb_agg(to_jsonb(x)),''[]''::jsonb) from public.%I x', name) into rows;
+    if name = 'clients' then
+      select coalesce(jsonb_agg(r - 'portal_token'),'[]'::jsonb) into rows from jsonb_array_elements(rows) r;
+    end if;
+    t := t || jsonb_build_object(name, rows);
+    c := c || jsonb_build_object(name, jsonb_array_length(rows));
+  end loop;
+  -- The invoice register and its counters prove that invoice and credit-note numbers follow on without gaps.
+  select coalesce(jsonb_agg(to_jsonb(x)),'[]'::jsonb) into rows from private.dzoft_issued_invoice_registry x;
+  t := t || jsonb_build_object('invoice_registry', rows); c := c || jsonb_build_object('invoice_registry', jsonb_array_length(rows));
+  select coalesce(jsonb_agg(to_jsonb(x)),'[]'::jsonb) into rows from private.dzoft_invoice_sequences x;
+  t := t || jsonb_build_object('invoice_sequences', rows);
+  select coalesce(jsonb_agg(to_jsonb(x)),'[]'::jsonb) into rows from private.dzoft_credit_note_sequences x;
+  t := t || jsonb_build_object('credit_note_sequences', rows);
+  insert into private.owner_backup_log(made_by, counts) values (auth.uid(), c);
+  return jsonb_build_object('format','dzoft-backup','version',1,'exported_at',now(),'tables',t,'counts',c);
+end $f$;
+revoke all on function public.owner_backup_export() from public, anon;
+grant execute on function public.owner_backup_export() to authenticated;
+
+-- Last backup, and the last important change since (signature, payment, invoice, credit note, extra decided).
+create or replace function public.owner_backup_status()
+ returns jsonb language plpgsql stable security definer set search_path to '' as $f$
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  return jsonb_build_object(
+    'last_backup_at', (select max(made_at) from private.owner_backup_log),
+    'last_change_at', greatest(
+      (select max(accepted_at) from public.quotes),
+      (select max(created_at) from public.project_receipts),
+      (select max(created_at) from private.dzoft_issued_invoice_registry),
+      (select max(issued_at) from public.dzoft_credit_notes),
+      (select max(decided_at) from public.dzoft_change_requests)));
+end $f$;
+revoke all on function public.owner_backup_status() from public, anon;
+grant execute on function public.owner_backup_status() to authenticated;
+
+-- Owner backup fixes (migration 20261118170000_owner_backup_fixes.sql, applied 18 Nov 2026): one-snapshot export, confirm after download
+create or replace function public.owner_backup_export()
+ returns jsonb language plpgsql stable security definer set search_path to '' as $f$
+declare b jsonb;
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  with t as (select jsonb_build_object(
+    'leads',                        (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.leads x),
+    'clients',                      (select coalesce(jsonb_agg(to_jsonb(x) - 'portal_token'),'[]') from public.clients x),
+    'quotes',                       (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.quotes x),
+    'messages',                     (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.messages x),
+    'reviews',                      (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.reviews x),
+    'notifications',                (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.notifications x),
+    'project_receipts',             (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_receipts x),
+    'project_receipt_method_audit', (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_receipt_method_audit x),
+    'project_payment_statuses',     (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_payment_statuses x),
+    'project_updates',              (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_updates x),
+    'project_work_items',           (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_work_items x),
+    'project_events',               (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.project_events x),
+    'email_outbox',                 (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.email_outbox x),
+    'dzoft_change_requests',        (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.dzoft_change_requests x),
+    'dzoft_change_events',          (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.dzoft_change_events x),
+    'dzoft_credit_notes',           (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.dzoft_credit_notes x),
+    'settings',                     (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from public.settings x),
+    -- The invoice register and its counters prove that invoice and credit-note numbers follow on without gaps.
+    'invoice_registry',             (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from private.dzoft_issued_invoice_registry x),
+    'invoice_sequences',            (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from private.dzoft_invoice_sequences x),
+    'credit_note_sequences',        (select coalesce(jsonb_agg(to_jsonb(x)),'[]') from private.dzoft_credit_note_sequences x)
+  ) v)
+  select jsonb_build_object('format','dzoft-backup','version',1,'exported_at',now(),'tables',t.v,
+    'counts',(select jsonb_object_agg(k, jsonb_array_length(t.v->k)) from jsonb_object_keys(t.v) k
+              where k not in ('invoice_sequences','credit_note_sequences')))
+    into b from t;
+  return b;
+end $f$;
+revoke all on function public.owner_backup_export() from public, anon;
+grant execute on function public.owner_backup_export() to authenticated;
+
+-- Called by the page after the encrypted file has been created and handed to the browser for download.
+create or replace function public.owner_backup_confirm(p_counts jsonb)
+ returns timestamptz language plpgsql volatile security definer set search_path to '' as $f$
+declare at timestamptz;
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  insert into private.owner_backup_log(made_by, counts)
+    values (auth.uid(), case when jsonb_typeof(p_counts)='object' then p_counts else '{}'::jsonb end)
+    returning made_at into at;
+  return at;
+end $f$;
+revoke all on function public.owner_backup_confirm(jsonb) from public, anon;
+grant execute on function public.owner_backup_confirm(jsonb) to authenticated;

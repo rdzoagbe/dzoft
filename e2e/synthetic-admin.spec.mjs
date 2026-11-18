@@ -54,6 +54,11 @@ const syntheticSb = `
    return [];
   },
   rpc:async(name,args)=>{window.__syntheticCalls.push('rpc:'+name);
+   // Backup: a fixed synthetic export; the status says none was made until one is.
+   if(name==='owner_backup_status')return {last_backup_at:window.__backupAt||null,last_change_at:'2026-11-15T10:00:00Z'};
+   if(name==='owner_backup_confirm'){window.__backupConfirmed=(window.__backupConfirmed||0)+1;window.__backupAt=new Date().toISOString();return window.__backupAt;}
+   if(name==='owner_backup_export'){
+     return {format:'dzoft-backup',version:1,exported_at:new Date().toISOString(),tables:{clients:[client],quotes:[quote],invoice_registry:[]},counts:{clients:1,quotes:1,invoice_registry:0,project_receipts:0}};}
    // Credit notes (« avoirs »): recorded in memory only.
    if(name==='issue_credit_note'){window.__credits=window.__credits||[];window.__creditArgs=args;
      const c={id:'cn-'+(window.__credits.length+1),number:'A-2026-000'+(window.__credits.length+1),quote_id:args.p_quote,invoice_id:args.p_invoice,invoice_number:'F-2026-0003',invoice_issued_on:'2026-11-15',invoice_amount:700,invoice_kind:'base',amount:args.p_amount==null?700:args.p_amount,effect:args.p_effect,full_cancel:args.p_amount==null,reason:args.p_reason,issued_on:'2026-11-18',issued_at:now};
@@ -730,6 +735,52 @@ test('« + Nouveau devis ou supplément » asks first: new project, or extra on 
  await page.locator('#sd-pick-go').click();
  await expect(page).toHaveURL(/suivi\.html\?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing/);
  await expect(page.locator('#dzoft-owner-changes .dzoft-change-new[data-new-proposal]')).toHaveAttribute('open','');
+ expect(errors).toEqual([]);
+});
+
+test('Quick backup: encrypted download, readable with its password only, and a dashboard reminder until it is done',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ // Reminder while no backup exists, and it opens the backup section.
+ await page.goto('admin/#/tableau-de-bord',{waitUntil:'domcontentloaded'});
+ const reminder=page.locator('#sd-action-list [data-go="backup"]');
+ await expect(reminder).toHaveCount(1);
+ await reminder.click();
+ await expect(page).toHaveURL(/#\/parametres$/);
+ await expect(page.locator('#settings-backup')).toHaveAttribute('open','');
+ await expect(page.locator('#backup-status')).toContainText('Aucune sauvegarde');
+ // Passwords are checked before anything is asked from the server.
+ const before=await page.evaluate(()=>window.__syntheticCalls.filter(c=>c==='rpc:owner_backup_export').length);
+ await page.fill('#backup-pass','court');await page.fill('#backup-pass2','court');await page.click('#backup-save');
+ await expect(page.locator('#backup-msg')).toContainText('au moins 10');
+ await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-autre-mot-de-passe');await page.click('#backup-save');
+ await expect(page.locator('#backup-msg')).toContainText('pas identiques');
+ expect(await page.evaluate(()=>window.__syntheticCalls.filter(c=>c==='rpc:owner_backup_export').length)).toBe(before);
+ // Save: one encrypted file, nothing readable in it.
+ await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-mot-de-passe-long');
+ const [dl]=await Promise.all([page.waitForEvent('download'),page.click('#backup-save')]);
+ expect(dl.suggestedFilename()).toMatch(/^dzoft-sauvegarde-\d{4}-\d{2}-\d{2}\.dzoftbak$/);
+ const file=testInfo.outputPath('backup.dzoftbak');await dl.saveAs(file);
+ const raw=(await import('node:fs')).readFileSync(file,'utf8');const json=JSON.parse(raw);
+ expect(json.format).toBe('dzoft-backup-encrypted');expect(json.cipher).toBe('AES-256-GCM');expect(json.kdf.iterations).toBe(310000);
+ expect(raw).not.toContain('Synthetic Test Customer');
+ await expect(page.locator('#backup-msg')).toContainText('Sauvegarde téléchargée');
+ // The backup is recorded once, after the file was created, never by the export alone.
+ await expect.poll(()=>page.evaluate(()=>window.__backupConfirmed||0)).toBe(1);
+ await expect(page.locator('#backup-pass')).toHaveValue('');
+ await expect(page.locator('#backup-status')).toContainText('Dernière sauvegarde');
+ // Check: right password shows the contents; wrong password does not.
+ await page.locator('.backup-check summary').click();
+ await page.setInputFiles('#backup-file',file);
+ await page.fill('#backup-check-pass','mauvais-mot-de-passe');await page.click('#backup-verify');
+ await expect(page.locator('#backup-check-result')).toContainText('Mot de passe incorrect');
+ await page.fill('#backup-check-pass','un-mot-de-passe-long');await page.click('#backup-verify');
+ await expect(page.locator('#backup-check-result')).toContainText('Sauvegarde lisible');
+ await expect(page.locator('#backup-check-result')).toContainText('Clients');
+ if(testInfo.project.name.includes('mobile')){
+  const w=await page.evaluate(()=>({s:document.documentElement.scrollWidth,v:document.documentElement.clientWidth}));
+  expect(w.s).toBeLessThanOrEqual(w.v+4);
+ }
  expect(errors).toEqual([]);
 });
 
