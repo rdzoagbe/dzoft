@@ -125,3 +125,20 @@
 .dzoft-calc-pct{white-space:nowrap}
 .dzoft-calc-pct input[name=pct]{width:72px;display:inline-block}
 .dzoft-calc-pct span[aria-hidden]{margin-left:4px;font-weight:700}
+
+/* Explicit review-first sharing: the dialog is private to the owner, never
+   sends on open, and fits the installed mobile PWA as well as desktop. */
+.dzoft-change-manual-dialog{width:min(680px,calc(100vw - 28px));max-width:680px;max-height:min(90vh,850px);overflow-y:auto;box-sizing:border-box;border:1px solid #dbe1ef;border-radius:16px;background:#fff;color:#172137;padding:22px;box-shadow:0 18px 70px #0b102050}
+.dzoft-change-manual-dialog::backdrop{background:#0b1020a9}
+.dzoft-change-manual-dialog h2{font-size:20px;margin:0 0 12px}
+.dzoft-change-manual-dialog p{font-size:13px;line-height:1.6}
+.dzoft-change-manual-dialog label{display:grid;gap:6px;font-size:13px;font-weight:700;margin:12px 0}
+.dzoft-change-manual-dialog label input:not([type=checkbox]),.dzoft-change-manual-dialog textarea{width:100%;min-width:0;box-sizing:border-box;background:#fff;color:#152037;border:1px solid #cbd5e2;border-radius:9px;padding:10px 12px;font:inherit;font-weight:400}
+.dzoft-change-manual-dialog textarea{white-space:pre-wrap;min-height:180px;line-height:1.55;resize:vertical}
+.dzoft-change-manual-dialog .dzoft-change-actions{display:flex;gap:10px;flex-wrap:wrap;margin:13px 0}
+.dzoft-change-manual-dialog .dzoft-change-manual-confirm{padding:14px;border:1px solid #ddd5ff;background:#f5f2ff;border-radius:12px;margin:17px 0}
+.dzoft-change-manual-dialog .dzoft-change-manual-confirm label{display:flex;align-items:flex-start;gap:9px;font-weight:600}
+.dzoft-change-manual-dialog .dzoft-change-manual-confirm input[type=checkbox]{flex:0 0 auto;margin-top:3px}
+.dzoft-change-manual-dialog button:disabled{opacity:.5;cursor:not-allowed}
+.dzoft-change-manual-dialog [data-share-status]{min-height:20px}
+@media(max-width:560px){.dzoft-change-manual-dialog{padding:14px;max-height:94vh}.dzoft-change-manual-dialog .dzoft-change-actions .btn{width:100%;justify-content:center}}
