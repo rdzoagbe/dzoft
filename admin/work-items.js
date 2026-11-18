@@ -127,7 +127,10 @@ function render(){
    var editInput=el('input');editInput.type='text';editInput.maxLength=160;editInput.required=true;editInput.minLength=3;editInput.value=item.title;
    var cat=selection(categories,item.category);
    var editSave=el('button','btn sm line',t('Enregistrer','Save'));editSave.type='submit';
-   editForm.append(editInput,cat,editSave);edit.append(editForm);
+   // Cancel (18 Nov 2026): puts back the saved title and category and closes, without saving.
+   var editCancel=el('button','btn sm ghost',t('Annuler','Cancel'));editCancel.type='button';
+   editCancel.onclick=function(){editInput.value=item.title;cat.value=item.category;edit.open=false;};
+   editForm.append(editInput,cat,editSave,editCancel);edit.append(editForm);
    editForm.onsubmit=function(ev){ev.preventDefault();editSave.disabled=true;
     save({id:item.id,title:editInput.value.trim(),status:item.status,category:cat.value},function(){load();})
       .catch(function(){message(t('Modification non enregistrée.','Edit not saved.'),true);})
@@ -145,7 +148,10 @@ function render(){
     var tested=el('label','jr-work-tested');var check=el('input');check.type='checkbox';
     tested.append(check,document.createTextNode(t(' J’ai testé personnellement cette modification',' I personally tested this change')));
     var pubBtn=el('button','btn sm main',t('Approuver et notifier','Approve and notify'));pubBtn.type='submit';
-    pubForm.append(intro,pubLabel,pubCategory,tested,pubBtn);publish.append(pubForm);
+    // Cancel: clears the draft summary and closes; nothing is published.
+    var pubCancel=el('button','btn sm ghost',t('Annuler','Cancel'));pubCancel.type='button';
+    pubCancel.onclick=function(){if(pubBtn.disabled)return;pubText.value='';check.checked=false;pubCategory.value=item.category;publish.open=false;};
+    pubForm.append(intro,pubLabel,pubCategory,tested,pubBtn,pubCancel);publish.append(pubForm);
     var batchId=null;
     pubForm.onsubmit=function(ev){
       ev.preventDefault();if(!pubForm.reportValidity())return;

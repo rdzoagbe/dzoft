@@ -284,6 +284,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       <input type="text" id="n-user" autocomplete="username" hidden aria-hidden="true" tabindex="-1">
       <label for="n-pass">Mot de passe (10 caractères minimum)</label><input id="n-pass" type="password" minlength="10" autocomplete="new-password" required>
       <button class="btn main" style="width:100%;margin-top:14px" type="submit">Enregistrer</button>
+      <div class="row"><a class="go-login">Retour à la connexion</a></div>
     </form>
     <div class="msg" id="a-msg"></div>
   </div>
@@ -466,7 +467,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
             <label for="p-link">Lien de paiement par carte (facultatif, https://…)</label>
             <p class="settings-payment-qr-tip">Si ce lien est configuré, les nouvelles factures DZOFT avec un solde à payer pourront afficher un QR code vers cette page. Vérifiez que votre lien Revolut Pro fonctionne : le QR n’ajoute pas automatiquement le montant ni la référence de facture.</p><input id="p-link" placeholder="Ex. : https://revolut.me/votre-nom (page de paiement Revolut Pro)">
             <label for="p-note">Précision pour le client (facultatif)</label><textarea id="p-note" placeholder="Ex. : la facture vous est envoyée dans votre espace sous 48 h après le paiement."></textarea>
-            <div class="acts settings-save-actions"><button class="btn main" id="p-save" type="button">Enregistrer</button><span id="p-msg" aria-live="polite"></span></div>
+            <div class="acts settings-save-actions"><button class="btn main" id="p-save" type="button">Enregistrer</button><button class="btn line" id="p-cancel" type="button">Annuler les modifications</button><span id="p-msg" aria-live="polite"></span></div>
           </div>
         </details>
 
@@ -1233,14 +1234,18 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     sb.select('settings', 'select=payment&id=eq.1').then(function(r){
       var p = (r && r[0] && r[0].payment) || {};
       PAY.forEach(function(k){ $('p-' + k).value = p[k] || ''; });
+      savedPay = p;
     }, function(){});
   }
+  // Cancel (18 Nov 2026): puts back what is saved, without saving anything.
+  var savedPay = {};
+  $('p-cancel').onclick = function(){ PAY.forEach(function(k){ $('p-' + k).value = savedPay[k] || ''; }); $('p-msg').textContent = 'Modifications annulées.'; };
   $('p-save').onclick = function(){
     var p = {};
     PAY.forEach(function(k){ var v = $('p-' + k).value.trim(); if (v) p[k] = k === 'iban' || k === 'bic' ? v.toUpperCase() : v; });
     if (p.link && !/^https:\/\//i.test(p.link)) { $('p-msg').textContent = 'Le lien doit commencer par https://'; return; }
     if (p.iban && !/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,40}$/.test(p.iban)) { $('p-msg').textContent = 'IBAN incomplet ou mal saisi.'; return; }
-    sb.update('settings', 1, { payment: p, updated_at: new Date().toISOString() }).then(function(){ $('p-msg').textContent = 'Enregistré ✓'; toast('Paramètres de paiement enregistrés.'); }, fail);
+    sb.update('settings', 1, { payment: p, updated_at: new Date().toISOString() }).then(function(){ savedPay = p; $('p-msg').textContent = 'Enregistré ✓'; toast('Paramètres de paiement enregistrés.'); }, fail);
   };
 
   /* ---------------- two-step sign-in ---------------- */
@@ -1298,11 +1303,17 @@ td select{width:auto;padding:4px 6px;font-size:13px}
             '<img id="mfa-qr" alt="QR code à scanner" style="width:180px;height:180px;display:block;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px">' +
             '<p style="font-size:12.5px;color:var(--mute)">Pas de scanner ? Saisissez cette clé : <code style="user-select:all">' + esc(r.totp.secret) + '</code></p>' +
             '<ol start="2" style="font-size:14px;margin:10px 0 0 18px"><li>Tapez le code à 6 chiffres affiché :</li></ol>' +
-            '<div style="display:flex;gap:8px;margin-top:6px;max-width:320px"><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"><button class="btn main sm" id="mfa-ok" type="button">Confirmer</button></div>';
+            '<div style="display:flex;gap:8px;margin-top:6px;max-width:320px"><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"><button class="btn main sm" id="mfa-ok" type="button">Confirmer</button></div>' +
+            '<p style="margin-top:10px"><button class="btn line sm" id="mfa-cancel" type="button">Annuler</button></p>';
           // the QR code comes as SVG markup (sometimes behind a non-standard data: prefix): rebuild a clean, encoded image
           var qr = String(r.totp.qr_code || ''), at = qr.indexOf('<svg');
           if (at >= 0) $('mfa-qr').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(qr.slice(at));
           else if (/^data:image\//.test(qr)) $('mfa-qr').src = qr;
+          // Cancel (18 Nov 2026): the half-finished setup is removed; the code stays off, nothing else changes.
+          $('mfa-cancel').onclick = function(){
+            var id = enrolling; enrolling = null;
+            sb.mfa.remove(id).catch(function(){}).then(function(){ toast('Activation annulée.'); return sb.me().then(renderMfa); });
+          };
           $('mfa-ok').onclick = function(){
             var code = $('mfa-code').value.replace(/\D/g, '');
             if (code.length !== 6) { toast('Le code fait 6 chiffres.'); return; }
@@ -1924,7 +1935,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261117-onepage"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
-<script src="../assets/change-requests.js?v=20261118-range"></script>
+<script src="../assets/change-requests.js?v=20261118-cancel"></script>
 <script src="workspace-panels-v7.js?v=20261117-onepage"></script>
 <script src="workspace-nav-v6.js?v=20261117-onepage"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>

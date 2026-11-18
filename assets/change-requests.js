@@ -54,7 +54,7 @@ function openForm(en){return '<details class="dzoft-change-new"><summary>'+tr(en
  '<label>'+tr(en,'Objet de la demande','Request title')+'<input name="title" maxlength="120" minlength="3" required placeholder="'+tr(en,'Ex. : Ajouter une page','E.g. add a new page')+'"></label>'+
  '<label>'+tr(en,'Décrivez précisément ce que vous souhaitez ajouter ou modifier','Explain what you would like to add or change')+'<textarea name="description" minlength="10" maxlength="2000" rows="3" required></textarea></label>'+
  '<p>'+tr(en,'Vous ne payez rien en envoyant cette demande. DZOFT étudie le prix et le délai, puis vous soumet une proposition à signer avant tout supplément.','Submitting a request does not incur any charge. DZOFT will assess the cost and timeline, then ask for your signature before any extra work.')+'</p>'+
- '<button class="btn main" type="submit">'+tr(en,'Envoyer la demande','Submit request')+'</button></form></details>';}
+ '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+tr(en,'Envoyer la demande','Submit request')+'</button><button class="btn line" type="button" data-form-cancel>'+tr(en,'Annuler','Cancel')+'</button></div></form></details>';}
 function termsLine(en,terms){
  // The proposal extends the signed quote and follows its general terms (Code civil art. 1119).
  var link='<a href="'+esc(terms&&terms.url||'../cgv.html')+'" target="_blank" rel="noopener">'+tr(en,'conditions générales de vente (CGV)','general terms of sale (CGV)')+'</a>';
@@ -77,7 +77,7 @@ function clientCard(r,en,name,terms){
    '<div class="dzoft-change-code" hidden><p data-code-sent></p><label>'+tr(en,'Code reçu par e-mail (6 chiffres)','Code received by e-mail (6 digits)')+
    '<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456"></label>'+
    '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+tr(en,'Signer la proposition','Sign the proposal')+'</button></div></div>'+
-   '<div class="dzoft-change-actions"><button class="btn line" type="button" data-change-decline="'+esc(r.id)+'">'+tr(en,'Refuser cette proposition','Decline proposal')+'</button></div></form>';
+   '<div class="dzoft-change-actions"><button class="btn line" type="button" data-form-cancel="later">'+tr(en,'Plus tard','Later')+'</button><button class="btn line" type="button" data-change-decline="'+esc(r.id)+'">'+tr(en,'Refuser cette proposition','Decline proposal')+'</button></div></form>';
  }
  // Withdraw is for the client's own requests; an owner proposal is simply declined.
  if(r.status==='requested'||(r.status==='proposed'&&r.description!=='Proposition établie par DZOFT.'))h+='<button class="btn line sm" type="button" data-change-withdraw="'+esc(r.id)+'">'+tr(en,'Retirer cette demande','Withdraw request')+'</button>';
@@ -164,7 +164,7 @@ function calculator(en,blocks,target,tiers){
   '<label class="dzoft-change-check"><input type="checkbox" name="done"><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="keep" checked><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
   '<p>'+tr(en,'« Créer le brouillon » : vous seul le voyez, pour le relire. « Envoyer au client » : il apparaît dans son espace et il le signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvé lui-même.','“Create the draft”: only you see it, to check it. “Send to client”: it appears in their space and they sign it with a code sent by e-mail. Nothing is owed until they approve it themselves.')+'</p>'+
-  '<button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button></form>';
+  '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+(target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button><button class="btn line" type="button" data-form-cancel="calc">'+tr(en,'Annuler','Cancel')+'</button></div></form>';
 }
 function priceList(en,blocks,defaultPrice,tiers){
  return '<div class="dzoft-price-list">'+
@@ -197,7 +197,7 @@ function adminCard(r,en,invoice,blocks,tiers){
  if(r.status==='requested'||r.status==='proposed'){
   h+='<form data-change-reject="'+esc(r.id)+'" class="dzoft-change-form dzoft-change-reject"><label>'+tr(en,'Motif si la proposition est retirée ou la demande non retenue','Reason if withdrawn or declined')+
    '<input name="reason" minlength="5" maxlength="600" placeholder="'+tr(en,'Ex. : remplacée par une nouvelle proposition','E.g. replaced by a new proposal')+'" required></label>'+
-   '<button class="btn line sm" type="submit">'+tr(en,'Retirer / refuser','Withdraw / reject')+'</button></form>';
+   '<button class="btn line sm" type="submit">'+tr(en,'Retirer / refuser','Withdraw / reject')+'</button><button class="btn ghost sm" type="button" data-form-cancel>'+tr(en,'Annuler','Cancel')+'</button></form>';
  }
  if(['approved','in_progress','completed'].includes(r.status))h+=signedNote(r,en)+'<p class="dzoft-change-meta">'+tr(en,'Facturez ce complément séparément, sans modifier la facture initiale.','Invoice this addition separately; do not change the original invoice.')+'</p>';
  if(r.status==='approved')h+='<div class="dzoft-change-actions">'+(r.already_done?'':'<button class="btn line sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="in_progress">'+tr(en,'Démarrer les travaux complémentaires','Start approved additional work')+'</button>')+
@@ -445,6 +445,24 @@ function bindPrices(root,options){
  root.__dzoftPricesRefresh=refresh;
  return refresh();
 }
+/* Cancel buttons (18 Nov 2026): close or clear a form without sending or saving anything.
+   « Plus tard » on a proposal to sign only hides the code step; the proposal stays to sign later. */
+if(global.document)global.document.addEventListener('click',function(ev){
+ var b=ev.target.closest&&ev.target.closest('[data-form-cancel]');if(!b)return;
+ var f=b.closest('form'),d=b.closest('details'),kind=b.dataset.formCancel;if(!f)return;
+ var en=document.documentElement.lang==='en';
+ if(kind==='calc'){
+  var rows=f.querySelectorAll('[data-calc-lines] [data-line]'),filled=Array.prototype.some.call(rows,function(r){return (r.querySelector('[name=label]')||{}).value;});
+  if(filled&&!global.confirm(tr(en,'Effacer ce calcul ? Rien n’a été enregistré.','Clear this calculation? Nothing was saved.')))return;
+  Array.prototype.forEach.call(rows,function(r,i){if(i)r.remove();else r.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});});
+  f.reset();var sum=f.querySelector('[data-calc-summary]');if(sum){sum.hidden=true;sum.innerHTML='';}
+  f.dispatchEvent(new Event('input',{bubbles:true}));
+ }else if(kind==='later'){
+  var code=f.querySelector('.dzoft-change-code');if(code)code.hidden=true;if(f.elements.code)f.elements.code.value='';
+  b.closest('.dzoft-change-item').scrollIntoView({block:'nearest'});
+ }else f.reset();
+ if(d)d.open=false;
+});
 api.client=bindClient;api.owner=bindOwner;api.prices=bindPrices;
 global.DzoftChanges=api;
 })(window);
