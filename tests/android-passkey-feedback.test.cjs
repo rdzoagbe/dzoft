@@ -49,7 +49,7 @@ test('Existing Google Password Manager passkeys are explained and repeated error
 });
 
 test('No change to passkey privacy, server challenges, MFA or removal logic',()=>{
- assert.match(sb,/if \(!getSession\(\) \|\| !mfaFresh\(12 \* 60 \* 60\)\)/);
+ assert.match(sb,/if \(!getSession\(\) \|\| !mfaFresh\(7 \* 24 \* 60 \* 60\)\)/);
  assert.match(sb,/passkeys\/registration\/options/);
  assert.match(sb,/passkeys\/registration\/verify/);
  assert.match(sb,/navigator\.credentials\.create/);
