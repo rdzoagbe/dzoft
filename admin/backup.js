@@ -62,9 +62,11 @@ function bind(sb){
       var url=URL.createObjectURL(new Blob([JSON.stringify(file)],{type:'application/octet-stream'}));
       var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
       setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      // Recorded only now that the encrypted file exists and was handed to the browser: a failed export or
+      // encryption never counts as a backup, so the dashboard reminder stays.
+      sb.rpc('owner_backup_confirm',{p_counts:data.counts||{}},true).then(refresh,refresh);
       $('backup-pass').value=$('backup-pass2').value='';
       msg.innerHTML=tr('Sauvegarde téléchargée : <b>','Backup downloaded: <b>')+name+'</b>. '+tr('Gardez-la hors de cet ordinateur (clé USB, Drive…) et notez le mot de passe : sans lui, personne ne peut l’ouvrir, pas même DZOFT.','Keep it off this computer (USB stick, Drive…) and write down the password: without it nobody can open it, not even DZOFT.')+countsTable(data.counts);
-      refresh();
     },function(e){msg.textContent=tr('Sauvegarde impossible : ','Backup failed: ')+((e&&e.message)||'erreur')+tr('. Reconnectez-vous avec votre code si besoin, puis réessayez.','. Sign in again with your code if needed, then try again.');})
     .then(function(){b.disabled=false;b.textContent=tr('Télécharger la sauvegarde chiffrée','Download the encrypted backup');});
   });

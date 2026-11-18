@@ -56,8 +56,9 @@ const syntheticSb = `
   rpc:async(name,args)=>{window.__syntheticCalls.push('rpc:'+name);
    // Backup: a fixed synthetic export; the status says none was made until one is.
    if(name==='owner_backup_status')return {last_backup_at:window.__backupAt||null,last_change_at:'2026-11-15T10:00:00Z'};
-   if(name==='owner_backup_export'){window.__backupAt=new Date().toISOString();
-     return {format:'dzoft-backup',version:1,exported_at:window.__backupAt,tables:{clients:[client],quotes:[quote],invoice_registry:[]},counts:{clients:1,quotes:1,invoice_registry:0,project_receipts:0}};}
+   if(name==='owner_backup_confirm'){window.__backupConfirmed=(window.__backupConfirmed||0)+1;window.__backupAt=new Date().toISOString();return window.__backupAt;}
+   if(name==='owner_backup_export'){
+     return {format:'dzoft-backup',version:1,exported_at:new Date().toISOString(),tables:{clients:[client],quotes:[quote],invoice_registry:[]},counts:{clients:1,quotes:1,invoice_registry:0,project_receipts:0}};}
    // Credit notes (« avoirs »): recorded in memory only.
    if(name==='issue_credit_note'){window.__credits=window.__credits||[];window.__creditArgs=args;
      const c={id:'cn-'+(window.__credits.length+1),number:'A-2026-000'+(window.__credits.length+1),quote_id:args.p_quote,invoice_id:args.p_invoice,invoice_number:'F-2026-0003',invoice_issued_on:'2026-11-15',invoice_amount:700,invoice_kind:'base',amount:args.p_amount==null?700:args.p_amount,effect:args.p_effect,full_cancel:args.p_amount==null,reason:args.p_reason,issued_on:'2026-11-18',issued_at:now};
@@ -764,6 +765,8 @@ test('Quick backup: encrypted download, readable with its password only, and a d
  expect(json.format).toBe('dzoft-backup-encrypted');expect(json.cipher).toBe('AES-256-GCM');expect(json.kdf.iterations).toBe(310000);
  expect(raw).not.toContain('Synthetic Test Customer');
  await expect(page.locator('#backup-msg')).toContainText('Sauvegarde téléchargée');
+ // The backup is recorded once, after the file was created, never by the export alone.
+ await expect.poll(()=>page.evaluate(()=>window.__backupConfirmed||0)).toBe(1);
  await expect(page.locator('#backup-pass')).toHaveValue('');
  await expect(page.locator('#backup-status')).toContainText('Dernière sauvegarde');
  // Check: right password shows the contents; wrong password does not.
