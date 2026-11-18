@@ -476,7 +476,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261118-range">
-<script src="../assets/change-requests.js?v=20261118-cancel"></script>
+<script src="../assets/change-requests.js?v=20261118-review"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -925,12 +925,12 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     var total = $('iv-total'), count = $('iv-count'), billed = $('iv-billed'), remaining = $('iv-remaining');
     if (total) total.textContent = eur(Q.accepted_total || Q.total || 0);
     if (count) count.textContent = Q.invoices.length;
-    if (billed) billed.textContent = eur((Q.invoices || []).filter(function(x){ return !x.care && !x.change; }).reduce(function(sum,x){ return sum + (Number(x.amt) || 0); },0));
+    if (billed) billed.textContent = eur(liveInvoices().filter(function(x){ return !x.care && !x.change; }).reduce(function(sum,x){ return sum + (Number(x.amt) || 0); },0));
     if (remaining) remaining.textContent = 'Vérification…';
     var breakdown = $('iv-explanation');
     if (breakdown) {
       var signed = Number(Q.accepted_total || Q.total || 0);
-      var active = (Q.invoices || []).filter(function(x){ return !x.care && !x.change; });
+      var active = liveInvoices().filter(function(x){ return !x.care && !x.change; });
       var totalIssued = active.reduce(function(n,x){ return n + (Number(x.amt)||0); },0);
       var finalInvoice = active.filter(function(x){ return x.basis === 'final'; })[0];
       if (finalInvoice) {
@@ -1056,7 +1056,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     if (!bar) return;
     ++draftPreviewToken;
     draftMax = null; draftInfo = null;
-    if (Q.accepted_at && !Q.invoices.some(function(x){ return x.basis === 'final'; })) {
+    if (Q.accepted_at && !liveInvoices().some(function(x){ return x.basis === 'final'; })) {
       h += '<div class="iv-act iv-draft"><div class="iv-draft-copy"><b>Préparer une facture DZOFT</b><p class="muted">Montant proposé depuis le devis accepté. Modifiez-le avant l’émission ; le numéro sera créé automatiquement.</p>'+
         '<label for="iv-amount">Montant à facturer (€)</label><input id="iv-amount" data-iv-amount inputmode="decimal" autocomplete="off" placeholder="Chargement…" disabled aria-describedby="iv-amount-hint">'+
         '<p class="muted" id="iv-amount-hint" data-iv-hint>Chargement du solde…</p></div>'+

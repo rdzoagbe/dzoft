@@ -780,7 +780,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     var clientBox=$('clients');if(clientBox)clientBox.innerHTML='<div class="v4-empty" role="status">Chargement des clients…</div>';
     // Independent reads: a timeout in Messages or another ancillary service
     // must never hide Clients, issued invoices, or accepted quotations.
-    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor','change_requests'];
+    var names=['leads','clients','quotes','messages','reviews','project_events','email_outbox','brevo_delivery_monitor','change_requests','credit_notes'];
     var reads=[
       sb.select('leads', 'select=*&order=created_at.desc'),
       sb.select('clients', 'select=*&order=created_at.desc'),
@@ -802,7 +802,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       sb.select('project_events', 'select=id,event_type,summary,created_at,quote_id,client_id&order=created_at.desc&limit=30'),
       sb.select('email_outbox', 'select=id,event_id,recipient_role,recipient,status,attempts,created_at,sent_at,last_error,quote_id,delivery_status,delivery_event_at,delivered_at,opened_at,bounced_at&order=created_at.desc&limit=80'),
       sb.rpc('brevo_delivery_monitor',{},true),
-      sb.rpc('owner_open_change_requests',{},true)
+      sb.rpc('owner_open_change_requests',{},true),
+      // Credit notes: a cancelled invoice leaves « À faire ». Optional read: a failure only keeps the old list.
+      sb.rpc('owner_list_credit_notes',{},true).catch(function(){return [];})
     ];
     return Promise.allSettled(reads).then(function(results){
       if(generation!==loadGeneration)return;
@@ -827,6 +829,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
       data.emailOutbox=Array.isArray(r[6])?r[6]:[];
       data.deliveryMonitor=r[7]||null;
       data.changes=Array.isArray(r[8])?r[8]:[];
+      data.credited={};(Array.isArray(r[9])?r[9]:[]).forEach(function(c){if(c.invoice_id)data.credited[c.invoice_id]=(data.credited[c.invoice_id]||0)+Math.round((Number(c.amount)||0)*100);});
       ['leads','clients','quotes','messages'].forEach(function(name,i){
         if(!Array.isArray(r[i])&&!loadErrors[name])loadErrors[name]=new Error('Réponse serveur inattendue');
       });
@@ -1110,9 +1113,10 @@ td select{width:auto;padding:4px 6px;font-size:13px}
     data.emailOutbox.filter(function(m){ return m.status === 'failed'; }).forEach(function(m){ todo.push(['Échec d’e-mail ' + (m.recipient_role === 'owner' ? 'à votre adresse' : 'au client') + (m.last_error ? ' : ' + m.last_error : ''), m.quote_id ? 'follow:' + m.quote_id : 'dash', 'Voir']); });
     var soon = new Date(); soon.setDate(soon.getDate() + 5);
     cares.filter(function(q){ return q.care.next && new Date(q.care.next + 'T00:00:00') <= soon; }).forEach(function(q){ todo.push(['Facturer le suivi mensuel de ' + ((client(q.client_id) || {}).nom || '—') + ' · ' + eur(q.care.price) + ' (échéance le ' + new Date(q.care.next + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ')', 'follow:' + q.id, 'Facturer']); });
-    ps.forEach(function(q){ (q.invoices || []).filter(function(x){ return !x.paid && (x.n || x.num); }).forEach(function(x){
+    var credited = function(x){ return x.id && data.credited ? (data.credited[x.id] || 0) / 100 : 0; };
+    ps.forEach(function(q){ (q.invoices || []).filter(function(x){ return !x.paid && (x.n || x.num) && !(credited(x) > 0 && credited(x) >= (Number(x.amt) || 0) - 0.005); }).forEach(function(x){
       if (x.payment_reported_at) { todo.push(['Paiement déclaré envoyé · ' + (x.num || x.n) + ' · ' + ((client(q.client_id) || {}).nom || 'Client'), 'follow:' + q.id, 'Confirmer la réception']); return; }
-      todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(x.amt) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
+      todo.push(['Paiement à vérifier · ' + (x.n || x.num) + ' · ' + ((client(q.client_id) || {}).nom || 'Client') + (x.amt ? ' · ' + eur(Math.round(((Number(x.amt) || 0) - credited(x)) * 100) / 100) : ''), 'remind:' + q.id + ':' + (x.id || ''), 'Relancer']);
     }); });
     // Extra work (changes after signature): what the client is waiting for, and what is yours to do.
     (data.changes || []).forEach(function(c){
@@ -1320,16 +1324,22 @@ td select{width:auto;padding:4px 6px;font-size:13px}
           if (at >= 0) $('mfa-qr').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(qr.slice(at));
           else if (/^data:image\//.test(qr)) $('mfa-qr').src = qr;
           // Cancel (18 Nov 2026): the half-finished setup is removed; the code stays off, nothing else changes.
+          var mfaBusy = false;
           $('mfa-cancel').onclick = function(){
+            // Never while a code is being checked: it could delete the factor that has just been verified.
+            if (mfaBusy || !enrolling) return;
             var id = enrolling; enrolling = null;
             sb.mfa.remove(id).catch(function(){}).then(function(){ toast('Activation annulée.'); return sb.me().then(renderMfa); });
           };
           $('mfa-ok').onclick = function(){
             var code = $('mfa-code').value.replace(/\D/g, '');
             if (code.length !== 6) { toast('Le code fait 6 chiffres.'); return; }
-            sb.mfa.challenge(enrolling).then(function(c){ return sb.mfa.verify(enrolling, c.id, code); }).then(function(){
-              toast('Double authentification activée ✓'); sb.me().then(renderMfa);
-            }, function(){ toast('Code incorrect : réessayez avec le code affiché maintenant.'); });
+            if (mfaBusy || !enrolling) return;
+            mfaBusy = true; $('mfa-ok').disabled = $('mfa-cancel').disabled = true;
+            var id = enrolling;
+            sb.mfa.challenge(id).then(function(c){ return sb.mfa.verify(id, c.id, code); }).then(function(){
+              enrolling = null; toast('Double authentification activée ✓'); sb.me().then(renderMfa);
+            }, function(){ mfaBusy = false; $('mfa-ok').disabled = $('mfa-cancel').disabled = false; toast('Code incorrect : réessayez avec le code affiché maintenant.'); });
           };
         }, function(e){ toast('Activation impossible : ' + (e.message || 'erreur')); });
     };
@@ -1945,7 +1955,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261117-onepage"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
-<script src="../assets/change-requests.js?v=20261118-cancel"></script>
+<script src="../assets/change-requests.js?v=20261118-review"></script>
 <script src="workspace-panels-v7.js?v=20261117-onepage"></script>
 <script src="workspace-nav-v6.js?v=20261117-onepage"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>

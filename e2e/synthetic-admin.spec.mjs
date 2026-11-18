@@ -992,7 +992,7 @@ test('Calculator « Annuler » clears the lines and closes the form without savi
  await expect(det).toHaveAttribute('open','');
  const form=det.locator('form[data-change-offer]');
  // Pre-filled line, as one added from the price list or the journal (values in the HTML attributes).
- await form.evaluate(f=>{const r=f.querySelector('[data-line]');r.querySelector('[name=label]').setAttribute('value','Ligne de la liste');r.querySelector('[name=price]').setAttribute('value','80');});
+ await form.evaluate(f=>{const r=f.querySelector('[data-line]');r.querySelector('[name=label]').setAttribute('value','Ligne de la liste');r.querySelector('[name=price]').setAttribute('value','80');r.dataset.when='2026-11-10';r.querySelector('[data-line-detail]').textContent='Note de la liste';});
  await form.locator('[data-line] [name=label]').first().fill('Page supplémentaire');
  await form.locator('[data-line] [name=price]').first().fill('120');
  await expect(form.locator('[data-calc-total]')).toContainText('120,00');
@@ -1002,6 +1002,9 @@ test('Calculator « Annuler » clears the lines and closes the form without savi
  await expect(form.locator('[data-line]')).toHaveCount(1);
  await expect(form.locator('[data-line] [name=label]').first()).toHaveValue('');
  await expect(form.locator('[data-calc-total]')).toContainText('0,00');
+ // The fresh line keeps no note or date from the removed one.
+ await expect(form.locator('[data-line] [data-line-detail]').first()).toHaveText('');
+ expect(await form.locator('[data-line]').first().getAttribute('data-when')).toBe('');
  // A later reset must not bring the pre-filled line back.
  await form.evaluate(f=>f.reset());
  await expect(form.locator('[data-line] [name=label]').first()).toHaveValue('');

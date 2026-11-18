@@ -355,7 +355,7 @@ footer{max-width:1180px}
 <script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261118-range">
-<script src="../assets/change-requests.js?v=20261118-cancel"></script>
+<script src="../assets/change-requests.js?v=20261118-review"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -924,8 +924,9 @@ footer{max-width:1180px}
     return todo.sort(function(a, b){ return (a[3] || 0) - (b[3] || 0); });
   }
   // Open invoices as [{id, amt}] (deposit before any invoice), for the "due now" figure.
-  function dueList(q){
-    var open = invoices(q).filter(function(x){ return openInv(q, x) && +x.amt > 0; }).map(function(x){ return { id: x.id || '', amt: Math.round((+x.amt - creditOf(q, x)) * 100) / 100 }; });
+  // gross: amounts before credit notes, for the payments card, which takes credit notes and receipts off itself.
+  function dueList(q, gross){
+    var open = invoices(q).filter(function(x){ return openInv(q, x) && +x.amt > 0; }).map(function(x){ return { id: x.id || '', amt: gross ? +x.amt : Math.round((+x.amt - creditOf(q, x)) * 100) / 100 }; });
     if (!open.length && !invoices(q).length && !depositDone(q) && amounts(q).dep > 0) open = [{ id: '', amt: Math.round(amounts(q).dep * 100) / 100 }];
     return open;
   }
@@ -1120,7 +1121,7 @@ footer{max-width:1180px}
       h += '<section class="card"><h2>' + L('Avancées publiées', 'Published updates') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="updates"></div></section>';
       h += '<section class="card" id="dzoft-client-changes-card"><h2>' + L('Demandes de modification', 'Change requests') + '</h2><div id="dzoft-client-changes"></div></section>';
     } else if (tab === 'paiements') {
-      h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '" data-tracking-part="payments" data-due="' + esc(JSON.stringify(dueList(q))) + '"><h2>' + L('Où en sont les paiements', 'Payment status') + '</h2><div class="tracking-slot"></div></section>';
+      h += '<section class="card tracking" data-project-tracking="' + esc(q.id) + '" data-tracking-part="payments" data-due="' + esc(JSON.stringify(dueList(q, true))) + '"><h2>' + L('Où en sont les paiements', 'Payment status') + '</h2><div class="tracking-slot"></div></section>';
       h += payBlock(q) + careBlock(q);
     } else {
       h += officialDocs(q);

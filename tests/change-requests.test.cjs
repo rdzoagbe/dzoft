@@ -10,10 +10,10 @@ test('both client and admin render live change-request workflows',()=>{
  const owner=read('admin/suivi.html'),workspace=read('admin/project-workspace.js');
  assert.match(client,/dzoft-client-changes/);
  assert.match(client,/DzoftChanges\.client/);
- assert.match(client,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel)/);
+ assert.match(client,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel|review)/);
  assert.match(owner,/dzoft-owner-changes/);
  assert.match(owner,/DzoftChanges\.owner/);
- assert.match(owner,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel)/);
+ assert.match(owner,/change-requests\.js\?v=2026111[78]-(?:prices|freeprice|since|neutral|sincedate|draft|range|cancel|review)/);
  assert.match(workspace,/move\('c-changes',primary\)/);
  for(const html of [client,owner]){
   for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
