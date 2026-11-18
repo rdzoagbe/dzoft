@@ -63,6 +63,8 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   chiffres du serveur ; suivi.html lui passe ses données par `window.DzoftProjectData`). `projet.html` ne fait plus que rediriger
   les anciens liens vers le bon onglet. Même menu partout (`editor-navigation.js` reprend `workspace-nav-v6.js`).
   Test `tests/admin-one-project-page.test.cjs`.
+  Menu de la fiche projet et de l’éditeur sur téléphone (≤ 950 px, 18 nov. 2026) : fermé = `inert` (ni clavier ni lecteur d’écran),
+  ouvert = focus dans le menu, Tab y reste, Échap le ferme et rend le focus au bouton ☰ ; jamais `inert` sur ordinateur (e2e).
   Fiche projet : carte « Journal du projet » (13 nov. 2026), privée : entrées datées {d, k, t} (fait, demande du client,
   décision, en attente) dans `quotes.journal`, collage de plusieurs lignes « date | type | texte », jamais renvoyée au client
   (test `tests/project-journal.test.cjs`). Ne jamais y mettre de journal dans le dépôt : il vit dans la base.

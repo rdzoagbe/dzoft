@@ -1181,3 +1181,58 @@ test('Calculator « Annuler » clears the lines and closes the form without savi
  expect(await page.evaluate(()=>window.__syntheticCalls.filter(c=>/create_priced|price_change/.test(c)).length)).toBe(before);
  expect(errors).toEqual([]);
 });
+
+test('Project page menu on a phone: closed = unreachable, open = focus inside, Escape gives focus back',async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes('mobile'),'Only the mobile layout is relevant');
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ const aside=page.locator('#dzoft-editor-sidebar'),toggle=page.locator('.dzoft-editor-menu-toggle');
+ await expect(toggle).toBeVisible();
+ // Closed: the off-screen menu is inert (no keyboard focus, hidden from screen readers).
+ expect(await aside.evaluate(a=>a.inert)).toBe(true);
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ await toggle.click();
+ await expect(toggle).toHaveAttribute('aria-expanded','true');
+ expect(await aside.evaluate(a=>a.inert)).toBe(false);
+ await expect(aside.locator('a[href]').first()).toBeFocused();
+ // Tab stays inside the open menu.
+ const count=await aside.locator('a[href]').count();
+ for(let i=0;i<count;i++)await page.keyboard.press('Tab');
+ expect(await page.evaluate(()=>document.getElementById('dzoft-editor-sidebar').contains(document.activeElement))).toBe(true);
+ await page.keyboard.press('Escape');
+ await expect(toggle).toHaveAttribute('aria-expanded','false');
+ await expect(toggle).toBeFocused();
+ expect(await aside.evaluate(a=>a.inert)).toBe(true);
+ await expect(page.locator('.dzoft-editor-overlay')).toBeHidden();
+ expect(errors).toEqual([]);
+});
+
+test('Project page menu on a computer stays reachable (never inert)',async({page},testInfo)=>{
+ test.skip(testInfo.project.name.includes('mobile'),'Desktop layout only');
+ await syntheticOwner(page);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ const aside=page.locator('#dzoft-editor-sidebar');
+ await expect(aside).toBeVisible();
+ expect(await aside.evaluate(a=>a.inert)).toBe(false);
+ await expect(page.locator('.dzoft-editor-overlay')).toBeHidden();
+});
+
+test('Journal « Importer des lignes » › Annuler forgets the pasted text and saves nothing',async({page})=>{
+ await syntheticOwner(page);
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-project-tab="work"]').click();
+ await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
+ const writes=[];
+ page.on('request',r=>{if(r.method()!=='GET')writes.push(r.url());});
+ await page.locator('.jr-advanced > summary').click();
+ await page.locator('#jr-paste').click();
+ await page.locator('#jr-text').fill('2026-11-18 | fait | Test à ne pas garder');
+ await page.locator('#jr-cancel').click();
+ await expect(page.locator('#jr-bulk')).toBeHidden();
+ await expect(page.locator('#jr-paste')).toBeFocused();
+ await page.locator('#jr-paste').click();
+ await expect(page.locator('#jr-text')).toHaveValue('');
+ await expect(page.locator('#journal')).not.toContainText('Test à ne pas garder');
+ expect(writes).toEqual([]);
+});
