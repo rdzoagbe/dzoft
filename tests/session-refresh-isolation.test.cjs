@@ -164,6 +164,6 @@ test('admin and client screens hide private UI when session disappears in anothe
  assert.match(client,/activeClientUserId = current && current\.user && current\.user\.id/);
  assert.match(client,/D = null; activeClientUserId = null/);
  assert.match(client,/location\.replace\(location\.pathname\)/);
- assert.match(admin,/sb\.js\?v=20261115-session-concurrency/);
- assert.match(client,/sb\.js\?v=20261115-session-concurrency/);
+ assert.match(admin,/sb\.js\?v=20261118-mfa7d/);
+ assert.match(client,/sb\.js\?v=20261118-mfa7d/);
 });

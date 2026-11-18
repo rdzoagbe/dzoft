@@ -29,7 +29,7 @@ function hasRecentTotp(payload: any) {
   const now = Math.floor(Date.now() / 1000);
   return Array.isArray(payload?.amr) && payload.amr.some((entry: any) => {
     const at = Number(entry?.timestamp);
-    return SECOND_FACTORS.includes(entry?.method) && Number.isFinite(at) && at <= now + 120 && now - at <= 12 * 60 * 60;
+    return SECOND_FACTORS.includes(entry?.method) && Number.isFinite(at) && at <= now + 120 && now - at <= 7 * 24 * 60 * 60; // asked again every 7 days (18 Nov 2026)
   });
 }
 function mail(title: string, paras: string[], button: string, link: string) {

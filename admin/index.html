@@ -566,7 +566,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <div id="print"></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="sb.js?v=20261115-session-concurrency"></script>
+<script src="sb.js?v=20261118-mfa7d"></script>
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <script>
@@ -582,7 +582,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 
   /* ---------------- auth ---------------- */
   var forms = ['f-login', 'f-first', 'f-forgot', 'f-newpass', 'f-mfa'];
-  var MFA_WINDOW = 12 * 60 * 60;
+  var MFA_WINDOW = 7 * 24 * 60 * 60; // second factor asked again every 7 days (Roland, 18 Nov 2026)
   // Passkey as second factor: ready in the code, but Supabase hosted projects do not allow it yet
   // (Authentication → Multi-Factor offers only TOTP and phone). Set to true once it does.
   var PASSKEY_MFA = false; // Hosted WebAuthn MFA isn't enabled; passwordless passkeys are separate.

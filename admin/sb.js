@@ -122,7 +122,7 @@
       return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4)));
     } catch (e) { return {}; }
   }
-  // Second factors accepted for the 8-hour check: authenticator-app code or a passkey (WebAuthn).
+  // Second factors accepted for the 7-day check: authenticator-app code or a passkey (WebAuthn).
   var SECOND_FACTORS = ['totp', 'mfa/totp', 'mfa/webauthn', 'webauthn'];
   function mfaFresh(maxAgeSeconds) {
     var p = claims(), now = Date.now() / 1000;
@@ -305,7 +305,7 @@
       },
       register: function () {
         if (!sb.devicePasskey.supported()) return Promise.reject(new Error('WebAuthn is unavailable on this device.'));
-        if (!getSession() || !mfaFresh(12 * 60 * 60)) {
+        if (!getSession() || !mfaFresh(7 * 24 * 60 * 60)) {
           return Promise.reject(new Error('Complete the account verification step before adding a passkey.'));
         }
         return authenticatedToken().then(function (t) {
@@ -333,7 +333,7 @@
         if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(passkeyId || ''))) {
           return Promise.reject(new Error('Invalid device identifier.'));
         }
-        if (!mfaFresh(12 * 60 * 60)) {
+        if (!mfaFresh(7 * 24 * 60 * 60)) {
           return Promise.reject(new Error('Verify your account before removing a device.'));
         }
         return authenticatedToken().then(function (t) {

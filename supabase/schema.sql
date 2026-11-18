@@ -3067,7 +3067,7 @@ AS $function$
           where amr.entry ->> 'method' in ('totp', 'mfa/totp', 'mfa/webauthn', 'webauthn')
             and case when amr.entry ->> 'timestamp' ~ '^[0-9]{10}$' then
               to_timestamp((amr.entry ->> 'timestamp')::double precision)
-                between now() - interval '12 hours' and now() + interval '2 minutes'
+                between now() - interval '7 days' and now() + interval '2 minutes'
             else false end
         )
       )
