@@ -454,8 +454,10 @@ if(global.document)global.document.addEventListener('click',function(ev){
  if(kind==='calc'){
   var rows=f.querySelectorAll('[data-calc-lines] [data-line]'),filled=Array.prototype.some.call(rows,function(r){return (r.querySelector('[name=label]')||{}).value;});
   if(filled&&!global.confirm(tr(en,'Effacer ce calcul ? Rien n’a été enregistré.','Clear this calculation? Nothing was saved.')))return;
-  Array.prototype.forEach.call(rows,function(r,i){if(i)r.remove();else r.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});});
-  f.reset();var sum=f.querySelector('[data-calc-summary]');if(sum){sum.hidden=true;sum.innerHTML='';}
+  // Reset first (it restores pre-filled lines), then empty the kept row, defaults included, so nothing comes back.
+  f.reset();
+  Array.prototype.forEach.call(rows,function(r,i){if(i)r.remove();else r.querySelectorAll('input').forEach(function(x){x.value=x.defaultValue=x.name==='qty'?'1':'';});});
+  var sum=f.querySelector('[data-calc-summary]');if(sum){sum.hidden=true;sum.innerHTML='';}
   f.dispatchEvent(new Event('input',{bubbles:true}));
  }else if(kind==='later'){
   var code=f.querySelector('.dzoft-change-code');if(code)code.hidden=true;if(f.elements.code)f.elements.code.value='';
