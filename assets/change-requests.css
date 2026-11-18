@@ -113,6 +113,8 @@
  .dzoft-calc .dzoft-change-table tfoot th:empty{display:none}
 }
 
+.dzoft-calc-dates{display:flex;flex-wrap:wrap;gap:12px}
+.dzoft-calc-dates .dzoft-calc-since{flex:1 1 160px}
 .dzoft-calc-since{display:grid;gap:5px;font-size:13px;font-weight:600;max-width:240px}
 .dzoft-calc-since input{border:1px solid #cad3e1;border-radius:8px;padding:8px;font:inherit;min-height:40px;background:var(--card,#fff)}
 #dzoft-calc-since-help{color:#636e81;font-size:12px;margin-top:-4px}
@@ -120,3 +122,6 @@
 .dzoft-change-item.dzoft-change-draft{border-style:dashed;border-color:#4361EE;background:#f6f8ff}
 .dzoft-change-draft .dzoft-change-status{background:#e9edff;color:#2a3fbf}
 .dzoft-change-draft-note{background:#eef2ff;border-radius:8px;padding:8px 10px;color:#22306e!important}
+.dzoft-calc-pct{white-space:nowrap}
+.dzoft-calc-pct input[name=pct]{width:72px;display:inline-block}
+.dzoft-calc-pct span[aria-hidden]{margin-left:4px;font-weight:700}

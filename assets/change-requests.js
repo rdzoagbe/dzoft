@@ -122,6 +122,8 @@ function bindClient(root,options){
 function words(label){return String(label||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[^a-z0-9]+/).filter(function(w){return w.length>3;});}
 function plain(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
 function tierDetail(t,when){return t?(t.label+' : '+t.rule+(when?' · '+when:'')).slice(0,300):(when||'');}
+// Percentage of a discount line: given, or read from its label « … (10 %) » when an existing proposal is edited.
+function discountPct(l){if(l.pct!=null&&l.pct!=='')return String(l.pct).replace('.',',');var m=/\((\d+(?:[.,]\d{1,2})?)\s*%\)\s*$/.exec(String(l.label||''));return m?m[1]:'';}
 function lineRow(l,en,tiers){
  l=l||{};tiers=tiers||[];var discount=Number(l.price)<0||l.discount;
  var level=discount?'':'<select name="level" aria-label="'+tr(en,'Niveau de la prestation','Level of the item')+'"><option value="">'+tr(en,'Prix libre','Free price')+'</option>'+
@@ -130,7 +132,11 @@ function lineRow(l,en,tiers){
   '<input type="hidden" name="source" value="'+esc(l.source||'')+'"><input type="hidden" name="detail" value="'+esc(l.detail||'')+'">'+level+
   '<small data-line-detail>'+esc(l.detail||'')+'</small>'+(l.origin?'<small class="dzoft-calc-origin" data-line-origin>'+esc(l.origin)+'</small>':'')+'</td>'+
   (discount?'<td><input name="qty" type="hidden" value="1">1</td>':'<td><input name="qty" type="text" inputmode="decimal" autocomplete="off" required value="'+esc(l.qty==null?1:l.qty)+'" aria-label="'+tr(en,'Quantité','Quantity')+'"></td>')+
-  '<td>'+(discount?'<span class="dzoft-calc-minus" aria-hidden="true">−</span>':'')+'<input name="price" type="text" inputmode="decimal" autocomplete="off" required value="'+esc(l.price==null||l.price===''?'':String(Math.abs(Number(l.price))).replace('.',','))+'" aria-label="'+(discount?tr(en,'Montant de la remise (€), déduit du total','Discount amount (€), taken off the total'):tr(en,'Prix unitaire (€)','Unit price (€)'))+'"'+(discount?' placeholder="'+tr(en,'Montant','Amount')+'"':'')+(l.price==null||l.price===''?' data-unpriced':'')+'></td>'+
+  (discount
+   // Commercial discount as a percentage of the other lines (18 Nov 2026); the euro amount is computed and sent.
+   ?'<td class="dzoft-calc-pct"><span class="dzoft-calc-minus" aria-hidden="true">−</span><input name="pct" type="text" inputmode="decimal" autocomplete="off" required value="'+esc(discountPct(l))+'" aria-label="'+tr(en,'Remise en pourcentage du total','Discount as a percentage of the total')+'" placeholder="10"><span aria-hidden="true">%</span>'+
+    '<input type="hidden" name="price" value="'+esc(l.price==null||l.price===''?'':String(Math.abs(Number(l.price))))+'"'+(discountPct(l)===''&&Number(l.price)<0?' data-amount="'+esc(String(Math.abs(Number(l.price))))+'"':'')+'></td>'
+   :'<td><input name="price" type="text" inputmode="decimal" autocomplete="off" required value="'+esc(l.price==null||l.price===''?'':String(Math.abs(Number(l.price))).replace('.',','))+'" aria-label="'+tr(en,'Prix unitaire (€)','Unit price (€)')+'"'+(l.price==null||l.price===''?' data-unpriced':'')+'></td>')+
   '<td data-line-total>'+cash(0)+'</td><td><button class="btn line sm" type="button" data-line-remove aria-label="'+tr(en,'Retirer la ligne','Remove line')+'">×</button></td></tr>';
 }
 function calculator(en,blocks,target,tiers){
@@ -141,8 +147,9 @@ function calculator(en,blocks,target,tiers){
   '<details class="dzoft-calc-request"'+(target?' open':'')+'><summary>'+tr(en,'Repérer depuis la demande du client (facultatif)','Detect from the client request (optional)')+'</summary>'+
   '<label>'+tr(en,'Texte de la demande','Request text')+'<textarea name="request" rows="3" maxlength="4000">'+esc(target?(r.title+'\n'+(r.description||'')):'')+'</textarea></label>'+
   '<button class="btn line sm" type="button" data-calc-detect>'+tr(en,'Repérer dans ma liste de prix','Find in my price list')+'</button></details>'+
-  (target?'':'<div class="dzoft-calc-auto"><label class="dzoft-calc-since">'+tr(en,'Depuis le (facultatif)','From (optional)')+'<input type="date" name="since" aria-describedby="dzoft-calc-since-help"></label>'+
-  '<small id="dzoft-calc-since-help">'+tr(en,'Vide : depuis votre dernier supplément, ou depuis la signature.','Empty: since your last extra-work proposal, or since signature.')+'</small>'+
+  (target?'':'<div class="dzoft-calc-auto"><div class="dzoft-calc-dates"><label class="dzoft-calc-since">'+tr(en,'Du (facultatif)','From (optional)')+'<input type="date" name="since" aria-describedby="dzoft-calc-since-help"></label>'+
+  '<label class="dzoft-calc-since">'+tr(en,'Au (facultatif)','To (optional)')+'<input type="date" name="until" aria-describedby="dzoft-calc-since-help"></label></div>'+
+  '<small id="dzoft-calc-since-help">'+tr(en,'« Du » vide : depuis votre dernier supplément, ou depuis la signature. « Au » vide : jusqu’à aujourd’hui.','Empty “From”: since your last extra-work proposal, or since signature. Empty “To”: up to today.')+'</small>'+
   '<button class="btn main" type="button" data-calc-journal>'+tr(en,'⚡ Calculer depuis le suivi du projet','⚡ Calculate from project tracking')+'</button>'+
   '<p>'+tr(en,'Reprend les demandes du client réalisées depuis votre dernier supplément (ou depuis la signature s’il n’y en a pas), chiffrées dans cet ordre : le niveau noté dans le journal, sinon une prestation de votre liste dont les mots figurent dans la demande, sinon votre prix par défaut. Vérifiez chaque ligne : retirez ce qui était prévu au devis ou ce qui venait de vous, et tapez votre prix si besoin (« Prix libre »).','Takes the client requests completed since your last extra-work proposal (or since signature if there is none), priced in this order: the level noted in the journal, else an item of your list whose words appear in the request, else your default price. Check every line: remove what the quote already covered or what was your own idea, and type your own price if needed (“Free price”).')+'</p>'+
   '<div data-calc-summary class="dzoft-calc-summary" hidden></div></div>')+
@@ -226,7 +233,12 @@ function bindOwner(root,options){
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
- function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value);return {label:row.querySelector('[name=label]').value.trim(),qty:disc?1:amount(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):(p<0?NaN:p),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
+ function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
+   // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
+   // The base label is shortened so the label with its percentage stays within the server's 160 characters.
+   if(disc&&Number.isFinite(pc)){var suf=' ('+String(pc).replace('.',',')+' %)';lb=lb.replace(/\s*\(\d+(?:[.,]\d{1,2})?\s*%\)\s*$/,'').slice(0,160-suf.length).trim()+suf;}
+   if(disc&&!(pc>0&&pc<100))p=NaN;
+   return {label:lb,qty:disc?1:amount(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):(p<0?NaN:p),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
  /* « Calculer depuis le suivi » : the client requests completed since signature, from the private journal.
     A request is billed once: its origin is kept on the line and skipped if already in a live proposal. */
  function hash(t){var h=2166136261;for(var i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
@@ -239,7 +251,10 @@ function bindOwner(root,options){
    return (q.client_id?Promise.resolve(sb.select('clients','select=nom&id=eq.'+encodeURIComponent(q.client_id))).catch(function(){return [];}):Promise.resolve([])).then(function(c){q.clientName=c&&c[0]&&c[0].nom||'';return [q,res[1]];});
   }).then(function(res){
    var q=res[0],work=Array.isArray(res[1])?res[1]:[],signed=String(q.accepted_at||'').slice(0,10),since=signed;
-   var used={},lastDay='';records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0){(r.lines||[]).forEach(function(l){if(l.source)used[l.source]=1;});
+   var used={},holder={},lastDay='';records.forEach(function(r){if(['declined','rejected','withdrawn'].indexOf(r.status)<0){
+     // Which proposal already holds a journal line (named in the summary, so a forgotten draft is easy to find).
+     var name=(r.proposal_number||r.title||tr(en,'proposition','proposal'))+(r.status==='proposed'&&!r.sent_at?tr(en,' (brouillon non envoyé du ',' (unsent draft of ')+String(r.proposed_at||r.created_at||'').slice(0,10).split('-').reverse().join('/')+')':'');
+     (r.lines||[]).forEach(function(l){if(l.source){used[l.source]=1;holder[l.source]=name;}});
      // Only priced extra work moves the start (a client's unpriced request does not), dated when it was proposed.
      if(['proposed','approved','in_progress','completed'].indexOf(r.status)>=0){var c=String(r.proposed_at||r.created_at||'').slice(0,10);if(c>lastDay)lastDay=c;}}});
    /* Only what is new (17 Nov 2026): requests done since the last extra-work proposal still open or signed (or since
@@ -249,17 +264,23 @@ function bindOwner(root,options){
    // A date chosen by the owner replaces the automatic start (never before the signature).
    var chosen=form.elements.since&&/^\d{4}-\d{2}-\d{2}$/.test(form.elements.since.value)?form.elements.since.value:'';
    if(chosen)since=signed&&chosen<signed?signed:chosen;
+   // Optional end date (18 Nov 2026): only requests done up to that day; empty = up to today.
+   var until=form.elements.until&&/^\d{4}-\d{2}-\d{2}$/.test(form.elements.until.value)?form.elements.until.value:'';
+   // Empty « Au » means today (local date): a journal line dated in the future is never added.
+   var today=new Date(),upto=until||(today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'));
+   if(until&&since&&until<since){var bad=form.querySelector('[data-calc-summary]');bad.hidden=false;bad.innerHTML='<p class="dzoft-calc-warn">'+tr(en,'La date « Au » est avant la date « Du ». Corrigez les dates puis recalculez.','The “To” date is before the “From” date. Fix the dates, then calculate again.')+'</p>';return;}
    // Calculating again with a later start: lines imported earlier from the journal and now before the start are removed
    // (lines typed by hand have no journal origin and stay).
    Array.prototype.forEach.call(form.querySelectorAll('[data-line]'),function(row){var src=(row.querySelector('[name=source]')||{}).value||'',m=/^journal:(\d{4}-\d{2}-\d{2}):/.exec(src);
-     if(m&&since&&m[1]<since){if(form.querySelectorAll('[data-line]').length>1)row.remove();else row.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}});
+     if(m&&((since&&m[1]<since)||m[1]>upto)){if(form.querySelectorAll('[data-line]').length>1)row.remove();else row.querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}});
    recalc(form);
    readLines(form).forEach(function(l){if(l.source)used[l.source]=1;});
    var clientName=plain(q.clientName||'').split(/\s+/)[0];
-   var added=0,priced=0,skipped=0,offered=0,byLevel=0,byList=0,byDefault=0,later=[],included=[],earlier=[];
+   var added=0,priced=0,skipped=0,offered=0,byLevel=0,byList=0,byDefault=0,later=[],included=[],earlier=[],after=[],holders={};
    (Array.isArray(q.journal)?q.journal:[]).filter(function(e){
      if(!(e&&e.k==='demande'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d||'')&&(!signed||e.d>=signed)))return false;
      if(since&&e.d<since){var t=String(e.t||'').trim();if(/:\s*fait\b/i.test(t)&&!/^pas encore/i.test(t))earlier.push(t.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
+     if(e.d>upto){var u=String(e.t||'').trim();if(/:\s*fait\b/i.test(u)&&!/^pas encore/i.test(u))after.push(u.replace(/\s*:\s*fait\b.*$/i,'').trim()+' ('+e.d.split('-').reverse().join('/')+')');return false;}
      return true;})
     .sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;}).forEach(function(e){
      var text=String(e.t||'').trim(),done=/:\s*fait\b/i.test(text)&&!/^pas encore/i.test(text);
@@ -270,7 +291,7 @@ function bindOwner(root,options){
      label=label.charAt(0).toUpperCase()+label.slice(1);if(label.length>160)label=label.slice(0,157)+'…';
      if(!done){later.push(label);return;}
      var source='journal:'+e.d+':'+hash(e.d+'|'+text).slice(0,16);
-     if(used[source]){skipped++;return;}
+     if(used[source]){skipped++;if(holder[source])holders[holder[source]]=(holders[holder[source]]||0)+1;return;}
      // The level recorded in the journal decides: "inclus" (already in the quote, or a correction) is never billed.
      if(e.lvl==='inclus'){included.push(label+(e.why?' — '+e.why:''));return;}
      used[source]=1;
@@ -295,9 +316,11 @@ function bindOwner(root,options){
     (offered?' · '+offered+' '+tr(en,'offerte(s)','offered'):'')+(skipped?' · '+skipped+' '+tr(en,'déjà dans une proposition','already in a proposal'):'')+'</p>'+
     (priced?'<p>'+tr(en,'Origine des prix : ','Where prices come from: ')+[byLevel?byLevel+' '+tr(en,'par le niveau noté dans le journal','from the level noted in the journal'):'',byList?byList+' '+tr(en,'par votre liste de prix','from your price list'):'',byDefault?byDefault+' '+tr(en,'par le prix par défaut','from the default price'):''].filter(Boolean).join(' · ')+tr(en,'. Le détail est sous chaque ligne (visible par vous seul).','. Details under each line (only you see them).')+'</p>':'')+
     (included.length?'<details><summary>'+included.length+' '+tr(en,'demande(s) incluse(s) au devis ou corrections, non facturée(s)','request(s) included in the quote or fixes, not billed')+'</summary><ul>'+included.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
-    (chosen?'<p>'+tr(en,'Depuis le ','From ')+since.split('-').reverse().join('/')+tr(en,' (date choisie).',' (chosen date).')+'</p>':since!==signed?'<p>'+tr(en,'Depuis le dernier supplément, du ','Since the last extra-work proposal, of ')+since.split('-').reverse().join('/')+'.</p>':'')+
+    (Object.keys(holders).length?'<details><summary>'+skipped+' '+tr(en,'demande(s) déjà dans une autre proposition, non reprise(s)','request(s) already in another proposal, not added')+'</summary><ul>'+Object.keys(holders).map(function(h){return '<li>'+esc(h)+' : '+holders[h]+'</li>';}).join('')+'</ul><p>'+tr(en,'Pour les reprendre ici, modifiez ou refusez d’abord cette proposition.','To add them here, first edit or reject that proposal.')+'</p></details>':'')+
+    (chosen||until?'<p>'+(chosen?tr(en,'Du ','From ')+since.split('-').reverse().join('/'):tr(en,'Depuis le ','Since ')+since.split('-').reverse().join('/'))+(until?tr(en,' au ',' to ')+until.split('-').reverse().join('/'):tr(en,' à aujourd’hui',' to today'))+tr(en,' (dates choisies).',' (chosen dates).')+'</p>':since!==signed?'<p>'+tr(en,'Depuis le dernier supplément, du ','Since the last extra-work proposal, of ')+since.split('-').reverse().join('/')+'.</p>':'')+
     (earlier.length?'<details><summary>'+earlier.length+' '+(chosen?tr(en,'demande(s) réalisée(s) avant cette date, non reprise(s)','request(s) done before this date, not added'):tr(en,'demande(s) réalisée(s) avant le dernier supplément, non reprise(s)','request(s) done before the last extra-work proposal, not added'))+'</summary><ul>'+earlier.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
     '<p>'+tr(en,'Activité Git sur le projet depuis la signature : ','Git activity on the project since signature: ')+Object.keys(days).length+' '+tr(en,'jour(s) de travail.','working day(s).')+'</p>'+
+    (after.length?'<details><summary>'+after.length+' '+tr(en,'demande(s) réalisée(s) après la date « Au », non reprise(s)','request(s) done after the “To” date, not added')+'</summary><ul>'+after.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'')+
     (later.length?'<details><summary>'+later.length+' '+tr(en,'demande(s) pas encore réalisée(s), non incluse(s)','request(s) not done yet, not included')+'</summary><ul>'+later.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></details>':'');
    if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value=tr(en,'Ajouts demandés depuis la signature du devis','Additions requested since the quote was signed');
    form.elements.done.checked=true;
@@ -305,9 +328,17 @@ function bindOwner(root,options){
   }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;btn.disabled=false;});
  }
  function recalc(form){
-  var total=0;
-  form.querySelectorAll('[data-line]').forEach(function(row){
-   var disc=row.hasAttribute('data-discount'),q=disc?1:amount(row.querySelector('[name=qty]').value),p=amount(row.querySelector('[name=price]').value);if(disc&&Number.isFinite(p))p=-Math.abs(p);
+  var total=0,rows=form.querySelectorAll('[data-line]'),sub=0;
+  // Items first: a discount is a percentage of their total, never of another discount.
+  rows.forEach(function(row){if(row.hasAttribute('data-discount'))return;var q=amount(row.querySelector('[name=qty]').value),p=amount(row.querySelector('[name=price]').value);if(Number.isFinite(q)&&Number.isFinite(p))sub+=Math.round(q*p*100);});
+  rows.forEach(function(row){
+   var disc=row.hasAttribute('data-discount'),q=disc?1:amount(row.querySelector('[name=qty]').value),p;
+   if(disc){var pi0=row.querySelector('[name=price]'),pf=row.querySelector('[name=pct]');
+    // An older discount saved in euros: shown once as the matching percentage.
+    if(pf&&pf.value===''&&pi0.dataset.amount&&sub>0){pf.value=String(Math.round(Number(pi0.dataset.amount)*10000/sub)/100).replace('.',',');delete pi0.dataset.amount;}
+    var pc=amount(pf?pf.value:''),c=pc>0&&pc<100?Math.round(sub*pc/100):NaN;
+    pi0.value=Number.isFinite(c)?String(c/100):'';p=Number.isFinite(c)?-c/100:NaN;}
+   else p=amount(row.querySelector('[name=price]').value);
    var t=Number.isFinite(q)&&Number.isFinite(p)?Math.round(q*p*100):0;total+=t;
    var pi=row.querySelector('[name=price]');if(pi.value!=='')pi.removeAttribute('data-unpriced');
    row.querySelector('[data-line-total]').textContent=cash(t/100);
@@ -338,7 +369,7 @@ function bindOwner(root,options){
   if(b.hasAttribute('data-calc-add-line')&&form){addLine(form,null).querySelector('[name=label]').focus();return;}
   if(b.hasAttribute('data-calc-add-block')&&form){var i=form.elements.block.value;if(i===''||!blocks[+i])return;var bl=blocks[+i];addLine(form,{label:bl.label,qty:1,price:bl.price});form.elements.block.value='';return;}
   if(b.hasAttribute('data-line-remove')&&form){var rows=form.querySelectorAll('[data-line]');if(rows.length>1)b.closest('[data-line]').remove();else{b.closest('[data-line]').querySelectorAll('input').forEach(function(x){x.value=x.name==='qty'?'1':'';});}recalc(form);return;}
-  if(b.hasAttribute('data-calc-discount')&&form){var d=addLine(form,{label:tr(en,'Remise commerciale','Commercial discount'),qty:1,price:'',discount:true});d.querySelector('[name=price]').focus();return;}
+  if(b.hasAttribute('data-calc-discount')&&form){var d=addLine(form,{label:tr(en,'Remise commerciale','Commercial discount'),qty:1,price:'',discount:true});d.querySelector('[name=pct]').focus();return;}
   if(b.hasAttribute('data-calc-journal')&&form){fromJournal(form,b);return;}
   if(b.hasAttribute('data-calc-detect')&&form){
    var text=plain(form.elements.request.value),present=readLines(form).map(function(l){return l.label;}),found=0;
@@ -353,6 +384,8 @@ function bindOwner(root,options){
  });
  root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-offer],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
   if(f.hasAttribute('data-change-offer')){
+   recalc(f);
+   if(Array.prototype.some.call(f.querySelectorAll('[data-discount] [name=pct]'),function(x){var v=amount(x.value);return !(v>0&&v<100);})){banner(root,tr(en,'La remise est un pourcentage : tapez un nombre entre 0 et 100 (ex. 10).','The discount is a percentage: type a number between 0 and 100 (e.g. 10).'),true);return;}
    var lines=readLines(f).filter(function(l){return l.label||Number.isFinite(l.price);});
    if(!lines.length||lines.some(function(l){return l.label.length<2||!(l.qty>0)||l.qty>1000||!Number.isFinite(l.price)||Math.abs(l.price)>1000000;})){banner(root,stateError({message:'Each line needs a label, a quantity and a price'},en),true);return;}
    lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});

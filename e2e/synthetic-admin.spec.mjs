@@ -891,3 +891,42 @@ test('Invoice send window: e-mail and/or WhatsApp with the message ready, visibl
  }
  expect(errors).toEqual([]);
 });
+
+test('Extra calculator: « Du … Au … » dates and a commercial discount in percent, recalculated with the lines',async({page},testInfo)=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&summaryFixture=1',{waitUntil:'domcontentloaded'});
+ await page.locator('[data-workspace-action="extra"]').click();
+ const form=page.locator('#dzoft-owner-changes form[data-change-offer]').first();
+ await expect(form.locator('input[name="since"]')).toBeVisible();
+ await expect(form.locator('input[name="until"]')).toBeVisible();
+ // An end date before the start date is refused with a message.
+ await form.locator('input[name="since"]').fill('2026-11-14');
+ await form.locator('input[name="until"]').fill('2026-11-10');
+ await form.locator('[data-calc-journal]').click();
+ await expect(form.locator('[data-calc-summary]')).toContainText('avant la date « Du »');
+ const rows=form.locator('[data-line]');
+ await rows.first().locator('[name=label]').fill('Page supplémentaire');
+ await rows.first().locator('[name=qty]').fill('2');
+ await rows.first().locator('[name=price]').fill('100');
+ await form.locator('[data-calc-add-line]').click();
+ await rows.nth(1).locator('[name=label]').fill('Formulaire');
+ await rows.nth(1).locator('[name=price]').fill('50');
+ await form.locator('[data-calc-discount]').click();
+ const disc=form.locator('[data-discount]');
+ await disc.locator('[name=pct]').fill('10');
+ // 2 × 100 + 50 = 250; 10 % = 25; total 225.
+ await expect(disc.locator('[data-line-total]')).toContainText('25,00');
+ await expect(form.locator('[data-calc-total]')).toContainText('225,00');
+ // Changing an item updates the discount: 2 × 100 + 150 = 350; 10 % = 35; total 315.
+ await rows.nth(1).locator('[name=price]').fill('150');
+ await expect(disc.locator('[data-line-total]')).toContainText('35,00');
+ await expect(form.locator('[data-calc-total]')).toContainText('315,00');
+ await disc.scrollIntoViewIfNeeded();
+ await page.screenshot({path:testInfo.outputPath('discount-percent.png')});
+ if(testInfo.project.name.includes('mobile')){
+  const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport+4);
+ }
+ expect(errors).toEqual([]);
+});
