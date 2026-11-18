@@ -374,6 +374,62 @@ function bindOwner(root,options){
   var d=t?tierDetail(t,row.dataset.when):(row.dataset.when||'');row.querySelector('[name=detail]').value=d;row.querySelector('[data-line-detail]').textContent=d;
   var pr=row.querySelector('[name=price]');if(t){pr.value=String(t.price).replace('.',',');}else{pr.value='';pr.setAttribute('data-unpriced','');pr.focus();}
   var o=row.querySelector('[data-line-origin]');if(o)o.remove();recalc(sel.closest('form'));});
+ function openManualShare(proposal){
+  if(document.getElementById('dzoft-change-manual-share'))return;
+  var opt=root.__dzoftOwnerOptions||{},email=String(opt.clientEmail||'').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))email='';
+  var number=String(opt.clientPhone||'').replace(/[\s().-]/g,'').replace(/^00/,'').replace(/^\+/,'');
+  if(/^0[67]\d{8}$/.test(number))number='33'+number.slice(1);
+  if(!/^[1-9]\d{7,14}$/.test(number))number='';
+  var url=(sb.PORTAL||'')+'?projet='+encodeURIComponent(quoteId);
+  var title='Proposition complémentaire '+String(proposal.proposal_number||'')+' · DZOFT';
+  var lines=(Array.isArray(proposal.lines)?proposal.lines:[]).map(function(x){return '– '+String(x.label||'')+' : '+cash(Number(x.qty||1)*Number(x.price||0));}).join('\n');
+  var msg='Bonjour,\n\nJe vous présente une proposition complémentaire au devis initial '+String(opt.quoteNumber||'')+'.\n\n'+
+   'Les prestations suivantes ont été demandées après la signature du devis et sont chiffrées séparément :\n'+lines+
+   '\n\nMontant proposé pour ces ajouts : '+cash(proposal.extra_price)+'. Le devis initial et les paiements déjà reçus ne changent pas.\n\n'+
+   'Vous pouvez consulter la proposition dans votre espace client : '+url+'.\n\n'+
+   'Aucun supplément ne sera facturé sans votre accord et votre signature. Je reste disponible pour en discuter avant toute décision.\n\nCordialement,\nRoland — DZOFT';
+  var d=document.createElement('dialog');d.id='dzoft-change-manual-share';d.className='dzoft-change-manual-dialog';
+  d.innerHTML='<h2>'+tr(en,'Relire avant de partager','Review before sharing')+' · '+esc(proposal.proposal_number||'')+'</h2>'+
+   '<p>'+tr(en,'Ceci est une <b>proposition de travaux complémentaires</b>, pas une nouvelle facture. Aucun envoi automatique.','This is an <b>extra-work proposal</b>, not a new invoice. Nothing is automatically sent.')+'</p>'+
+   '<label>'+tr(en,'Destinataire e-mail','Email recipient')+'<input data-share-email type="email" value="'+esc(email)+'" placeholder="client@example.com"></label>'+
+   '<label>'+tr(en,'Objet','Subject')+'<input data-share-subject type="text" maxlength="240" value="'+esc(title)+'"></label>'+
+   '<label>'+tr(en,'Votre explication (modifiable)','Your explanation (editable)')+'<textarea data-share-body rows="13" maxlength="12000">'+esc(msg)+'</textarea></label>'+
+   '<div class="dzoft-change-actions"><button type="button" class="btn main" data-share-outlook>'+tr(en,'Ouvrir dans Outlook (Hotmail)','Open in Outlook (Hotmail)')+'</button></div>'+
+   '<p>'+tr(en,'Vérifiez que votre compte Hotmail est connecté avant d’envoyer. Ouvrir le brouillon ne marque rien comme envoyé.','Check your Hotmail account before sending. Opening the draft never marks it sent.')+'</p>'+
+   '<label>'+tr(en,'WhatsApp du client','Client WhatsApp')+'<input data-share-phone type="tel" value="'+esc(number?'+'+number:'')+'"></label>'+
+   '<div class="dzoft-change-actions"><button type="button" class="btn line" data-share-wa>'+tr(en,'Ouvrir dans WhatsApp','Open in WhatsApp')+'</button></div>'+
+   (!proposal.sent_at?'<div class="dzoft-change-manual-confirm"><label><input type="checkbox" data-share-checked> '+tr(en,'J’ai personnellement envoyé ce message au client.','I personally sent this message to the client.')+'</label><button type="button" class="btn main" data-share-confirm disabled>'+tr(en,'Confirmer mon envoi manuel','Confirm manual sending')+'</button></div>':
+    '<p>'+tr(en,'Le client peut déjà voir cette proposition. Rédiger un nouveau message ne déclenche pas d’e-mail automatique.','The client can already see this proposal. Preparing another message will not trigger automatic mail.')+'</p>')+
+   '<p data-share-status role="status"></p><button class="btn line" type="button" data-share-close>'+tr(en,'Fermer sans envoyer','Close without sending')+'</button>';
+  document.body.appendChild(d);
+  var q=function(css){return d.querySelector(css);};
+  q('[data-share-close]').onclick=function(){d.close();};
+  d.addEventListener('close',function(){d.remove();});
+  q('[data-share-outlook]').onclick=function(){
+   var to=q('[data-share-email]').value.trim(),subject=q('[data-share-subject]').value.trim(),body=q('[data-share-body]').value.trim();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||!subject||!body){q('[data-share-status]').textContent=tr(en,'Vérifiez destinataire, objet et message.','Check recipient, subject and message.');return;}
+   var compose='https://outlook.live.com/mail/0/deeplink/compose?to='+encodeURIComponent(to)+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+   var w=global.open(compose,'_blank');if(w)w.opener=null;else q('[data-share-status]').textContent=tr(en,'Autorisez les fenêtres contextuelles.','Allow pop-ups.');
+  };
+  q('[data-share-wa]').onclick=function(){
+   var digits=q('[data-share-phone]').value.replace(/[\s().-]/g,'').replace(/^00/,'').replace(/^\+/,'');
+   if(/^0[67]\d{8}$/.test(digits))digits='33'+digits.slice(1);
+   if(!/^[1-9]\d{7,14}$/.test(digits)){q('[data-share-status]').textContent=tr(en,'Indiquez un numéro WhatsApp valide.','Enter a valid WhatsApp number.');return;}
+   var body=q('[data-share-body]').value.trim();if(!body)return;
+   var w=global.open('https://wa.me/'+digits+'?text='+encodeURIComponent(body),'_blank');if(w)w.opener=null;
+  };
+  if(!proposal.sent_at){
+   q('[data-share-checked]').onchange=function(){q('[data-share-confirm]').disabled=!this.checked;};
+   q('[data-share-confirm]').onclick=function(){
+    if(!q('[data-share-checked]').checked||busy)return;
+    if(!global.confirm(tr(en,'Avez-vous réellement envoyé ce message vous-même ? Le client pourra ensuite consulter et signer la proposition. DZOFT n’enverra pas d’e-mail.','Did you really send the message yourself? The client can then view and sign the proposal. DZOFT will send no email.')))return;
+    q('[data-share-confirm]').disabled=true;
+    perform(sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true),tr(en,'Partage manuel confirmé sans envoi automatique.','Manual sharing confirmed without automatic sending.')).then(function(){if(d.open)d.close();});
+   };
+  }
+  d.showModal();
+ }
  root.addEventListener('click',function(ev){
   var b=ev.target.closest('button');if(!b)return;
   var form=b.closest('form[data-change-offer]');
