@@ -124,6 +124,9 @@ function plain(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[
 function tierDetail(t,when){return t?(t.label+' : '+t.rule+(when?' · '+when:'')).slice(0,300):(when||'');}
 // Percentage of a discount line: given, or read from its label « … (10 %) » when an existing proposal is edited.
 function discountPct(l){if(l.pct!=null&&l.pct!=='')return String(l.pct).replace('.',',');var m=/\((\d+(?:[.,]\d{1,2})?)\s*%\)\s*$/.exec(String(l.label||''));return m?m[1]:'';}
+// A discount saved in euros (older proposals, no « (x %) » in its label) keeps its exact amount while the percentage
+// shown for it is left as is; typing another percentage switches it to a percentage discount (Codex review, 18 Nov 2026).
+function fixedCents(row){var pf=row.querySelector('[name=pct]');return pf&&pf.dataset.fixed&&pf.value===pf.dataset.shown?Math.round(Number(pf.dataset.fixed)*100):NaN;}
 function lineRow(l,en,tiers){
  l=l||{};tiers=tiers||[];var discount=Number(l.price)<0||l.discount;
  var level=discount?'':'<select name="level" aria-label="'+tr(en,'Niveau de la prestation','Level of the item')+'"><option value="">'+tr(en,'Prix libre','Free price')+'</option>'+
@@ -241,6 +244,8 @@ function bindOwner(root,options){
  function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
    // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
    // The base label is shortened so the label with its percentage stays within the server's 160 characters.
+   var fx=disc?fixedCents(row):NaN;
+   if(disc&&Number.isFinite(fx))return {label:lb,qty:1,price:-fx/100,source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:''};
    if(disc&&Number.isFinite(pc)){var suf=' ('+String(pc).replace('.',',')+' %)';lb=lb.replace(/\s*\(\d+(?:[.,]\d{1,2})?\s*%\)\s*$/,'').slice(0,160-suf.length).trim()+suf;}
    if(disc&&!(pc>0&&pc<100))p=NaN;
    return {label:lb,qty:disc?1:amount(row.querySelector('[name=qty]').value),price:disc&&Number.isFinite(p)?-Math.abs(p):(p<0?NaN:p),source:row.querySelector('[name=source]').value,detail:row.querySelector('[name=detail]').value,level:(row.querySelector('[name=level]')||{}).value||''};});}
@@ -340,8 +345,8 @@ function bindOwner(root,options){
    var disc=row.hasAttribute('data-discount'),q=disc?1:amount(row.querySelector('[name=qty]').value),p;
    if(disc){var pi0=row.querySelector('[name=price]'),pf=row.querySelector('[name=pct]');
     // An older discount saved in euros: shown once as the matching percentage.
-    if(pf&&pf.value===''&&pi0.dataset.amount&&sub>0){pf.value=String(Math.round(Number(pi0.dataset.amount)*10000/sub)/100).replace('.',',');delete pi0.dataset.amount;}
-    var pc=amount(pf?pf.value:''),c=pc>0&&pc<100?Math.round(sub*pc/100):NaN;
+    if(pf&&pf.value===''&&pi0.dataset.amount&&sub>0){pf.value=String(Math.round(Number(pi0.dataset.amount)*10000/sub)/100).replace('.',',');pf.dataset.fixed=pi0.dataset.amount;pf.dataset.shown=pf.value;delete pi0.dataset.amount;}
+    var pc=amount(pf?pf.value:''),fx=fixedCents(row),c=Number.isFinite(fx)?fx:pc>0&&pc<100?Math.round(sub*pc/100):NaN;
     pi0.value=Number.isFinite(c)?String(c/100):'';p=Number.isFinite(c)?-c/100:NaN;}
    else p=amount(row.querySelector('[name=price]').value);
    var t=Number.isFinite(q)&&Number.isFinite(p)?Math.round(q*p*100):0;total+=t;
@@ -390,7 +395,7 @@ function bindOwner(root,options){
  root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-offer],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
   if(f.hasAttribute('data-change-offer')){
    recalc(f);
-   if(Array.prototype.some.call(f.querySelectorAll('[data-discount] [name=pct]'),function(x){var v=amount(x.value);return !(v>0&&v<100);})){banner(root,tr(en,'La remise est un pourcentage : tapez un nombre entre 0 et 100 (ex. 10).','The discount is a percentage: type a number between 0 and 100 (e.g. 10).'),true);return;}
+   if(Array.prototype.some.call(f.querySelectorAll('[data-discount] [name=pct]'),function(x){var v=amount(x.value);return !Number.isFinite(fixedCents(x.closest('[data-line]')))&&!(v>0&&v<100);})){banner(root,tr(en,'La remise est un pourcentage : tapez un nombre entre 0 et 100 (ex. 10).','The discount is a percentage: type a number between 0 and 100 (e.g. 10).'),true);return;}
    var lines=readLines(f).filter(function(l){return l.label||Number.isFinite(l.price);});
    if(!lines.length||lines.some(function(l){return l.label.length<2||!(l.qty>0)||l.qty>1000||!Number.isFinite(l.price)||Math.abs(l.price)>1000000;})){banner(root,stateError({message:'Each line needs a label, a quantity and a price'},en),true);return;}
    lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});

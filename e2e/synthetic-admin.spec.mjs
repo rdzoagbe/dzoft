@@ -78,7 +78,8 @@ const syntheticSb = `
    // Unsent draft proposal (18 Nov 2026): « Modifier ce brouillon » re-prices it in place.
    if(location.search.includes('draftFixture=1')){
      window.__draft=window.__draft||{id:'33333333-3333-4333-8333-333333333333',title:'Ajouts demandés',status:'proposed',sent_at:null,proposal_number:'D-SYNTHETIC-001-C1',proposal_version:1,extra_price:400,already_done:true,timeline_impact:'',created_at:now,
-       lines:[{label:'Logo plus grand',qty:1,price:25,source:'j1'},{label:'Photo floutée avant le pass',qty:1,price:100,source:'j2'},{label:'Écran d’administration',qty:1,price:275},{label:'Vidéo de présentation',qty:1,price:0}]};
+       lines:location.search.includes('euroDiscount=1')?[{label:'Application complète',qty:1,price:30000},{label:'Remise commerciale',qty:1,price:-100}]
+        :[{label:'Logo plus grand',qty:1,price:25,source:'j1'},{label:'Photo floutée avant le pass',qty:1,price:100,source:'j2'},{label:'Écran d’administration',qty:1,price:275},{label:'Vidéo de présentation',qty:1,price:0}]};
      if(name==='owner_list_change_requests')return [window.__draft];
      if(name==='owner_price_change_request'){window.__priceArgs=args;const t=args.p_lines.reduce((n,l)=>n+Math.round(l.qty*l.price*100),0)/100;
        window.__draft=Object.assign({},window.__draft,{lines:args.p_lines,extra_price:t,proposal_version:window.__draft.proposal_version+1,already_done:args.p_already_done});return window.__draft;}
@@ -1285,4 +1286,31 @@ test('Journal « Importer des lignes » › Annuler forgets the pasted text and 
  await expect(page.locator('#jr-text')).toHaveValue('');
  await expect(page.locator('#journal')).not.toContainText('Test à ne pas garder');
  expect(writes).toEqual([]);
+});
+
+test('Editing a draft keeps an older discount saved in euros exact until its percentage is changed',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('dialog',d=>d.accept());
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&draftFixture=1&euroDiscount=1#billing',{waitUntil:'domcontentloaded'});
+ const edit=page.locator('#dzoft-owner-changes details.dzoft-change-edit');
+ await edit.locator('summary').click();
+ const form=edit.locator('form[data-edit]');
+ // 100 € off 30 000 € is about 0,33 %: the editor must not turn it into 99 €.
+ await expect(form.locator('[data-calc-total]')).toContainText('29 900,00');
+ await form.locator('[name=timeline]').fill('+ 2 jours');
+ await form.locator('button[type=submit]').click();
+ await expect.poll(()=>page.evaluate(()=>!!window.__priceArgs)).toBe(true);
+ let args=await page.evaluate(()=>window.__priceArgs);
+ expect(args.p_lines[1]).toMatchObject({label:'Remise commerciale',qty:1,price:-100});
+ // Typing a percentage switches the line to a percentage discount.
+ await page.evaluate(()=>{window.__priceArgs=null;});
+ await edit.locator('summary').click();
+ await form.locator('[data-discount] [name=pct]').fill('10');
+ await expect(form.locator('[data-calc-total]')).toContainText('27 000,00');
+ await form.locator('button[type=submit]').click();
+ await expect.poll(()=>page.evaluate(()=>!!window.__priceArgs)).toBe(true);
+ args=await page.evaluate(()=>window.__priceArgs);
+ expect(args.p_lines[1]).toMatchObject({label:'Remise commerciale (10 %)',price:-3000});
+ expect(errors).toEqual([]);
 });
