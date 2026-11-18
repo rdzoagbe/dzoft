@@ -69,6 +69,7 @@ function todoKind(t){
  if(/^Proposition|^Travaux .* terminés/.test(x))return ["quote","Travaux complémentaires","Extra work"];
  if(g==="leads")return ["lead",/^Relancer/.test(x)?"Relance prévue":"Nouvelle demande",/^Relancer/.test(x)?"Follow-up due":"New request"];
  if(/^Échec/.test(x))return ["failed","E-mail non envoyé","E-mail not sent"];
+ if(g==="backup")return ["failed","Sauvegarde","Backup"];
  if(/^Paiement à vérifier|^Acompte|facture/.test(x))return ["pending","Paiement et facturation","Payment and invoicing"];
  if(/^Devis/.test(x))return ["quote","Devis","Quote"];
  if(/a validé/.test(x))return ["validated","Étape validée","Step validated"];

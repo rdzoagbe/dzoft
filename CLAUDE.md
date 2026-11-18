@@ -200,6 +200,13 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   stockage, déclencheurs, droits), régénérée depuis la base réelle le 2026-11-17 ; à régénérer après toute migration.
 - Sauvegardes : le schéma est dans Git, pas les données. Conserver les exports JSON chiffrés
   hors du dépôt public et les mettre à jour après chaque signature ou changement important.
+  Sauvegarde rapide (18 nov. 2026) : Paramètres › Sauvegardes et données › « Télécharger la sauvegarde chiffrée »
+  (`admin/backup.js`) : `owner_backup_export()` (propriétaire + second facteur ; sans `portal_token` ni `sign_codes`), chiffrement
+  dans le navigateur (PBKDF2-SHA-256 310 000 tours → AES-256-GCM, mot de passe jamais envoyé), fichier `.dzoftbak` ;
+  « Vérifier une sauvegarde » l’ouvre localement. Journal privé `private.owner_backup_log` ; `owner_backup_status()` alimente le
+  rappel « Sauvegarde » de « À faire » (aucune, plus vieille qu’une signature / un paiement / une facture / un avoir, ou > 30 jours).
+  Pas de restauration depuis le site (volontaire). La sauvegarde complète Windows (`tools/backup-dzoft-windows.ps1`, PDF et comptes
+  de connexion compris) reste à part. Tests `tests/owner-backup.sql`, e2e « Quick backup ».
 - Modèles d'e-mails d'authentification : `docs/emails-supabase.md` (à recoller à la main dans
   Supabase, Authentication → Emails).
 
