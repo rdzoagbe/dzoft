@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-async function ownerFixture(page, initiallyShared=false){
+async function ownerFixture(page, initiallyShared=false, secret=false){
   await page.goto('admin/',{waitUntil:'domcontentloaded'});
   await page.addScriptTag({url:'/assets/change-requests.js?v=20261118-manual-review'});
   await page.addStyleTag({url:'/assets/change-requests.css?v=20261118-manual-review'});
-  await page.evaluate((shared)=>{
+  await page.evaluate(({shared,secret})=>{
     window.__manualReview={calls:[],opened:[]};
     window.confirm=()=>true;
     window.open=(url)=>{window.__manualReview.opened.push(url);return {opener:null};};
@@ -35,9 +35,9 @@ async function ownerFixture(page, initiallyShared=false){
     root.id='manual-test-root';document.body.appendChild(root);
     window.__manualReview.ready=window.DzoftChanges.owner(root,{
       sb,quoteId:proposal.quote_id,en:false,clientEmail:'test-client@example.com',
-      clientPhone:'+33612345678',quoteNumber:'D-TEST',invoices:[]
+      clientPhone:'+33612345678',clientUserId:secret?null:'user-id',clientPortalToken:secret?'demo-secret-token':null,quoteNumber:'D-TEST',invoices:[]
     });
-  },initiallyShared);
+  },{shared:initiallyShared,secret});
   await page.waitForFunction(()=>!!document.querySelector('#manual-test-root [data-change-send]'));
 }
 
@@ -81,4 +81,18 @@ test('already-shared proposal only prepares a follow-up, never requeues emails',
   await d.locator('[data-share-outlook]').click();
   const calls=await page.evaluate(()=>window.__manualReview.calls);
   expect(calls).toEqual(['owner_list_change_requests']);
+});
+
+test('clients without accounts receive only their protected secret link and locked recipient',async({page})=>{
+  await ownerFixture(page,false,true);
+  await page.locator('#manual-test-root [data-change-send]').click();
+  const d=page.locator('#dzoft-change-manual-share');
+  await expect(d.locator('[data-share-email]')).toHaveAttribute('readonly','');
+  const text=await d.locator('[data-share-body]').inputValue();
+  expect(text).toContain('https://example.org/client/#demo-secret-token');
+  expect(text).not.toContain('?projet=');
+  await d.locator('[data-share-outlook]').click();
+  const state=await page.evaluate(()=>window.__manualReview);
+  expect(state.opened.length).toBe(1);
+  expect(state.calls).toEqual(['owner_list_change_requests']);
 });
