@@ -122,7 +122,8 @@ function newQuote(){
  requestAnimationFrame(function(){var b=document.getElementById("b-qnew");if(b)b.click();});
 }
 /* « + Nouveau devis ou supplément » (18 Nov 2026, Roland's flow): first choose a new project or an extra on a
-   project in progress. The extra goes to that project's calculator (same path as « Créer un supplément »):
+   project in progress. It is the dashboard's only way into an extra (no separate quick button), and it opens that
+   project's calculator:
    calculate from the project's follow-up, optional commercial discount, draft to read, then « Envoyer au client ».
    Nothing is created or sent by this choice. With no accepted project yet, it goes straight to a new quote. */
 function translateNew(){

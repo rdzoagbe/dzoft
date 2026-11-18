@@ -27,7 +27,10 @@ test('quick buttons only navigate: they never write, and they open the existing 
  assert.match(quick,/suivi\.html\?q="\+encodeURIComponent\(id\)\+"#billing\/new-extra"/);
  assert.match(quick,/suivi\.html\?q="\+encodeURIComponent\(id\)\+"#work\/publish"/);
  assert.match(quick,/d\.returnValue==="go"/,'Cancel opens nothing');
- for(const k of ['pay','extra','publish'])assert.match(index,new RegExp('data-quick="'+k+'"'));
+ for(const k of ['pay','publish'])assert.match(index,new RegExp('data-quick="'+k+'"'));
+ // Extras start from « + Nouveau devis ou supplément » only: no second dashboard button doing the same thing.
+ assert.doesNotMatch(index,/data-quick="extra"/);
+ assert.match(index,/id="sd-new-extra-choice"/);
  assert.match(tabs,/'billing\/pay':\{pane:'billing'/);assert.match(tabs,/'work\/publish':\{pane:'work'/);
  assert.match(tracking,/function openFromHash\(box,pub\)/);
  assert.match(tracking,/openFromHash\(box,pub\);/);
