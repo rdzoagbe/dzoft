@@ -7,7 +7,6 @@ const file=p=>fs.readFileSync(path.join(root,p),'utf8');
 const admin=file('admin/index.html');
 const project=file('admin/projet.html');
 const nav=file('admin/workspace-nav-v6.js');
-const panels=file('admin/workspace-panels-v6.js');
 const tabs=file('admin/project-workspace-tabs.js'),editorNav=file('admin/editor-navigation.js');
 // 17 Nov 2026: seven entries; a project's invoices, payments, journal and documents live in the project page.
 const routes=['tableau-de-bord','clients','devis','projets','comptabilite','messages','parametres'];

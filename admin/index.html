@@ -1003,15 +1003,6 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   // DZOFT main dashboard is the new project workspace when there is exactly
   // one accepted project. Multiple projects use an explicit global overview;
   // never choose an arbitrary client's finances as if they were global.
-  function routeToPrimaryWorkspace(){
-    var route=location.hash.slice(1).replace(/^\//,'');
-    if(route && route!=='tableau-de-bord')return false;
-    if(!dashboardDataLoaded)return false;
-    var accepted=data.quotes.filter(function(q){return q.accepted_at&&q.id;});
-    if(accepted.length!==1)return false;
-    location.replace('suivi.html?q='+encodeURIComponent(accepted[0].id));
-    return true;
-  }
   function showView(v){
     if(VIEWS.indexOf(v)<0)v='dash';
     // Vue globale and Aujourd'hui may share data, but must never be selected

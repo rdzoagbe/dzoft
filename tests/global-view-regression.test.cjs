@@ -71,8 +71,9 @@ test('normal dashboard and global overview do not both select',()=>{
 test('global page title and layout differ from the project dashboard',()=>{
  assert.match(dashboard,/global\?tr\("Vue globale","Global overview"\)/);
  assert.match(dashboard,/addEventListener\("hashchange"/);
- assert.match(css,/dzoft-global-view[^\n]*\.sd-selected\{display:none!important\}/);
- assert.match(css,/\.sd-shortcuts\{display:grid;grid-template-columns:repeat\(4/);
+ // « Dossier sélectionné » and « Raccourcis » were removed from the dashboard (17 Nov 2026): no markup builds them,
+ // so their old hiding/layout rules were deleted in the 18 Nov clean-up.
+ assert.doesNotMatch(dashboard+admin,/class="sd-selected|class="sd-shortcuts|'sd-selected|"sd-selected/);
  assert.match(admin,/global-view-v5\.css/);
  assert.match(admin,/dashboard-v3\.js\?v=(?:20261117-dash2|20261117-blue|20261117-onepage|20261118-newchoice)/);
 });

@@ -13,7 +13,7 @@ body.dzoft-admin #app .side hr{border-color:#3b3d58}
 body.dzoft-admin #app main{min-width:0}
 body.dzoft-admin #app #v-dash>.bar{margin-bottom:18px}
 body.dzoft-admin #app h2,body.dzoft-admin #app h3{letter-spacing:-.025em}
-body.dzoft-admin #app .panel,body.dzoft-admin #app .dzoft-case-finder,body.dzoft-admin #app .owner-command-bar{background:#fff;border:1px solid #e4e7f3;border-radius:16px;box-shadow:0 7px 22px rgba(20,30,76,.045)}
+body.dzoft-admin #app .panel,body.dzoft-admin #app .dzoft-case-finder{background:#fff;border:1px solid #e4e7f3;border-radius:16px;box-shadow:0 7px 22px rgba(20,30,76,.045)}
 body.dzoft-admin #app .btn.main,body.dzoft-admin #app .btn.sm.main{background:linear-gradient(125deg,#2c4ff3,#1235d9);color:#fff;border-color:transparent;box-shadow:0 4px 11px rgba(49,79,218,.14)}
 body.dzoft-admin #app .btn.main:hover,body.dzoft-admin #app .btn.sm.main:hover{filter:brightness(1.08)}
 body.dzoft-admin #app .btn.line{border-color:#d8dcee;color:#242a44;background:#fff}
@@ -23,15 +23,12 @@ body.dzoft-admin #app table{width:100%;border-collapse:collapse}
 body.dzoft-admin #app th{background:#fafbff;color:#74768c;font-size:12px;text-transform:none;font-weight:750}
 body.dzoft-admin #app tr:hover td{background:#fbfcff}
 body.dzoft-admin #app #v-dash .bar h2{font-size:clamp(22px,2.5vw,29px)}
-body.dzoft-admin #app #v-dash .clean-project-list{margin-top:16px}
+
 body.dzoft-admin #app .finance-kpis>div,body.dzoft-admin #app .kpi{border:1px solid #e4e7f3;background:#fff;border-radius:15px}
 body.dzoft-admin #app .finance-line{border:1px solid #e3e6f3;border-radius:15px;background:#fff}
 body.dzoft-admin #app .dossier-pill[aria-pressed=true]{background:#eaeeff;color:#4259c5;border-color:#aab6ed}
 body.dzoft-admin #app .dossier-pill:hover{background:#f2f4ff}
-body.dzoft-admin #app #v-dash .owner-command-bar{border:1px solid #e4e7f3}
-body.dzoft-admin #app .owner-command-eyebrow{color:#2646de}
-body.dzoft-admin #app .owner-command-actions button{border-color:#dde3ff;color:#2040d8;background:#f0f3ff}
-body.dzoft-admin #app .owner-command-actions button:hover{background:#e5eaff}
+
 body.dzoft-admin #app .today-stats>*,body.dzoft-admin #app .today-task{border-color:#e5e7f3}
 @media(max-width:980px){
  body.dzoft-admin #app .shell{display:block;padding:10px 14px 98px}
@@ -48,7 +45,7 @@ body.dzoft-admin #app .today-stats>*,body.dzoft-admin #app .today-task{border-co
 @media(max-width:600px){
  body.dzoft-admin #app .shell{padding:10px 10px 100px}
  body.dzoft-admin #app .panel{border-radius:14px}
- body.dzoft-admin #app .owner-command-bar{padding:17px 14px}
+ 
  body.dzoft-admin #app #v-dash .bar h2{font-size:21px}
  body.dzoft-admin #app .finance-line{padding:13px}
  body.dzoft-admin #app .dzoft-case-results{grid-template-columns:1fr}

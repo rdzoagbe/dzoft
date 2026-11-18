@@ -28,10 +28,7 @@ body.dzoft-admin #app .top .workspace-more:focus-within>summary{outline:2px soli
 body.dzoft-admin #app #v-dash{max-width:1280px;margin:0 auto}
 body.dzoft-admin #app #v-dash>.bar{margin:2px 0 12px;padding:0;border:0;background:transparent}
 body.dzoft-admin #app #v-dash>.bar h2{font-size:clamp(19px,2.3vw,24px);letter-spacing:-.035em}
-body.dzoft-admin #app .owner-command-bar{background:#fff;box-shadow:none;border:1px solid var(--clean-line);padding:20px 22px 17px;border-radius:17px}
-body.dzoft-admin #app .owner-command-intro h2{font-size:21px}
-body.dzoft-admin #app .owner-command-intro p{font-size:12.5px}
-body.dzoft-admin #app .owner-command-actions button{background:#f8f9fd;border-color:#e6e8f2;border-radius:10px}
+
 body.dzoft-admin #app .today-action-center{margin-top:17px}
 body.dzoft-admin #app .today-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
 body.dzoft-admin #app .today-stat{min-width:0;padding:15px 13px;border:1px solid var(--clean-line);border-radius:13px;background:#fff;box-shadow:none}
@@ -40,14 +37,6 @@ body.dzoft-admin #app .today-stat.remaining{background:#fff9f4;border-color:#f1d
 body.dzoft-admin #app .today-stat.remaining b{color:#94491c}
 body.dzoft-admin #app .today-stats span{font-size:11.5px}
 body.dzoft-admin #app .today-task{background:#fff;border:1px solid #edf0f4;border-radius:13px}
-body.dzoft-admin #app .clean-dashboard-more{border:1px solid var(--clean-line);border-radius:12px;background:#fff;margin:16px 0;overflow:hidden}
-body.dzoft-admin #app .clean-dashboard-more>summary{font-size:12.5px;font-weight:700;color:#5f647d;padding:13px 17px;cursor:pointer}
-body.dzoft-admin #app .clean-dashboard-more>.dashboard-focus{margin:10px 14px}
-body.dzoft-admin #app .clean-dashboard-more>.dashboard-shortcuts{padding:0 15px 15px}
-body.dzoft-admin #app .clean-project-list{border:1px solid var(--clean-line);box-shadow:none;border-radius:16px;padding:19px;margin-top:18px}
-body.dzoft-admin #app .clean-project-list h3{font-size:17px;letter-spacing:-.02em}
-body.dzoft-admin #app .today-advanced{background:#fff;box-shadow:none;border-color:var(--clean-line)}
-body.dzoft-admin #app .today-advanced>summary{font-size:12.5px;color:#686b7e}
 
 /* Distinguish legal invoicing from cash actually received. */
 body.dzoft-admin .invoice-stats>div:last-child{background:#f6f7fb;border-color:#e8e8f1}
@@ -74,7 +63,7 @@ body.dzoft-admin #tracking-publish .tracking-auto-draft{border:1px solid #e0e3ea
 
 @media(max-width:1000px){body.dzoft-admin #app .today-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){
- body.dzoft-admin #app .owner-command-bar{padding:16px 14px}
+ 
  body.dzoft-admin #app .today-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
  body.dzoft-admin #app .today-stat{padding:12px}
  body.dzoft-admin #app .today-stat b{font-size:20px}

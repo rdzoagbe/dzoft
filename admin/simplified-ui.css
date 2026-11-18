@@ -117,7 +117,6 @@ body.dzoft-admin{background:#f8f9fb;color:#16182b}
 @media(max-width:1100px){#app .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#app .finance-kpis>div:last-child{grid-column:auto}}
 
-
 /* DZOFT Aujourd'hui — an action-first financial and client inbox view. */
 #app .today-action-center{background:#fff;border:1px solid #e8eaf4;border-radius:19px;padding:22px;margin:18px 0;box-shadow:0 7px 25px rgba(24,29,54,.045)}
 #app .today-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
@@ -145,14 +144,7 @@ body.dzoft-admin{background:#f8f9fb;color:#16182b}
 #app .today-task .btn{flex:0 0 auto}
 #app .today-no-tasks{font-size:13px;color:#667188;padding:14px 3px}
 #app .today-task-more,#app .today-safety-note{font-size:11.5px;color:#667188;margin:11px 0 0;line-height:1.6}
-#app .today-advanced{margin:14px 0;background:#fff;border:1px solid #ecedf4;border-radius:15px;overflow:hidden}
-#app .today-advanced>summary{padding:15px 18px;font-size:13px;font-weight:800;color:#3e4260;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
-#app .today-advanced>summary::-webkit-details-marker{display:none}
-#app .today-advanced>summary::after{content:'+';font-size:20px;color:#3a59ea}
-#app .today-advanced[open]>summary::after{content:'−'}
-#app .today-advanced>.kpis{margin:0;padding:0 14px 14px}
-#app .today-advanced>.panel{border:0;box-shadow:none;margin:0;padding:0 12px 12px}
-#app .today-advanced .todo{margin:0}
+
 @media(max-width:1050px){#app .today-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){
  #app .today-action-center{padding:14px 12px;margin:13px 0;border-radius:16px}
@@ -167,7 +159,6 @@ body.dzoft-admin{background:#f8f9fb;color:#16182b}
  #app .today-task-copy strong{font-size:12px}
  #app .today-task-copy span{font-size:11px}
 }
-
 
 /* One-button navigation in INSTALLED mobile DZOFT Admin only.
    The ordinary mobile website, desktop layout, and client portal keep their existing menus. */

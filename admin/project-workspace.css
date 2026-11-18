@@ -53,10 +53,7 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
 .workspace-shell .workspace-fold>summary:hover{background:#f6f8ff}
 .workspace-shell .workspace-fold>.card{border:0;border-top:1px solid var(--ws-border);border-radius:0;box-shadow:none;padding:18px 21px}
 .workspace-shell .workspace-fold>.card[hidden]{display:none}
-.workspace-shell .workspace-fold.workspace-legacy{margin-top:16px;border:1px solid #e5e7f0;background:#fff}
-.workspace-shell .workspace-legacy>h2,.workspace-shell .workspace-legacy>.muted,.workspace-shell .workspace-legacy>#invs,.workspace-shell .workspace-legacy>#payment-steps{margin:12px}
-.workspace-shell .workspace-legacy>h2{font-size:15px}
-.workspace-shell #c-inv>.workspace-legacy{margin-top:20px}
+
 .workspace-shell #c-inv{background:#fff}
 .workspace-shell .workspace-step-edit{margin-top:16px}
 .workspace-shell .workspace-step-edit>#steps{margin:0 18px 18px}
@@ -105,7 +102,6 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
 @media(prefers-reduced-motion:reduce){.workspace-meter span{transition:none}}
 @media print{.workspace-actions,.workspace-intro{display:none}.workspace-shell{max-width:none}.workspace-columns{display:block}.workspace-fold,.workspace-advanced{display:block}}
 
-
 /* Compact private project journal + read-only sanitized GitHub activity. */
 #c-journal .jr-heading h2{margin:0 0 5px;font-size:19px;letter-spacing:-.025em}
 #c-journal .jr-heading .muted{font-size:12px}
@@ -150,7 +146,6 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
  #c-journal .jr-github-head .btn{padding:8px 9px;font-size:11px}
  #c-journal .jr-github-head .muted{font-size:11px}
 }
-
 
 /* Project task review: private by default, publishing is an explicit owner action. */
 #c-journal .jr-work-items{padding:16px;margin:16px 0;border:1px solid #e3e6f4;border-radius:15px;background:#fff}
@@ -198,7 +193,6 @@ body.dzoft-admin{background:var(--ws-bg);color:#16182b}
  #c-journal .jr-task-new button{width:100%}
  #c-journal .jr-task-actions form button{width:100%}
 }
-
 
 /* Owner-only weekly review. English-first, no AI or raw commit data. */
 #c-journal .jr-weekly-review{padding:17px;margin:15px 0;border:1px solid #dce0f3;border-radius:17px;background:#fafbff}
