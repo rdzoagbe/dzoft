@@ -52,9 +52,13 @@ test('deposit invoices keep their own rule: issued when the deposit is received'
 test('the page asks before issuing and before sending, and sending reuses the existing invoice e-mail',()=>{
  const fn=admin.slice(admin.indexOf('function issueAccepted('),admin.indexOf('function updateInvoice('));
  assert.match(fn,/if \(!confirm\(ask\)\) return;/);
- // After creation: a window to send by e-mail (PDF + owner copy) and/or WhatsApp, nothing sent before « Envoyer ».
+ // After creation: the owner manually reviews an Outlook or WhatsApp draft; no send is triggered by the dialog.
  assert.match(fn,/return sendInvoiceDialog\(x, true\);/);
- assert.match(admin,/if \(mail\) mailInvoice\(x, null\)\.then\(done\)/);
+ const dialog=admin.slice(admin.indexOf('function sendInvoiceDialog('),admin.indexOf('function mailInvoice('));
+ assert.match(dialog,/data-outlook/);
+ assert.match(dialog,/data-wa-open/);
+ assert.doesNotMatch(dialog,/mailInvoice\(/);
+ assert.doesNotMatch(dialog,/process-notification-outbox/);
  assert.ok(fn.indexOf('sb.rpc(rpc, payload, true)')<fn.indexOf('archiveIssued(x)'));
  assert.ok(fn.indexOf('archiveIssued(x)')<fn.indexOf('sendInvoiceDialog(x, true)'));
  assert.match(admin,/data-iv="final" disabled>Vérifier le montant/);
