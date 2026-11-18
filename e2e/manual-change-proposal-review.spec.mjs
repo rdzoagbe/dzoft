@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 async function ownerFixture(page, initiallyShared=false){
   await page.goto('admin/',{waitUntil:'domcontentloaded'});
-  await page.addScriptTag({url:'assets/change-requests.js?v=20261118-manual-review'});
-  await page.addStyleTag({url:'assets/change-requests.css?v=20261118-manual-review'});
+  await page.addScriptTag({url:'/assets/change-requests.js?v=20261118-manual-review'});
+  await page.addStyleTag({url:'/assets/change-requests.css?v=20261118-manual-review'});
   await page.evaluate((shared)=>{
     window.__manualReview={calls:[],opened:[]};
     window.confirm=()=>true;
