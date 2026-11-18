@@ -84,6 +84,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   « Envoyer au client », signature par code avant toute facture) ; ce choix ne crée ni n’envoie rien (e2e « asks first »).
   Une seule entrée par endroit (choix de Roland) : tableau de bord = ce bouton ; fiche projet = « ＋ Ajouter un supplément » des actions
   du haut (plus de second bouton dans la Vue d’ensemble). Ne pas ajouter de bouton qui refait une action déjà présente sur la même page.
+  Nettoyage (18 nov. 2026) : fichiers admin jamais chargés supprimés (`workspace-home.js`, `workspace-panels-v6.js` remplacé par v7),
+  redirection désactivée `routeToPrimaryWorkspace` retirée, règles CSS visant des éléments disparus supprimées (rendu identique au pixel
+  sur 14 écrans, ordinateur et téléphone). `tests/no-dead-admin-files.test.cjs` : tout script ou style de `admin/` doit être chargé.
+  Gardés exprès : `assets/profile.jpg` (portrait de Roland), logos et icônes de la marque.
   Tableau de bord (17 nov. 2026) : chiffres (déjà encaissé dont ce mois-ci, reste à encaisser dont annoncé par le client,
   prêt à facturer = suppléments signés terminés sans facture, total des contrats, projets en cours), « Projets en cours » et « À faire » ;
   plus de « Dossier sélectionné » ni de « Raccourcis » (les outils d’un projet sont dans le projet).

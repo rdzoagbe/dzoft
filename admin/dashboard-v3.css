@@ -20,7 +20,7 @@ body.dzoft-admin #app #v-dash .sd-stat-label{font-size:11.3px;color:#666b83;line
 body.dzoft-admin #app #v-dash .sd-stat strong{font-family:Sora,system-ui,sans-serif;font-size:clamp(16px,1.75vw,24px);line-height:1.15;letter-spacing:-.04em;font-weight:800;overflow-wrap:anywhere;max-width:100%}
 body.dzoft-admin #app #v-dash .sd-stat-arrow{position:absolute;top:18px;right:16px;color:#9e95b5;font-size:14px}
 body.dzoft-admin #app #v-dash .sd-content{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(285px,.94fr);gap:18px;margin-bottom:18px;align-items:stretch}
-body.dzoft-admin #app #v-dash .sd-bottom{grid-template-columns:minmax(0,1.4fr) minmax(285px,.75fr)}
+
 body.dzoft-admin #app #v-dash .sd-surface{min-width:0;border:1px solid #e4e7f3;border-radius:17px;background:#fff;box-shadow:0 7px 23px rgba(20,30,76,.04);padding:22px}
 body.dzoft-admin #app #v-dash .sd-surface-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
 body.dzoft-admin #app #v-dash .sd-surface-head h2{font-family:Sora,system-ui,sans-serif;font-weight:750;font-size:19px;letter-spacing:-.035em;margin:0 0 5px;color:#1c2136}
@@ -51,40 +51,19 @@ body.dzoft-admin #app #v-dash .sd-action-copy{display:grid;gap:3px;flex:1;min-wi
 body.dzoft-admin #app #v-dash .sd-action-copy strong{font-size:12.5px;font-weight:800}
 body.dzoft-admin #app #v-dash .sd-action-copy small{font-size:11px;color:#7b7b91;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.dzoft-admin #app #v-dash .sd-action-chevron{font-size:22px;color:#7983b0}
-body.dzoft-admin #app #v-dash .sd-select-label{display:flex;flex-direction:column;gap:5px;min-width:175px}
-body.dzoft-admin #app #v-dash .sd-select-label span{font-size:11px;color:#7e7b94;font-weight:800}
-body.dzoft-admin #app #v-dash .sd-select-label select{background:#f7f8ff;border-color:#d8ddf2;border-radius:10px;padding:9px 12px;font-size:12px;min-width:0;max-width:290px}
-body.dzoft-admin #app #v-dash .sd-selected-name{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 16px;border-bottom:1px solid #eaecf4}
-body.dzoft-admin #app #v-dash .sd-selected-name div{display:grid;gap:3px}
-body.dzoft-admin #app #v-dash .sd-selected-name strong{font-size:14px}
-body.dzoft-admin #app #v-dash .sd-selected-name span{font-size:11px;color:#818094}
-body.dzoft-admin #app #v-dash .sd-project-link{display:inline-flex;padding:9px 11px;border-radius:9px;background:#2444dc;color:#fff;font-size:11.5px;text-decoration:none;font-weight:800}
-body.dzoft-admin #app #v-dash .sd-project-link:hover{background:#1934b5}
-body.dzoft-admin #app #v-dash .sd-selected-amounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
-body.dzoft-admin #app #v-dash .sd-selected-amounts>div{display:grid;gap:7px}
-body.dzoft-admin #app #v-dash .sd-selected-amounts span{font-size:11px;color:#79798e}
-body.dzoft-admin #app #v-dash .sd-selected-amounts b{font-family:Sora,system-ui,sans-serif;font-size:clamp(14px,1.5vw,21px);letter-spacing:-.04em;overflow-wrap:anywhere}
-body.dzoft-admin #app #v-dash .sd-selected-track{height:9px;border-radius:30px;background:#ebedf8;overflow:hidden}
-body.dzoft-admin #app #v-dash .sd-selected-track span{display:block;height:100%;background:linear-gradient(90deg,#2646db,#6d85f4);border-radius:30px}
-body.dzoft-admin #app #v-dash .sd-selected-foot{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:13px;font-size:11px;color:#72738a}
-body.dzoft-admin #app #v-dash .sd-selected-foot a{color:#2241d4;font-weight:750;text-decoration:none}
-body.dzoft-admin #app #v-dash .sd-selected-foot a:hover{text-decoration:underline}
-body.dzoft-admin #app #v-dash .sd-shortcuts{display:grid;gap:10px}
-body.dzoft-admin #app #v-dash .sd-shortcuts button{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border:1px solid #e9ebf5;border-radius:11px;background:#fafbff;color:#282e48;font-size:12px;font-weight:750;cursor:pointer}
-body.dzoft-admin #app #v-dash .sd-shortcuts button:hover{background:#eaeeff;border-color:#b4bff1}
-body.dzoft-admin #app #v-dash .sd-shortcuts span{color:#2545dc;font-size:16px}
+
 body.dzoft-admin #app #v-dash .sd-email-history{border:1px solid #e6e9f5;border-radius:13px;background:#fff;padding:12px 17px;margin-bottom:12px}
 body.dzoft-admin #app #v-dash .sd-email-history summary{cursor:pointer;font-size:12px;color:#6e6e86;font-weight:750}
 body.dzoft-admin #app #v-dash .sd-email-history>div{margin-top:15px;font-size:12px}
 body.dzoft-admin #app #v-dash .sd-verification{font-size:11px;line-height:1.5;color:#88859c;margin:0 0 20px}
-body.dzoft-admin #app #v-dash .sd-warning{font-size:11px;color:#aa561f}
+
 body.dzoft-admin #app #v-dash .sd-placeholder,body.dzoft-admin #app #v-dash .sd-empty{font-size:12px;color:#7a7893;padding:18px;line-height:1.6}
 @media(max-width:1250px){
  body.dzoft-admin #app #v-dash .sd-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
  body.dzoft-admin #app #v-dash .sd-content{grid-template-columns:minmax(0,1.3fr) minmax(260px,1fr)}
 }
 @media(max-width:900px){
- body.dzoft-admin #app #v-dash .sd-content,body.dzoft-admin #app #v-dash .sd-bottom{grid-template-columns:1fr}
+ body.dzoft-admin #app #v-dash .sd-content{grid-template-columns:1fr}
  body.dzoft-admin #app #v-dash .sd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:600px){
@@ -100,10 +79,10 @@ body.dzoft-admin #app #v-dash .sd-placeholder,body.dzoft-admin #app #v-dash .sd-
  body.dzoft-admin #app #v-dash .sd-surface-head{flex-direction:column;gap:10px}
  body.dzoft-admin #app #v-dash .sd-project-status{max-width:85px}
  body.dzoft-admin #app #v-dash .sd-project-status b{font-size:11px;overflow-wrap:anywhere}
- body.dzoft-admin #app #v-dash .sd-selected-amounts{gap:6px}
- body.dzoft-admin #app #v-dash .sd-selected-amounts span{font-size:10px}
- body.dzoft-admin #app #v-dash .sd-selected-amounts b{font-size:13px}
- body.dzoft-admin #app #v-dash .sd-select-label,body.dzoft-admin #app #v-dash .sd-select-label select{width:100%;max-width:100%}
+ 
+ 
+ 
+ 
 }
 /* To-do categories (17 Nov 2026): every reminder of the dashboard is listed. */
 body.dzoft-admin #app #v-dash .sd-action-dot.request{background:#d6336c;box-shadow:0 0 0 5px #fde8ef}
