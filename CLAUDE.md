@@ -21,6 +21,10 @@ Roland Dzoagbe a demandé (10 nov. 2026) des réponses en anglais, simples et sa
   `faq.html` (JSON-LD FAQPage) ; même modèle : bandeau héros, section CTA, nav avec `aria-current`.
 - `devis.html` (et `en/quote.html`) : formulaire de devis avec brief adapté au type de projet ;
   le brief part dans `leads.message` en lignes « Libellé : valeur », que l'admin regroupe par rubriques.
+  Un seul chemin (18 nov. 2026) : bouton principal « Envoyer ma demande », WhatsApp en second, « ou par e-mail » en simple lien ;
+  colonne de droite = rendez-vous, téléphone, WhatsApp, e-mail. Carte de visite (recto/verso), contact .vcf et carte PDF sont sur
+  « À propos » (`a-propos.html`, `en/a-propos.html`) ; la fiche de remise reste liée dans le brief et sur Méthode.
+  Accueil (18 nov. 2026) : réalisations = Ahenora en avant (produit réalisé), puis StackLens, puis Le Fournil (démonstration, signalée).
 - `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
 - `en/` : version anglaise page à page (index, services, methode, faq, realisations, cgv,
