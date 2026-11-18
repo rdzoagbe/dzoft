@@ -838,6 +838,33 @@ test('Google Drive backup: one-time link, then one click sends the encrypted fil
  expect(errors).toEqual([]);
 });
 
+test('Google Drive backup recovers when Google’s script failed to load once',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{window.__gcid='123456789012-abcdef123.apps.googleusercontent.com';});
+ let scriptLoads=0;
+ // First request for Google's script fails (network), the next one works and defines a simulated Google.
+ await page.context().route('https://accounts.google.com/**',r=>{scriptLoads++;
+  if(scriptLoads===1)return r.abort('failed');
+  return r.fulfill({status:200,contentType:'application/javascript',body:"window.google={accounts:{oauth2:{initTokenClient:function(c){return {requestAccessToken:function(){setTimeout(function(){c.callback({access_token:'synthetic-token'});},10);}};}}}};"});});
+ await page.context().route('https://www.googleapis.com/**',r=>{const url=r.request().url();
+  if(url.includes('/upload/'))return r.fulfill({json:{id:'f',name:'x.dzoftbak',webViewLink:'https://drive.google.com/file/d/f/view'}});
+  return r.fulfill({json:r.request().method()==='GET'?{files:[{id:'folder-1'}]}:{id:'folder-1'}});});
+ await page.goto('admin/#/parametres',{waitUntil:'domcontentloaded'});
+ await page.locator('#settings-backup summary').first().click();
+ await expect(page.locator('#backup-drive')).toBeVisible();
+ await expect.poll(()=>scriptLoads).toBe(1);
+ await page.fill('#backup-pass','un-mot-de-passe-long');await page.fill('#backup-pass2','un-mot-de-passe-long');
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('pas encore fini de se charger');
+ // That click restarted the loading; the next click succeeds.
+ await expect.poll(()=>scriptLoads).toBe(2);
+ await expect.poll(()=>page.evaluate(()=>!!(window.google&&window.google.accounts))).toBe(true);
+ await page.click('#backup-drive');
+ await expect(page.locator('#backup-msg')).toContainText('Sauvegarde enregistrée dans Google Drive');
+ expect(errors).toEqual([]);
+});
+
 test('Price list lives on the Catalogue page; the project calculator links to it',async({page})=>{
  await syntheticOwner(page);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));

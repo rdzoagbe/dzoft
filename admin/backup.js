@@ -146,6 +146,8 @@ function bind(sb){
   });
   $('backup-drive').addEventListener('click',function(){
     var btn=this,pass=passOk();if(!pass)return;
+    // Google's script missing (e.g. a brief network failure): start loading it again, so the next click can work.
+    if(!(global.google&&global.google.accounts&&global.google.accounts.oauth2))loadGis().catch(function(){});
     var tokenP;try{tokenP=askToken(clientId);}catch(e){tokenP=Promise.reject(e);}
     btn.disabled=true;var label=btn.textContent;btn.textContent=tr('Envoi vers Google Drive…','Sending to Google Drive…');
     tokenP.then(function(token){
