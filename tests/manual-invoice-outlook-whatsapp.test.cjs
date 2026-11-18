@@ -18,7 +18,7 @@ test('invoice dialog prepares drafts but never queues, marks sent, or writes inv
 });
 test('invoice buttons route through the manual send dialog, not the automatic mail queue',()=>{
  assert.match(source,/data-a="invoice-send"/);
- assert.match(source,/data-a="invoice-email'\) return sendInvoiceDialog\(x, false\)/);
+ assert.match(source,/b\.dataset\.a === 'invoice-email'\) return sendInvoiceDialog\(x, false\)/);
  assert.match(source,/data-a === 'invoice-send'\) return sendInvoiceDialog\(x, false\)/);
  assert.match(source,/Préparer \(Outlook ou WhatsApp\)/);
 });
