@@ -1,6 +1,7 @@
 -- ============================================================================
 -- DZOFT · copie de référence du schéma Supabase (projet rzghbvmszbjlqkdjzpxc)
--- Régénérée le 2026-11-17 directement depuis la base réelle (catalogue Postgres) :
+-- Régénérée le 2026-11-17 directement depuis la base réelle (catalogue Postgres),
+-- mise à jour le 2026-11-18 (avoirs / credit notes, migration 20261118120000_credit_notes.sql) :
 -- tables, contraintes, index, RLS et politiques, déclencheurs, droits, fonctions.
 --
 -- Ce fichier documente l'état de la base. Ce n'est PAS un script d'installation à
@@ -47,7 +48,8 @@ create table private.dzoft_issued_invoice_registry (
   issued_by uuid not null,
   basis text not null default 'receipt'::text,
   change_id uuid,
-  request_key uuid
+  request_key uuid,
+  cancelled_for_reissue boolean not null default false
 );
 alter table private.dzoft_issued_invoice_registry enable row level security;
 
@@ -362,7 +364,6 @@ alter table private.dzoft_invoice_sequences add constraint dzoft_invoice_sequenc
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_basis_check CHECK ((((basis = 'receipt'::text) AND (receipt_id IS NOT NULL) AND (change_id IS NULL)) OR ((basis = ANY (ARRAY['final'::text, 'interim'::text])) AND (receipt_id IS NULL) AND (change_id IS NULL)) OR ((basis = 'supplement'::text) AND (receipt_id IS NULL) AND (change_id IS NOT NULL))));
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_amount_check CHECK ((amount > (0)::numeric));
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_change_id_fkey FOREIGN KEY (change_id) REFERENCES dzoft_change_requests(id);
-alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_change_id_key UNIQUE (change_id);
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_invoice_id_key UNIQUE (invoice_id);
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_pkey PRIMARY KEY (invoice_number);
 alter table private.dzoft_issued_invoice_registry add constraint dzoft_issued_invoice_registry_quote_id_fkey FOREIGN KEY (quote_id) REFERENCES quotes(id);
@@ -492,7 +493,8 @@ alter table public.sign_codes add constraint sign_codes_quote_id_fkey FOREIGN KE
 -- ---------------------------------------------------------------- index
 
 CREATE UNIQUE INDEX dzoft_issued_invoice_request_key_unique ON private.dzoft_issued_invoice_registry USING btree (request_key) WHERE (request_key IS NOT NULL);
-CREATE UNIQUE INDEX dzoft_issued_invoice_one_final ON private.dzoft_issued_invoice_registry USING btree (quote_id) WHERE (basis = 'final'::text);
+CREATE UNIQUE INDEX dzoft_issued_invoice_one_final ON private.dzoft_issued_invoice_registry USING btree (quote_id) WHERE ((basis = 'final'::text) AND (NOT cancelled_for_reissue));
+CREATE UNIQUE INDEX dzoft_issued_invoice_registry_change_id_key ON private.dzoft_issued_invoice_registry USING btree (change_id) WHERE ((change_id IS NOT NULL) AND (NOT cancelled_for_reissue));
 CREATE UNIQUE INDEX clients_user_id_key ON public.clients USING btree (user_id) WHERE (user_id IS NOT NULL);
 CREATE UNIQUE INDEX clients_portal_token_key ON public.clients USING btree (portal_token);
 CREATE INDEX dzoft_change_events_request ON public.dzoft_change_events USING btree (request_id, created_at, id);
@@ -686,7 +688,7 @@ begin
     then (i->>'amt')::numeric else 0 end),0) into inv_sum
   from jsonb_array_elements(coalesce(q.invoices,'[]'::jsonb)) i
   where not (i ? 'care') and not (i ? 'change');
-  if inv_sum+r.amount>q.accepted_total then
+  if inv_sum-private.dzoft_base_reissue_credits(p_quote)+r.amount>q.accepted_total then
     raise exception 'Invoices would exceed the agreed total';
   end if;
 
@@ -1571,9 +1573,9 @@ begin
   -- Same request again (double click, retry): return the invoice already issued.
   if p_basis='final' then
     select * into prior from private.dzoft_issued_invoice_registry
-      where quote_id=p_quote and basis='final';
+      where quote_id=p_quote and basis='final' and not cancelled_for_reissue;
   else
-    select * into prior from private.dzoft_issued_invoice_registry where change_id=p_change;
+    select * into prior from private.dzoft_issued_invoice_registry where change_id=p_change and not cancelled_for_reissue;
   end if;
   if found then
     if prior.quote_id<>p_quote then raise exception 'Invalid invoice request'; end if;
@@ -1597,7 +1599,7 @@ begin
     where not (i ? 'care') and not (i ? 'change');
     select coalesce(sum(r.amount),0) into unbilled from public.project_receipts r
       where r.quote_id=p_quote and r.invoice_id is null;
-    v_amount:=q.accepted_total-invoiced-unbilled;
+    v_amount:=q.accepted_total-(invoiced-private.dzoft_base_reissue_credits(p_quote))-unbilled;
     if v_amount<=0 then raise exception 'Nothing left to invoice on the accepted quote'; end if;
     label:='Facture de solde';
     extra:=jsonb_build_object('basis','final');
@@ -1695,7 +1697,7 @@ begin
       'amount',prior.amount,'already_issued',true);
   end if;
   if exists(select 1 from private.dzoft_issued_invoice_registry
-            where quote_id=p_quote and basis='final') then
+            where quote_id=p_quote and basis='final' and not cancelled_for_reissue) then
     raise exception 'Final invoice already issued for this quote';
   end if;
 
@@ -1715,7 +1717,7 @@ begin
   select coalesce(sum(r.amount),0) into unbilled
     from public.project_receipts r
     where r.quote_id=p_quote and r.invoice_id is null;
-  remaining:=round(q.accepted_total-already-unbilled,2);
+  remaining:=round(q.accepted_total-(already-private.dzoft_base_reissue_credits(p_quote))-unbilled,2);
   if remaining <= 0 then raise exception 'Nothing left to invoice'; end if;
   if p_amount >= remaining then
     raise exception 'For the full balance use the final invoice action';
@@ -1815,7 +1817,7 @@ begin
   ),0) into total_invoiced
   from jsonb_array_elements(coalesce(q.invoices,'[]'::jsonb)) x
   where not (x ? 'care') and not (x ? 'change');
-  if total_invoiced+v_amt>q.accepted_total then
+  if total_invoiced-private.dzoft_base_reissue_credits(p_quote)+v_amt>q.accepted_total then
    raise exception 'Invoices would exceed the agreed total';
   end if;
   update public.quotes set invoices=coalesce(invoices,'[]'::jsonb)||
@@ -1834,6 +1836,7 @@ begin
  end if;
  select coalesce(sum(amount),0) into used from public.project_receipts
   where quote_id=p_quote and invoice_id=p_invoice;
+ used:=used+coalesce((select sum(amount) from public.dzoft_credit_notes where quote_id=p_quote and invoice_id=p_invoice),0);
  if used+r.amount>(i->>'amt')::numeric then
   raise exception 'Amount exceeds invoice balance';
  end if;
@@ -2001,12 +2004,14 @@ create or replace function private.project_tracking(p_quote uuid)
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-declare q public.quotes; received numeric; legacy numeric; supp numeric; rows jsonb; reports jsonb;
+declare q public.quotes; cred_reduce numeric; cred_supp_reissue numeric; received numeric; legacy numeric; supp numeric; rows jsonb; reports jsonb;
 begin
  select * into q from public.quotes where id=p_quote and deleted_at is null;
- if not found or auth.uid() is null or not (public.is_owner() or
+ if not found or not ((auth.uid() is not null and (public.is_owner() or
    (q.shared and q.accepted_at is not null and exists(
-     select 1 from public.clients c where c.id=q.client_id and c.user_id=auth.uid())))
+     select 1 from public.clients c where c.id=q.client_id and c.user_id=auth.uid()))))
+   or (q.shared and q.accepted_at is not null
+       and coalesce(current_setting('dzoft.portal_client', true), '') = q.client_id::text))
  then raise exception 'Project unavailable'; end if;
  select coalesce(sum(amount),0) into received
  from public.project_receipts where quote_id=p_quote;
@@ -2019,6 +2024,7 @@ begin
  select coalesce(sum((i->>'amt')::numeric),0) into supp
  from jsonb_array_elements(coalesce(q.invoices,'[]'::jsonb)) i
  where i ? 'change' and coalesce(i->>'amt','') ~ '^[0-9]+([.][0-9]+)?$';
+ select coalesce(sum(amount) filter (where effect='reduce'),0), coalesce(sum(amount) filter (where effect='reissue' and invoice_kind='supplement'),0) into cred_reduce, cred_supp_reissue from public.dzoft_credit_notes where quote_id=p_quote;
  select coalesce(jsonb_agg(to_jsonb(r)-'created_by' order by r.received_on desc,r.created_at desc),'[]'::jsonb)
  into rows from public.project_receipts r where quote_id=p_quote;
  select coalesce(jsonb_agg(jsonb_build_object(
@@ -2029,9 +2035,10 @@ begin
  ) order by s.created_at desc),'[]'::jsonb)
  into reports from public.project_payment_statuses s where quote_id=p_quote;
  return jsonb_build_object(
-  'total',q.accepted_total+supp,'base_total',q.accepted_total,'supplements',supp,
+  'total',q.accepted_total+supp-cred_supp_reissue-cred_reduce,'base_total',q.accepted_total,'supplements',supp-cred_supp_reissue,'credits',cred_reduce,
   'received',received+legacy,'legacy',legacy,
-  'remaining',greatest(coalesce(q.accepted_total,0)+supp-received-legacy,0),
+  'remaining',greatest(coalesce(q.accepted_total,0)+supp-cred_supp_reissue-cred_reduce-received-legacy,0),
+  'credit_notes',(select coalesce(jsonb_agg(to_jsonb(cn)-'issued_by'-'request_key' order by cn.issued_at),'[]'::jsonb) from public.dzoft_credit_notes cn where cn.quote_id=p_quote),
   'receipts',rows,'payment_statuses',reports,
   'updates',(select coalesce(jsonb_agg(to_jsonb(u)-'created_by' order by u.created_at desc),'[]'::jsonb)
     from public.project_updates u where quote_id=p_quote)
@@ -2320,7 +2327,7 @@ begin
   if exists(select 1 from jsonb_array_elements(coalesce(q.invoices,'[]')) x where lower(btrim(x->>'num'))=lower(v_num)) then raise exception 'Invoice number already used'; end if;
   select coalesce(sum(case when coalesce(x->>'amt','') ~ '^[0-9]+([.][0-9]+)?$' then (x->>'amt')::numeric else 0 end),0) into invoiced
    from jsonb_array_elements(coalesce(q.invoices,'[]')) x where not (x ? 'care') and not (x ? 'change');
-  if invoiced+v_amt>q.accepted_total then raise exception 'Invoices would exceed the agreed total'; end if;
+  if invoiced-private.dzoft_base_reissue_credits(p_quote)+v_amt>q.accepted_total then raise exception 'Invoices would exceed the agreed total'; end if;
   perform set_config('dzoft.receipt_write','yes',true);
   update public.quotes set invoices=coalesce(invoices,'[]')||jsonb_build_array(jsonb_build_object('id',p_invoice,'n',v_label,'num',v_num,'amt',v_amt,'u','','paid',false))
    where id=p_quote returning * into q;
@@ -2330,6 +2337,8 @@ begin
  select value,ordinality::integer-1 into i,pos from jsonb_array_elements(coalesce(q.invoices,'[]')) with ordinality where value->>'id'=p_invoice;
  if i is null or i ? 'care' or coalesce(i->>'num','')='' or i->>'paid'='true' then raise exception 'Choose an unpaid numbered invoice'; end if;
  select coalesce(sum(amount),0) into already from public.project_receipts where quote_id=p_quote and invoice_id=p_invoice;
+ -- Credit notes reduce what is left to pay on the invoice.
+ already:=already+coalesce((select sum(amount) from public.dzoft_credit_notes where quote_id=p_quote and invoice_id=p_invoice),0);
  state:=private.project_tracking(p_quote);
  if p_amount>(i->>'amt')::numeric-already or p_amount>(state->>'remaining')::numeric then raise exception 'Amount exceeds remaining balance'; end if;
  insert into public.project_receipts values(p_id,p_quote,p_invoice,p_amount,p_date,p_method,p_reference,now(),auth.uid());
@@ -3039,9 +3048,9 @@ begin
   select coalesce(sum(r.amount),0) into unbilled
     from public.project_receipts r
     where r.quote_id=p_quote and r.invoice_id is null;
-  remaining:=greatest(round(q.accepted_total-already-unbilled,2),0);
+  remaining:=greatest(round(q.accepted_total-(already-private.dzoft_base_reissue_credits(p_quote))-unbilled,2),0);
   select exists(select 1 from private.dzoft_issued_invoice_registry i
-    where i.quote_id=p_quote and i.basis='final') into final_exists;
+    where i.quote_id=p_quote and i.basis='final' and not i.cancelled_for_reissue) into final_exists;
   return jsonb_build_object('remaining',remaining,'has_final',final_exists,
      'base_total',q.accepted_total,'invoiced',already,'unbilled_receipts',unbilled);
 end $function$
@@ -3106,7 +3115,7 @@ begin
   select * into q from public.quotes where id=p_quote for update;
   if not found then raise exception 'Project not found'; end if;
   select * into prior from private.dzoft_issued_invoice_registry
-    where quote_id=p_quote and basis='final';
+    where quote_id=p_quote and basis='final' and not cancelled_for_reissue;
   if found then
     if prior.amount is distinct from p_expected_amount then
       raise exception 'A different final amount was already issued';
@@ -4061,6 +4070,159 @@ AS $function$
 $function$
 ;
 
+-- ---------------------------------------------------------------- avoirs (credit notes, migration 20261118120000_credit_notes.sql)
+-- Une facture émise ne se modifie ni ne se supprime : elle est annulée ou réduite par un avoir
+-- (série A-AAAA-NNNN, immuable). Voir aussi private.dzoft_issued_invoice_registry.cancelled_for_reissue
+-- et les index partiels dzoft_issued_invoice_one_final / dzoft_issued_invoice_registry_change_id_key.
+
+create table private.dzoft_credit_note_sequences (
+  credit_year integer primary key,
+  last_number bigint not null default 0
+);
+revoke all on private.dzoft_credit_note_sequences from public, anon, authenticated;
+
+create table public.dzoft_credit_notes (
+  id uuid primary key default gen_random_uuid(),
+  number text not null unique,
+  quote_id uuid not null,
+  client_id uuid not null,
+  invoice_id text not null,
+  invoice_number text not null,
+  invoice_issued_on date,
+  invoice_amount numeric(12,2) not null,
+  invoice_kind text not null check (invoice_kind in ('base','supplement')),
+  amount numeric(12,2) not null check (amount > 0),
+  effect text not null check (effect in ('reduce','reissue')),
+  full_cancel boolean not null,
+  reason text not null check (char_length(btrim(reason)) between 5 and 600),
+  issued_on date not null,
+  issued_at timestamptz not null default now(),
+  issued_by uuid,
+  request_key uuid not null unique
+);
+create index dzoft_credit_notes_quote on public.dzoft_credit_notes(quote_id);
+create index dzoft_credit_notes_invoice on public.dzoft_credit_notes(quote_id, invoice_id);
+alter table public.dzoft_credit_notes enable row level security;
+-- Aucune politique : lecture seulement par les fonctions SECURITY DEFINER (propriétaire, ou client du projet).
+revoke all on public.dzoft_credit_notes from anon, authenticated;
+
+create trigger dzoft_credit_notes_immutable before update or delete on public.dzoft_credit_notes
+  for each row execute function private.dzoft_credit_notes_immutable();
+
+create or replace function private.dzoft_credit_notes_immutable()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  raise exception 'A credit note cannot be changed or deleted';
+end $function$
+;
+
+create or replace function private.dzoft_base_reissue_credits(p_quote uuid)
+ RETURNS numeric
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select coalesce(sum(amount),0) from public.dzoft_credit_notes
+   where quote_id = p_quote and effect = 'reissue' and invoice_kind = 'base';
+$function$
+;
+
+create or replace function private.issue_credit_note(p_quote uuid, p_invoice text, p_amount numeric, p_effect text, p_reason text, p_request_key uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  q public.quotes; i jsonb; reg private.dzoft_issued_invoice_registry; c public.dzoft_credit_notes;
+  paid numeric; credited numeric; open_amt numeric; v_amount numeric; today_paris date; yr integer; n bigint; num text;
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  p_reason := btrim(coalesce(p_reason,''));
+  if p_quote is null or p_invoice is null or p_request_key is null or p_effect is null
+     or p_effect not in ('reduce','reissue') or char_length(p_reason) not between 5 and 600 then
+    raise exception 'Invalid credit note request';
+  end if;
+  -- Same request again (double click, retry): return the credit note already issued.
+  select * into c from public.dzoft_credit_notes where request_key = p_request_key;
+  if found then
+    if c.quote_id <> p_quote or c.invoice_id <> p_invoice then raise exception 'Request key already used'; end if;
+    return to_jsonb(c) - 'issued_by' - 'request_key' || jsonb_build_object('already_issued', true);
+  end if;
+  select * into q from public.quotes where id = p_quote for update;
+  if not found or q.deleted_at is not null or q.accepted_at is null then raise exception 'Project not found'; end if;
+  -- Only an invoice issued (and numbered) by DZOFT can be credited here.
+  select * into reg from private.dzoft_issued_invoice_registry where quote_id = p_quote and invoice_id = p_invoice;
+  if not found then raise exception 'Only an invoice issued by DZOFT can be credited'; end if;
+  select value into i from jsonb_array_elements(coalesce(q.invoices,'[]'::jsonb)) where value->>'id' = p_invoice;
+  if i is null then raise exception 'Invoice not found'; end if;
+  select coalesce(sum(amount),0) into paid from public.project_receipts where quote_id = p_quote and invoice_id = p_invoice;
+  select coalesce(sum(amount),0) into credited from public.dzoft_credit_notes where quote_id = p_quote and invoice_id = p_invoice;
+  open_amt := reg.amount - paid - credited;
+  if open_amt <= 0 then raise exception 'Nothing left to credit on this invoice'; end if;
+  v_amount := coalesce(p_amount, open_amt);
+  if v_amount <= 0 or v_amount <> round(v_amount,2) or v_amount > open_amt then
+    raise exception 'Credit note amount must be between 0.01 and the unpaid balance of the invoice';
+  end if;
+  if p_effect = 'reissue' and (paid > 0 or credited > 0 or v_amount <> reg.amount) then
+    raise exception 'To re-issue, cancel the whole unpaid invoice';
+  end if;
+  today_paris := (now() at time zone 'Europe/Paris')::date;
+  yr := extract(year from today_paris)::integer;
+  insert into private.dzoft_credit_note_sequences(credit_year,last_number) values(yr,0) on conflict(credit_year) do nothing;
+  select last_number into n from private.dzoft_credit_note_sequences where credit_year = yr for update;
+  n := n + 1;
+  num := 'A-' || yr || '-' || lpad(n::text, greatest(4, length(n::text)), '0');
+  if exists(select 1 from public.dzoft_credit_notes where number = num) then
+    raise exception 'Credit note number conflict; reconcile numbering before issuing';
+  end if;
+  update private.dzoft_credit_note_sequences set last_number = n where credit_year = yr;
+  insert into public.dzoft_credit_notes(number,quote_id,client_id,invoice_id,invoice_number,invoice_issued_on,
+    invoice_amount,invoice_kind,amount,effect,full_cancel,reason,issued_on,issued_by,request_key)
+  values(num,p_quote,q.client_id,p_invoice,reg.invoice_number,reg.issued_on,reg.amount,
+    case when i ? 'change' then 'supplement' else 'base' end,
+    v_amount,p_effect,(credited + v_amount = reg.amount),p_reason,today_paris,auth.uid(),p_request_key)
+  returning * into c;
+  if p_effect = 'reissue' then
+    update private.dzoft_issued_invoice_registry set cancelled_for_reissue = true where invoice_id = p_invoice;
+  end if;
+  return to_jsonb(c) - 'issued_by' - 'request_key' || jsonb_build_object('already_issued', false);
+end $function$
+;
+
+create or replace function public.issue_credit_note(p_quote uuid, p_invoice text, p_amount numeric, p_effect text, p_reason text, p_request_key uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ SET search_path TO ''
+AS $function$
+  select private.issue_credit_note(p_quote,p_invoice,p_amount,p_effect,p_reason,p_request_key);
+$function$
+;
+
+create or replace function public.owner_list_credit_notes()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  if auth.uid() is null or not public.is_owner() then raise exception 'Owner access required'; end if;
+  return coalesce((select jsonb_agg(to_jsonb(c) - 'issued_by' - 'request_key' order by c.issued_at)
+    from public.dzoft_credit_notes c), '[]'::jsonb);
+end $function$
+;
+
+revoke all on function private.dzoft_base_reissue_credits(uuid) from public, anon, authenticated;
+revoke all on function private.issue_credit_note(uuid,text,numeric,text,text,uuid) from public, anon, authenticated;
+revoke all on function public.issue_credit_note(uuid,text,numeric,text,text,uuid) from public, anon;
+revoke all on function public.owner_list_credit_notes() from public, anon;
+grant execute on function public.issue_credit_note(uuid,text,numeric,text,text,uuid) to authenticated;
+grant execute on function public.owner_list_credit_notes() to authenticated;
+
 -- ---------------------------------------------------------------- droits EXECUTE des fonctions exposées par l'API
 
 grant execute on function admin_notify_quote(uuid) to authenticated;
@@ -4085,6 +4247,7 @@ grant execute on function finish_email_outbox(uuid,boolean,text,text,boolean) to
 grant execute on function invoice_draft_amount(uuid) to authenticated;
 grant execute on function is_owner() to authenticated;
 grant execute on function issue_accepted_invoice(uuid,text,uuid) to authenticated;
+grant execute on function issue_credit_note(uuid,text,numeric,text,text,uuid) to authenticated;
 grant execute on function issue_final_invoice_checked(uuid,numeric) to authenticated;
 grant execute on function issue_interim_invoice(uuid,numeric,uuid) to authenticated;
 grant execute on function link_project_receipt_invoice(uuid,uuid,text,jsonb) to authenticated;
@@ -4112,6 +4275,7 @@ grant execute on function my_withdraw_change_request(uuid) to authenticated;
 grant execute on function owner_create_change_proposal(uuid,text,text,numeric,text) to authenticated;
 grant execute on function owner_create_priced_proposal(uuid,text,jsonb,text,boolean) to authenticated;
 grant execute on function owner_list_change_requests(uuid) to authenticated;
+grant execute on function owner_list_credit_notes() to authenticated;
 grant execute on function owner_price_change_request(uuid,jsonb,text,boolean) to authenticated;
 grant execute on function owner_progress_change(uuid,text) to authenticated;
 grant execute on function owner_propose_change(uuid,text,numeric,text) to authenticated;
