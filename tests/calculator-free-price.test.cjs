@@ -90,3 +90,11 @@ test('Commercial discount is a percentage of the items, sent as its euro amount 
  assert.ok(js.includes('.slice(0,160-suf.length).trim()+suf'));
  assert.match(js,/La remise est un pourcentage : tapez un nombre entre 0 et 100/);
 });
+
+test('Text sent to the client stays in French whatever the admin language (18 Nov 2026)',()=>{
+ // The discount line and the default title end up in the proposal the client signs: never translated.
+ assert.ok(js.includes("addLine(form,{label:'Remise commerciale',qty:1,price:'',discount:true})"));
+ assert.ok(!js.includes("tr(en,'Remise commerciale','Commercial discount')"));
+ assert.ok(js.includes("form.elements.title.value='Ajouts demandés depuis la signature du devis'"));
+ assert.ok(!/tr\(en,'Ajouts demandés depuis la signature du devis'/.test(js));
+});
