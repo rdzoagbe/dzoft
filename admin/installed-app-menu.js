@@ -21,20 +21,18 @@ var icons={};
  var source=app.querySelector('.side [data-tab="'+key+'"] svg');
  icons[key]=source?source.outerHTML:'';
 });
+// Keep the early installed-PWA menu identical to the seven canonical Admin routes.
+// workspace-nav-v6.js reuses these same destinations when it finishes loading.
 var groups=[
  {fr:'Navigation',en:'Navigation',items:[
-  {key:'dash',slug:'tableau-de-bord',fr:'Aujourd’hui',en:'Today'},
-  {key:'global',slug:'vue-globale',fr:'Vue globale',en:'Global overview'},
-  {key:'dossiers',slug:'dossiers',fr:'Tous les dossiers',en:'All cases'},
-  {key:'leads',slug:'demandes',fr:'Demandes',en:'Requests'},
+  {key:'dash',slug:'tableau-de-bord',fr:'Tableau de bord',en:'Dashboard'},
   {key:'clients',slug:'clients',fr:'Clients',en:'Clients'},
   {key:'quotes',slug:'devis',fr:'Devis',en:'Quotes'},
   {key:'projects',slug:'projets',fr:'Projets',en:'Projects'},
+  {key:'finance',slug:'comptabilite',fr:'Comptabilité',en:'Accounts'},
   {key:'inbox',slug:'messages',fr:'Messages',en:'Messages'},
-  {key:'finance',slug:'comptabilite',fr:'Comptabilité',en:'Accounts'}]},
- {fr:'Compte et préférences',en:'Account & preferences',items:[
-  {key:'settings',slug:'parametres',fr:'Paramètres',en:'Settings'},
-  {key:'trash',slug:'corbeille',fr:'Corbeille',en:'Trash'},
+  {key:'settings',slug:'parametres',fr:'Paramètres',en:'Settings'}]},
+ {fr:'Compte',en:'Account',items:[
   {key:'site',url:'../?workspace=admin',fr:'Voir le site',en:'View website'},
   {key:'logout',action:'logout',fr:'Déconnexion',en:'Log out'}]}
 ];
