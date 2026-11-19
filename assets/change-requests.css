@@ -266,3 +266,19 @@
 }
 
 .dzoft-change-manual-v2 .dzoft-share-badge-shared{background:#f1efff;color:#5638af;border-color:#e0dafb}
+
+/* Rich readable preview (all content inserted as text nodes, never HTML). */
+.dzoft-change-manual-v2 .dzoft-share-preview-line{min-height:1.55em;white-space:pre-wrap;overflow-wrap:anywhere}
+.dzoft-change-manual-v2 .dzoft-share-preview-space{height:13px;min-height:13px}
+.dzoft-change-manual-v2 .dzoft-share-preview-greeting{font-weight:800;color:#1c2040;font-size:14px}
+.dzoft-change-manual-v2 .dzoft-share-preview-section{
+ color:#5428bd;font-size:12px;font-weight:850;letter-spacing:.025em;
+ margin-top:5px;padding:8px 10px;background:#f3efff;border-radius:8px;
+}
+.dzoft-change-manual-v2 .dzoft-share-preview-category{font-weight:800;color:#2d2b4c;margin-top:6px}
+.dzoft-change-manual-v2 .dzoft-share-preview-item{padding:3px 0 3px 9px;border-left:2px solid #e9e2ff;line-height:1.6}
+.dzoft-change-manual-v2 .dzoft-share-preview-total{
+ background:#eee8ff;border:1px solid #d8caff;border-radius:9px;
+ color:#4f20bc;font-weight:850;padding:10px 12px;margin:6px 0;font-size:15px;
+}
+.dzoft-change-manual-v2 .dzoft-share-preview-link{color:#5427c5;overflow-wrap:anywhere;text-decoration:underline}
