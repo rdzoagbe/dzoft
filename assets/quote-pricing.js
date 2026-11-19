@@ -92,7 +92,11 @@
     '<div class="qpc-section"><h3>Prestations supplémentaires <span>'+extras.length+'</span></h3>'+
     (extras.length?extras.map(function(x){return itemHtml(x,false);}).join(''):'<p class="qpc-muted">Aucun supplément repéré. Ajoutez une prestation de votre Catalogue ou une ligne libre dans le devis.</p>')+'</div>'+
     '<p class="qpc-assist">Seules les lignes cochées seront ajoutées. Les lignes « incluses » coûtent 0 € en plus du forfait ; les autres sont facturées au prix affiché.</p>';
-   apply.disabled=!loaded||busy;
+   var current=options.currentTotal?options.currentTotal(p.key):null;
+   var conflict=!!(current&&current.conflict);
+   if(conflict)error('Un autre forfait est déjà présent. Retirez-le manuellement pour en choisir un autre.');
+   else if(message.textContent.indexOf('Un autre forfait')===0)error('');
+   apply.disabled=!loaded||busy||conflict;
    updateTotal();
   }
   function clear(){
@@ -139,6 +143,7 @@
    }
    if(b.hasAttribute('data-qpc-apply')){
     if(!loaded||busy||!last||options.isLocked&&options.isLocked())return;
+    if(options.currentTotal&&options.currentTotal(chosenPackage().key).conflict)return;
     var selection=last.included.concat(last.extras).filter(function(x){var el=root.querySelector('[data-qpc-select="'+x.id+'"]');return el&&el.checked&&!el.disabled;});
     var included=selection.filter(function(x){return isIncluded(x,chosenPackage().kind);});
     var extras=selection.filter(function(x){return !isIncluded(x,chosenPackage().kind);});
