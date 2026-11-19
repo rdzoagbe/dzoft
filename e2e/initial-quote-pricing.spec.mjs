@@ -10,16 +10,17 @@ async function setup(page,locked=false,failedCatalogue=false){
    panel.className='quote-estimator';panel.id='qpc-synthetic';panel.hidden=true;
    document.body.prepend(panel);
    window.__qpc={applied:[],locked};
+   window.__qpc.catalogue=[
+    {label:'Connexion',description:'Authentification',price:100,scope:'pwa',words:['connexion']},
+    {label:'Galerie photo',description:'Album client',price:100,scope:'extra',words:['galerie photo']},
+    {label:'Notifications mobiles',description:'Alertes',price:50,scope:'mobile',words:['notifications']}
+   ];
    window.__qpc.instance=window.DzoftQuotePricing.attach(panel,{
      packages:[
        {key:'pwa',kind:'pwa',label:'Application web installable (PWA)',price:700,presetIndex:2},
        {key:'mobile',kind:'mobile',label:'Application mobile',price:1500,presetIndex:3}
      ],
-     loadCatalog:()=>failedCatalogue?Promise.reject(new Error('no catalogue')):Promise.resolve([
-       {label:'Connexion',description:'Authentification',price:100,scope:'pwa',words:['connexion']},
-       {label:'Galerie photo',description:'Album client',price:100,scope:'extra',words:['galerie photo']},
-       {label:'Notifications mobiles',description:'Alertes',price:50,scope:'mobile',words:['notifications']}
-     ]),
+     loadCatalog:()=>failedCatalogue?Promise.reject(new Error('no catalogue')):Promise.resolve(window.__qpc.catalogue),
      isLocked:()=>window.__qpc.locked,
      currentTotal:(key)=>({value:key==='pwa'?700:1500,conflict:false}),
      initialRequest:()=> 'Connexion et galerie photo',
@@ -122,4 +123,40 @@ test('initial quote editor adds one base preset, included zero-euro scope and a 
  await page.locator('[data-qpc-detect]').click();
  await expect(page.locator('[data-qpc-select="catalogue-1"]')).toBeDisabled();
  await expect(page.locator('#t-ttc')).toContainText('800,00');
+});
+
+test('fresh catalogue may reclassify an included service as paid but cannot precheck it',async({page})=>{
+ await setup(page);
+ await page.evaluate(()=>window.__qpc.instance.open());
+ await expect(page.locator('[data-qpc-select="catalogue-0"]')).toBeChecked();
+ await page.locator('[data-qpc-cancel]').click();
+ // Simulate owner changing the Catalogue after the first calculator visit.
+ await page.evaluate(()=>{window.__qpc.catalogue[0].scope='extra';});
+ await page.evaluate(()=>window.__qpc.instance.open());
+ await expect(page.locator('[data-qpc-select="catalogue-0"]')).not.toBeChecked();
+ await expect(page.locator('[data-qpc-total]')).toContainText('700');
+ await page.locator('[data-qpc-select="catalogue-0"]').check();
+ await expect(page.locator('[data-qpc-total]')).toContainText('800');
+});
+
+test('legacy quote with a one-line negotiated package price never gets a duplicate base',async({page})=>{
+ const id='00000000-0000-4000-8000-000000000140';
+ await page.route('**/admin/sb.js*',route=>route.fulfill({
+  status:200,contentType:'application/javascript',
+  body:"window.RDsb={session:()=>({user:{id:'synthetic'}}),aal:()=> 'aal2',mfaFresh:()=>true,select:(table)=>Promise.resolve(table==='quotes'?[{id:'00000000-0000-4000-8000-000000000140',data:{lines:[{l:'Application web installable (PWA)',s:'Ancien devis',q:1,u:'forfait',p:650}],host:[],f:{num:'D-TEST-140'}}}]:[{price_blocks:[{label:'Galerie photo',description:'Album',price:100,scope:'extra',words:['galerie photo']}]}]),update:()=>Promise.resolve([]),PORTAL:'https://example.org/espace/'};"
+ }));
+ await page.goto('admin/devis.html?q='+id,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#b-estimate')).toBeEnabled();
+ await expect(page.locator('#t-ttc')).toContainText('650,00');
+ await page.locator('#b-estimate').click();
+ await expect(page.locator('[data-qpc-kind]')).toHaveValue('pwa');
+ await page.locator('[data-qpc-request]').fill('Une galerie photo pour les visiteurs');
+ await page.locator('[data-qpc-detect]').click();
+ await expect(page.locator('[data-qpc-total]')).toContainText('750,00');
+ await page.locator('[data-qpc-select="catalogue-0"]').check();
+ await page.locator('[data-qpc-apply]').click();
+ await expect(page.locator('#t-ttc')).toContainText('750,00');
+ await expect(page.locator('#lines tr:not(.grp)')).toHaveCount(2);
+ const labels=await page.locator('#lines tr:not(.grp) input.label').evaluateAll(xs=>xs.map(x=>x.value));
+ expect(labels).toEqual(['Application web installable (PWA)','Galerie photo']);
 });
