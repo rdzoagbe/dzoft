@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-async function ownerFixture(page, initiallyShared=false, secret=false){
+async function ownerFixture(page, initiallyShared=false, secret=false, interfaceEnglish=false){
   await page.goto('admin/',{waitUntil:'domcontentloaded'});
-  await page.addScriptTag({url:'/assets/change-requests.js?v=20261119-formatted'});
-  await page.addStyleTag({url:'/assets/change-requests.css?v=20261118-manual-review'});
-  await page.evaluate(({shared,secret})=>{
+  await page.addScriptTag({url:'/assets/change-requests.js?v=20261119-french-dialog'});
+  await page.addStyleTag({url:'/assets/change-requests.css?v=20261119-french-dialog'});
+  await page.evaluate(({shared,secret,interfaceEnglish})=>{
     window.__manualReview={calls:[],opened:[]};
     window.confirm=()=>true;
     window.open=(url)=>{window.__manualReview.opened.push(url);return {opener:null};};
@@ -34,10 +34,10 @@ async function ownerFixture(page, initiallyShared=false, secret=false){
     const root=document.createElement('div');
     root.id='manual-test-root';document.body.appendChild(root);
     window.__manualReview.ready=window.DzoftChanges.owner(root,{
-      sb,quoteId:proposal.quote_id,en:false,clientEmail:'test-client@example.com',
+      sb,quoteId:proposal.quote_id,en:interfaceEnglish,clientName:'Rodney K.',clientEmail:'test-client@example.com',
       clientPhone:'+33612345678',clientUserId:secret?null:'user-id',clientPortalToken:secret?'demo-secret-token':null,quoteNumber:'D-TEST',invoices:[]
     });
-  },{shared:initiallyShared,secret});
+  },{shared:initiallyShared,secret,interfaceEnglish});
   await page.waitForFunction(()=>!!document.querySelector('#manual-test-root [data-change-send]'));
 }
 
@@ -95,4 +95,21 @@ test('clients without accounts receive only their protected secret link and lock
   const state=await page.evaluate(()=>window.__manualReview);
   expect(state.opened.length).toBe(1);
   expect(state.calls).toEqual(['owner_list_change_requests']);
+});
+
+test('English admin opens a polished, French-first client draft and safe live preview',async({page},testInfo)=>{
+  await ownerFixture(page,false,false,true);
+  await page.locator('#manual-test-root [data-change-send]').click();
+  const d=page.locator('#dzoft-change-manual-share');
+  await expect(d).toBeVisible();
+  await expect(d.locator('[data-share-language]')).toHaveValue('fr');
+  await expect(d.locator('[data-share-body]')).toHaveValue(/^Bonjour Rodney,/);
+  await expect(d.locator('[data-share-preview]')).toContainText('1. PRESTATIONS COMPLÉMENTAIRES');
+  await expect(d.locator('[data-share-preview]')).toContainText('350,00');
+  await d.locator('[data-share-body]').fill('Bonjour Rodney,\n\nUn exemple personnalisé et relu.');
+  await expect(d.locator('[data-share-preview]')).toHaveText('Bonjour Rodney,\n\nUn exemple personnalisé et relu.');
+  await expect(d.locator('[data-share-language]')).toHaveValue('fr');
+  const callState=await page.evaluate(()=>window.__manualReview);
+  expect(callState.calls).toEqual(['owner_list_change_requests']);
+  await d.screenshot({path:testInfo.outputPath('proposal-french-review.png')});
 });
