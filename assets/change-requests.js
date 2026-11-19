@@ -503,7 +503,25 @@ function bindOwner(root,options){
       '<button type="button" class="btn line" data-share-close>Fermer</button></footer>';
   document.body.appendChild(d);
   var q=function(css){return d.querySelector(css);};
-  function updatePreview(){q('[data-share-preview]').textContent=q('[data-share-body]').value;}
+  function updatePreview(){
+    // Render the editable plain-text message as a readable document. All
+    // client-supplied service labels remain text nodes, never HTML.
+    var preview=q('[data-share-preview]');
+    preview.replaceChildren();
+    q('[data-share-body]').value.split(/\\r?\\n/).forEach(function(line,index){
+      var node=document.createElement('div'),trimmed=line.trim();
+      node.className='dzoft-share-preview-line';
+      if(!trimmed)node.classList.add('dzoft-share-preview-space');
+      else if(/^\\d+[.]\\s+[A-ZÀ-Ÿ]/.test(trimmed))node.classList.add('dzoft-share-preview-section');
+      else if(trimmed==='TOTAL PROPOSÉ :'||/^MONTANT TOTAL PROPOSÉ|^TOTAL PROPOSED/.test(trimmed))node.classList.add('dzoft-share-preview-total');
+      else if(/^•|^–\\s/.test(trimmed))node.classList.add('dzoft-share-preview-item');
+      else if(trimmed===trimmed.toLocaleUpperCase()&&trimmed.length>7&&!/^https?:/.test(trimmed))node.classList.add('dzoft-share-preview-category');
+      else if(/^https?:/.test(trimmed))node.classList.add('dzoft-share-preview-link');
+      else if(index===0)node.classList.add('dzoft-share-preview-greeting');
+      node.textContent=line;
+      preview.appendChild(node);
+    });
+  }
   q('[data-share-body]').value=message;
   updatePreview();
   q('[data-share-body]').addEventListener('input',updatePreview);
