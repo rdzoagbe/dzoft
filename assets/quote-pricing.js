@@ -39,7 +39,7 @@
  }
  function attach(root,options){
   if(!root||!options||!Array.isArray(options.packages)||!options.packages.length)return null;
-  var catalog=[],loaded=false,opening=false,busy=false,last=null,manual=new Map();
+  var catalog=[],loaded=false,opening=false,busy=false,last=null,manual=new Map(),selected={};
   var pkg=options.packages;
   var packageOptions=pkg.map(function(p){return '<option value="'+esc(p.key)+'">'+esc(p.label)+' · '+euro(p.price)+'</option>';}).join('');
   root.innerHTML='<div class="qpc-top"><div><p class="qpc-eyebrow">DZOFT · CHIFFRAGE</p><h2>Calculateur du devis initial</h2><p>Repérez les prestations incluses et les demandes supplémentaires. Les montants restent des propositions à vérifier.</p></div><button class="qpc-close" type="button" data-qpc-close aria-label="Fermer le calculateur">×</button></div>'+
@@ -66,21 +66,25 @@
    return items;
   }
   function itemHtml(x,included){
-   var mark=included?'checked':'';
-   return '<label class="qpc-item"><input type="checkbox" data-qpc-select="'+esc(x.id)+'" '+mark+'>'+
-    '<span><b>'+esc(x.label)+'</b><small>'+esc(x.description||(included?'Déjà compris dans le forfait':'À chiffrer séparément'))+'</small></span>'+
+   var quoted=!!(options.isAlreadyQuoted&&options.isAlreadyQuoted(x)),mark=quoted||Object.prototype.hasOwnProperty.call(selected,x.id)?(quoted||selected[x.id]?'checked':''):(included?'checked':'');
+   return '<label class="qpc-item"><input type="checkbox" data-qpc-select="'+esc(x.id)+'" '+mark+(quoted?' disabled':'')+'>'+
+    '<span><b>'+esc(x.label)+'</b><small>'+esc(quoted?'Déjà inscrit au devis':(x.description||(included?'Déjà compris dans le forfait':'À chiffrer séparément')))+'</small></span>'+
     '<strong>'+ (included?'Inclus · 0 €':euro(x.price))+'</strong></label>';
   }
   function updateTotal(){
    if(!last)return;
    var p=chosenPackage(),extra=0;
-   last.extras.forEach(function(x){var check=root.querySelector('[data-qpc-select="'+x.id+'"]');if(check&&check.checked)extra+=x.price;});
+   last.extras.forEach(function(x){var check=root.querySelector('[data-qpc-select="'+x.id+'"]');if(check&&check.checked&&!check.disabled)extra+=x.price;});
    // This is an estimate of the package + selected extras, not a replacement for
    // totals()/VAT/deposit from the original quotation editor.
-   $('[data-qpc-total]').textContent=euro(p.price+extra);
+   var current=options.currentTotal?options.currentTotal(p.key):null;
+   var starting=current&&Number.isFinite(current.value)?current.value:p.price;
+   $('[data-qpc-total]').textContent=euro(starting+extra);
   }
   function render(){
-   var p=chosenPackage(),items=allItems();last=items;
+   var p=chosenPackage(),items=allItems();
+   root.querySelectorAll('[data-qpc-select]').forEach(function(c){if(!c.disabled)selected[c.dataset.qpcSelect]=c.checked;});
+   last=items;
    var included=items.included,extras=items.extras;
    preview.innerHTML='<div class="qpc-package"><span>Forfait sélectionné</span><strong>'+esc(p.label)+' · '+euro(p.price)+'</strong></div>'+
     '<div class="qpc-section"><h3>Inclus dans le forfait <span>'+included.length+'</span></h3>'+
@@ -92,7 +96,7 @@
    updateTotal();
   }
   function clear(){
-   request.value='';manual.clear();last=null;preview.innerHTML='<p class="qpc-muted">Demande effacée. Aucune modification du devis.</p>';
+   request.value='';manual.clear();selected={};last=null;preview.innerHTML='<p class="qpc-muted">Demande effacée. Aucune modification du devis.</p>';
    apply.disabled=true;$('[data-qpc-total]').textContent='—';error('');
   }
   function close(){clear();root.hidden=true;opening=false;options.onClose&&options.onClose();}
@@ -117,7 +121,7 @@
    root.hidden=false;opening=true;kind.value=options.initialKind?options.initialKind():pkg[0].key;
    if(!pkg.some(function(x){return x.key===kind.value;}))kind.value=pkg[0].key;
    var desc=options.initialRequest&&options.initialRequest();
-   request.value=desc||'';manual.clear();last=null;
+   request.value=desc||'';manual.clear();selected={};last=null;
    refreshCatalog();
    if(request.value)render();
    root.scrollIntoView({behavior:'smooth',block:'start'});
@@ -135,7 +139,7 @@
    }
    if(b.hasAttribute('data-qpc-apply')){
     if(!loaded||busy||!last||options.isLocked&&options.isLocked())return;
-    var selection=last.included.concat(last.extras).filter(function(x){var el=root.querySelector('[data-qpc-select="'+x.id+'"]');return el&&el.checked;});
+    var selection=last.included.concat(last.extras).filter(function(x){var el=root.querySelector('[data-qpc-select="'+x.id+'"]');return el&&el.checked&&!el.disabled;});
     var included=selection.filter(function(x){return isIncluded(x,chosenPackage().kind);});
     var extras=selection.filter(function(x){return !isIncluded(x,chosenPackage().kind);});
     try{
@@ -145,9 +149,9 @@
     }catch(e){error(e&&e.message||'Application impossible : vérifiez le devis.');}
    }
   });
-  kind.addEventListener('change',function(){if(last)render();});
-  request.addEventListener('input',function(){last=null;apply.disabled=true;preview.innerHTML='<p class="qpc-muted">Demande modifiée : cliquez sur « Analyser la demande » pour actualiser le prix.</p>';$('[data-qpc-total]').textContent='—';});
-  root.addEventListener('change',function(ev){if(ev.target.matches('[data-qpc-select]'))updateTotal();});
+  kind.addEventListener('change',function(){selected={};if(last)render();});
+  request.addEventListener('input',function(){selected={};last=null;apply.disabled=true;preview.innerHTML='<p class="qpc-muted">Demande modifiée : cliquez sur « Analyser la demande » pour actualiser le prix.</p>';$('[data-qpc-total]').textContent='—';});
+  root.addEventListener('change',function(ev){if(ev.target.matches('[data-qpc-select]')){selected[ev.target.dataset.qpcSelect]=ev.target.checked;updateTotal();}});
   return {open:open,close:close,refreshCatalog:refreshCatalog};
  }
  return {normalize:normalize,validPrice:validPrice,isIncluded:isIncluded,matchRequest:matchRequest,analyze:analyze,attach:attach};
