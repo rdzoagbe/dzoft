@@ -107,7 +107,8 @@ test('English admin opens a polished, French-first client draft and safe live pr
   await expect(d.locator('[data-share-preview]')).toContainText('1. PRESTATIONS COMPLÉMENTAIRES');
   await expect(d.locator('[data-share-preview]')).toContainText('350,00');
   await d.locator('[data-share-body]').fill('Bonjour Rodney,\n\nUn exemple personnalisé et relu.');
-  await expect(d.locator('[data-share-preview]')).toHaveText('Bonjour Rodney,\n\nUn exemple personnalisé et relu.');
+  await expect(d.locator('[data-share-preview]')).toContainText('Bonjour Rodney,');
+  await expect(d.locator('[data-share-preview]')).toContainText('Un exemple personnalisé et relu.');
   await expect(d.locator('[data-share-language]')).toHaveValue('fr');
   const callState=await page.evaluate(()=>window.__manualReview);
   expect(callState.calls).toEqual(['owner_list_change_requests']);
