@@ -616,6 +616,19 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       return /^Application mobile/.test(head.l)?'mobile':/^Site vitrine/.test(head.l)?'site':/^Page de présentation/.test(head.l)?'page':'pwa';
     },
     initialRequest:function(){return $('desc').innerText.trim().slice(0,4000);},
+    isAlreadyQuoted:function(item){
+      var n=window.DzoftQuotePricing.normalize(item.label);
+      return state.lines.some(function(l){return !l.h&&window.DzoftQuotePricing.normalize(l.l)===n;});
+    },
+    currentTotal:function(key){
+      var names={page:PRESETS[0].l,site:PRESETS[1].l,pwa:PRESETS[2].l,mobile:PRESETS[3].l};
+      var base=state.lines.filter(function(l){return l.h&&(l.qpBase||l.l===names.page||l.l===names.site||l.l===names.pwa||/^Application mobile/.test(l.l));})
+       .map(function(l){return l.qpBase||(/^Application mobile/.test(l.l)?'mobile':Object.keys(names).find(function(k){return names[k]===l.l;}));});
+      var subtotal=state.lines.reduce(function(sum,l){return sum+(!l.h&&!l.o&&l.u!=='mois'?((Number(l.q)||0)*(Number(l.p)||0)):0);},0);
+      var proposed={page:200,site:400,pwa:700,mobile:1500};
+      return {value:Math.round((subtotal+(base.includes(key)?0:proposed[key]))*100)/100,
+       conflict:base.some(function(k){return k!==key;})};
+    },
     isLocked:function(){return !quoteLoaded||quoteAccepted;},
     onClose:function(){$('b-estimate').focus();},
     apply:applyPricingPlan
