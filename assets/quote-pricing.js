@@ -39,7 +39,7 @@
  }
  function attach(root,options){
   if(!root||!options||!Array.isArray(options.packages)||!options.packages.length)return null;
-  var catalog=[],loaded=false,opening=false,busy=false,last=null,manual=new Map(),selected={};
+  var catalog=[],loaded=false,opening=false,busy=false,last=null,manual=new Map(),selected={},catalogGeneration=0;
   var pkg=options.packages;
   var packageOptions=pkg.map(function(p){return '<option value="'+esc(p.key)+'">'+esc(p.label)+' · '+euro(p.price)+'</option>';}).join('');
   root.innerHTML='<div class="qpc-top"><div><p class="qpc-eyebrow">DZOFT · CHIFFRAGE</p><h2>Calculateur du devis initial</h2><p>Repérez les prestations incluses et les demandes supplémentaires. Les montants restent des propositions à vérifier.</p></div><button class="qpc-close" type="button" data-qpc-close aria-label="Fermer le calculateur">×</button></div>'+
@@ -103,21 +103,30 @@
    request.value='';manual.clear();selected={};last=null;preview.innerHTML='<p class="qpc-muted">Demande effacée. Aucune modification du devis.</p>';
    apply.disabled=true;$('[data-qpc-total]').textContent='—';error('');
   }
-  function close(){clear();root.hidden=true;opening=false;options.onClose&&options.onClose();}
+  function close(){catalogGeneration++;busy=false;loaded=false;clear();root.hidden=true;opening=false;options.onClose&&options.onClose();}
   function refreshCatalog(){
-   busy=true;apply.disabled=true;error('');
+   var generation=++catalogGeneration;
+   // Drop cached data and selections until the fresh catalogue is verified.
+   // A formerly included service could now cost extra; stale choices must NEVER
+   // survive a new opening or a re-ordered catalogue.
+   loaded=false;busy=true;catalog=[];last=null;manual.clear();selected={};
+   apply.disabled=true;error('');
+   preview.innerHTML='<p class="qpc-muted">Chargement du Catalogue… Aucun montant ne sera appliqué avant vérification.</p>';
+   $('[data-qpc-total]').textContent='—';
    return Promise.resolve().then(options.loadCatalog).then(function(result){
+    if(generation!==catalogGeneration)return;
     var list=Array.isArray(result)?result:[];
     catalog=list.slice(0,200).filter(function(b){return b&&String(b.label||'').trim()&&validPrice(b.price)!==null;});
     loaded=true;
     $('[data-qpc-manual]').innerHTML='<option value="">— Sélectionner —</option>'+
      catalog.map(function(b,i){return '<option value="'+i+'">'+esc(b.label)+' · '+euro(b.price)+'</option>';}).join('');
     if(!catalog.length)error('Catalogue vide : les prestations du forfait restent disponibles ; ajoutez vos tarifs dans Devis → Catalogue.');
-    if(last)render();
+    if(request.value)render(false);
    }).catch(function(){
+    if(generation!==catalogGeneration)return;
     loaded=false;catalog=[];error('Impossible de lire le Catalogue. Vérifiez votre connexion puis réouvrez le calculateur.');
     apply.disabled=true;
-   }).finally(function(){busy=false;if(last)render();});
+   }).finally(function(){if(generation===catalogGeneration){busy=false;if(last)render(false);}});
   }
   function open(){
    if(options.isLocked&&options.isLocked()){error('Devis signé ou en chargement : modification interdite.');return false;}
@@ -127,7 +136,6 @@
    var desc=options.initialRequest&&options.initialRequest();
    request.value=desc||'';manual.clear();selected={};last=null;
    refreshCatalog();
-   if(request.value)render();
    root.scrollIntoView({behavior:'smooth',block:'start'});
    request.focus();
    return true;
