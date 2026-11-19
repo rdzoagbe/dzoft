@@ -109,9 +109,13 @@ test('initial quote editor adds one base preset, included zero-euro scope and a 
  await expect(page.locator('#lines tr.grp')).toHaveCount(3);
  await expect(page.locator('#t-ttc')).toContainText('800,00');
  await expect(page.locator('#lines tr:not(.grp)')).toHaveCount(6);
- const lines=await page.locator('#lines tr:not(.grp)').allTextContents();
- expect(lines.some(x=>x.includes('Connexion')&&x.includes('0,00'))).toBe(true);
- expect(lines.some(x=>x.includes('Galerie photo')&&x.includes('100,00'))).toBe(true);
+ // Input values are not DOM text, so inspect the actual editable line model and computed totals.
+ const lines=await page.locator('#lines tr:not(.grp)').evaluateAll(rows=>rows.map(row=>({
+  label:row.querySelector('input.label')?.value,
+  total:row.querySelector('.tot')?.textContent
+ })));
+ expect(lines.some(x=>x.label==='Connexion'&&x.total?.includes('0,00'))).toBe(true);
+ expect(lines.some(x=>x.label==='Galerie photo'&&x.total?.includes('100,00'))).toBe(true);
  // Applying the same suggestion twice must not add another paid line.
  await page.locator('#b-estimate').click();
  await page.locator('[data-qpc-request]').fill('Une connexion et une galerie photo.');
