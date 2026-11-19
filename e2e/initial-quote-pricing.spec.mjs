@@ -152,8 +152,11 @@ test('legacy quote with a one-line negotiated package price never gets a duplica
  await expect(page.locator('[data-qpc-kind]')).toHaveValue('pwa');
  await page.locator('[data-qpc-request]').fill('Une galerie photo pour les visiteurs');
  await page.locator('[data-qpc-detect]').click();
- await expect(page.locator('[data-qpc-total]')).toContainText('750,00');
+ // Paid extras are always unchecked until the owner explicitly opts in.
+ await expect(page.locator('[data-qpc-select="catalogue-0"]')).not.toBeChecked();
+ await expect(page.locator('[data-qpc-total]')).toContainText('650,00');
  await page.locator('[data-qpc-select="catalogue-0"]').check();
+ await expect(page.locator('[data-qpc-total]')).toContainText('750,00');
  await page.locator('[data-qpc-apply]').click();
  await expect(page.locator('#t-ttc')).toContainText('750,00');
  await expect(page.locator('#lines tr:not(.grp)')).toHaveCount(2);
