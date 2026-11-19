@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 async function ownerFixture(page, initiallyShared=false, secret=false){
   await page.goto('admin/',{waitUntil:'domcontentloaded'});
-  await page.addScriptTag({url:'/assets/change-requests.js?v=20261118-manual-review'});
+  await page.addScriptTag({url:'/assets/change-requests.js?v=20261119-formatted'});
   await page.addStyleTag({url:'/assets/change-requests.css?v=20261118-manual-review'});
   await page.evaluate(({shared,secret})=>{
     window.__manualReview={calls:[],opened:[]};
@@ -47,7 +47,7 @@ test('supplementary proposal must be reviewed in Outlook; draft does not send',a
   const d=page.locator('#dzoft-change-manual-share');
   await expect(d).toBeVisible();
   await expect(d.locator('[data-share-email]')).toHaveValue('test-client@example.com');
-  await expect(d.locator('[data-share-body]')).toContainText('Aucun supplément ne sera facturé');
+  await expect(d.locator('[data-share-body]')).toHaveValue(/Aucune facture complémentaire ne sera émise sans votre accord préalable/);
   await expect(d.locator('[data-share-confirm]')).toBeDisabled();
   await d.locator('[data-share-outlook]').click();
   const state=await page.evaluate(()=>window.__manualReview);
