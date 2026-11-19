@@ -20,7 +20,7 @@ test('message is editable and only external Outlook or WhatsApp opens on button 
  assert.match(body,/https:\/\/wa\.me\//);
  assert.match(body,/clientEmail/);
  assert.match(body,/clientPhone/);
- assert.match(body,/Aucun supplément ne sera facturé sans votre accord/);
+ assert.match(ui,/Aucune facture complémentaire ne sera émise sans votre accord préalable/);
  assert.doesNotMatch(body,/process-notification-outbox|owner_send_change_proposal|queue_project_event/);
 });
 test('manual-sharing RPC is server-enforced owner-only and never queues client email',()=>{
@@ -40,5 +40,5 @@ test('legacy sent history is preserved, new manual sharing has an auditable even
  assert.doesNotMatch(sql,/delete from|truncate |update public\.email_outbox/i);
  const project=read('admin/suivi.html');
  assert.match(project,/clientEmail:\(C&&C\.email\)/);
- assert.match(project,/change-requests\.js\?v=20261118-manual-review/);
+ assert.match(project,/change-requests\.js\?v=20261119-formatted/);
 });
