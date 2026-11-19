@@ -10,7 +10,7 @@
  var SCOPES=['extra','pwa','mobile','both'];
  function normalize(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
  function euro(n){return Number(n||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});}
- function validPrice(raw){if(raw==null||raw==='')return null;var n=Number(String(raw).replace(',','.'));return Number.isFinite(n)&&n>=0&&n<=1000000?Math.round(n*100)/100:null;}
+ function validPrice(raw){if(raw==null||String(raw).trim()==='')return null;var n=Number(String(raw).replace(',','.'));return Number.isFinite(n)&&n>=0&&n<=1000000?Math.round(n*100)/100:null;}
  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c];});}
  function isIncluded(block,kind){
   var scope=SCOPES.indexOf(block&&block.scope)>=0?block.scope:'extra';
