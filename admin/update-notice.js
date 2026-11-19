@@ -3,8 +3,16 @@
    No user data or account identifiers leave the page. */
 (function(){
 'use strict';
-var BUILD='2026.11.15.4';
+var BUILD='2026.11.19.1';
 var notice=null,checking=false;
+// Numeric release comparison; a delayed metadata response must not suggest a downgrade.
+function isNewer(remote,local){
+ var parse=function(v){return /^\d{4}\.\d{1,2}\.\d{1,2}\.\d+$/.test(v)?v.split('.').map(Number):null;};
+ var a=parse(remote),b=parse(local);
+ if(!a||!b)return false;
+ for(var i=0;i<4;i++){if(a[i]!==b[i])return a[i]>b[i];}
+ return false;
+}
 function tr(fr,en){return document.documentElement.lang==='en'?en:fr;}
 function check(){
  if(checking||!window.fetch)return;
@@ -12,7 +20,7 @@ function check(){
  fetch('release.json?check='+Date.now(),{cache:'no-store',credentials:'same-origin'})
   .then(function(r){if(!r.ok)throw new Error('release unavailable');return r.json();})
   .then(function(x){if(!x||typeof x.version!=='string')return;
-     if(x.version!==BUILD)show();
+     if(isNewer(x.version,BUILD))show();
      else if(notice){notice.remove();notice=null;}
   }).catch(function(){/* Do not interrupt the owner when offline. */})
     .then(function(){checking=false;});
@@ -61,8 +69,13 @@ function buildInfo(){
    outcome.textContent=tr('Vérification…','Checking…');
    fetch('release.json?check='+Date.now(),{cache:'no-store',credentials:'same-origin'})
     .then(function(r){if(!r.ok)throw new Error('release unavailable');return r.json();})
-    .then(function(x){if(x&&x.version===BUILD)outcome.textContent=tr('Vous utilisez la dernière version.','You have the latest version.');
-      else{outcome.textContent=tr('Mise à jour disponible.','Update available.');show();}})
+    .then(function(x){if(x&&typeof x.version==='string'&&isNewer(x.version,BUILD)){
+        outcome.textContent=tr('Mise à jour disponible.','Update available.');show();
+      }else if(x&&x.version===BUILD){
+        outcome.textContent=tr('Version publiée vérifiée.','Published release version verified.');
+      }else{
+        outcome.textContent=tr('Impossible de confirmer la version publiée.','Unable to verify published release version.');
+      }})
     .catch(function(){outcome.textContent=tr('Connexion indisponible.','Connection unavailable.');});
  });
 }
