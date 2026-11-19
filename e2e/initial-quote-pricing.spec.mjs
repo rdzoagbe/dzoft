@@ -66,8 +66,15 @@ test('signed quotation and failed catalogue both fail closed',async({page})=>{
  await page.evaluate(()=>window.__qpc.instance.open());
  await expect(page.locator('#qpc-synthetic')).toBeVisible();
  await page.evaluate(()=>window.__qpc.instance.close());
- // A rejected catalogue request must leave Apply disabled and never write anything.
- await page.evaluate(()=>window.__qpc.instance.close());
+ expect(await page.evaluate(()=>window.__qpc.applied.length)).toBe(0);
+});
+
+test('offline catalogue cannot apply a guessed initial quote',async({page})=>{
+ await setup(page,false,true);
+ await page.evaluate(()=>window.__qpc.instance.open());
+ await expect(page.locator('[data-qpc-error]')).toContainText('Impossible de lire le Catalogue');
+ await expect(page.locator('[data-qpc-apply]')).toBeDisabled();
+ await page.locator('[data-qpc-detect]').click();
  expect(await page.evaluate(()=>window.__qpc.applied.length)).toBe(0);
 });
 
