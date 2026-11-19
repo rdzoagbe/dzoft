@@ -475,7 +475,7 @@ function bindOwner(root,options){
     '<header class="dzoft-share-header"><div><p class="dzoft-share-eyebrow">DZOFT · '+esc(proposal.proposal_number||'')+'</p>'+
       '<h2 id="dzoft-change-dialog-title">Préparer une explication</h2>'+
       '<p class="dzoft-share-intro">Relisez votre proposition complémentaire avant de l’ouvrir dans Outlook ou WhatsApp. Aucun envoi automatique.</p></div>'+
-      '<span class="dzoft-share-badge">Brouillon non envoyé</span></header>'+
+      '<span class="dzoft-share-badge'+(proposal.sent_at?' dzoft-share-badge-shared':'')+'">'+(proposal.sent_at?'Proposition déjà partagée':'Brouillon non envoyé')+'</span></header>' +
     '<div class="dzoft-share-topbar"><div class="dzoft-share-amount"><span>Montant proposé</span><strong>'+esc(cash(proposal.extra_price))+'</strong></div>'+
       '<label class="dzoft-share-language">Langue du client<select data-share-language aria-label="Langue du message"><option value="fr" selected>Français</option><option value="en">English</option></select></label></div>'+
     '<div class="dzoft-share-fields"><label>Destinataire e-mail<input data-share-email type="email" value="'+esc(email)+'" placeholder="client@example.com"'+(secretMode?' readonly':'')+'></label>'+
