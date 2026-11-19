@@ -221,6 +221,85 @@ function adminCard(r,en,invoice,blocks,tiers){
  }
  return h+history(r,en)+'</article>';
 }
+/* Professionally formatted proposal explanation. Source of truth is the saved
+ * proposal lines; zero-price gifts and negative discounts stay separate.
+ * No example client amounts or descriptions are hard-coded into this template.
+ */
+function proposalExplanation(proposal,opt,portal,en){
+ var all=Array.isArray(proposal.lines)?proposal.lines:[];
+ var groups=[
+  {fr:'Interface et présentation',en:'Interface and presentation',items:[]},
+  {fr:'Fonctionnalités et expérience utilisateur',en:'Features and user experience',items:[]},
+  {fr:'Administration et suivi',en:'Administration and tracking',items:[]},
+  {fr:'Autres prestations',en:'Other services',items:[]}
+ ];
+ function category(label){
+  var t=String(label||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(/logo|onglet|titre|mise en page|affich|photo|visuel|liste du lieu|couleur|design|interface graphique/.test(t))return groups[0];
+  if(/compte|connex|portail|tutoi|vouvoi|pass|validation|face id|empreinte|qr code|duree|evenement|etablissement|visite|authentif/.test(t))return groups[1];
+  if(/administr|menu admin|fiche|retour|tableau de bord|suivi/.test(t))return groups[2];
+  return groups[3];
+ }
+ function money(v){return Number(v).toLocaleString(en?'en-GB':'fr-FR',{style:'currency',currency:'EUR'});}
+ function rowAmount(l){
+  var qty=Number(l.qty),price=Number(l.price);
+  return Number.isFinite(qty)&&Number.isFinite(price)?Math.round(qty*price*100):null;
+ }
+ var gifts=[],discounts=[],subtotal=0,hasUnpriced=false;
+ all.forEach(function(l){
+  if(!l)return;
+  var amount=rowAmount(l),name=String(l.label||'').trim();
+  if(!name)return;
+  if(amount===null){hasUnpriced=true;category(name).items.push('• '+name+' — '+(en?'price not specified':'prix non précisé'));return;}
+  var desc='• '+name+(Number(l.qty)!==1?' (× '+String(l.qty)+')':'');
+  if(amount<0){discounts.push({name:name,amount:amount});return;}
+  if(amount===0){gifts.push(desc);return;}
+  subtotal+=amount;
+  category(name).items.push(desc+' : '+money(amount/100));
+ });
+ var first=String(opt.clientName||'').trim().split(/\s+/)[0]||'';
+ var greeting=en?'Hello'+(first?' '+first:'')+',':'Bonjour'+(first?' '+first:'')+',';
+ var result=[greeting,'',en?'I hope you are doing well.':'J’espère que vous allez bien.','',
+  en?'Following the approval of our original quote '+String(opt.quoteNumber||'')+
+  ', you requested additional changes and improvements. To keep our agreement clear, these items are priced separately from the initial contract.':
+  'À la suite de la validation de notre devis initial '+String(opt.quoteNumber||'')+
+  ', plusieurs modifications et améliorations ont été demandées. Afin de conserver une parfaite transparence, je vous présente une proposition complémentaire, distincte de notre accord initial.','',
+  en?'1. ADDITIONAL WORK':'1. PRESTATIONS COMPLÉMENTAIRES',''];
+ groups.forEach(function(group){
+  if(!group.items.length)return;
+  result.push((en?group.en:group.fr).toUpperCase());
+  group.items.forEach(function(line){result.push(line);});
+  result.push('');
+ });
+ if(gifts.length){
+  result.push(en?'2. SERVICES INCLUDED AT NO CHARGE':'2. PRESTATIONS OFFERTES','');
+  gifts.forEach(function(line){result.push(line+' — '+(en?'Included':'Offert'));});
+  result.push('');
+ }
+ var total=Number(proposal.extra_price),validTotal=Number.isFinite(total);
+ var discountsTotal=discounts.reduce(function(sum,l){return sum+l.amount;},0);
+ result.push(en?'3. FINANCIAL SUMMARY':'3. RÉCAPITULATIF FINANCIER','');
+ if(!hasUnpriced)result.push((en?'Additional work before discount: ':'Total des prestations complémentaires : ')+money(subtotal/100));
+ discounts.forEach(function(d){result.push(d.name+' : '+money(d.amount/100));});
+ // If individual rows disagree with the server-calculated total, do not silently
+ // present a misleading reconciliation: clearly flag it for owner review.
+ if(validTotal){
+  result.push((en?'TOTAL PROPOSED: ':'MONTANT TOTAL PROPOSÉ : ')+money(total));
+  if(!hasUnpriced&&Math.abs((subtotal+discountsTotal)-Math.round(total*100))>1)
+   result.push(en?'IMPORTANT: The line totals differ from the recorded proposal total. Please verify before sending.':
+    'ATTENTION : le total des lignes diffère du montant de la proposition enregistrée. Vérifiez avant tout envoi.');
+ }else result.push(en?'Total to be confirmed in the proposal':'Montant total à vérifier dans la proposition');
+ result.push('',en?'4. YOUR AGREEMENT':'4. VOTRE ACCORD','',
+  en?'The initial quote and payments already received remain unchanged. Only the additional work listed above is concerned.':
+  'Le montant du devis initial ainsi que les paiements déjà effectués restent inchangés. Cette proposition concerne uniquement les prestations complémentaires détaillées ci-dessus.','',
+  en?'You can review the proposal in your client area:':'Vous pouvez consulter la proposition dans votre espace client :',portal,'',
+  en?'No supplementary invoice will be issued without your prior agreement and signature.':
+  'Aucune facture complémentaire ne sera émise sans votre accord préalable et votre signature.','',
+  en?'Please feel free to contact me if you would like to discuss any of these items. Thank you for your trust.':
+  'Je reste naturellement disponible pour échanger sur ces éléments et répondre à vos questions. Je vous remercie pour votre confiance.','',
+  en?'Kind regards,':'Bien cordialement,','Roland','DZOFT — Développement web & solutions digitales');
+ return result.join('\n');
+}
 function bindOwner(root,options){
  var sb=options.sb,quoteId=options.quoteId,en=!!options.en,busy=false;
  // The project page calls this after every reload: keep one set of listeners, refresh the options.
@@ -384,13 +463,8 @@ function bindOwner(root,options){
   var secretMode=!opt.clientUserId&&!!opt.clientPortalToken;
   var url=secretMode?(sb.PORTAL||'')+'#'+encodeURIComponent(String(opt.clientPortalToken)):
     (sb.PORTAL||'')+'?projet='+encodeURIComponent(quoteId);
-  var title='Proposition complémentaire '+String(proposal.proposal_number||'')+' · DZOFT';
-  var lines=(Array.isArray(proposal.lines)?proposal.lines:[]).map(function(x){return '– '+String(x.label||'')+' : '+cash(Number(x.qty||1)*Number(x.price||0));}).join('\n');
-  var msg='Bonjour,\n\nJe vous présente une proposition complémentaire au devis initial '+String(opt.quoteNumber||'')+'.\n\n'+
-   'Les prestations suivantes ont été demandées après la signature du devis et sont chiffrées séparément :\n'+lines+
-   '\n\nMontant proposé pour ces ajouts : '+cash(proposal.extra_price)+'. Le devis initial et les paiements déjà reçus ne changent pas.\n\n'+
-   'Vous pouvez consulter la proposition dans votre espace client : '+url+'.\n\n'+
-   'Aucun supplément ne sera facturé sans votre accord et votre signature. Je reste disponible pour en discuter avant toute décision.\n\nCordialement,\nRoland — DZOFT';
+  var title='DZOFT | Proposition complémentaire au devis '+String(opt.quoteNumber||'');
+  var msg=proposalExplanation(proposal,opt,url,en);
   var d=document.createElement('dialog');d.id='dzoft-change-manual-share';d.className='dzoft-change-manual-dialog';
   d.innerHTML='<h2>'+tr(en,'Relire avant de partager','Review before sharing')+' · '+esc(proposal.proposal_number||'')+'</h2>'+
    '<p>'+tr(en,'Ceci est une <b>proposition de travaux complémentaires</b>, pas une nouvelle facture. Aucun envoi automatique.','This is an <b>extra-work proposal</b>, not a new invoice. Nothing is automatically sent.')+'</p>'+
