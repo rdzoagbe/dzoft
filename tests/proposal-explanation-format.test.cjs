@@ -53,7 +53,9 @@ test('manual delivery remains explicitly review-first and never queues a message
  assert.match(form,/var message=proposalExplanation\(proposal,opt,url,false\)/);
  assert.match(form,/var lang='fr'/);
  assert.match(form,/data-share-preview/);
- assert.match(form,/\[data-share-preview\]'\)\.textContent/);
+ assert.match(form,/preview\.replaceChildren\(\)/);
+ assert.match(form,/node\.textContent=line/);
+ assert.match(form,/value\.split\(\/\\r\?\\n\//);
  assert.match(form,/data-share-body/);
  assert.match(form,/data-share-outlook/);
  assert.match(form,/data-share-wa/);
