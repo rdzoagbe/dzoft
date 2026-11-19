@@ -173,22 +173,40 @@ function calculator(en,blocks,target,tiers,edit){
   '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+(edit?tr(en,'Enregistrer le brouillon modifié','Save the edited draft'):target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button><button class="btn line" type="button" data-form-cancel="calc">'+tr(en,'Annuler','Cancel')+'</button></div></form>';
 }
 function priceList(en,blocks,defaultPrice,tiers){
+ var scopes=[
+  {key:'extra',fr:'Toujours en supplément',en:'Always extra'},
+  {key:'pwa',fr:'Inclus dans PWA',en:'Included in PWA'},
+  {key:'mobile',fr:'Inclus dans application mobile',en:'Included in mobile app'},
+  {key:'both',fr:'Inclus dans PWA et mobile',en:'Included in PWA & mobile'}
+ ];
+ function scopeOptions(value){return scopes.map(function(x){return '<option value="'+x.key+'"'+((value||'extra')===x.key?' selected':'')+'>'+esc(tr(en,x.fr,x.en))+'</option>';}).join('');}
  return '<div class="dzoft-price-list">'+
   '<h4>'+tr(en,'Niveaux de prix','Price levels')+'</h4><p class="dzoft-change-note">'+tr(en,'Chaque ligne affiche au client son niveau et sa règle. Prix proposés en proportion de votre premier devis signé : modifiez-les librement.','Each line shows the client its level and rule. Default prices are proportional to your first signed quote: change them freely.')+'</p>'+
   '<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Niveau','Level')+'</th><th>'+tr(en,'Règle montrée au client','Rule shown to the client')+'</th><th>'+tr(en,'Prix','Price')+'</th></tr></thead><tbody>'+
   tiers.map(function(t,i){return '<tr><td>'+esc(t.label)+'</td><td>'+esc(t.rule)+'</td><td><input type="number" min="0" max="1000000" step="0.01" value="'+esc(t.price)+'" data-tier-price="'+i+'" aria-label="'+tr(en,'Prix du niveau ','Price of level ')+esc(t.label)+'"></td></tr>';}).join('')+
   '</tbody></table></div><button class="btn line sm" type="button" data-tier-save>'+tr(en,'Enregistrer les niveaux','Save levels')+'</button>'+
   '<h4>'+tr(en,'Prestations connues','Known items')+'</h4>'+
+  '<p class="dzoft-change-note">'+tr(en,'Les mots-clés permettent de repérer une demande. Le forfait indique quand la prestation est déjà incluse au devis initial ; il ne change pas le calcul des suppléments après signature.','Matching words detect a request. Package scope marks work already included in an initial quote; it never changes pricing for approved supplements.')+'</p>'+
   '<div class="dzoft-calc-pick"><label>'+tr(en,'Prix par défaut d’une demande absente de la liste (€)','Default price of a request not in the list (€)')+
   '<input type="number" min="0" max="1000000" step="0.01" data-default-price value="'+esc(defaultPrice==null?'':defaultPrice)+'" placeholder="'+tr(en,'Vide : à chiffrer à la main','Empty: priced by hand')+'"></label>'+
   '<button class="btn line sm" type="button" data-default-save>'+tr(en,'Enregistrer','Save')+'</button></div>'+
-  (blocks.length?'<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Prestation','Item')+'</th><th>'+tr(en,'Prix','Price')+'</th><th>'+tr(en,'Mots repérés','Matching words')+'</th><th><span class="sr-only">'+tr(en,'Retirer','Remove')+'</span></th></tr></thead><tbody>'+
+  (blocks.length?'<div class="dzoft-change-table"><table><thead><tr><th>'+tr(en,'Prestation','Item')+'</th><th>'+tr(en,'Prix','Price')+'</th><th>'+tr(en,'Description','Description')+'</th><th>'+tr(en,'Forfait','Package')+'</th><th>'+tr(en,'Mots repérés','Matching words')+'</th><th><span class="sr-only">'+tr(en,'Retirer','Remove')+'</span></th></tr></thead><tbody>'+
    blocks.map(function(b,i){return '<tr><td>'+esc(b.label)+'</td><td><input type="number" min="0" max="1000000" step="0.01" value="'+esc(b.price)+'" data-block-price="'+i+'" aria-label="'+tr(en,'Prix de ','Price of ')+esc(b.label)+'"></td>'+
-    '<td><input maxlength="200" value="'+esc((b.words||[]).join(', '))+'" data-block-words="'+i+'" aria-label="'+tr(en,'Mots repérés pour ','Matching words for ')+esc(b.label)+'"></td>'+
+    '<td><input maxlength="400" value="'+esc(b.description||'')+'" data-block-description="'+i+'" aria-label="'+tr(en,'Description de ','Description of ')+esc(b.label)+'"></td>'+
+    '<td><select data-block-scope="'+i+'" aria-label="'+tr(en,'Forfait de ','Package for ')+esc(b.label)+'">'+scopeOptions(b.scope)+'</select></td>'+
+    '<td><input maxlength="200" value="'+esc((Array.isArray(b.words)?b.words:[]).join(', '))+'" data-block-words="'+i+'" aria-label="'+tr(en,'Mots repérés pour ','Matching words for ')+esc(b.label)+'"></td>'+
     '<td><button class="btn line sm" type="button" data-block-remove="'+i+'" aria-label="'+tr(en,'Retirer ','Remove ')+esc(b.label)+'">×</button></td></tr>';}).join('')+'</tbody></table></div>'+
    '<button class="btn line sm" type="button" data-block-save>'+tr(en,'Enregistrer la liste','Save the list')+'</button>'
-  :'<p>'+tr(en,'Votre liste se remplit quand vous créez une proposition avec « Ajouter les nouvelles lignes à ma liste de prix ».','Your list fills up when you create a proposal with “Add new lines to my price list”.')+'</p>')+'</div>';
+  :'<p>'+tr(en,'Votre liste est vide : ajoutez une prestation ci-dessous.','Your list is empty: add an item below.')+'</p>')+
+  '<fieldset class="dzoft-block-new"><legend>'+tr(en,'Ajouter une prestation','Add a service')+'</legend>'+
+  '<label>'+tr(en,'Nom','Name')+'<input data-new-block-label maxlength="140" placeholder="'+tr(en,'Ex. : Galerie photo','E.g. Photo gallery')+'"></label>'+
+  '<label>'+tr(en,'Prix (€)','Price (€)')+'<input data-new-block-price inputmode="decimal" placeholder="100,00"></label>'+
+  '<label>'+tr(en,'Inclus dans','Included in')+'<select data-new-block-scope>'+scopeOptions('extra')+'</select></label>'+
+  '<label>'+tr(en,'Description','Description')+'<input data-new-block-description maxlength="400" placeholder="'+tr(en,'Ce qui sera réalisé','What will be delivered')+'"></label>'+
+  '<label>'+tr(en,'Mots-clés (séparés par une virgule)','Matching words (comma separated)')+'<input data-new-block-words maxlength="200" placeholder="'+tr(en,'galerie, photos','gallery, photos')+'"></label>'+
+  '<button type="button" class="btn main" data-block-add>'+tr(en,'Ajouter à mon catalogue','Add to my catalogue')+'</button></fieldset></div>';
 }
+
 function adminCard(r,en,invoice,blocks,tiers){
  // A proposal is a draft, seen only by the owner, until explicit manual-share acknowledgement (server enforced).
  var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(r.status==='proposed'&&r.sent_at?tr(en,'Partagée · signature attendue','Shared · awaiting signature'):(labels(en)[r.status]||r.status));
@@ -656,9 +674,41 @@ function bindPrices(root,options){
    if(dp!==null&&!(dp>=0)){banner(root,tr(en,'Prix par défaut invalide.','Invalid default price.'),true);return;}
    perform(Promise.resolve(sb.update('settings',1,{default_line_price:dp})),tr(en,'Prix par défaut enregistré.','Default price saved.'));return;}
   if(b.hasAttribute('data-block-remove')){var k=+b.dataset.blockRemove,copy=data.blocks.slice();if(!global.confirm(tr(en,'Retirer « '+(copy[k]&&copy[k].label||'')+' » de la liste ?','Remove “'+(copy[k]&&copy[k].label||'')+'” from the list?')))return;copy.splice(k,1);perform(saveBlocks(copy),tr(en,'Liste de prix enregistrée.','Price list saved.'));return;}
+  if(b.hasAttribute('data-block-add')){
+   var name=root.querySelector('[data-new-block-label]').value.trim(),
+    price=num(root.querySelector('[data-new-block-price]').value),
+    scope=root.querySelector('[data-new-block-scope]').value,
+    desc=root.querySelector('[data-new-block-description]').value.trim(),
+    words=root.querySelector('[data-new-block-words]').value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean).slice(0,12);
+   if(name.length<2||name.length>140||!Number.isFinite(price)||price<0||price>1000000||!['extra','pwa','mobile','both'].includes(scope)){
+    banner(root,tr(en,'Nom, tarif ou forfait incorrect.','Invalid name, price or package.'),true);return;
+   }
+   if(!words.length){banner(root,tr(en,'Ajoutez au moins un mot-clé pour repérer cette prestation.','Add at least one matching word.'),true);return;}
+   if(data.blocks.length>=200){banner(root,tr(en,'Catalogue limité à 200 prestations.','Catalogue limit: 200 items.'),true);return;}
+   if(data.blocks.some(function(x){return String(x.label||'').trim().toLowerCase()===name.toLowerCase();})){
+    banner(root,tr(en,'Une prestation porte déjà ce nom.','An item already has that name.'),true);return;
+   }
+   var item={label:name,price:Math.round(price*100)/100,description:desc.slice(0,400),scope:scope,words:words};
+   perform(saveBlocks(data.blocks.concat([item])),tr(en,'Prestation ajoutée au Catalogue.','Item added to catalogue.'));return;
+  }
   if(b.hasAttribute('data-block-save')){
-   var edited=data.blocks.map(function(bl,i){var p=root.querySelector('[data-block-price="'+i+'"]'),w=root.querySelector('[data-block-words="'+i+'"]');
-    var price=p?num(p.value):bl.price;return {label:bl.label,price:Number.isFinite(price)&&price>=0?Math.round(price*100)/100:bl.price,words:w?w.value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean).slice(0,12):(bl.words||[])};});
+   var valid=true;
+   var edited=data.blocks.map(function(bl,i){
+    var p=root.querySelector('[data-block-price="'+i+'"]'),
+     w=root.querySelector('[data-block-words="'+i+'"]'),
+     d=root.querySelector('[data-block-description="'+i+'"]'),
+     sc=root.querySelector('[data-block-scope="'+i+'"]');
+    var price=p?num(p.value):Number(bl.price);
+    var scope=sc?sc.value:(bl.scope||'extra');
+    if(!Number.isFinite(price)||price<0||price>1000000||!['extra','pwa','mobile','both'].includes(scope))valid=false;
+    return Object.assign({},bl,{
+     price:Math.round(price*100)/100,
+     description:d?d.value.trim().slice(0,400):String(bl.description||'').slice(0,400),
+     scope:scope,
+     words:w?w.value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean).slice(0,12):(bl.words||[])
+    });
+   });
+   if(!valid){banner(root,tr(en,'Corrigez les prix ou les forfaits invalides.','Correct invalid prices or packages.'),true);return;}
    perform(saveBlocks(edited),tr(en,'Liste de prix enregistrée.','Price list saved.'));return;
   }
  });
