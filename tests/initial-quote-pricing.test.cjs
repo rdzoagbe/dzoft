@@ -46,6 +46,7 @@ test('invalid or negative prices are rejected and comma decimal prices round exa
  assert.equal(pricing.validPrice(-1),null);
  assert.equal(pricing.validPrice('Infinity'),null);
  assert.equal(pricing.validPrice(''),null);
+ assert.equal(pricing.validPrice('   '),null);
  assert.equal(pricing.analyze('connexion','pwa',[{...catalogue[0],price:-99}]).included.length,0);
 });
 test('new quotation editor is explicitly owner-only and signed quotes cannot use estimator',()=>{
