@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 var BUILD='2026.11.19.1';
-var notice=null,checking=false;
+var notice=null,checking=false,updateOutcome=null;
 // Numeric release comparison; a delayed metadata response must not suggest a downgrade.
 function isNewer(remote,local){
  var parse=function(v){return /^\d{4}\.\d{1,2}\.\d{1,2}\.\d+$/.test(v)?v.split('.').map(Number):null;};
@@ -14,6 +14,32 @@ function isNewer(remote,local){
  return false;
 }
 function tr(fr,en){return document.documentElement.lang==='en'?en:fr;}
+// This UI is created dynamically, outside the shared static translation dictionary.
+// Preserve the outcome meaning when the owner changes language in Settings.
+function outcomeText(code){
+ var messages={
+  checking:['Vérification…','Checking…'],
+  available:['Mise à jour disponible.','Update available.'],
+  verified:['Version publiée vérifiée.','Published release version verified.'],
+  unknown:['Impossible de confirmer la version publiée.','Unable to verify published release version.'],
+  offline:['Connexion indisponible.','Connection unavailable.']
+ };
+ var value=messages[code];
+ return value?tr(value[0],value[1]):'';
+}
+function setOutcome(code){
+ updateOutcome=code;
+ var status=document.getElementById('dzoft-update-status');
+ if(status)status.textContent=outcomeText(code);
+}
+function localizeBuildInfo(){
+ var info=document.getElementById('dzoft-build-info');
+ if(info)info.textContent=tr('Version DZOFT : ','DZOFT version: ')+BUILD;
+ var button=document.getElementById('dzoft-check-updates');
+ if(button)button.textContent=tr('Vérifier les mises à jour','Check for updates');
+ var status=document.getElementById('dzoft-update-status');
+ if(status)status.textContent=outcomeText(updateOutcome);
+}
 function check(){
  if(checking||!window.fetch)return;
  checking=true;
@@ -65,18 +91,19 @@ function buildInfo(){
  var outcome=document.createElement('span');outcome.id='dzoft-update-status';
  outcome.style.cssText='font-size:12px;color:#67718a;margin-left:10px';
  settings.appendChild(outcome);
+ localizeBuildInfo();
  control.addEventListener('click',function(){
-   outcome.textContent=tr('Vérification…','Checking…');
+   setOutcome('checking');
    fetch('release.json?check='+Date.now(),{cache:'no-store',credentials:'same-origin'})
     .then(function(r){if(!r.ok)throw new Error('release unavailable');return r.json();})
     .then(function(x){if(x&&typeof x.version==='string'&&isNewer(x.version,BUILD)){
-        outcome.textContent=tr('Mise à jour disponible.','Update available.');show();
+        setOutcome('available');show();
       }else if(x&&x.version===BUILD){
-        outcome.textContent=tr('Version publiée vérifiée.','Published release version verified.');
+        setOutcome('verified');
       }else{
-        outcome.textContent=tr('Impossible de confirmer la version publiée.','Unable to verify published release version.');
+        setOutcome('unknown');
       }})
-    .catch(function(){outcome.textContent=tr('Connexion indisponible.','Connection unavailable.');});
+    .catch(function(){setOutcome('offline');});
  });
 }
 function registerUpdater(){
@@ -91,8 +118,7 @@ document.addEventListener('visibilitychange',function(){if(document.visibilitySt
 window.addEventListener('focus',check);
 document.addEventListener('dzoft:locale-change',function(){
  if(notice){notice.remove();notice=null;show();}
- var settings=document.getElementById('dzoft-build-info');
- if(settings)settings.textContent=tr('Version DZOFT : ','DZOFT version: ')+BUILD;
+ localizeBuildInfo();
 });
 buildInfo();check();registerUpdater();
 })();
