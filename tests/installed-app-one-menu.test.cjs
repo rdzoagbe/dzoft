@@ -16,14 +16,16 @@ test('single-menu script runs only when an installed PWA is on a mobile viewport
  assert.match(css,/body\.dzoft-admin\.dzoft-installed-mobile #app \.side\{display:none!important\}/);
  assert.match(css,/body\.dzoft-admin\.dzoft-installed-mobile #app \.top \.in>:not\(\.installed-app-menu\)\{display:none!important\}/);
  assert.match(css,/#app \.installed-app-menu\{display:none\}/);
- assert.match(html,/installed-app-menu\.js\?v=(?:20261116-nav-audit1|20261117-nav7)/);
+ assert.match(html,/installed-app-menu\.js\?v=(?:20261116-nav-audit1|20261117-nav7|20261119-audit-nav)/);
  assert.match(html,/simplified-ui\.css\?v=(?:20261115-one-menu|20261117-blue|20261117-nav7)/);
  assert.doesNotMatch(read('espace/index.html'),/installed-app-menu\.js|dzoft-installed-mobile/);
 });
 
 test('one menu includes all routes, public website and existing logout handler',()=>{
- for(const slug of ['tableau-de-bord','dossiers','demandes','clients','devis','projets','messages','comptabilite','parametres','corbeille'])
+ for(const slug of ['tableau-de-bord','clients','devis','projets','comptabilite','messages','parametres'])
   assert.ok(js.includes("slug:'"+slug+"'"),'Missing mobile menu destination '+slug);
+ assert.equal((js.match(/slug:'/g)||[]).length,7);
+ for(const old of ['vue-globale','dossiers','demandes','corbeille'])assert.ok(!js.includes("slug:'"+old+"'"), 'Unexpected legacy mobile route: '+old);
  assert.match(js,/url:'\.\.\/\?workspace=admin'/);
  assert.match(js,/action:'logout'/);
  assert.match(js,/document\.getElementById\('b-out'\)/);
