@@ -476,7 +476,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 <script src="../assets/rd-steps.js"></script>
 <script src="../assets/delivery-status.js?v=20261114-brevo-events"></script>
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261118-manual-review">
-<script src="../assets/change-requests.js?v=20261118-manual-review"></script>
+<script src="../assets/change-requests.js?v=20261119-formatted"></script>
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
@@ -585,7 +585,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
     };
     $('note').value = Q.client_note || '';
     renderSteps(); renderJournal(); renderDocs(); renderEnv(); renderInv(); renderCare(); renderReview(); renderThread(); renderFiles(); renderActivity();
-    if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en',invoices:liveInvoices(),clientEmail:(C&&C.email)||((C&&C.contact||'').includes('@')?C.contact:''),clientPhone:(C&&C.contact)||'',clientUserId:(C&&C.user_id)||null,clientPortalToken:(C&&!C.user_id&&C.portal_token)||null,quoteNumber:Q.numero,onInvoice:function(record,btn){ issueAccepted('supplement',record,btn); }});
+    if (Q.accepted_at && window.DzoftChanges) window.DzoftChanges.owner($('dzoft-owner-changes'),{sb:sb,quoteId:QID,en:document.documentElement.lang==='en',invoices:liveInvoices(),clientEmail:(C&&C.email)||((C&&C.contact||'').includes('@')?C.contact:''),clientPhone:(C&&C.contact)||'',clientUserId:(C&&C.user_id)||null,clientPortalToken:(C&&!C.user_id&&C.portal_token)||null,clientName:(C&&C.nom)||'',quoteNumber:Q.numero,onInvoice:function(record,btn){ issueAccepted('supplement',record,btn); }});
     DzoftTracking.admin(Q, sb, load);
     // Client card, money tiles, scope and official documents (project-summary.js), refreshed after every load.
     // The module may load after this first render: it reads the last data from window.DzoftProjectData.
