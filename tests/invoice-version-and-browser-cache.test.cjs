@@ -8,7 +8,7 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 test('desktop Chrome and installed phone have the same current release controls',()=>{
  const main=read('admin/index.html'),project=read('admin/suivi.html');
  for(const html of [main,project]){
-  assert.match(html,/update-notice\.js\?v=20261119-release1/);
+  assert.match(html,/update-notice\.js\?v=20261119-locale2/);
   assert.match(html,/workspace-flow\.css\?v=(?:20261115-update4|20261117-blue)/);
   assert.match(html,/updateViaCache: 'none'/);
  }
@@ -20,6 +20,9 @@ test('desktop Chrome and installed phone have the same current release controls'
  assert.match(script,/Version publiée vérifiée/);
  assert.match(script,/cache:'no-store'/);
  assert.match(script,/dzoft-check-updates/);
+ assert.match(script,/function localizeBuildInfo\(\)/);
+ assert.match(script,/function setOutcome\(code\)/);
+ assert.match(script,/localizeBuildInfo\(\);/);
  assert.match(script,/location\.replace\(url\.href\)/);
  assert.doesNotMatch(script,/localStorage|sessionStorage|service_role|sb\.rpc|supabase\.co/);
  new vm.Script(script,{filename:'admin/update-notice.js'});
