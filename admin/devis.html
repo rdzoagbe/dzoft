@@ -553,6 +553,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     renderLines();
   }
   // This advisor fills only current draft lines, not accepted_data, invoices or receipts.
+  function presetPrice(index){return PRESETS[index].parts.reduce(function(sum,line){return sum+line[2];},0);}
   function applyPricingPlan(plan){
     if(!quoteLoaded||quoteAccepted)throw new Error('Devis signé ou en chargement : modification impossible.');
     var selected=plan.package,old=state.lines;
@@ -603,10 +604,10 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   }
   var quoteEstimator=window.DzoftQuotePricing&&window.DzoftQuotePricing.attach($('quote-estimator'),{
     packages:[
-      {key:'pwa',kind:'pwa',presetIndex:2,label:PRESETS[2].l,price:700},
-      {key:'mobile',kind:'mobile',presetIndex:3,label:PRESETS[3].l,price:1500},
-      {key:'site',kind:'site',presetIndex:1,label:PRESETS[1].l,price:400},
-      {key:'page',kind:'page',presetIndex:0,label:PRESETS[0].l,price:200}
+      {key:'pwa',kind:'pwa',presetIndex:2,label:PRESETS[2].l,price:presetPrice(2)},
+      {key:'mobile',kind:'mobile',presetIndex:3,label:PRESETS[3].l,price:presetPrice(3)},
+      {key:'site',kind:'site',presetIndex:1,label:PRESETS[1].l,price:presetPrice(1)},
+      {key:'page',kind:'page',presetIndex:0,label:PRESETS[0].l,price:presetPrice(0)}
     ],
     loadCatalog:function(){return sb.select('settings','select=price_blocks&id=eq.1')
       .then(function(rows){return rows&&rows[0]&&rows[0].price_blocks||[];});},
@@ -625,7 +626,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       var base=state.lines.filter(function(l){return l.h&&(l.qpBase||l.l===names.page||l.l===names.site||l.l===names.pwa||/^Application mobile/.test(l.l));})
        .map(function(l){return l.qpBase||(/^Application mobile/.test(l.l)?'mobile':Object.keys(names).find(function(k){return names[k]===l.l;}));});
       var subtotal=state.lines.reduce(function(sum,l){return sum+(!l.h&&!l.o&&l.u!=='mois'?((Number(l.q)||0)*(Number(l.p)||0)):0);},0);
-      var proposed={page:200,site:400,pwa:700,mobile:1500};
+      var proposed={page:presetPrice(0),site:presetPrice(1),pwa:presetPrice(2),mobile:presetPrice(3)};
       return {value:Math.round((subtotal+(base.includes(key)?0:proposed[key]))*100)/100,
        conflict:base.some(function(k){return k!==key;})};
     },
