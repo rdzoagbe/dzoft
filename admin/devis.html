@@ -172,6 +172,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 <link rel="stylesheet" href="../assets/dzoft-experience.css?v=contrast-fix">
 <link rel="stylesheet" href="editor-unified.css?v=20261117-blue">
 <link rel="stylesheet" href="editor-navigation.css?v=20261117-blue">
+<link rel="stylesheet" href="../assets/quote-pricing.css?v=20261119-initial1">
 </head>
 <body class="dzoft-admin dzoft-editor">
 <div class="tools">
@@ -179,6 +180,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   <b>Devis <span id="sync" role="status" aria-live="polite" style="font-weight:400;font-size:12.5px;color:#9fb3c8;margin-left:6px"></span></b>
   <button class="tb sync-retry" type="button" id="b-retry" hidden>Réessayer l’enregistrement</button>
   <button class="tb" type="button" id="b-import">Importer une demande</button>
+  <button class="tb" type="button" id="b-estimate">Calculer un devis</button>
   <button class="tb" type="button" id="b-new">Nouveau devis</button>
   <a class="tb" id="b-follow" href="#" hidden>Fiche projet</a>
   <button class="tb" type="button" id="b-mail">Préparer l’e-mail</button>
@@ -192,6 +194,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   <div class="row"><button class="ibtn go" type="button" id="b-doimport">Remplir le devis</button><button class="ibtn" type="button" id="b-cancel">Annuler</button></div>
 </div>
 
+<section class="quote-estimator noprint" id="quote-estimator" aria-label="Calculateur du devis initial" hidden></section>
 <div class="accbanner noprint" id="accbanner" hidden></div>
 <main class="sheet" id="sheet">
   <div class="top">
@@ -293,6 +296,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 </main>
 
 <script src="sb.js?v=20261118-mfa7d"></script>
+<script src="../assets/quote-pricing.js?v=20261119-initial1"></script>
 <script>
 (function(){
   // Private page: only the signed-in owner can use it.
@@ -309,6 +313,9 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkMfaExpiry(); });
   setInterval(checkMfaExpiry, 60000);
   var QID = new URLSearchParams(location.search).get('q'), QSHARED = false, remoteTimer = null, lastTotal = 0;
+  // A saved quote must finish loading before it can be edited; a signed quote is never repriced.
+  var quoteLoaded = !QID, quoteAccepted = false;
+  document.getElementById('b-estimate').disabled = !!QID;
   var PRESETS = [
     {l:'Page de présentation', s:'Une page : activité, horaires, tarifs, contacts ; adaptée au téléphone.', parts:[
       ['Conception de la page', 'Structure, textes et mise en forme', 60],
@@ -545,6 +552,75 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     } else state.lines.push({l: p.l, s: p.s, q: 1, u: p.u, p: p.p});
     renderLines();
   }
+  // This advisor fills only current draft lines, not accepted_data, invoices or receipts.
+  function applyPricingPlan(plan){
+    if(!quoteLoaded||quoteAccepted)throw new Error('Devis signé ou en chargement : modification impossible.');
+    var selected=plan.package,old=state.lines;
+    function keyForBase(row){
+      if(!row.h)return '';
+      if(row.qpBase)return row.qpBase;
+      if(/^Application mobile/.test(row.l))return 'mobile';
+      if(row.l===PRESETS[2].l)return 'pwa';
+      if(row.l===PRESETS[1].l)return 'site';
+      if(row.l===PRESETS[0].l)return 'page';
+      return '';
+    }
+    var bases=old.map(keyForBase).filter(Boolean);
+    if(bases.some(function(key){return key!==selected.key;}))
+      throw new Error('Un autre forfait figure dans le devis. Retirez-le manuellement avant de choisir ce forfait.');
+    var next=old.map(function(l){return Object.assign({},l);}),addedBase=!bases.length;
+    if(addedBase){
+      var preset=PRESETS[selected.presetIndex];
+      next.push({h:1,l:preset.l,s:preset.s,qpBase:selected.key,pf:preset.pf});
+      preset.parts.forEach(function(x){next.push({l:x[0],s:x[1],q:1,u:'forfait',p:x[2],k:x[3]});});
+    }
+    var count=0;
+    function addItems(items,section){
+      var additions=[];
+      items.forEach(function(item){
+        var label=String(item.label||'').trim().slice(0,140),normal=window.DzoftQuotePricing.normalize(label);
+        if(!normal)return;
+        var id='quote-'+section+'-'+normal;
+        if(next.some(function(l){return l.qpKey===id||(!l.h&&window.DzoftQuotePricing.normalize(l.l)===normal);}))return;
+        additions.push({l:label,s:(section==='included'?'Inclus dans le forfait. ':'Prestation complémentaire. ')+String(item.description||'').slice(0,300),
+          q:1,u:'forfait',p:section==='included'?0:item.price,qpKey:id});
+        count++;
+      });
+      if(!additions.length)return;
+      var found=next.findIndex(function(l){return l.h&&l.qpSection===section;});
+      if(found<0){
+        next.push({h:1,l:section==='included'?'Prestations incluses dans le forfait':'Prestations supplémentaires',s:'Demandes revues avec le client pour ce devis.',qpSection:section});
+        next.push.apply(next,additions);
+      }else{
+        var end=found+1;while(end<next.length&&!next[end].h)end++;
+        next.splice.apply(next,[end,0].concat(additions));
+      }
+    }
+    addItems(plan.included,'included');
+    addItems(plan.extras,'extra');
+    if(addedBase||count){state.lines=next;renderLines();return true;}
+    throw new Error('Ces prestations figurent déjà dans le devis.');
+  }
+  var quoteEstimator=window.DzoftQuotePricing&&window.DzoftQuotePricing.attach($('quote-estimator'),{
+    packages:[
+      {key:'pwa',kind:'pwa',presetIndex:2,label:PRESETS[2].l,price:700},
+      {key:'mobile',kind:'mobile',presetIndex:3,label:PRESETS[3].l,price:1500},
+      {key:'site',kind:'site',presetIndex:1,label:PRESETS[1].l,price:400},
+      {key:'page',kind:'page',presetIndex:0,label:PRESETS[0].l,price:200}
+    ],
+    loadCatalog:function(){return sb.select('settings','select=price_blocks&id=eq.1')
+      .then(function(rows){return rows&&rows[0]&&rows[0].price_blocks||[];});},
+    initialKind:function(){
+      var head=state.lines.find(function(l){return l.h&&/^(Page de présentation|Site vitrine|Application web installable|Application mobile)/.test(l.l);});
+      if(!head)return 'pwa';
+      return /^Application mobile/.test(head.l)?'mobile':/^Site vitrine/.test(head.l)?'site':/^Page de présentation/.test(head.l)?'page':'pwa';
+    },
+    initialRequest:function(){return $('desc').innerText.trim().slice(0,4000);},
+    isLocked:function(){return !quoteLoaded||quoteAccepted;},
+    onClose:function(){$('b-estimate').focus();},
+    apply:applyPricingPlan
+  });
+  $('b-estimate').onclick=function(){if(quoteEstimator)quoteEstimator.open();};
   function setField(k, v){
     var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
     if (el.isContentEditable) el.innerText = v; else el.value = v;
@@ -642,6 +718,10 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       var q = rows && rows[0];
       if (!q) { $('sync').textContent = 'devis introuvable'; return; }
       QSHARED = !!q.shared;
+      quoteAccepted = !!q.accepted_at;
+      quoteLoaded = true;
+      $('b-estimate').disabled = quoteAccepted;
+      if(quoteAccepted)$('b-estimate').title = 'Devis signé : utilisez un supplément depuis le dossier client.';
       $('b-print').disabled = $('b-mail').disabled = $('b-wa').disabled = false;
       var d = q.data || {};
       apply(d);
