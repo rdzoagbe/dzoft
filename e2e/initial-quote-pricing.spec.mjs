@@ -89,3 +89,33 @@ test('initial-quote calculator remains readable without horizontal page overflow
  expect(dims.width).toBeLessThanOrEqual(dims.viewport);
  expect(dims.doc).toBeLessThanOrEqual(dims.viewport+1);
 });
+
+test('initial quote editor adds one base preset, included zero-euro scope and a reviewed paid extra',async({page})=>{
+ // Exercise the REAL quote editor with a synthetic owner session; no external API.
+ await page.route('**/admin/sb.js*',route=>route.fulfill({
+  status:200,contentType:'application/javascript',
+  body:"window.RDsb={session:()=>({user:{id:'synthetic'}}),aal:()=> 'aal2',mfaFresh:()=>true,select:()=>Promise.resolve([{price_blocks:[{label:'Connexion',description:'Authentification',price:90,scope:'pwa',words:['connexion']},{label:'Galerie photo',description:'Photos',price:100,scope:'extra',words:['galerie photo']}]}]),update:()=>{throw Error('No remote writes expected');},PORTAL:'https://example.org/espace/'};"
+ }));
+ await page.goto('admin/devis.html',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#b-estimate')).toBeEnabled();
+ await page.locator('#b-estimate').click();
+ await expect(page.locator('#quote-estimator')).toBeVisible();
+ await page.locator('[data-qpc-request]').fill('Une connexion et une galerie photo.');
+ await page.locator('[data-qpc-detect]').click();
+ await expect(page.locator('[data-qpc-select="catalogue-0"]')).toBeChecked();
+ await page.locator('[data-qpc-select="catalogue-1"]').check();
+ await page.locator('[data-qpc-apply]').click();
+ await expect(page.locator('#quote-estimator')).toBeHidden();
+ await expect(page.locator('#lines tr.grp')).toHaveCount(3);
+ await expect(page.locator('#t-ttc')).toContainText('800,00');
+ await expect(page.locator('#lines tr:not(.grp)')).toHaveCount(6);
+ const lines=await page.locator('#lines tr:not(.grp)').allTextContents();
+ expect(lines.some(x=>x.includes('Connexion')&&x.includes('0,00'))).toBe(true);
+ expect(lines.some(x=>x.includes('Galerie photo')&&x.includes('100,00'))).toBe(true);
+ // Applying the same suggestion twice must not add another paid line.
+ await page.locator('#b-estimate').click();
+ await page.locator('[data-qpc-request]').fill('Une connexion et une galerie photo.');
+ await page.locator('[data-qpc-detect]').click();
+ await expect(page.locator('[data-qpc-select="catalogue-1"]')).toBeDisabled();
+ await expect(page.locator('#t-ttc')).toContainText('800,00');
+});
