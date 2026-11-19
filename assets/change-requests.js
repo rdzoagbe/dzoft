@@ -676,7 +676,7 @@ function bindPrices(root,options){
   if(b.hasAttribute('data-block-remove')){var k=+b.dataset.blockRemove,copy=data.blocks.slice();if(!global.confirm(tr(en,'Retirer « '+(copy[k]&&copy[k].label||'')+' » de la liste ?','Remove “'+(copy[k]&&copy[k].label||'')+'” from the list?')))return;copy.splice(k,1);perform(saveBlocks(copy),tr(en,'Liste de prix enregistrée.','Price list saved.'));return;}
   if(b.hasAttribute('data-block-add')){
    var name=root.querySelector('[data-new-block-label]').value.trim(),
-    price=num(root.querySelector('[data-new-block-price]').value),
+    price=root.querySelector('[data-new-block-price]').value.trim()===''?NaN:num(root.querySelector('[data-new-block-price]').value),
     scope=root.querySelector('[data-new-block-scope]').value,
     desc=root.querySelector('[data-new-block-description]').value.trim(),
     words=root.querySelector('[data-new-block-words]').value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean).slice(0,12);
@@ -698,7 +698,7 @@ function bindPrices(root,options){
      w=root.querySelector('[data-block-words="'+i+'"]'),
      d=root.querySelector('[data-block-description="'+i+'"]'),
      sc=root.querySelector('[data-block-scope="'+i+'"]');
-    var price=p?num(p.value):Number(bl.price);
+    var price=p?(p.value.trim()===''?NaN:num(p.value)):Number(bl.price);
     var scope=sc?sc.value:(bl.scope||'extra');
     if(!Number.isFinite(price)||price<0||price>1000000||!['extra','pwa','mobile','both'].includes(scope))valid=false;
     return Object.assign({},bl,{
