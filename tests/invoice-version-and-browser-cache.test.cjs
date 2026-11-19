@@ -8,14 +8,16 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 test('desktop Chrome and installed phone have the same current release controls',()=>{
  const main=read('admin/index.html'),project=read('admin/suivi.html');
  for(const html of [main,project]){
-  assert.match(html,/update-notice\.js\?v=(?:20261115-update4|20261117-blue)/);
+  assert.match(html,/update-notice\.js\?v=20261119-release1/);
   assert.match(html,/workspace-flow\.css\?v=(?:20261115-update4|20261117-blue)/);
   assert.match(html,/updateViaCache: 'none'/);
  }
  const script=read('admin/update-notice.js');
  const release=JSON.parse(read('admin/release.json'));
- assert.equal(release.version,'2026.11.15.4');
- assert.match(script,/BUILD='2026\.11\.15\.4'/);
+ assert.equal(release.version,'2026.11.19.1');
+ assert.match(script,/BUILD='2026\.11\.19\.1'/);
+ assert.match(script,/function isNewer\(remote,local\)/);
+ assert.match(script,/Version publiée vérifiée/);
  assert.match(script,/cache:'no-store'/);
  assert.match(script,/dzoft-check-updates/);
  assert.match(script,/location\.replace\(url\.href\)/);
