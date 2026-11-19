@@ -2,7 +2,7 @@
 'use strict';
 /* DZOFT extra work after signature.
    Owner: prices the work line by line (from his price list or free lines), the server totals and numbers
-   the proposal (D-…-C1), "Envoyer au client" e-mails it. Client: reads the lines and signs with a code
+   the proposal (D-…-C1), owner reviews and shares from Outlook/WhatsApp, then confirms sharing. Client signs with a code
    received by e-mail, like the original quote, or declines. Approved work is then invoiced from its
    signed amount; the original quote, its invoices and payments never change. */
 var api={};
@@ -15,7 +15,7 @@ function cents(v){return Math.round(num(v)*100);}
 // Prices and quantities: at most two decimals, comma or point (what the server accepts).
 function amount(v){var t=String(v==null?'':v).trim();return /^-?\d{1,7}(?:[.,]\d{1,2})?$/.test(t)?num(t):NaN;}
 function labels(en){return {requested:tr(en,'À étudier','Awaiting review'),proposed:tr(en,'Proposition à signer','Awaiting signature'),approved:tr(en,'Signée','Signed'),declined:tr(en,'Refusée par le client','Declined by client'),rejected:tr(en,'Non retenue','Not proceeding'),withdrawn:tr(en,'Retirée','Withdrawn'),in_progress:tr(en,'Travaux en cours','In progress'),completed:tr(en,'Travaux terminés','Work completed')};}
-function eventLabels(en){var l=labels(en);l.sent=tr(en,'Envoyée par e-mail','Sent by e-mail');l.approved=tr(en,'Signée','Signed');l.proposed=tr(en,'Proposition chiffrée','Priced proposal');l.requested=tr(en,'Demande','Request');return l;}
+function eventLabels(en){var l=labels(en);l.sent=tr(en,'Partage déclaré','Sharing recorded');l.approved=tr(en,'Signée','Signed');l.proposed=tr(en,'Proposition chiffrée','Priced proposal');l.requested=tr(en,'Demande','Request');return l;}
 function history(r,en){var h=r.history||[],l=eventLabels(en);return '<details class="dzoft-change-history"><summary>'+tr(en,'Historique des décisions','Decision history')+' ('+h.length+')</summary><ol>'+h.map(function(e){return '<li>'+esc(l[e.event_type]||e.event_type)+' · '+esc(e.actor_type==='owner'?'DZOFT':'Client')+' · '+esc(when(e.at))+'</li>';}).join('')+'</ol></details>';}
 function stateError(err,en){
  var m=(err&&err.message)||'';
@@ -169,7 +169,7 @@ function calculator(en,blocks,target,tiers,edit){
   '<label>'+tr(en,'Conséquence sur le délai','Schedule impact')+'<input name="timeline" maxlength="600" value="'+esc(edit?r.timeline_impact||'':'')+'" placeholder=""'+tr(en,'Ex. : aucun changement ; + 3 jours','E.g. no change; +3 days')+'"></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="done"'+(edit&&r.already_done?' checked':'')+'><span>'+tr(en,'Travaux déjà réalisés : après la signature, ils pourront être facturés directement.','Work already done: once signed, it can be invoiced directly.')+'</span></label>'+
   '<label class="dzoft-change-check"><input type="checkbox" name="keep"'+(edit?'':' checked')+'><span>'+tr(en,'Ajouter les nouvelles lignes à ma liste de prix','Add new lines to my price list')+'</span></label>'+
-  '<p>'+tr(en,'« Créer le brouillon » : vous seul le voyez, pour le relire. « Envoyer au client » : il apparaît dans son espace et il le signe avec un code reçu par e-mail. Rien n’est dû tant qu’il ne l’a pas approuvé lui-même.','“Create the draft”: only you see it, to check it. “Send to client”: it appears in their space and they sign it with a code sent by e-mail. Nothing is owed until they approve it themselves.')+'</p>'+
+  '<p>'+tr(en,'« Créer le brouillon » : vous seul le voyez. Relisez, envoyez votre explication depuis Outlook ou WhatsApp, puis confirmez le partage manuel : le client pourra consulter et signer la proposition. Rien n’est dû sans son accord.','“Create draft”: only you can see it. Review, send your explanation from Outlook or WhatsApp, then confirm manual sharing so the client can review and sign. Nothing is owed without approval.')+'</p>'+
   '<div class="dzoft-change-actions"><button class="btn main" type="submit">'+(edit?tr(en,'Enregistrer le brouillon modifié','Save the edited draft'):target?tr(en,'Chiffrer cette demande','Price this request'):tr(en,'Créer le brouillon','Create the draft'))+'</button><button class="btn line" type="button" data-form-cancel="calc">'+tr(en,'Annuler','Cancel')+'</button></div></form>';
 }
 function priceList(en,blocks,defaultPrice,tiers){
@@ -190,14 +190,15 @@ function priceList(en,blocks,defaultPrice,tiers){
   :'<p>'+tr(en,'Votre liste se remplit quand vous créez une proposition avec « Ajouter les nouvelles lignes à ma liste de prix ».','Your list fills up when you create a proposal with “Add new lines to my price list”.')+'</p>')+'</div>';
 }
 function adminCard(r,en,invoice,blocks,tiers){
- // A proposal is a draft, seen only by the owner, until « Envoyer au client » (17 Nov 2026, server-side too).
- var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(labels(en)[r.status]||r.status);
+ // A proposal is a draft, seen only by the owner, until explicit manual-share acknowledgement (server enforced).
+ var draft=r.status==='proposed'&&!r.sent_at,status=draft?tr(en,'Brouillon · visible par vous seul','Draft · only you can see it'):(r.status==='proposed'&&r.sent_at?tr(en,'Partagée · signature attendue','Shared · awaiting signature'):(labels(en)[r.status]||r.status));
  var h='<article class="dzoft-change-item'+(draft?' dzoft-change-draft':'')+'" data-change-card="'+esc(r.id)+'"><header><b>'+esc(r.title)+(r.proposal_number?' · '+esc(r.proposal_number):'')+'</b><span class="dzoft-change-status">'+esc(status)+'</span></header>'+
  (r.description&&r.description!=='Proposition établie par DZOFT.'?'<p>'+esc(r.description)+'</p>':'')+
  '<p class="dzoft-change-meta">'+tr(en,'Créée le ','Created on ')+esc(when(r.created_at))+'</p>'+proposalBlock(r,en);
  if(r.status==='proposed'){
-  h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Renvoyer au client par e-mail','Send again by e-mail'):tr(en,'Envoyer au client','Send to client'))+'</button></div>'+
-   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Envoyée le ','Sent on ')+esc(when(r.sent_at))+tr(en,'. En attente de la signature du client.','. Waiting for the client’s signature.')+'</p>':'<p class="dzoft-change-meta dzoft-change-draft-note">'+tr(en,'Brouillon : le client ne le voit pas encore. Relisez les lignes et le total ci-dessus (c’est ce qu’il verra), modifiez-le si besoin (« Modifier ce brouillon »), puis « Envoyer au client » : il apparaîtra dans son espace et il recevra un e-mail pour le signer.','Draft: the client cannot see it yet. Check the lines and total above (this is what they will see), change it if needed (“Edit this draft”), then “Send to client”: it appears in their space and they get an e-mail to sign it.')+'</p>');
+  h+='<div class="dzoft-change-actions"><button class="btn main sm" type="button" data-change-send="'+esc(r.id)+'">'+(r.sent_at?tr(en,'Préparer une explication dans Outlook / WhatsApp','Prepare an explanation in Outlook / WhatsApp'):tr(en,'Relire et préparer mon message','Review and prepare my message'))+'</button></div>'+
+   (r.sent_at?'<p class="dzoft-change-meta">'+tr(en,'Partagée le ','Shared on ')+esc(when(r.sent_at))+tr(en,'. Signature non encore enregistrée. L’ouverture d’un brouillon n’envoie rien.','. Signature not yet recorded. Opening a draft does not send anything.')+'</p>':
+   '<p class="dzoft-change-meta dzoft-change-draft-note">'+tr(en,'Brouillon privé : relisez le supplément, envoyez votre explication depuis Outlook ou WhatsApp, puis confirmez séparément le partage manuel. Aucun e-mail automatique.','Private draft: review the proposal, send your explanation from Outlook or WhatsApp, then confirm manual sharing separately. No automatic email.')+'</p>');
  }
  if(r.status==='requested')h+='<details class="dzoft-change-new"><summary>'+tr(en,'Chiffrer cette demande','Price this request')+'</summary>'+calculator(en,blocks,r,tiers)+'</details>';
  // An unsent draft can be changed in place (lines, prices, discount): the server keeps its number and it stays a draft.
@@ -234,7 +235,7 @@ function bindOwner(root,options){
  function refresh(){return Promise.all([sb.rpc('owner_list_change_requests',{p_quote:quoteId},true),loadBlocks()]).then(function(res){records=Array.isArray(res[0])?res[0]:[];
   var keepOpen=root.querySelector('.dzoft-change-new[data-new-proposal]');keepOpen=keepOpen&&keepOpen.open;
   root.querySelector('.dzoft-change-content').innerHTML=
-  '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Chiffrez les travaux, envoyez la proposition, puis attendez la signature du client (code reçu par e-mail) avant de les facturer.','A request is not an order. Price the work, send the proposal, then wait for the client’s signature (code sent by e-mail) before invoicing.')+'</p>'+
+  '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Chiffrez les travaux, relisez et expliquez-les depuis Outlook ou WhatsApp. Après votre envoi manuel, confirmez le partage pour permettre la signature du client avant toute facturation.','A request is not an order. Price the work and explain it using Outlook or WhatsApp. After sending manually, confirm sharing to enable client signature before any invoicing.')+'</p>'+
   '<details class="dzoft-change-new" data-new-proposal'+(keepOpen?' open':'')+'><summary>'+tr(en,'＋ Proposer un complément chiffré','＋ Propose priced additional work')+'</summary>'+calculator(en,blocks,null,tiers)+'</details>'+
   '<p class="dzoft-change-note dzoft-price-link">'+tr(en,'Ma liste de prix ('+blocks.length+' prestation(s), '+tiers.length+' niveau(x)) se gère dans ','My price list ('+blocks.length+' item(s), '+tiers.length+' level(s)) is managed in ')+'<a href="./#/catalogue">'+tr(en,'Catalogue (Prestations)','Service catalogue')+'</a>.</p>'+
   (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
@@ -373,6 +374,75 @@ function bindOwner(root,options){
   var d=t?tierDetail(t,row.dataset.when):(row.dataset.when||'');row.querySelector('[name=detail]').value=d;row.querySelector('[data-line-detail]').textContent=d;
   var pr=row.querySelector('[name=price]');if(t){pr.value=String(t.price).replace('.',',');}else{pr.value='';pr.setAttribute('data-unpriced','');pr.focus();}
   var o=row.querySelector('[data-line-origin]');if(o)o.remove();recalc(sel.closest('form'));});
+ function openManualShare(proposal){
+  if(document.getElementById('dzoft-change-manual-share'))return;
+  var opt=root.__dzoftOwnerOptions||{},email=String(opt.clientEmail||'').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))email='';
+  var number=String(opt.clientPhone||'').replace(/[\s().-]/g,'').replace(/^00/,'').replace(/^\+/,'');
+  if(/^0[67]\d{8}$/.test(number))number='33'+number.slice(1);
+  if(!/^[1-9]\d{7,14}$/.test(number))number='';
+  var secretMode=!opt.clientUserId&&!!opt.clientPortalToken;
+  var url=secretMode?(sb.PORTAL||'')+'#'+encodeURIComponent(String(opt.clientPortalToken)):
+    (sb.PORTAL||'')+'?projet='+encodeURIComponent(quoteId);
+  var title='Proposition complémentaire '+String(proposal.proposal_number||'')+' · DZOFT';
+  var lines=(Array.isArray(proposal.lines)?proposal.lines:[]).map(function(x){return '– '+String(x.label||'')+' : '+cash(Number(x.qty||1)*Number(x.price||0));}).join('\n');
+  var msg='Bonjour,\n\nJe vous présente une proposition complémentaire au devis initial '+String(opt.quoteNumber||'')+'.\n\n'+
+   'Les prestations suivantes ont été demandées après la signature du devis et sont chiffrées séparément :\n'+lines+
+   '\n\nMontant proposé pour ces ajouts : '+cash(proposal.extra_price)+'. Le devis initial et les paiements déjà reçus ne changent pas.\n\n'+
+   'Vous pouvez consulter la proposition dans votre espace client : '+url+'.\n\n'+
+   'Aucun supplément ne sera facturé sans votre accord et votre signature. Je reste disponible pour en discuter avant toute décision.\n\nCordialement,\nRoland — DZOFT';
+  var d=document.createElement('dialog');d.id='dzoft-change-manual-share';d.className='dzoft-change-manual-dialog';
+  d.innerHTML='<h2>'+tr(en,'Relire avant de partager','Review before sharing')+' · '+esc(proposal.proposal_number||'')+'</h2>'+
+   '<p>'+tr(en,'Ceci est une <b>proposition de travaux complémentaires</b>, pas une nouvelle facture. Aucun envoi automatique.','This is an <b>extra-work proposal</b>, not a new invoice. Nothing is automatically sent.')+'</p>'+
+   '<label>'+tr(en,'Destinataire e-mail','Email recipient')+'<input data-share-email type="email" value="'+esc(email)+'" placeholder="client@example.com"'+(secretMode?' readonly':'')+'></label>'+ 
+   (secretMode?'<p class="dzoft-change-help">'+tr(en,'Lien privé : le destinataire e-mail est verrouillé sur la fiche client afin de ne pas divulguer le lien secret. Pour changer cette adresse, modifiez la fiche client.','Private link: email recipient is locked to the client record to avoid exposing the secret link. Edit the client record to change the address.')+'</p>':'')+
+   '<label>'+tr(en,'Objet','Subject')+'<input data-share-subject type="text" maxlength="240" value="'+esc(title)+'"></label>'+
+   '<label>'+tr(en,'Votre explication (modifiable)','Your explanation (editable)')+'<textarea data-share-body rows="13" maxlength="12000">'+esc(msg)+'</textarea></label>'+
+   '<div class="dzoft-change-actions"><button type="button" class="btn main" data-share-outlook>'+tr(en,'Ouvrir dans Outlook (Hotmail)','Open in Outlook (Hotmail)')+'</button></div>'+
+   '<p>'+tr(en,'Vérifiez que votre compte Hotmail est connecté avant d’envoyer. Ouvrir le brouillon ne marque rien comme envoyé.','Check your Hotmail account before sending. Opening the draft never marks it sent.')+'</p>'+
+   '<label>'+tr(en,'WhatsApp du client','Client WhatsApp')+'<input data-share-phone type="tel" value="'+esc(number?'+'+number:'')+'"></label>'+
+   '<div class="dzoft-change-actions"><button type="button" class="btn line" data-share-wa>'+tr(en,'Ouvrir dans WhatsApp','Open in WhatsApp')+'</button></div>'+
+   (!proposal.sent_at?'<div class="dzoft-change-manual-confirm"><label><input type="checkbox" data-share-checked> '+tr(en,'J’ai personnellement envoyé ce message au client.','I personally sent this message to the client.')+'</label><button type="button" class="btn main" data-share-confirm disabled>'+tr(en,'Confirmer mon envoi manuel','Confirm manual sending')+'</button></div>':
+    '<p>'+tr(en,'Le client peut déjà voir cette proposition. Rédiger un nouveau message ne déclenche pas d’e-mail automatique.','The client can already see this proposal. Preparing another message will not trigger automatic mail.')+'</p>')+
+   '<p data-share-status role="status"></p><button class="btn line" type="button" data-share-close>'+tr(en,'Fermer sans envoyer','Close without sending')+'</button>';
+  document.body.appendChild(d);
+  var q=function(css){return d.querySelector(css);};
+  q('[data-share-close]').onclick=function(){d.close();};
+  d.addEventListener('close',function(){d.remove();});
+  q('[data-share-outlook]').onclick=function(){
+   var to=q('[data-share-email]').value.trim(),subject=q('[data-share-subject]').value.trim(),body=q('[data-share-body]').value.trim();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||!subject||!body){q('[data-share-status]').textContent=tr(en,'Vérifiez destinataire, objet et message.','Check recipient, subject and message.');return;}
+   var compose='https://outlook.live.com/mail/0/deeplink/compose?to='+encodeURIComponent(to)+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+   var w=global.open(compose,'_blank');if(w)w.opener=null;else q('[data-share-status]').textContent=tr(en,'Autorisez les fenêtres contextuelles.','Allow pop-ups.');
+  };
+  q('[data-share-wa]').onclick=function(){
+   var digits=q('[data-share-phone]').value.replace(/[\s().-]/g,'').replace(/^00/,'').replace(/^\+/,'');
+   if(/^0[67]\d{8}$/.test(digits))digits='33'+digits.slice(1);
+   if(!/^[1-9]\d{7,14}$/.test(digits)){q('[data-share-status]').textContent=tr(en,'Indiquez un numéro WhatsApp valide.','Enter a valid WhatsApp number.');return;}
+   var body=q('[data-share-body]').value.trim();if(!body)return;
+   if(secretMode&&!global.confirm(tr(en,'Ce message contient un lien privé donnant accès au dossier. Avez-vous vérifié que ce numéro est bien celui du client ?','This message contains a private case-access link. Have you verified the WhatsApp number belongs to the client?')))return;
+   var w=global.open('https://wa.me/'+digits+'?text='+encodeURIComponent(body),'_blank');if(w)w.opener=null;
+  };
+  if(!proposal.sent_at){
+   q('[data-share-checked]').onchange=function(){q('[data-share-confirm]').disabled=!this.checked;};
+   q('[data-share-confirm]').onclick=function(){
+    if(!q('[data-share-checked]').checked||busy)return;
+    if(!global.confirm(tr(en,'Avez-vous réellement envoyé ce message vous-même ? Le client pourra ensuite consulter et signer la proposition. DZOFT n’enverra pas d’e-mail.','Did you really send the message yourself? The client can then view and sign the proposal. DZOFT will send no email.')))return;
+    q('[data-share-confirm]').disabled=true;
+    busy=true;
+    sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true)
+     .then(function(){
+       if(d.open)d.close();
+       banner(root,tr(en,'Partage manuel confirmé, sans e-mail automatique.','Manual sharing confirmed without automatic email.'),false);
+       return refresh();
+     }).catch(function(err){
+       q('[data-share-status]').textContent=stateError(err,en);
+       q('[data-share-confirm]').disabled=false;
+     }).finally(function(){busy=false;});
+   };
+  }
+  d.showModal();
+ }
  root.addEventListener('click',function(ev){
   var b=ev.target.closest('button');if(!b)return;
   var form=b.closest('form[data-change-offer]');
@@ -387,9 +457,12 @@ function bindOwner(root,options){
    banner(root,found?tr(en,found+' prestation(s) repérée(s) : vérifiez-les.',found+' item(s) found: please check them.'):tr(en,'Rien de repéré dans votre liste : ajoutez des lignes libres.','Nothing found in your list: add free lines.'),!found);return;
   }
   if(busy)return;
-  if(b.dataset.changeSend){if(!global.confirm(tr(en,'Envoyer cette proposition au client ? Elle deviendra visible dans son espace et il recevra un e-mail pour la lire et la signer.','Send this proposal to the client? It becomes visible in their space and they get an e-mail to read and sign it.')))return;
-   perform(sb.rpc('owner_send_change_proposal',{p_request:b.dataset.changeSend},true).then(function(r){if(typeof sb.fn==='function')sb.fn('process-notification-outbox',{}).catch(function(){});return r;}),tr(en,'E-mail mis en file d’envoi.','E-mail queued.'));return;}
-  if(b.dataset.changeInvoice){var record=records.filter(function(r){return r.id===b.dataset.changeInvoice;})[0],issue=(root.__dzoftOwnerOptions||{}).onInvoice;if(record&&typeof issue==='function')issue(record,b);return;}
+  if(b.dataset.changeSend){
+    var proposal=records.filter(function(r){return r.id===b.dataset.changeSend;})[0];
+    if(proposal)openManualShare(proposal);
+    return;
+   }
+   if(b.dataset.changeInvoice){var record=records.filter(function(r){return r.id===b.dataset.changeInvoice;})[0],issue=(root.__dzoftOwnerOptions||{}).onInvoice;if(record&&typeof issue==='function')issue(record,b);return;}
   if(b.dataset.changeProgress){var next=b.dataset.next;if(next!=='in_progress'&&next!=='completed')return;if(!global.confirm(next==='completed'?tr(en,'Confirmer que ces travaux sont terminés ? Ils pourront ensuite être facturés.','Confirm this work is complete? It can then be invoiced.'):tr(en,'Démarrer ces travaux complémentaires ?','Start this additional work?')))return;perform(sb.rpc('owner_progress_change',{p_request:b.dataset.changeProgress,p_status:next},true));return;}
  });
  root.addEventListener('submit',function(ev){var f=ev.target;if(!f.matches('[data-change-offer],[data-change-reject]'))return;ev.preventDefault();if(busy||!f.reportValidity())return;
@@ -401,12 +474,12 @@ function bindOwner(root,options){
    lines=lines.map(function(l){var o={label:l.label,qty:cents(l.qty)/100,price:cents(l.price)/100};if(l.source)o.source=l.source;if(l.detail)o.detail=l.detail;if(l.level)o.level=l.level;return o;});
    var total=lines.reduce(function(n,l){return n+Math.round(l.qty*l.price*100);},0)/100;
    if(!(total>0)){banner(root,tr(en,'Le total doit rester positif après la remise.','The total must stay positive after the discount.'),true);return;}
-   if(!global.confirm(f.hasAttribute('data-edit')?tr(en,'Enregistrer ce brouillon à '+cash(total)+' ? Il reste visible par vous seul jusqu’à « Envoyer au client ».','Save this draft at '+cash(total)+'? It stays visible to you only until “Send to client”.'):tr(en,'Créer ce brouillon de '+cash(total)+' ? Vous seul le voyez : rien n’est visible par le client avant « Envoyer au client ».','Create this '+cash(total)+' draft? Only you can see it: nothing is visible to the client before “Send to client”.')))return;
+   if(!global.confirm(f.hasAttribute('data-edit')?tr(en,'Enregistrer ce brouillon à '+cash(total)+' ? Il reste privé jusqu’à la confirmation d’un partage manuel.','Save this draft at '+cash(total)+'? It stays private until you confirm manual sharing.'):tr(en,'Créer ce brouillon de '+cash(total)+' ? Vous seul le voyez : le client ne le voit pas avant votre confirmation d’envoi manuel.','Create this '+cash(total)+' draft? Only you can see it: the client cannot see it before you confirm manual sharing.')))return;
    var known=blocks.map(function(bl){return bl.label;}),fresh=f.elements.keep.checked?lines.filter(function(l){return l.price>0&&!l.source&&known.indexOf(l.label)<0;}).map(function(l){return {label:l.label,price:l.price,words:words(l.label).slice(0,6)};}):[];
    var call=f.dataset.for?sb.rpc('owner_price_change_request',{p_request:f.dataset.for,p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true)
     :sb.rpc('owner_create_priced_proposal',{p_quote:quoteId,p_title:f.elements.title.value.trim(),p_lines:lines,p_timeline:f.elements.timeline.value.trim(),p_already_done:f.elements.done.checked},true);
    perform(call.then(function(r){return fresh.length?saveBlocks(blocks.concat(fresh)).catch(function(){}).then(function(){return r;}):r;}),
-    f.hasAttribute('data-edit')?tr(en,'Brouillon modifié : relisez-le ci-dessous, puis « Envoyer au client ».','Draft updated: check it below, then “Send to client”.'):tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
+    f.hasAttribute('data-edit')?tr(en,'Brouillon modifié : relisez-le ci-dessous, puis préparez un message Outlook ou WhatsApp.','Draft updated: check it below, then prepare an Outlook or WhatsApp message.'):tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
    return;
   }
   if(f.dataset.changeReject){if(!global.confirm(tr(en,'Retirer ou refuser cette proposition ?','Withdraw or reject this proposal?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
