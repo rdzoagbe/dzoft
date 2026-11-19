@@ -50,7 +50,10 @@ test('English UI explanation remains coherent and dynamically sourced',()=>{
 });
 test('manual delivery remains explicitly review-first and never queues a message',()=>{
  const form=ui.slice(ui.indexOf('function openManualShare(proposal){'),ui.indexOf("root.addEventListener('click'",ui.indexOf('function openManualShare(proposal){')));
- assert.match(form,/var msg=proposalExplanation\(proposal,opt,url,en\)/);
+ assert.match(form,/var message=proposalExplanation\(proposal,opt,url,false\)/);
+ assert.match(form,/var lang='fr'/);
+ assert.match(form,/data-share-preview/);
+ assert.match(form,/\[data-share-preview\]'\)\.textContent/);
  assert.match(form,/data-share-body/);
  assert.match(form,/data-share-outlook/);
  assert.match(form,/data-share-wa/);
