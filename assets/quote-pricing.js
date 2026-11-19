@@ -81,9 +81,9 @@
    var starting=current&&Number.isFinite(current.value)?current.value:p.price;
    $('[data-qpc-total]').textContent=euro(starting+extra);
   }
-  function render(){
+  function render(preserveSelections){
    var p=chosenPackage(),items=allItems();
-   root.querySelectorAll('[data-qpc-select]').forEach(function(c){if(!c.disabled)selected[c.dataset.qpcSelect]=c.checked;});
+   if(preserveSelections!==false)root.querySelectorAll('[data-qpc-select]').forEach(function(c){if(!c.disabled)selected[c.dataset.qpcSelect]=c.checked;});
    last=items;
    var included=items.included,extras=items.extras;
    preview.innerHTML='<div class="qpc-package"><span>Forfait sélectionné</span><strong>'+esc(p.label)+' · '+euro(p.price)+'</strong></div>'+
@@ -154,7 +154,7 @@
     }catch(e){error(e&&e.message||'Application impossible : vérifiez le devis.');}
    }
   });
-  kind.addEventListener('change',function(){selected={};if(last)render();});
+  kind.addEventListener('change',function(){selected={};if(last)render(false);});
   request.addEventListener('input',function(){selected={};last=null;apply.disabled=true;preview.innerHTML='<p class="qpc-muted">Demande modifiée : cliquez sur « Analyser la demande » pour actualiser le prix.</p>';$('[data-qpc-total]').textContent='—';});
   root.addEventListener('change',function(ev){if(ev.target.matches('[data-qpc-select]')){selected[ev.target.dataset.qpcSelect]=ev.target.checked;updateTotal();}});
   return {open:open,close:close,refreshCatalog:refreshCatalog};
