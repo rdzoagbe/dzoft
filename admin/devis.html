@@ -554,19 +554,22 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   }
   // This advisor fills only current draft lines, not accepted_data, invoices or receipts.
   function presetPrice(index){return PRESETS[index].parts.reduce(function(sum,line){return sum+line[2];},0);}
+  // Legacy quote data can hold a whole package as ONE priced row instead of
+  // a heading followed by the priced preset parts. Recognize both forms.
+  // Never silently replace a negotiated legacy price with today's preset price.
+  function quoteBaseKey(row){
+    if(!row)return '';
+    if(row.qpBase)return row.qpBase;
+    if(/^Application mobile/.test(row.l||''))return 'mobile';
+    if(row.l===PRESETS[2].l)return 'pwa';
+    if(row.l===PRESETS[1].l)return 'site';
+    if(row.l===PRESETS[0].l)return 'page';
+    return '';
+  }
   function applyPricingPlan(plan){
     if(!quoteLoaded||quoteAccepted)throw new Error('Devis signé ou en chargement : modification impossible.');
     var selected=plan.package,old=state.lines;
-    function keyForBase(row){
-      if(!row.h)return '';
-      if(row.qpBase)return row.qpBase;
-      if(/^Application mobile/.test(row.l))return 'mobile';
-      if(row.l===PRESETS[2].l)return 'pwa';
-      if(row.l===PRESETS[1].l)return 'site';
-      if(row.l===PRESETS[0].l)return 'page';
-      return '';
-    }
-    var bases=old.map(keyForBase).filter(Boolean);
+    var bases=old.map(quoteBaseKey).filter(Boolean);
     if(bases.some(function(key){return key!==selected.key;}))
       throw new Error('Un autre forfait figure dans le devis. Retirez-le manuellement avant de choisir ce forfait.');
     var next=old.map(function(l){return Object.assign({},l);}),addedBase=!bases.length;
@@ -612,9 +615,8 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     loadCatalog:function(){return sb.select('settings','select=price_blocks&id=eq.1')
       .then(function(rows){return rows&&rows[0]&&rows[0].price_blocks||[];});},
     initialKind:function(){
-      var head=state.lines.find(function(l){return l.h&&/^(Page de présentation|Site vitrine|Application web installable|Application mobile)/.test(l.l);});
-      if(!head)return 'pwa';
-      return /^Application mobile/.test(head.l)?'mobile':/^Site vitrine/.test(head.l)?'site':/^Page de présentation/.test(head.l)?'page':'pwa';
+      var base=state.lines.map(quoteBaseKey).filter(Boolean);
+      return base[0]||'pwa';
     },
     initialRequest:function(){return $('desc').innerText.trim().slice(0,4000);},
     isAlreadyQuoted:function(item){
@@ -622,9 +624,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       return state.lines.some(function(l){return !l.h&&window.DzoftQuotePricing.normalize(l.l)===n;});
     },
     currentTotal:function(key){
-      var names={page:PRESETS[0].l,site:PRESETS[1].l,pwa:PRESETS[2].l,mobile:PRESETS[3].l};
-      var base=state.lines.filter(function(l){return l.h&&(l.qpBase||l.l===names.page||l.l===names.site||l.l===names.pwa||/^Application mobile/.test(l.l));})
-       .map(function(l){return l.qpBase||(/^Application mobile/.test(l.l)?'mobile':Object.keys(names).find(function(k){return names[k]===l.l;}));});
+      var base=state.lines.map(quoteBaseKey).filter(Boolean);
       var subtotal=state.lines.reduce(function(sum,l){return sum+(!l.h&&!l.o&&l.u!=='mois'?((Number(l.q)||0)*(Number(l.p)||0)):0);},0);
       var proposed={page:presetPrice(0),site:presetPrice(1),pwa:presetPrice(2),mobile:presetPrice(3)};
       return {value:Math.round((subtotal+(base.includes(key)?0:proposed[key]))*100)/100,
