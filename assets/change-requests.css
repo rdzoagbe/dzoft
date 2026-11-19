@@ -282,3 +282,13 @@
  color:#4f20bc;font-weight:850;padding:10px 12px;margin:6px 0;font-size:15px;
 }
 .dzoft-change-manual-v2 .dzoft-share-preview-link{color:#5427c5;overflow-wrap:anywhere;text-decoration:underline}
+
+/* Editable service catalogue: package scope applies only to initial quotations. */
+.dzoft-block-new{border:1px solid #dce5f2;border-radius:14px;padding:16px;margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 15px}
+.dzoft-block-new legend{padding:0 7px;font-size:14px;font-weight:800;color:#24365c}
+.dzoft-block-new label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#49617e;font-weight:700}
+.dzoft-block-new input,.dzoft-block-new select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #ced9e9;border-radius:9px;padding:10px;background:#fff;color:#1e2a42;font:inherit}
+.dzoft-block-new button{grid-column:1/-1;justify-self:start}
+.dzoft-price-list [data-block-description],.dzoft-price-list [data-block-scope]{min-width:155px;max-width:290px}
+.dzoft-price-list [data-block-scope]{padding:7px}
+@media(max-width:700px){.dzoft-block-new{grid-template-columns:1fr;padding:13px}.dzoft-block-new button{width:100%}}

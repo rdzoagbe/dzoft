@@ -1,11 +1,12 @@
 {
-  "version": "2026.11.19.1",
+  "version": "2026.11.19.2",
   "features": [
     "unified-search",
     "invoice-amount-explanation",
     "desktop-phone-update",
     "manual-invoice-outlook-whatsapp-drafts",
     "manual-supplementary-proposal-sharing",
-    "owner-only-proposal-sharing-security"
+    "owner-only-proposal-sharing-security",
+    "initial-quote-pricing"
   ]
 }
