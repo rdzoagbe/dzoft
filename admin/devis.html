@@ -304,13 +304,19 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   if (!sb || !sb.session()) { location.replace('./'); return; }
   var MFA_WINDOW = 7 * 24 * 60 * 60; // second factor asked again every 7 days (Roland, 18 Nov 2026)
   function checkMfaExpiry(){
-    if (sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return false;
+    // Expired MFA *or* an AAL1 downgrade must return to the server-verified
+    // owner gate before any private project or quote data is rendered.
+    if (sb.aal() === 'aal2' && sb.mfaFresh(MFA_WINDOW)) return false;
+    // Do not leave an already-rendered project or quote visible while
+    // navigation waits for the owner verification screen to load.
+    document.documentElement.style.visibility = 'hidden';
     var back = location.pathname.split('/').pop() + location.search + location.hash;
     location.replace('./?return=' + encodeURIComponent(back));
     return true;
   }
   if (checkMfaExpiry()) return;
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkMfaExpiry(); });
+  window.addEventListener('focus', checkMfaExpiry);
   setInterval(checkMfaExpiry, 60000);
   var QID = new URLSearchParams(location.search).get('q'), QSHARED = false, remoteTimer = null, lastTotal = 0;
   // A saved quote must finish loading before it can be edited; a signed quote is never repriced.

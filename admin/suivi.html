@@ -483,13 +483,19 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
   if (!sb || !sb.session()) { location.replace('./'); return; }
   var MFA_WINDOW = 7 * 24 * 60 * 60; // second factor asked again every 7 days (Roland, 18 Nov 2026)
   function checkMfaExpiry(){
-    if (sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return false;
+    // Expired MFA *or* an AAL1 downgrade must return to the server-verified
+    // owner gate before any private project or quote data is rendered.
+    if (sb.aal() === 'aal2' && sb.mfaFresh(MFA_WINDOW)) return false;
+    // Do not leave an already-rendered project or quote visible while
+    // navigation waits for the owner verification screen to load.
+    document.documentElement.style.visibility = 'hidden';
     var back = location.pathname.split('/').pop() + location.search + location.hash;
     location.replace('./?return=' + encodeURIComponent(back));
     return true;
   }
   if (checkMfaExpiry()) return;
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkMfaExpiry(); });
+  window.addEventListener('focus', checkMfaExpiry);
   setInterval(checkMfaExpiry, 60000);
   var QID = new URLSearchParams(location.search).get('q');
   if (!QID) { location.replace('./'); return; }
@@ -1705,7 +1711,7 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:14px}
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function(){}); });
 </script>
 <script src="project-workspace.js?v=20261117-onepage" defer></script>
-<script src="update-notice.js?v=20261120-balance2" defer></script>
+<script src="update-notice.js?v=20261120-sessionlock3" defer></script>
 <script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
 <script src="project-summary.js?v=20261118-onebutton"></script>
 <script src="project-workspace-tabs.js?v=20261117-onepage2" defer></script>

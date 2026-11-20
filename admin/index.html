@@ -670,6 +670,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function returnAfterAuth(){
     var target = safeReturnTarget();
     if (!target) return false;
+    // A recovery account with no enrolled factor can reach the owner
+    // dashboard under the existing server policy, but auxiliary pages now
+    // require AAL2. Send that account to MFA setup instead of looping back
+    // endlessly between a private page and the login gate.
+    if (!sb.mfaFresh(MFA_WINDOW)) {
+      location.replace('./#/parametres');
+      return true;
+    }
     location.replace('./' + target);
     return true;
   }
@@ -786,11 +794,25 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   $('mfa-out').onclick = logoutPrivateWorkspace;
   $('b-out').onclick = logoutPrivateWorkspace;
 
+  // Lock the visible private UI synchronously, BEFORE waiting on Auth or an
+  // owner RPC. Revoke in-flight load generations so old responses cannot
+  // repopulate financial views after the assurance level expires.
+  function hideOwnerForRecheck(){
+    if ($('app').hidden) return;
+    $('app').hidden = true;
+    document.querySelectorAll('.modal').forEach(function(box){ box.hidden = true; });
+    activeOwnerId = null;
+    loadGeneration++;
+    loadReady = false;
+  }
   function start(){
     if (startPending) return;
+    // The client may have been visible before this recheck. Shield it while
+    // the server validates the account, even if the network never responds.
+    hideOwnerForRecheck();
     startPending = true;
     sb.me().then(function(u){
-      if (!u) { startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login'); return; }
+      if (!u) { startPending = false; hideOwnerForRecheck(); $('auth').hidden = false; showForm('f-login'); return; }
       // A verified factor must be recent before any admin data is shown.
       var f = factorOf(u, 'totp') || factorOf(u, 'webauthn');
       if (f && !sb.mfaFresh(MFA_WINDOW)) { startPending = false; askSecondFactor(u); return; }
@@ -809,14 +831,21 @@ td select{width:auto;padding:4px 6px;font-size:13px}
         $('auth').hidden = true; $('app').hidden = false; $('who').textContent = u.email;
         sb.rpc('register_notification_owner', {}, true).then(function(){ return sb.fn('process-notification-outbox', {}); }).catch(function(){});
         fromHash(); loadAll(); loadSettings(); renderMfa(u); renderDevicePasskeys(u);
-      }, function(){ startPending = false; $('app').hidden = true; $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
-    }, function(){ startPending = false; $('auth').hidden = false; showForm('f-login'); });
+      }, function(){ startPending = false; hideOwnerForRecheck(); $('auth').hidden = false; showForm('f-login', 'Vérification du compte impossible. Réessayez.'); });
+    }, function(){ startPending = false; hideOwnerForRecheck(); $('auth').hidden = false; showForm('f-login', 'Session non vérifiable. Reconnectez-vous ou réessayez.'); });
   }
   function checkMfaExpiry(){
-    if (document.hidden || $('auth').hidden === false || $('app').hidden || sb.aal() !== 'aal2' || sb.mfaFresh(MFA_WINDOW)) return;
+    if (document.hidden || $('auth').hidden === false || $('app').hidden) return;
+    // A downgrade to AAL1 must ALSO lock the view; never treat it as a reason
+    // to skip revalidation. Server-side is_owner() remains authoritative.
+    if (sb.aal() === 'aal2' && sb.mfaFresh(MFA_WINDOW)) return;
+    hideOwnerForRecheck();
+    $('auth').hidden = false;
+    showForm('f-login', 'Votre vérification de sécurité a expiré. Confirmez votre identité pour continuer.');
     start();
   }
   document.addEventListener('visibilitychange', checkMfaExpiry);
+  window.addEventListener('focus', checkMfaExpiry);
   setInterval(checkMfaExpiry, 60000);
 
   /* ---------------- data ---------------- */
@@ -2000,7 +2029,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="simplified-ui.js?v=20261117-nav7"></script>
 <script src="case-finder.js?v=20261117-cards"></script>
 <script src="installed-app-menu.js?v=20261119-audit-nav"></script>
-<script src="update-notice.js?v=20261120-balance2"></script>
+<script src="update-notice.js?v=20261120-sessionlock3"></script>
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261118-backup"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
