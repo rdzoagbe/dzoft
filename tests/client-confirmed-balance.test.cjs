@@ -58,7 +58,7 @@ test('a subsequent server snapshot automatically updates remaining funds',()=>{
 
 test('invalid data fails closed instead of displaying a fabricated zero',()=>{
  const render=makeSummary('fr');
- for(const value of [null,{}, {total:1500,received:null,remaining:NaN},
+ for(const value of [null,{}, {total:1500,received:null,remaining:1000},{total:1500,received:null,remaining:NaN},
    {total:1500,received:500,remaining:-50},{total:Infinity,received:500,remaining:1000}]){
   const out=render(value);
   assert.match(out,/Solde indisponible/);
