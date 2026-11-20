@@ -799,6 +799,9 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   }
   function start(){
     if (startPending) return;
+    // The client may have been visible before this recheck. Shield it while
+    // the server validates the account, even if the network never responds.
+    hideOwnerForRecheck();
     startPending = true;
     sb.me().then(function(u){
       if (!u) { startPending = false; hideOwnerForRecheck(); $('auth').hidden = false; showForm('f-login'); return; }
