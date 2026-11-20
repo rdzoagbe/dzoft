@@ -92,3 +92,26 @@ body.dzoft-client .quote-lang{margin:0 0 12px}
  body.dzoft-client .ptabs{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
  body.dzoft-client .ptabs a{white-space:normal;font-size:13.5px;padding:8px 10px}
 }
+
+/* 20 Nov 2026 — ledger-backed balance is distinct from what is due today. */
+body.dzoft-client .tracking-balance-summary{
+  margin:8px 0 12px;
+  padding:18px 19px;
+  border:1px solid #dcd6ff;
+  border-radius:14px;
+  background:#f5f3ff;
+  color:#232046;
+}
+body.dzoft-client .tracking-balance-label{display:block;font-size:14px;font-weight:750;line-height:1.4}
+body.dzoft-client .tracking-balance-amount{
+  display:block;margin:5px 0 8px;font-size:clamp(24px,3vw,32px);
+  line-height:1.15;letter-spacing:-.025em;color:#3427b7;
+  font-variant-numeric:tabular-nums;
+}
+body.dzoft-client .tracking-balance-breakdown{margin:7px 0 4px;font-size:13px;font-weight:650;line-height:1.5}
+body.dzoft-client .tracking-balance-caption{margin:7px 0 0;font-size:12.5px;line-height:1.55;color:#555271}
+body.dzoft-client .tracking-balance-unavailable{margin:10px 0;padding:12px;background:#fff8eb;border-radius:10px}
+@media(max-width:620px){
+ body.dzoft-client .tracking-balance-summary{padding:15px}
+ body.dzoft-client .tracking-balance-breakdown{font-size:12px}
+}

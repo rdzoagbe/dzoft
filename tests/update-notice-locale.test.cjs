@@ -34,7 +34,7 @@ function createPage(){
   body:element('body')
  };
  const window={addEventListener(){}};
- const fetch=async()=>({ok:true,json:async()=>({version:'2026.11.20.1'})});
+ const fetch=async()=>({ok:true,json:async()=>({version:'2026.11.20.2'})});
  vm.runInNewContext(source,{document,window,navigator:{},fetch,URL,Date,location:{href:'https://example.test/admin/'}});
  return {document,elements,fireLocale(){listeners.get('dzoft:locale-change')();}};
 }
@@ -46,7 +46,7 @@ test('update-check button, release label, and result translate immediately in bo
  const status=page.elements.get('dzoft-update-status');
  assert.ok(button&&label&&status);
  assert.equal(button.textContent,'Vérifier les mises à jour');
- assert.match(label.textContent,/^Version DZOFT : 2026\.11\.20\.1$/);
+ assert.match(label.textContent,/^Version DZOFT : 2026\.11\.20\.2$/);
  button.fire('click');
  await new Promise(resolve=>setImmediate(resolve));
  assert.equal(status.textContent,'Version publiée vérifiée.');
@@ -54,7 +54,7 @@ test('update-check button, release label, and result translate immediately in bo
  page.document.documentElement.lang='en';
  page.fireLocale();
  assert.equal(button.textContent,'Check for updates');
- assert.equal(label.textContent,'DZOFT version: 2026.11.20.1');
+ assert.equal(label.textContent,'DZOFT version: 2026.11.20.2');
  assert.equal(status.textContent,'Published release version verified.');
 
  page.document.documentElement.lang='fr';
