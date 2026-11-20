@@ -88,21 +88,22 @@ async function owner(browser,prompt) {
       report('Admin '+name,await visible(page,selector));
     }
     await page.evaluate(()=>{location.hash='#/tableau-de-bord';});
-    report('Dashboard stats panel',await visible(page,'#sd-stats'));
+    report('Dashboard stats container visible',await visible(page,'#sd-stats'));
     await mobileWidth(page,'Owner browser 390px viewport');
     process.stdout.write('\nOptional: open a project through the browser UI; do not change or save anything.\n');
     const reply=(await prompt.question('Press Enter once project is open, or type skip: ')).trim().toLowerCase();
     if(reply!=='skip') {
-      const hasProject=page.url().includes('/admin/suivi.html?');
+      const projectPage=context.pages().find(p=>p.url().includes('/admin/suivi.html?')) || page;
+      const hasProject=projectPage.url().includes('/admin/suivi.html?');
       report('Project opened',hasProject);
       if(hasProject) {
         for(const name of ['overview','work','billing','documents','messages']) {
           const selector='[data-project-tab="'+name+'"]';
-          const ready=await visible(page,selector);
-          if(ready)await page.locator(selector).click();
-          report('Project '+name,ready && await visible(page,'#project-panel-'+name));
+          const ready=await visible(projectPage,selector);
+          if(ready)await projectPage.locator(selector).click();
+          report('Project '+name,ready && await visible(projectPage,'#project-panel-'+name));
         }
-        await mobileWidth(page,'Project browser 390px viewport');
+        await mobileWidth(projectPage,'Project browser 390px viewport');
       }
     }
   } finally { await context.close(); }
