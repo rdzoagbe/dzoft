@@ -307,6 +307,9 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     // Expired MFA *or* an AAL1 downgrade must return to the server-verified
     // owner gate before any private project or quote data is rendered.
     if (sb.aal() === 'aal2' && sb.mfaFresh(MFA_WINDOW)) return false;
+    // Do not leave an already-rendered project or quote visible while
+    // navigation waits for the owner verification screen to load.
+    document.documentElement.style.visibility = 'hidden';
     var back = location.pathname.split('/').pop() + location.search + location.hash;
     location.replace('./?return=' + encodeURIComponent(back));
     return true;
