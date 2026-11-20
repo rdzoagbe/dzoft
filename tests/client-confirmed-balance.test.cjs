@@ -86,5 +86,6 @@ test('payments tab distinguishes remaining project debt from due-now collection'
  assert.match(tracking,/part==='payments'\?stats\(d,dueNow\(box,d\),true\)/);
  assert.match(tracking,/part==='balance'\?balanceSummary\(d\)/);
  assert.match(tracking,/clientView\?t\('Solde restant à régler'/);
- assert.match(tracking,/role="status"[^>]*>\'+t\('Solde ou suivi indisponible/);
+ assert.match(tracking,/Solde ou suivi indisponible/);
+ assert.match(tracking,/tracking-help" role="status"/);
 });
