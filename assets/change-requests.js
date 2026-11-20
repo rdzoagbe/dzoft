@@ -91,7 +91,7 @@ function bindClient(root,options){
   '<p class="dzoft-change-help">'+tr(en,'Les changements après signature sont étudiés séparément. Aucun supplément sans votre accord.','Changes after signing are reviewed separately. No extra charge without your agreement.')+'</p>'+
   openForm(en)+(records.length?records.map(function(r){return clientCard(r,en,name,options.terms);}).join(''):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
- function perform(promise,done){if(busy)return;busy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;});}
+ function perform(promise,done){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
  root.addEventListener('submit',function(ev){var form=ev.target;if(!form.matches('[data-change-create],[data-change-sign]'))return;ev.preventDefault();if(busy||!form.reportValidity())return;
   if(form.hasAttribute('data-change-create')){perform(call('create_change_request',{p_quote:quoteId,p_title:form.elements.title.value.trim(),p_description:form.elements.description.value.trim()}));return;}
   var code=form.elements.code.value.replace(/\D/g,'');
@@ -338,7 +338,7 @@ function bindOwner(root,options){
   (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
- function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
+ function perform(p,msg){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
  function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
    // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
    // The base label is shortened so the label with its percentage stays within the server's 160 characters.
@@ -720,6 +720,10 @@ function bindPrices(root,options){
 if(global.document)global.document.addEventListener('click',function(ev){
  var b=ev.target.closest&&ev.target.closest('[data-form-cancel]');if(!b)return;
  var f=b.closest('form'),d=b.closest('details'),kind=b.dataset.formCancel;if(!f)return;
+ // A request or proposal may still be committing. A Cancel cannot undo that RPC.
+ // Do not pretend an in-flight server action was discarded by resetting its form.
+ var scope=b.closest('#dzoft-owner-changes, #dzoft-client-changes');
+ if(scope&&scope.__dzoftChangeBusy)return;
  var en=document.documentElement.lang==='en';
  if(kind==='calc'&&f.hasAttribute('data-edit')){
   var orig=f.querySelector('template[data-calc-original]');
