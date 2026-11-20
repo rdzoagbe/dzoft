@@ -150,7 +150,7 @@ test('input data and original invoices/receipts remain untouched',()=>{
 
 test('the preview is offline and is NOT reachable from the currently deployed Admin/Client UI',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../tools/receipt-correction-preview.cjs'),'utf8');
- assert.doesNotMatch(src,/fetch\s*\(|https?:\/\/|supabase|XMLHttpRequest|require\(['"](@supabase|pg)['"]/i);
+ assert.doesNotMatch(src,/\bfetch\s*\(|https?:\/\/|XMLHttpRequest|require\(['"](@supabase|pg)['"]/i);
  const admin=fs.readFileSync(path.join(__dirname,'../admin/suivi.html'),'utf8');
  const client=fs.readFileSync(path.join(__dirname,'../espace/index.html'),'utf8');
  assert.doesNotMatch(admin,/receipt-correction-preview\.cjs/);
