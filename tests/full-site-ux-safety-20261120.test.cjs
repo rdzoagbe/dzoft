@@ -32,6 +32,7 @@ test('pending-payment status Discard restores the old selection, date and focus,
  const submit={disabled:false,insertAdjacentElement(position,button){assert.equal(position,'afterend');handlers.cancel=button;}};
  const message={textContent:'Unsaved draft'};
  let resetCount=0;
+ const outerPaymentsPanel={open:true};
  const form={
   elements:{status,reportedOn:date},
   hasAttribute(k){return k==='data-status-id';},
@@ -43,7 +44,7 @@ test('pending-payment status Discard restores the old selection, date and focus,
    return null;
   },
   querySelectorAll(s){assert.equal(s,'select');return [status];},
-  closest(s){assert.equal(s,'details');return null;},
+  closest(s){assert.equal(s,'details');return outerPaymentsPanel;},
   reset(){resetCount++;status.value=status.defaultValue;date.value='2026-11-14';}
  };
  const root={querySelectorAll(selector){assert.match(selector,/form\[data-status-id\]/);return [form];}};
@@ -58,6 +59,7 @@ test('pending-payment status Discard restores the old selection, date and focus,
  assert.equal(date.value,'2026-11-14');
  assert.equal(status.dispatched,1);
  assert.equal(status.focused,true);
+ assert.equal(outerPaymentsPanel.open,true,'Discard must not close the containing Payments panel');
  assert.equal(message.textContent,'');
  assert.equal(rpcCount,0);
  status.value='cancelled';submit.disabled=true;
