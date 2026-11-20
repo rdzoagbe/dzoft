@@ -73,7 +73,7 @@ test('client and owner change forms cannot pretend to Cancel a server operation 
  const src=functionSlice(source,"if(global.document)global.document.addEventListener('click'","api.client=bindClient;");
  let click=null,resets=0,details={open:true},scope={__dzoftChangeBusy:true};
  const form={reset(){resets++;},closest(s){return s==='details'?details:null;}};
- const button={dataset:{formCancel:''},closest(sel){return sel==='form'?form:scope;}};
+ const button={dataset:{formCancel:''},closest(sel){return sel==='form'?form:(sel==='details'?details:scope);}};
  const sandbox={global:{document:{addEventListener(k,fn){assert.equal(k,'click');click=fn;}}},document:{documentElement:{lang:'fr'}},tr:(en,fr)=>fr};
  vm.runInNewContext(src,sandbox);
  click({target:{closest(){return button;}}});
