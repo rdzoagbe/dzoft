@@ -123,9 +123,10 @@ function auxiliaryGuard(page,aal,fresh){
  const txt=fs.readFileSync(path.join(root,page),'utf8');
  const snippet=section(txt,'  function checkMfaExpiry(){','  if (checkMfaExpiry()) return;');
  const redirects=[];
+ const document={documentElement:{style:{visibility:'visible'}}};
  const context={
   sb:{aal:()=>aal,mfaFresh:()=>fresh},MFA_WINDOW:7*24*60*60,
-  location:{
+  document,location:{
    pathname:'/dzoft/admin/'+page.split('/').pop(),
    search:'?q=synthetic-quote',hash:'#paiements',
    replace:url=>redirects.push(url)
@@ -135,13 +136,14 @@ function auxiliaryGuard(page,aal,fresh){
  vm.createContext(context);
  vm.runInContext(snippet+';globalThis.__check=checkMfaExpiry;',context);
  const result=context.__check();
- return {result,redirects,source:txt};
+ return {result,redirects,source:txt,visibility:document.documentElement.style.visibility};
 }
 for(const page of ['admin/suivi.html','admin/devis.html']){
  test(page+' redirects an AAL1 owner rather than allowing private project data to initialize',()=>{
   const x=auxiliaryGuard(page,'aal1',false);
   assert.equal(x.result,true);
   assert.equal(x.redirects.length,1);
+  assert.equal(x.visibility,'hidden','private project content must disappear before redirect');
   assert.ok(x.redirects[0].startsWith('./?return='));
   assert.ok(decodeURIComponent(x.redirects[0].split('?return=')[1]).includes(page.split('/').pop()));
  });
@@ -149,9 +151,11 @@ for(const page of ['admin/suivi.html','admin/devis.html']){
   const okay=auxiliaryGuard(page,'aal2',true);
   assert.equal(okay.result,false);
   assert.equal(okay.redirects.length,0);
+  assert.equal(okay.visibility,'visible');
   const stale=auxiliaryGuard(page,'aal2',false);
   assert.equal(stale.result,true);
   assert.equal(stale.redirects.length,1);
+  assert.equal(stale.visibility,'hidden');
   assert.match(stale.source,/window\.addEventListener\('focus', checkMfaExpiry\)/);
  });
 }
