@@ -63,9 +63,6 @@ body.dzoft-client .overview-grid .card{margin:0}
 body.dzoft-client .overview-grid{margin-bottom:16px}
 body.dzoft-client .cp-grid{margin:16px 0}
 body.dzoft-client .cp-grid h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#5c5b74;margin:0 0 8px}
-body.dzoft-client .cp-due{display:flex;justify-content:space-between;align-items:baseline;gap:10px;background:#fff4e2;border:1px solid #f2d9ad;border-radius:12px;padding:12px 14px;margin:0 0 10px}
-body.dzoft-client .cp-due span{color:#6a4a10;font-weight:700;font-size:14px}
-body.dzoft-client .cp-due b{font-size:22px;color:#3a2a06}
 body.dzoft-client .current-project .ih{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 body.dzoft-client .current-project .ih h2{margin:0}
 body.dzoft-client .tracking-latest{border:1px solid #e0e5ef;border-radius:12px;padding:12px 14px;background:#fff}
