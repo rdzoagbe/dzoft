@@ -8,9 +8,11 @@ test('cancel buttons are added to editable payment, invoice, progress and correc
  assert.match(js,/function wireDraftCancelButtons\(root\)/);
  assert.match(js,/details\.tracking-editor > form, details\.tracking-link > form, details\.tracking-confirm > form, details\.tracking-correction > form/);
  assert.match(js,/cancel\.type='button'/);
- assert.match(js,/cancel\.textContent=t\('Annuler','Cancel'\)/);
+ assert.match(js,/cancel\.textContent=form\.hasAttribute\('data-status-id'\)/);
+ assert.match(js,/t\('Annuler les modifications','Discard changes'\):t\('Annuler','Cancel'\)/);
  assert.match(js,/wireDraftCancelButtons\(box\)/);
  assert.match(js,/wireDraftCancelButtons\(pub\)/);
+ assert.match(js,/\.tracking-claim-actions > form\[data-status-id\]/);
 });
 test('cancel only clears local draft and refuses to close during a save',()=>{
  const a=js.indexOf('function wireDraftCancelButtons(root){');
