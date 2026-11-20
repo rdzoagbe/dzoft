@@ -1,5 +1,16 @@
 # DZOFT — Isolated recovery drill checklist
 
+> **20 November 2026 live inventory update:** 18 public application tables,
+> 8 private application tables, 3 managed Auth identities, 3 files in the
+> private `client-files` bucket, and 9 deployed Edge Functions against only
+> 7 source directories in GitHub. The previous 15 November application archive
+> cannot establish coverage of all three current Storage objects.
+> See [the current recovery readiness audit](recovery-readiness-audit-2026-11-20.md)
+> and the offline [encrypted evidence checker](../tools/check_dzoft_recovery.py).
+> Even a full `PASS` from the checker is **not a restored database**:
+> keep issue #72 open until the actual isolated Auth + rows + Storage drill passes.
+
+
 **Status: NOT restore-tested.** One encrypted application-data archive was later uploaded to Google Drive and the downloaded copy successfully decrypted/validated. The full restore and Auth account re-association remain untested. The downloaded Auth recovery ledger has been independently SHA-256 matched, decrypted and validated on the owner's PC. See [Auth recovery plan](auth-recovery.md). This checklist prevents a successful encrypted-export check from being mistaken for a recoverable Supabase project.
 
 ## Current inventory change — 16 November 2026
