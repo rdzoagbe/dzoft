@@ -3,7 +3,7 @@
    No user data or account identifiers leave the page. */
 (function(){
 'use strict';
-var BUILD='2026.11.20.2';
+var BUILD='2026.11.20.3';
 var notice=null,checking=false,updateOutcome=null;
 // Numeric release comparison; a delayed metadata response must not suggest a downgrade.
 function isNewer(remote,local){
