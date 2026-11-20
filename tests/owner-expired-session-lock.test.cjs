@@ -119,6 +119,35 @@ test('a recheck after recovery cannot skip the actual MFA challenge',async()=>{
  assert.equal(x.app.hidden,true);
 });
 
+
+test('owner with no enrolled factor cannot loop from Admin back into AAL2-only private pages',()=>{
+ const source=section(admin,'  function safeReturnTarget(){','  function showForm(');
+ function check(fresh,url){
+  const redirects=[];
+  const context={
+   sb:{mfaFresh:()=>fresh},MFA_WINDOW:7*24*60*60,
+   URLSearchParams,location:{
+    search:url,
+    replace:v=>redirects.push(v)
+   }
+  };
+  vm.createContext(context);
+  vm.runInContext(source+';globalThis.__return=returnAfterAuth;',context);
+  const moved=context.__return();
+  return {moved,redirects};
+ }
+ const target='?return='+encodeURIComponent('suivi.html?q=synthetic-quote');
+ const recovering=check(false,target);
+ assert.equal(recovering.moved,true);
+ assert.deepEqual(recovering.redirects,['./#/parametres']);
+ const verified=check(true,target);
+ assert.equal(verified.moved,true);
+ assert.deepEqual(verified.redirects,['./suivi.html?q=synthetic-quote']);
+ const nothing=check(false,'');
+ assert.equal(nothing.moved,false);
+ assert.deepEqual(nothing.redirects,[]);
+});
+
 function auxiliaryGuard(page,aal,fresh){
  const txt=fs.readFileSync(path.join(root,page),'utf8');
  const snippet=section(txt,'  function checkMfaExpiry(){','  if (checkMfaExpiry()) return;');
