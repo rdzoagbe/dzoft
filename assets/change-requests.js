@@ -91,7 +91,7 @@ function bindClient(root,options){
   '<p class="dzoft-change-help">'+tr(en,'Les changements après signature sont étudiés séparément. Aucun supplément sans votre accord.','Changes after signing are reviewed separately. No extra charge without your agreement.')+'</p>'+
   openForm(en)+(records.length?records.map(function(r){return clientCard(r,en,name,options.terms);}).join(''):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
- function perform(promise,done){if(busy)return;busy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;});}
+ function perform(promise,done){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
  root.addEventListener('submit',function(ev){var form=ev.target;if(!form.matches('[data-change-create],[data-change-sign]'))return;ev.preventDefault();if(busy||!form.reportValidity())return;
   if(form.hasAttribute('data-change-create')){perform(call('create_change_request',{p_quote:quoteId,p_title:form.elements.title.value.trim(),p_description:form.elements.description.value.trim()}));return;}
   var code=form.elements.code.value.replace(/\D/g,'');
@@ -103,12 +103,12 @@ function bindClient(root,options){
   if(btn.dataset.changeCode){
    var form=btn.closest('form');if(!form.reportValidity())return;
    if(typeof options.sendCode!=='function'){banner(root,tr(en,'Envoi du code indisponible. Rechargez la page.','Code sending unavailable. Reload the page.'),true);return;}
-   busy=true;btn.disabled=true;
+   busy=true;root.__dzoftChangeBusy=true;btn.disabled=true;
    Promise.resolve(options.sendCode(btn.dataset.changeCode)).then(function(r){
     var box=form.querySelector('.dzoft-change-code');box.hidden=false;
     box.querySelector('[data-code-sent]').textContent=tr(en,'Code envoyé à ','Code sent to ')+((r&&r.target)||tr(en,'votre adresse e-mail','your e-mail address'))+tr(en,'. Il est valable 10 minutes.','. It is valid for 10 minutes.');
     btn.textContent=tr(en,'Renvoyer un code','Send a new code');form.elements.code.focus();
-   }).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;btn.disabled=false;});
+   }).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;btn.disabled=false;});
    return;
   }
   if(btn.dataset.changeDecline){var f=btn.closest('form'),n=f.elements.decisionName.value.trim();if(!n||n.length<2){f.elements.decisionName.focus();return;}if(!global.confirm(tr(en,'Refuser cette proposition ?','Decline this proposal?')))return;
@@ -338,7 +338,7 @@ function bindOwner(root,options){
   (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
- function perform(p,msg){if(busy)return;busy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;});}
+ function perform(p,msg){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
  function readLines(form){return Array.prototype.map.call(form.querySelectorAll('[data-line]'),function(row){var disc=row.hasAttribute('data-discount'),p=amount(row.querySelector('[name=price]').value),pc=disc?amount((row.querySelector('[name=pct]')||{}).value):NaN,lb=row.querySelector('[name=label]').value.trim();
    // The client sees the euro amount; the label says the percentage, e.g. « Remise commerciale (10 %) ».
    // The base label is shortened so the label with its percentage stays within the server's 160 characters.
@@ -351,7 +351,7 @@ function bindOwner(root,options){
     A request is billed once: its origin is kept on the line and skipped if already in a live proposal. */
  function hash(t){var h=2166136261;for(var i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
  function fromJournal(form,btn){
-  if(busy)return;busy=true;btn.disabled=true;
+  if(busy)return;busy=true;root.__dzoftChangeBusy=true;btn.disabled=true;
   Promise.all([sb.select('quotes','select=journal,accepted_at,client_id&id=eq.'+encodeURIComponent(quoteId)),
    Promise.resolve(sb.rpc('list_project_work_items',{p_quote:quoteId},true)).catch(function(){return [];})]).then(function(res){
    var q=res[0]&&res[0][0]||{};
@@ -433,7 +433,7 @@ function bindOwner(root,options){
    if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value='Ajouts demandés depuis la signature du devis';
    form.elements.done.checked=true;
    var firstEmpty=form.querySelector('[data-unpriced]');if(firstEmpty)firstEmpty.focus();
-  }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;btn.disabled=false;});
+  }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;btn.disabled=false;});
  }
  function recalc(form){
   var total=0,rows=form.querySelectorAll('[data-line]'),sub=0;
@@ -584,7 +584,7 @@ function bindOwner(root,options){
     q('[data-share-confirm]').onclick=function(){
       if(!q('[data-share-checked]').checked||busy)return;
       if(!global.confirm('Avez-vous réellement envoyé ce message vous-même ? Le client pourra ensuite consulter et signer la proposition. DZOFT n’enverra pas d’e-mail.'))return;
-      q('[data-share-confirm]').disabled=true;busy=true;
+      q('[data-share-confirm]').disabled=true;busy=true;root.__dzoftChangeBusy=true;
       sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true)
         .then(function(){
           if(d.open)d.close();
@@ -593,7 +593,7 @@ function bindOwner(root,options){
         }).catch(function(err){
           q('[data-share-status]').textContent=stateError(err,en);
           q('[data-share-confirm]').disabled=false;
-        }).finally(function(){busy=false;});
+        }).finally(function(){busy=false;root.__dzoftChangeBusy=false;});
     };
   }
   d.showModal();
@@ -720,6 +720,10 @@ function bindPrices(root,options){
 if(global.document)global.document.addEventListener('click',function(ev){
  var b=ev.target.closest&&ev.target.closest('[data-form-cancel]');if(!b)return;
  var f=b.closest('form'),d=b.closest('details'),kind=b.dataset.formCancel;if(!f)return;
+ // A request or proposal may still be committing. A Cancel cannot undo that RPC.
+ // Do not pretend an in-flight server action was discarded by resetting its form.
+ var scope=b.closest('#dzoft-owner-changes, #dzoft-client-changes');
+ if(scope&&scope.__dzoftChangeBusy)return;
  var en=document.documentElement.lang==='en';
  if(kind==='calc'&&f.hasAttribute('data-edit')){
   var orig=f.querySelector('template[data-calc-original]');

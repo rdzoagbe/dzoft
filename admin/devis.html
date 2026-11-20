@@ -429,6 +429,25 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     return 'D-' + y + '-' + String(n).padStart(3, '0');
   }
 
+  // Line items auto-save; deleting a meaningful row must not silently
+  // rewrite the current draft. A declined confirmation makes ZERO changes.
+  function removeQuoteLine(index){
+    var line=state.lines[index];if(!line)return;
+    var label=String(line.l||'').trim(),details=String(line.s||'').trim();
+    if(label||details||(Number(line.p)||0)>0){
+      var question=line.h
+       ?'Retirer le titre « '+(label||'Sans titre')+' » ? Les prestations sous ce titre resteront dans le devis.'
+       :'Retirer la prestation « '+(label||'Sans désignation')+' » du devis ? Le total et le brouillon enregistré seront recalculés.';
+      if(!window.confirm(question))return;
+    }
+    state.lines.splice(index,1);renderLines();
+  }
+  function removeHostLine(index){
+    var entry=state.host[index];if(!entry)return;
+    if((String(entry.l||'').trim()||String(entry.w||'').trim()||String(entry.c||'').trim()) &&
+       !window.confirm('Retirer « '+(entry.l||entry.w||'cet élément')+' » des informations d’hébergement du devis ?'))return;
+    state.host.splice(index,1);renderHost();
+  }
   function renderLines(){
     var tb = $('lines'); tb.innerHTML = '';
     state.lines.forEach(function(ln, i){
@@ -441,7 +460,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
         if (ln.pf) tr.querySelector('.pfsel').onchange = function(){ setPlatform(i, this.value); };
         tr.querySelector('input').oninput = function(){ ln.l = this.value; save(); };
         tr.querySelector('.sub').oninput = function(){ ln.s = this.innerText; save(); };
-        tr.querySelector('.rm').onclick = function(){ state.lines.splice(i, 1); renderLines(); };
+        tr.querySelector('.rm').onclick = function(){ removeQuoteLine(i); };
         tb.appendChild(tr);
         return;
       }
@@ -460,7 +479,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       ins[2].oninput = function(){ ln.p = parseFloat(this.value) || 0; totals(); };
       tr.querySelector('select').onchange = function(){ ln.u = this.value; totals(); };
       tr.querySelector('.opt').onchange = function(){ ln.o = this.checked; tr.classList.toggle('is-opt', ln.o); totals(); };
-      tr.querySelector('.rm').onclick = function(){ state.lines.splice(i, 1); renderLines(); };
+      tr.querySelector('.rm').onclick = function(){ removeQuoteLine(i); };
       tb.appendChild(tr);
     });
     totals();
@@ -503,7 +522,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
         save();
       };
       ins[2].oninput = function(){ h.c = this.value; save(); };
-      tr.querySelector('.rm').onclick = function(){ state.host.splice(i, 1); renderHost(); };
+      tr.querySelector('.rm').onclick = function(){ removeHostLine(i); };
       tb.appendChild(tr);
     });
     $('accounts').hidden = !state.host.length;

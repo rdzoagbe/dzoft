@@ -72,7 +72,7 @@
  // Buttons are injected only into editable <details> forms, not issued invoice actions.
  function wireDraftCancelButtons(root){
   if(!root)return;
-  root.querySelectorAll('details.tracking-editor > form, details.tracking-link > form, details.tracking-confirm > form, details.tracking-correction > form').forEach(function(form){
+  root.querySelectorAll('details.tracking-editor > form, details.tracking-link > form, details.tracking-confirm > form, details.tracking-correction > form, .tracking-claim-actions > form[data-status-id]').forEach(function(form){
    if(form.querySelector('[data-cancel-draft]'))return;
    var submit=form.querySelector('button[type="submit"]');
    if(!submit)return;
@@ -80,10 +80,14 @@
    cancel.type='button';
    cancel.className='btn line tracking-cancel-draft';
    cancel.setAttribute('data-cancel-draft','');
-   cancel.textContent=t('Annuler','Cancel');
+   cancel.textContent=form.hasAttribute('data-status-id')
+    ?t('Annuler les modifications','Discard changes'):t('Annuler','Cancel');
    submit.insertAdjacentElement('afterend',cancel);
    cancel.addEventListener('click',function(){
-    var detail=form.closest('details');
+    // An inline payment-status form lives inside the overall Payments <details>,
+    // not a per-form dialog. Discard must NOT collapse the whole Payments panel.
+    var inlineStatus=form.hasAttribute('data-status-id');
+    var detail=inlineStatus?null:form.closest('details');
     if(form.querySelector('button[type="submit"]:disabled'))return; // Never hide an in-flight save.
     form.reset(); // Discards unsaved inputs only, never calls the backend.
     // Re-apply conditional fields (invoice kind, pending date) after resetting.
@@ -93,6 +97,9 @@
     if(message)message.textContent='';
     var summary=detail&&detail.querySelector(':scope > summary');
     if(summary)summary.focus({preventScroll:true});
+    // Inline pending-status forms have no <details> wrapper. Keep keyboard focus
+    // on the editable status field after discarding the unsaved changes.
+    else if(inlineStatus)form.elements.status.focus({preventScroll:true});
    });
   });
  }
