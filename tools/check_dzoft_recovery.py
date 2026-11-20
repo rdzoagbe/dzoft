@@ -77,7 +77,7 @@ def backup_evidence(ciphertext: bytes, passphrase: str, *, expected_storage: int
     }, plain)
 
 def offsite_evidence(original: bytes, offsite: bytes, password: str) -> None:
-    if not hashlib.sha256(original).digest() == hashlib.sha256(offsite).digest():
+    if hashlib.sha256(original).digest() != hashlib.sha256(offsite).digest():
         raise EvidenceFailure("Independent encrypted off-site copy differs from the source.")
     try:
         backup.verified_archive(offsite, password)
@@ -123,7 +123,7 @@ def evaluate(*, archive_blob: bytes, archive_password: str,
     evidence, decrypted = backup_evidence(
         archive_blob, archive_password, expected_storage=expected_storage_count,
         max_age_hours=max_age_hours, now=now)
-    passed.append("Authenticated database archive + every file checksum + current Storage COUNT.")
+    passed.append("Authenticated database archive, file hashes and operator-supplied Storage inventory count.")
     if evidence["recent"]:
         passed.append("Database snapshot falls within the requested age window.")
     else:
@@ -174,7 +174,7 @@ def main(argv: list[str]|None=None) -> int:
     print("No Supabase, PostgreSQL database, cloud API or network request is made.")
     try:
         source=read_encrypted(args.archive,".dzoftbak",MAX_CIPHER_BYTES)
-        if args.offsite_copy is not None and args.archive.resolve()==args.offsite_copy.resolve():
+        if args.offsite_copy is not None and args.offsite_copy.is_file() and args.archive.samefile(args.offsite_copy):
             raise EvidenceFailure("Off-site copy must be a different file.")
         other=read_encrypted(args.offsite_copy,".dzoftbak",MAX_CIPHER_BYTES) if args.offsite_copy else None
         ledger=read_encrypted(args.auth_archive,".dzoftauth",auth.MAX_INVENTORY_BYTES+1024) if args.auth_archive else None
