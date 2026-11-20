@@ -3,156 +3,137 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {balanceSnapshot,preview,replayReceipt}=require('../tools/receipt-correction-preview.cjs');
+const {balanceSnapshot,preview}=require('../tools/receipt-correction-preview.cjs');
 
-const baseline=()=>({
- acceptedTotal:1500,asOfDate:'2026-11-20',
+// These amounts and identifiers are ENTIRELY FICTIONAL: do not use client data in a public test.
+const base=()=>({
+ acceptedTotal:1200,asOfDate:'2026-11-20',
  receipts:[
-  {id:'receipt-cash',invoice_id:'deposit-cash',amount:450,received_on:'2026-11-04'},
-  {id:'receipt-transfer',invoice_id:'deposit-transfer',amount:350,received_on:'2026-11-14'}
+  {id:'fake-cash',invoice_id:'invoice-cash',amount:275,received_on:'2026-11-04'},
+  {id:'fake-bank',invoice_id:'invoice-bank',amount:125,received_on:'2026-11-14'}
  ],
  invoices:[
-  {id:'deposit-cash',amt:450,paid:true},
-  {id:'deposit-transfer',amt:350,paid:true},
-  {id:'final',amt:700,paid:false}
+  {id:'invoice-cash',amt:275,paid:true},
+  {id:'invoice-bank',amt:125,paid:true},
+  {id:'invoice-final',amt:800,paid:false}
  ],
  adjustments:[],creditNotes:[]
 });
-const reduction=(amount=50,key='reduce-1')=>({receipt_id:'receipt-cash',key,kind:'reduce_error',amount});
-const voidRemain=(amount,key='void-1')=>({receipt_id:'receipt-cash',key,kind:'void_error',amount});
-const dateFix=(date='2026-11-05',key='date-1')=>({receipt_id:'receipt-cash',key,kind:'correct_date',date});
+const reduce=(amount=25,key='reduce-1')=>({receipt_id:'fake-cash',key,kind:'reduce_error',amount});
+const voidRemaining=(amount,key='void-1')=>({receipt_id:'fake-cash',key,kind:'void_error',amount});
+const dateFix=(date='2026-11-05',key='date-1')=>({receipt_id:'fake-cash',key,kind:'correct_date',date});
 
-test('unchanged historical state: €1,500 agreed, €800 verified and €700 remaining',()=>{
- const actual=balanceSnapshot(baseline());
- assert.equal(actual.agreed_cents,150000);
- assert.equal(actual.original_receipts_cents,80000);
- assert.equal(actual.effective_receipts_cents,80000);
- assert.equal(actual.legacy_cents,0,'historic paid flags linked to ledger may NOT double count');
- assert.equal(actual.received_cents,80000);
- assert.equal(actual.remaining_cents,70000);
- assert.equal(actual.overpaid_cents,0);
- assert.equal(actual.invoice_settlements[0].status,'paid');
- assert.equal(actual.invoice_settlements[2].status,'unpaid');
- assert.equal(actual.read_only,true);
+test('untouched synthetic contract: €1,200 agreed, €400 received, €800 outstanding',()=>{
+ const s=balanceSnapshot(base());
+ assert.deepEqual([s.agreed_cents,s.original_receipts_cents,s.effective_receipts_cents,s.legacy_cents,s.received_cents,s.remaining_cents],
+  [120000,40000,40000,0,40000,80000]);
+ assert.equal(s.invoice_settlements[0].status,'paid');
+ assert.equal(s.invoice_settlements[2].status,'unpaid');
+ assert.equal(s.read_only,true);
 });
 
-test('reduce a mistaken entry: revised cash €400, received €750, collect €750',()=>{
- const actual=balanceSnapshot({...baseline(),adjustments:[reduction()]});
- assert.equal(actual.adjustment_cents,5000);
- assert.equal(actual.receipts[0].original_cents,45000);
- assert.equal(actual.receipts[0].effective_cents,40000);
- assert.equal(actual.received_cents,75000);
- assert.equal(actual.remaining_cents,75000);
- assert.deepEqual(
-  [actual.invoice_settlements[0].status,actual.invoice_settlements[0].remaining_cents],
-  ['partial',5000]
- );
- assert.equal(actual.legacy_cents,0);
+test('mistaken €25 entry reduction changes effective receipt without rewriting source',()=>{
+ const s=balanceSnapshot({...base(),adjustments:[reduce()]});
+ assert.deepEqual([s.adjustment_cents,s.receipts[0].original_cents,s.receipts[0].effective_cents,s.received_cents,s.remaining_cents],
+  [2500,27500,25000,37500,82500]);
+ assert.equal(s.invoice_settlements[0].status,'partial');
+ assert.equal(s.invoice_settlements[0].remaining_cents,2500);
+ assert.equal(s.legacy_cents,0);
 });
 
-test('void the remaining value of a previously reduced mistaken entry',()=>{
- const actual=balanceSnapshot({...baseline(),adjustments:[reduction(),voidRemain(400)]});
- assert.equal(actual.receipts[0].effective_cents,0);
- assert.equal(actual.received_cents,35000);
- assert.equal(actual.remaining_cents,115000);
- assert.equal(actual.invoice_settlements[0].status,'unpaid');
- assert.equal(actual.invoice_settlements[0].effective_paid_cents,0);
- assert.equal(actual.legacy_cents,0,'voiding does not resuscitate the paid JSON flag');
+test('void the remaining €250 after reducing €25; never revive linked paid flag',()=>{
+ const s=balanceSnapshot({...base(),adjustments:[reduce(),voidRemaining(250)]});
+ assert.equal(s.receipts[0].effective_cents,0);
+ assert.equal(s.received_cents,12500);
+ assert.equal(s.remaining_cents,107500);
+ assert.equal(s.invoice_settlements[0].status,'unpaid');
+ assert.equal(s.invoice_settlements[0].effective_paid_cents,0);
+ assert.equal(s.legacy_cents,0);
 });
 
-test('a date correction has no monetary effect and the old timestamp stays visible',()=>{
- const actual=balanceSnapshot({...baseline(),adjustments:[dateFix()]});
- assert.equal(actual.received_cents,80000);
- assert.equal(actual.remaining_cents,70000);
- assert.equal(actual.receipts[0].original_date,'2026-11-04');
- assert.equal(actual.receipts[0].effective_date,'2026-11-05');
+test('historical receipt date stays visible but financial totals do not move',()=>{
+ const s=balanceSnapshot({...base(),adjustments:[dateFix()]});
+ assert.deepEqual([s.received_cents,s.remaining_cents],[40000,80000]);
+ assert.equal(s.receipts[0].original_date,'2026-11-04');
+ assert.equal(s.receipts[0].effective_date,'2026-11-05');
 });
-test('impossible or future receipt dates are rejected with an explicit valuation date',()=>{
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[dateFix('2026-02-30')]}),/date/);
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[dateFix('2026-11-21')]}),/date/);
+
+test('impossible or future dates fail a deterministic as-of-date check',()=>{
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[dateFix('2026-02-30')]}),/date/);
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[dateFix('2026-11-21')]}),/date/);
  assert.throws(()=>preview({
-  receipt:baseline().receipts[0],key:'date-check',kind:'correct_date',
-  reason:'Bank statement dated November 21st',date:'2026-11-21',asOfDate:'2026-11-20'
+  receipt:base().receipts[0],key:'date-check',kind:'correct_date',
+  reason:'Verified against the bank statement',date:'2026-11-21',asOfDate:'2026-11-20'
  }),/date/);
 });
 
-test('all active adjustments must refer to a listed receipt and carry globally unique request keys',()=>{
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[{...reduction(),receipt_id:'different-project'}]}),/unknown receipt/);
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[reduction(),{...reduction(),receipt_id:'receipt-transfer'}]}),/Duplicate adjustment request key/);
- assert.throws(()=>balanceSnapshot({...baseline(),receipts:[...baseline().receipts,baseline().receipts[0]]}),/duplicate receipt/);
+test('cross-receipt adjustments, double IDs and reused request keys fail closed',()=>{
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[{...reduce(),receipt_id:'outside-project'}]}),/unknown receipt/);
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[reduce(),{...reduce(),receipt_id:'fake-bank'}]}),/Duplicate adjustment request key/);
+ assert.throws(()=>balanceSnapshot({...base(),receipts:[...base().receipts,base().receipts[0]]}),/duplicate receipt/);
 });
 
-test('combined reductions cannot reverse more than the originally confirmed receipt',()=>{
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[reduction(400),voidRemain(75)]}),/exceeds/);
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[reduction(450),voidRemain(1)]}),/exceeds/);
- assert.throws(()=>balanceSnapshot({...baseline(),adjustments:[reduction(0)]}),/exceeds/);
+test('a partial debit or a void cannot exceed the effective confirmed amount',()=>{
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[reduce(250),voidRemaining(50)]}),/exceeds/);
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[reduce(275),voidRemaining(1)]}),/exceeds/);
+ assert.throws(()=>balanceSnapshot({...base(),adjustments:[reduce(0)]}),/exceeds/);
 });
 
-test('credit notes change contract value, not the amount of money genuinely received',()=>{
- const actual=balanceSnapshot({...baseline(),creditNotes:[{invoice_id:'final',amount:100,effect:'reduce',invoice_kind:'base'}]});
- assert.equal(actual.agreed_cents,140000);
- assert.equal(actual.received_cents,80000);
- assert.equal(actual.remaining_cents,60000);
- assert.equal(actual.invoice_settlements[2].net_cents,60000);
- assert.equal(actual.invoice_settlements[2].status,'unpaid');
+test('credit notes reduce contract debt but do not remove cash from the ledger',()=>{
+ const s=balanceSnapshot({...base(),creditNotes:[{invoice_id:'invoice-final',amount:100,effect:'reduce',invoice_kind:'base'}]});
+ assert.deepEqual([s.agreed_cents,s.received_cents,s.remaining_cents],[110000,40000,70000]);
+ assert.equal(s.invoice_settlements[2].net_cents,70000);
+ assert.equal(s.invoice_settlements[2].status,'unpaid');
 });
 
-test('supplement reissue credit does not count as approved extra work twice',()=>{
- const input=baseline();
- input.invoices.push({id:'extra',amt:200,change:'signed-extra-request',paid:false});
- const initial=balanceSnapshot(input);
- assert.equal(initial.agreed_cents,170000);
- assert.equal(initial.remaining_cents,90000);
- const updated=balanceSnapshot({...input,creditNotes:[{invoice_id:'extra',amount:200,effect:'reissue',invoice_kind:'supplement'}]});
- assert.equal(updated.agreed_cents,150000);
- assert.equal(updated.remaining_cents,70000);
- assert.equal(updated.invoice_settlements.find(x=>x.invoice_id==='extra').status,'credited');
+test('a supplement cancelled for reissue is removed from the agreed amount once',()=>{
+ const data=base();data.invoices.push({id:'fake-extra',amt:180,change:'fake-signed-change',paid:false});
+ const before=balanceSnapshot(data);
+ assert.deepEqual([before.agreed_cents,before.remaining_cents],[138000,98000]);
+ const after=balanceSnapshot({...data,creditNotes:[{invoice_id:'fake-extra',amount:180,effect:'reissue',invoice_kind:'supplement'}]});
+ assert.deepEqual([after.agreed_cents,after.remaining_cents],[120000,80000]);
+ assert.equal(after.invoice_settlements.find(x=>x.invoice_id==='fake-extra').status,'credited');
 });
 
-test('only orphaned historic paid invoices count as legacy received',()=>{
- const input=baseline();
- input.invoices.push({id:'historic-external',amt:120,paid:true});
- const actual=balanceSnapshot(input);
- assert.equal(actual.legacy_cents,12000);
- assert.equal(actual.received_cents,92000);
- assert.equal(actual.remaining_cents,58000);
- const zeroed=balanceSnapshot({...input,adjustments:[reduction(450)]});
- assert.equal(zeroed.legacy_cents,12000,'linked invoice must not be relabelled as legacy');
- assert.equal(zeroed.received_cents,47000);
+test('only historical paid invoices with no receipt ledger link count as legacy received',()=>{
+ const data=base();data.invoices.push({id:'fake-external',amt:60,paid:true});
+ const before=balanceSnapshot(data);
+ assert.deepEqual([before.legacy_cents,before.received_cents,before.remaining_cents],[6000,46000,74000]);
+ const after=balanceSnapshot({...data,adjustments:[reduce(275)]});
+ assert.equal(after.legacy_cents,6000);
+ assert.equal(after.received_cents,18500);
 });
 
-test('overpayment is separate from the remaining collection amount',()=>{
- const input=baseline();
- input.acceptedTotal=700;
- const actual=balanceSnapshot(input);
- assert.equal(actual.received_cents,80000);
- assert.equal(actual.remaining_cents,0);
- assert.equal(actual.overpaid_cents,10000);
+test('overpayments remain visible, while amount to collect never goes negative',()=>{
+ const data=base();data.acceptedTotal=350;
+ const s=balanceSnapshot(data);
+ assert.deepEqual([s.received_cents,s.remaining_cents,s.overpaid_cents],[40000,0,5000]);
 });
 
-test('refunds, missing reasons and repeated preview idempotency keys are blocked',()=>{
- const input=baseline(),base={receipt:input.receipts[0],reason:'Verified against the bank statement',key:'request-one',asOfDate:input.asOfDate};
- assert.throws(()=>preview({...base,kind:'refund',amount:100}),/Unsupported/);
- assert.throws(()=>preview({...base,kind:'void_error',reason:'bad'}),/reason/);
- assert.throws(()=>preview({...base,kind:'reduce_error',amount:50,previous:[reduction(100,'request-one')]}),/Idempotency/);
+test('refund, short reason and repeated idempotency key are rejected',()=>{
+ const {receipts,asOfDate}=base();
+ const opt={receipt:receipts[0],reason:'Verified against bank records',key:'replayed-key',asOfDate};
+ assert.throws(()=>preview({...opt,kind:'refund',amount:20}),/Unsupported/);
+ assert.throws(()=>preview({...opt,kind:'void_error',reason:'oops'}),/reason/);
+ assert.throws(()=>preview({...opt,kind:'reduce_error',amount:25,previous:[reduce(100,'replayed-key')]}),/Idempotency/);
 });
 
-test('input data and original invoices/receipts remain untouched',()=>{
- const input=baseline(),before=JSON.stringify(input);
- const model=balanceSnapshot({...input,adjustments:[reduction()]});
- assert.equal(JSON.stringify(input),before);
- assert.ok(Object.isFrozen(model));
- assert.ok(Object.isFrozen(model.receipts));
- assert.ok(Object.isFrozen(model.receipts[0]));
- assert.equal(input.invoices[0].paid,true);
- assert.equal(input.receipts[0].amount,450);
+test('original invoices/receipts and their immutable copies never change in preview',()=>{
+ const data=base(),before=JSON.stringify(data);
+ const s=balanceSnapshot({...data,adjustments:[reduce()]});
+ assert.equal(JSON.stringify(data),before);
+ assert.ok(Object.isFrozen(s));
+ assert.ok(Object.isFrozen(s.receipts));
+ assert.ok(Object.isFrozen(s.receipts[0]));
+ assert.equal(data.invoices[0].paid,true);
+ assert.equal(data.receipts[0].amount,275);
 });
 
-test('the preview is offline and is NOT reachable from the currently deployed Admin/Client UI',()=>{
+test('offline model contains no live API or network clients',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../tools/receipt-correction-preview.cjs'),'utf8');
  assert.doesNotMatch(src,/\bfetch\s*\(|https?:\/\/|XMLHttpRequest|require\(['"](@supabase|pg)['"]/i);
- const admin=fs.readFileSync(path.join(__dirname,'../admin/suivi.html'),'utf8');
+ const owner=fs.readFileSync(path.join(__dirname,'../admin/suivi.html'),'utf8');
  const client=fs.readFileSync(path.join(__dirname,'../espace/index.html'),'utf8');
- assert.doesNotMatch(admin,/receipt-correction-preview\.cjs/);
+ assert.doesNotMatch(owner,/receipt-correction-preview\.cjs/);
  assert.doesNotMatch(client,/receipt-correction-preview\.cjs/);
 });
