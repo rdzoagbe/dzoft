@@ -84,7 +84,10 @@
     ?t('Annuler les modifications','Discard changes'):t('Annuler','Cancel');
    submit.insertAdjacentElement('afterend',cancel);
    cancel.addEventListener('click',function(){
-    var detail=form.closest('details');
+    // An inline payment-status form lives inside the overall Payments <details>,
+    // not a per-form dialog. Discard must NOT collapse the whole Payments panel.
+    var inlineStatus=form.hasAttribute('data-status-id');
+    var detail=inlineStatus?null:form.closest('details');
     if(form.querySelector('button[type="submit"]:disabled'))return; // Never hide an in-flight save.
     form.reset(); // Discards unsaved inputs only, never calls the backend.
     // Re-apply conditional fields (invoice kind, pending date) after resetting.
@@ -96,7 +99,7 @@
     if(summary)summary.focus({preventScroll:true});
     // Inline pending-status forms have no <details> wrapper. Keep keyboard focus
     // on the editable status field after discarding the unsaved changes.
-    else if(form.hasAttribute('data-status-id'))form.elements.status.focus({preventScroll:true});
+    else if(inlineStatus)form.elements.status.focus({preventScroll:true});
    });
   });
  }
