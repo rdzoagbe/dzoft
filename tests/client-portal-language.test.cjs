@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
-const html=fs.readFileSync(path.join(__dirname,'../espace/index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../espace/index.html'),'utf8').replace(/\r\n/g,'\n');
 const tracking=fs.readFileSync(path.join(__dirname,'../assets/project-tracking.js'),'utf8');
 
 test('the current screen is redrawn when the language changes',()=>{

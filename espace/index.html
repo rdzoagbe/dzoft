@@ -353,7 +353,7 @@ footer{max-width:1180px}
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
 <script src="../assets/project-tracking.js?v=20261118-avoirs"></script>
 <script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
-<link rel="stylesheet" href="simplified-client.css?v=20261117-tabs">
+<link rel="stylesheet" href="simplified-client.css?v=20261120-payments">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261119-quote-catalogue1">
 <script src="../assets/change-requests.js?v=20261119-quote-catalogue1"></script>
 <script>
@@ -917,7 +917,7 @@ footer{max-width:1180px}
       if (!started) todo.push([L('Pour avancer sur « ' + title(q) + ' » : envoyez vos textes, photos et votre logo', 'To move “' + title(q) + '” forward: send your texts, photos and logo'), '#/documents', L('Envoyer', 'Send'), 4]);
     });
     projects().forEach(function(q){ steps(q).filter(function(s){ return s.ask && !s.done; }).forEach(function(s){ todo.push([L('Votre validation est attendue : « ' + s.t + ' » (' + title(q) + ')', 'Your approval is needed: “' + stepT(s) + '” (' + title(q) + ')'), '#/projets/' + q.id, L('Voir et valider', 'Review and approve'), 0]); }); });
-    projects().forEach(function(q){ invoices(q).filter(function(x){ return openInv(q, x) && !x.payment_reported_at; }).forEach(function(x){ var left = Math.round((+x.amt - creditOf(q, x)) * 100) / 100; todo.push([L('Facture à régler : ', 'Invoice to pay: ') + invoiceName(x) + (x.amt ? ' (' + eur(left) + ')' : ''), '#/projets/' + q.id + '/paiements', L('Voir et payer', 'View and pay'), 3]); }); });
+    projects().forEach(function(q){ invoices(q).filter(function(x){ return openInv(q, x) && !x.payment_reported_at; }).forEach(function(x){ todo.push([L('Facture à vérifier : ', 'Invoice to review: ') + invoiceName(x), '#/projets/' + q.id + '/paiements', L('Voir les paiements', 'View payments'), 3]); }); });
     projects().forEach(function(q){ if (liveDone(q) && !q.review) todo.push([L('« ' + title(q) + ' » est en ligne : donnez votre avis en deux minutes', '“' + title(q) + '” is live: give your feedback in two minutes'), '#/projets/' + q.id + '/avis', L('Donner mon avis', 'Give my feedback'), 5]); });
     if (un) todo.push([L(un + ' nouveau' + (un > 1 ? 'x' : '') + ' message' + (un > 1 ? 's' : '') + ' de Roland', un + ' new message' + (un > 1 ? 's' : '') + ' from Roland'), '#/messages', L('Lire', 'Read'), 2]);
     if (!qs.length && (D.requests || []).length) todo.push([L('Votre demande est bien reçue : je prépare votre devis, il apparaîtra dans « Mes devis ».', 'Your request has been received: I’m preparing your quote, and it will appear in “My quotes”.'), '#/demandes', L('Voir ma demande', 'View my request'), 6]);
@@ -930,7 +930,9 @@ footer{max-width:1180px}
     if (!open.length && !invoices(q).length && !depositDone(q) && amounts(q).dep > 0) open = [{ id: '', amt: Math.round(amounts(q).dep * 100) / 100 }];
     return open;
   }
-  function dueTotal(q){ return dueList(q).reduce(function(n, x){ return n + x.amt; }, 0); }
+  function paymentShortcut(q){
+    return '<a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>';
+  }
   // The project to feature on the home page: the first one still in progress, else the most recent.
   function featured(){ var ps = projects(); return ps.filter(function(q){ return current(q); })[0] || ps[ps.length - 1]; }
   function welcome(){
@@ -953,11 +955,11 @@ footer{max-width:1180px}
     if (qs.length || firstAction) h += '<section class="dashboard-focus"><div><span class="dashboard-eyebrow">' + L('Votre prochaine action', 'Your next action') + '</span><h2>' + (firstAction ? esc(firstAction[0]) : L('Tout est à jour', 'You’re all caught up')) + '</h2><p>' + (firstAction ? L('C’est ce qui fait avancer votre projet en ce moment.', 'This is what moves your project forward right now.') : L('Je vous préviens dès qu’une étape demande votre avis.', 'I’ll let you know as soon as a stage needs your feedback.')) + '</p></div>' +
       '<a class="btn main" href="' + (firstAction ? firstAction[1] : '#/messages') + '">' + '<span>' + (firstAction ? esc(firstAction[2]) : L('Poser une question', 'Ask a question')) + '</span> →</a></section>';
     if (q) {
-      var st = state(q), due = dueTotal(q), cur = current(q);
+      var st = state(q), cur = current(q);
       h += '<section class="card current-project"><div class="ih"><h2 data-no-translate>' + esc(title(q)) + '</h2><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span></div>' +
         bar(progress(q)) + '<p class="muted">' + completedStages(q) + (cur ? L(' · étape actuelle : ', ' · current stage: ') + raw(stepT(cur)) : '') + '</p>' +
         '<div class="cp-grid"><div><h3>' + L('Dernière avancée', 'Latest update') + '</h3><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></div>' +
-        '<div><h3>' + L('Paiement', 'Payment') + '</h3>' + (due > 0 ? '<p class="cp-due"><span>' + L('À régler maintenant', 'Due now') + '</span><b>' + eur(due) + '</b></p><a class="btn main sm" href="#/projets/' + q.id + '/paiements">' + L('Voir et payer', 'View and pay') + '</a>' : '<p class="muted">' + L('Rien à régler pour le moment.', 'Nothing to pay right now.') + '</p><a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>') + '</div></div>' +
+        '<div><h3>' + L('Paiement', 'Payment') + '</h3>' + paymentShortcut(q) + '</div></div>' +
         '<div class="row"><a class="btn main" href="#/projets/' + q.id + '">' + L('Ouvrir le projet', 'Open the project') + '</a><a class="btn line" href="#/messages">' + L('Écrire à Roland', 'Message Roland') + '</a></div></section>';
     }
     var note = qs.filter(function(x){ return x.note; })[0];
@@ -1096,11 +1098,11 @@ footer{max-width:1180px}
   }
   function projectDetail(q, sub){
     if (!q || !q.accepted_at) return back('projets', L('Mes projets', 'My projects')) + empty(L('Ce projet n’est pas disponible.', 'This project is not available.'));
-    var st = state(q), p = progress(q), tab = projectTab(q, sub), env = envOf(q), docs = okDocs(q), due = dueTotal(q), cur = current(q);
+    var st = state(q), p = progress(q), tab = projectTab(q, sub), env = envOf(q), docs = okDocs(q), cur = current(q);
     var h = back('projets', L('Mes projets', 'My projects'));
     h += '<div class="phead"><h1 data-no-translate>' + esc(title(q)) + '</h1><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span><span class="num"><a href="#/devis/' + q.id + '">' + L('Devis ', 'Quote ') + esc(q.numero) + '</a></span><a class="btn line sm phead-msg" href="#/messages">' + L('Écrire à Roland', 'Message Roland') + '</a></div>';
     h += '<nav class="ptabs" aria-label="' + L('Sections du projet', 'Project sections') + '">' + TABS.map(function(t){
-      var badge = t[0] === 'paiements' && due > 0 ? ' <i>' + eur(due) + '</i>' : t[0] === 'apercu' && steps(q).some(function(s){ return s.ask && !s.done; }) ? ' <i>1</i>' : '';
+      var badge = t[0] === 'apercu' && steps(q).some(function(s){ return s.ask && !s.done; }) ? ' <i>1</i>' : '';
       return '<a href="#/projets/' + q.id + (t[0] === 'apercu' ? '' : '/' + t[0]) + '"' + (t[0] === tab ? ' aria-current="page"' : '') + '>' + L(t[1], t[2]) + badge + '</a>';
     }).join('') + '</nav>';
     if (tab === 'apercu') {
@@ -1110,7 +1112,7 @@ footer{max-width:1180px}
         '<section class="card"><h2>' + L('Où en est le projet', 'Where the project stands') + '</h2>' + bar(p) + '<p class="muted">' + completedStages(q) + '</p>' +
           (cur ? '<p><b>' + L('Étape actuelle : ', 'Current stage: ') + '</b>' + raw(stepT(cur)) + '</p>' : '<p><b>' + L('Projet livré ✓', 'Project delivered ✓') + '</b></p>') +
           '<a class="btn line sm" href="#/projets/' + q.id + '/avancement">' + L('Voir toutes les étapes', 'See all stages') + '</a></section>' +
-        '<section class="card"><h2>' + L('Paiement', 'Payment') + '</h2>' + (due > 0 ? '<p class="cp-due"><span>' + L('À régler maintenant', 'Due now') + '</span><b>' + eur(due) + '</b></p><a class="btn main sm" href="#/projets/' + q.id + '/paiements">' + L('Voir et payer', 'View and pay') + '</a>' : '<p class="muted">' + L('Rien à régler pour le moment.', 'Nothing to pay right now.') + '</p><a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>') + '</section>' +
+        '<section class="card"><h2>' + L('Paiement', 'Payment') + '</h2>' + paymentShortcut(q) + '</section>' +
         '</div>';
       h += '<section class="card"><h2>' + L('Dernière avancée', 'Latest update') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></section>';
       h += withdrawText(q);
