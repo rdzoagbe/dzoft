@@ -132,7 +132,7 @@ def evaluate(*, archive_blob: bytes, archive_password: str,
         blocked.append("Independent encrypted off-site copy not supplied/verified.")
     else:
         offsite_evidence(archive_blob, offsite_blob, archive_password)
-        passed.append("Independent encrypted copy: identical SHA-256 and decrypted integrity.")
+        passed.append("Operator-designated off-site copy: identical SHA-256 and decrypted integrity; physical independence requires manual confirmation.")
     if auth_blob is None:
         blocked.append("Separate encrypted Auth identity-mapping ledger not supplied.")
     elif not auth_password:
