@@ -351,9 +351,9 @@ footer{max-width:1180px}
 <script src="../admin/sb.js?v=20261118-mfa7d"></script>
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
-<script src="../assets/project-tracking.js?v=20261118-avoirs-ux20261120"></script>
+<script src="../assets/project-tracking.js?v=20261120-balance2"></script>
 <script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
-<link rel="stylesheet" href="simplified-client.css?v=20261120-payments">
+<link rel="stylesheet" href="simplified-client.css?v=20261120-balance2">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261119-quote-catalogue1">
 <script src="../assets/change-requests.js?v=20261119-quote-catalogue1-ux20261120"></script>
 <script>
@@ -933,6 +933,14 @@ footer{max-width:1180px}
   function paymentShortcut(q){
     return '<a class="btn line sm" href="#/projets/' + q.id + '/paiements">' + L('Voir les paiements', 'View payments') + '</a>';
   }
+  function paymentSummary(q){
+    // The project-tracking RPC is the only source of received funds and debt.
+    // A signed invoice is never counted as a new receipt.
+    return '<div class="tracking-slot" data-project-tracking="' + esc(q.id) +
+      '" data-tracking-part="balance" aria-live="polite"><p class="muted" role="status">' +
+      L('Chargement du solde confirmé…', 'Loading verified project balance…') +
+      '</p></div>' + paymentShortcut(q);
+  }
   // The project to feature on the home page: the first one still in progress, else the most recent.
   function featured(){ var ps = projects(); return ps.filter(function(q){ return current(q); })[0] || ps[ps.length - 1]; }
   function welcome(){
@@ -959,7 +967,7 @@ footer{max-width:1180px}
       h += '<section class="card current-project"><div class="ih"><h2 data-no-translate>' + esc(title(q)) + '</h2><span class="pill ' + st[1] + '">' + esc(st[0]) + '</span></div>' +
         bar(progress(q)) + '<p class="muted">' + completedStages(q) + (cur ? L(' · étape actuelle : ', ' · current stage: ') + raw(stepT(cur)) : '') + '</p>' +
         '<div class="cp-grid"><div><h3>' + L('Dernière avancée', 'Latest update') + '</h3><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></div>' +
-        '<div><h3>' + L('Paiement', 'Payment') + '</h3>' + paymentShortcut(q) + '</div></div>' +
+        '<div><h3>' + L('Paiement', 'Payment') + '</h3>' + paymentSummary(q) + '</div></div>' +
         '<div class="row"><a class="btn main" href="#/projets/' + q.id + '">' + L('Ouvrir le projet', 'Open the project') + '</a><a class="btn line" href="#/messages">' + L('Écrire à Roland', 'Message Roland') + '</a></div></section>';
     }
     var note = qs.filter(function(x){ return x.note; })[0];
@@ -1112,7 +1120,7 @@ footer{max-width:1180px}
         '<section class="card"><h2>' + L('Où en est le projet', 'Where the project stands') + '</h2>' + bar(p) + '<p class="muted">' + completedStages(q) + '</p>' +
           (cur ? '<p><b>' + L('Étape actuelle : ', 'Current stage: ') + '</b>' + raw(stepT(cur)) + '</p>' : '<p><b>' + L('Projet livré ✓', 'Project delivered ✓') + '</b></p>') +
           '<a class="btn line sm" href="#/projets/' + q.id + '/avancement">' + L('Voir toutes les étapes', 'See all stages') + '</a></section>' +
-        '<section class="card"><h2>' + L('Paiement', 'Payment') + '</h2>' + paymentShortcut(q) + '</section>' +
+        '<section class="card"><h2>' + L('Paiement', 'Payment') + '</h2>' + paymentSummary(q) + '</section>' +
         '</div>';
       h += '<section class="card"><h2>' + L('Dernière avancée', 'Latest update') + '</h2><div class="tracking-slot" data-project-tracking="' + esc(q.id) + '" data-tracking-part="latest"></div></section>';
       h += withdrawText(q);
