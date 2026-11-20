@@ -8,7 +8,7 @@ Settings → **Sign in with Windows Hello or fingerprint** lets the owner regist
 
 No device PIN, fingerprint template, biometric image, GitHub token, Supabase service key, or passkey private key is ever sent to DZOFT. Only a WebAuthn signed assertion is sent to Supabase Auth.
 
-**Critical distinction:** Supabase **passkey login** is currently a first-factor sign-in. It can replace entering your email and password but **does not automatically replace an enrolled TOTP second factor** or grant `aal2`. DZOFT's existing owner permission checks and 12-hour MFA freshness check remain intact. A device-based second-factor alternative depends on Supabase enabling/accepting WebAuthn MFA factors; the existing code detects already verified factors but enrollment is deliberately disabled until supported. This release does NOT claim the phone authenticator is eliminated for every login. We will not forge `aal2` JWTs, reuse TOTP secrets, or disable MFA to achieve that.
+**Critical distinction:** Supabase **passkey login** is currently a first-factor sign-in. It can replace entering your email and password but **does not automatically replace an enrolled TOTP second factor** or grant `aal2`. DZOFT's existing owner permission checks and seven-day MFA freshness check remain intact. A device-based second-factor alternative depends on Supabase enabling/accepting WebAuthn MFA factors; the existing code detects already verified factors but enrollment is deliberately disabled until supported. This release does NOT claim the phone authenticator is eliminated for every login. We will not forge `aal2` JWTs, reuse TOTP secrets, or disable MFA to achieve that.
 
 ## Beta Passkeys enabled — live Auth endpoint verified
 
@@ -84,7 +84,7 @@ If the Supabase project does not expose the Passkeys toggle or returns `passkey_
 ## What remains unchanged
 
 - Owner role and server-side MFA checks protect clients, quotes, receipts, and project journals.
-- Existing TOTP verification, password recovery, sign-out, and 12-hour MFA freshness checks remain.
+- Existing TOTP verification, password recovery, sign-out, and seven-day MFA freshness checks remain.
 - No database migrations, service secrets, client email notifications, finance changes, or stored secrets are added.
 - A failed/cancelled device prompt never creates a session.
 - Passkey registration requires a fresh server-issued `aal2` claim. Any login token remains exactly what Supabase Auth issued.
@@ -98,3 +98,34 @@ If the Supabase project does not expose the Passkeys toggle or returns `passkey_
 A real device/browser biometric ceremony cannot be safely simulated with a customer's live account in automated CI. It must be verified interactively on each device after the hosted Auth setting is enabled.
 
 Sources: https://supabase.com/docs/guides/auth/passkeys and https://supabase.com/docs/guides/auth/auth-mfa
+
+## 20 November 2026 — verified owner access and UI session-lock hardening
+
+**Live read-only verification:** RD-Clients currently has one designated owner
+(in server-issued app metadata), that owner has one verified MFA factor, and
+the active `public.is_owner()` implementation checks **AAL2 + a valid
+second-factor AMR timestamp in the last seven days**, as explicitly chosen
+on 18 November. `anon` cannot directly execute `is_owner()`; authenticated
+clients may call it but get a role-restricted result. This supersedes the
+older 12-hour descriptions above. It does **not** prove that passkey sign-in
+alone meets the owner policy.
+
+**Client-side safeguard:** the Admin dashboard now immediately hides private
+customer and payment data, closes open modals and invalidates pending
+data-load generations when a previously valid AAL2 session expires **or
+downgrades to AAL1**, before waiting for an Auth-server response. Errors
+during revalidation keep the private interface hidden. The project and quote
+editor routes also redirect AAL1/expired sessions to the owner verification
+gate. Server-side RLS and `is_owner()` remain the actual authorization
+barrier; hiding a screen is defense in depth, not an alternative to it.
+
+**Remaining owner-passkey gate (#57):** Supabase passkey-only first-factor
+authentication remains insufficient to remove TOTP until the server's
+WebAuthn user-verification policy is demonstrably enforced. No browser-side
+`userVerification: required` request can prove that on its own. Keep
+the existing password and TOTP recovery. The existing owner function permits
+an AAL1 owner *when no verified factor exists at all*; while the current
+owner does have a verified factor, that fallback merits a separate
+migration/recovery review before declaring MFA mandatory under all states.
+This change **does not** alter the 7-day preference, TOTP enrollment,
+server-side grants, RLS, passkey availability, or customer sessions.
