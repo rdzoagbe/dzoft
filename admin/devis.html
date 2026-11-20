@@ -444,7 +444,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   }
   function removeHostLine(index){
     var entry=state.host[index];if(!entry)return;
-    if(String(entry.l||entry.w||entry.c||'').trim() &&
+    if((String(entry.l||'').trim()||String(entry.w||'').trim()||String(entry.c||'').trim()) &&
        !window.confirm('Retirer « '+(entry.l||entry.w||'cet élément')+' » des informations d’hébergement du devis ?'))return;
     state.host.splice(index,1);renderHost();
   }
