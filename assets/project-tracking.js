@@ -19,7 +19,7 @@
  // signatures, receipt-PDF downloads or the legacy invoice "paid" flag.
  function balanceSummary(d){
    var total=Number(d&&d.total),received=Number(d&&d.received),remaining=Number(d&&d.remaining);
-   if(!d||![total,received,remaining].every(function(v){return Number.isFinite(v)&&v>=0;}))
+   if(!d||d.total==null||d.received==null||d.remaining==null||![total,received,remaining].every(function(v){return Number.isFinite(v)&&v>=0;}))
      return '<p class="tracking-balance-unavailable" role="status">'+t('Solde indisponible pour le moment. Consultez le suivi des paiements.','Balance temporarily unavailable. See your payment history.')+'</p>';
    return '<div class="tracking-balance-summary" role="group" aria-label="'+t('Solde financier du projet','Project payment balance')+'">'+
      '<span class="tracking-balance-label">'+t('Solde restant à régler','Remaining project balance')+'</span>'+
