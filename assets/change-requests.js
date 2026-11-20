@@ -103,12 +103,12 @@ function bindClient(root,options){
   if(btn.dataset.changeCode){
    var form=btn.closest('form');if(!form.reportValidity())return;
    if(typeof options.sendCode!=='function'){banner(root,tr(en,'Envoi du code indisponible. Rechargez la page.','Code sending unavailable. Reload the page.'),true);return;}
-   busy=true;btn.disabled=true;
+   busy=true;root.__dzoftChangeBusy=true;btn.disabled=true;
    Promise.resolve(options.sendCode(btn.dataset.changeCode)).then(function(r){
     var box=form.querySelector('.dzoft-change-code');box.hidden=false;
     box.querySelector('[data-code-sent]').textContent=tr(en,'Code envoyé à ','Code sent to ')+((r&&r.target)||tr(en,'votre adresse e-mail','your e-mail address'))+tr(en,'. Il est valable 10 minutes.','. It is valid for 10 minutes.');
     btn.textContent=tr(en,'Renvoyer un code','Send a new code');form.elements.code.focus();
-   }).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;btn.disabled=false;});
+   }).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;btn.disabled=false;});
    return;
   }
   if(btn.dataset.changeDecline){var f=btn.closest('form'),n=f.elements.decisionName.value.trim();if(!n||n.length<2){f.elements.decisionName.focus();return;}if(!global.confirm(tr(en,'Refuser cette proposition ?','Decline this proposal?')))return;
@@ -351,7 +351,7 @@ function bindOwner(root,options){
     A request is billed once: its origin is kept on the line and skipped if already in a live proposal. */
  function hash(t){var h=2166136261;for(var i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
  function fromJournal(form,btn){
-  if(busy)return;busy=true;btn.disabled=true;
+  if(busy)return;busy=true;root.__dzoftChangeBusy=true;btn.disabled=true;
   Promise.all([sb.select('quotes','select=journal,accepted_at,client_id&id=eq.'+encodeURIComponent(quoteId)),
    Promise.resolve(sb.rpc('list_project_work_items',{p_quote:quoteId},true)).catch(function(){return [];})]).then(function(res){
    var q=res[0]&&res[0][0]||{};
@@ -433,7 +433,7 @@ function bindOwner(root,options){
    if(!form.elements.title||!form.elements.title.value)if(form.elements.title)form.elements.title.value='Ajouts demandés depuis la signature du devis';
    form.elements.done.checked=true;
    var firstEmpty=form.querySelector('[data-unpriced]');if(firstEmpty)firstEmpty.focus();
-  }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;btn.disabled=false;});
+  }).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;btn.disabled=false;});
  }
  function recalc(form){
   var total=0,rows=form.querySelectorAll('[data-line]'),sub=0;
@@ -584,7 +584,7 @@ function bindOwner(root,options){
     q('[data-share-confirm]').onclick=function(){
       if(!q('[data-share-checked]').checked||busy)return;
       if(!global.confirm('Avez-vous réellement envoyé ce message vous-même ? Le client pourra ensuite consulter et signer la proposition. DZOFT n’enverra pas d’e-mail.'))return;
-      q('[data-share-confirm]').disabled=true;busy=true;
+      q('[data-share-confirm]').disabled=true;busy=true;root.__dzoftChangeBusy=true;
       sb.rpc('owner_mark_change_shared_manually',{p_request:proposal.id,p_version:proposal.proposal_version},true)
         .then(function(){
           if(d.open)d.close();
@@ -593,7 +593,7 @@ function bindOwner(root,options){
         }).catch(function(err){
           q('[data-share-status]').textContent=stateError(err,en);
           q('[data-share-confirm]').disabled=false;
-        }).finally(function(){busy=false;});
+        }).finally(function(){busy=false;root.__dzoftChangeBusy=false;});
     };
   }
   d.showModal();
