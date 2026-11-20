@@ -670,6 +670,14 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   function returnAfterAuth(){
     var target = safeReturnTarget();
     if (!target) return false;
+    // A recovery account with no enrolled factor can reach the owner
+    // dashboard under the existing server policy, but auxiliary pages now
+    // require AAL2. Send that account to MFA setup instead of looping back
+    // endlessly between a private page and the login gate.
+    if (!sb.mfaFresh(MFA_WINDOW)) {
+      location.replace('./#/parametres');
+      return true;
+    }
     location.replace('./' + target);
     return true;
   }
