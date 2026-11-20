@@ -53,8 +53,12 @@
   lock on focus/visibility/periodic checks.
 - An unsuccessful verification leaves the private app hidden and displays
   a retryable login notice; it never treats a network error as approval.
-- Both the single-quote editor and project workspace route back to the
-  owner verification gate on AAL1, old MFA or expired MFA.
+- Both the single-quote editor and project workspace immediately conceal
+  existing content, then route back to the owner verification gate on AAL1,
+  old MFA or expired MFA. If the account has **no enrolled factor**, the owner
+  landing page deliberately routes a pending return target to **Settings →
+  MFA setup**, avoiding an endless redirect; this preserves the existing
+  recovery pathway without granting AAL1 on the auxiliary pages.
 - The owner can continue using the normal passkey-first sign-in and TOTP
   verification; nothing changes the seven-day window or signs the owner out
   automatically merely because they returned to a tab.
