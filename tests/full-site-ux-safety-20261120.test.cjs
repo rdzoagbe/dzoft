@@ -69,7 +69,10 @@ test('client and owner change forms cannot pretend to Cancel a server operation 
  const source=read('assets/change-requests.js');
  assert.match(source,/function perform\(promise,done\)\{if\(busy\)return;busy=true;root\.__dzoftChangeBusy=true;/);
  assert.match(source,/function perform\(p,msg\)\{if\(busy\)return;busy=true;root\.__dzoftChangeBusy=true;/);
- assert.equal((source.match(/root\.__dzoftChangeBusy=false/g)||[]).length,2);
+ assert.equal((source.match(/root\.__dzoftChangeBusy=false/g)||[]).length,5);
+ assert.match(source,/options\.sendCode\(btn\.dataset\.changeCode\)/);
+ assert.match(source,/function fromJournal\(form,btn\)\{[\s\S]{0,90}root\.__dzoftChangeBusy=true/);
+ assert.match(source,/owner_mark_change_shared_manually/);
  const src=functionSlice(source,"if(global.document)global.document.addEventListener('click'","api.client=bindClient;");
  let click=null,resets=0,details={open:true},scope={__dzoftChangeBusy:true};
  const form={reset(){resets++;},closest(s){return s==='details'?details:null;}};
