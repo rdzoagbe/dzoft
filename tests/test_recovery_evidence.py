@@ -61,9 +61,10 @@ def auth_file(users=3):
 
 class RecoveryEvidenceTests(unittest.TestCase):
  def test_complete_bundle_always_requires_real_isolated_restore(self):
-  ok,pending=gate.evaluate(archive_blob=archive(),archive_password=PW,
+  original=archive()
+  ok,pending=gate.evaluate(archive_blob=original,archive_password=PW,
    expected_storage_count=3,expected_auth_count=3,auth_blob=auth_file(),
-   auth_password=AUTH_PW,offsite_blob=archive(),pg_bin=None,
+   auth_password=AUTH_PW,offsite_blob=bytes(bytearray(original)),pg_bin=None,
    max_age_hours=72,now=NOW)
   self.assertTrue(any("Storage" in x for x in ok))
   self.assertTrue(any("Auth mapping" in x for x in ok))
@@ -118,12 +119,13 @@ class RecoveryEvidenceTests(unittest.TestCase):
    gate.backup_evidence(archive(),PW,expected_storage=3,max_age_hours=72,now=NOW-timedelta(days=2))
 
  def test_native_pg_probe_cannot_claim_restored_db(self):
+  original=archive()
   dummy={"evaluated":True,"tables":26,"table_data_entries":26,"functions":10,
          "policies":1,"auth_dependencies":True}
   with patch.object(gate,"pg_evidence",return_value=dummy):
-   good,pending=gate.evaluate(archive_blob=archive(),archive_password=PW,
+   good,pending=gate.evaluate(archive_blob=original,archive_password=PW,
     expected_storage_count=3,expected_auth_count=3,auth_blob=auth_file(),
-    auth_password=AUTH_PW,offsite_blob=archive(),pg_bin=Path("/synthetic"),
+    auth_password=AUTH_PW,offsite_blob=bytes(bytearray(original)),pg_bin=Path("/synthetic"),
     max_age_hours=72,now=NOW)
   self.assertTrue(any("SQL render" in s for s in good))
   self.assertTrue(any("Auth dependencies" in s for s in pending))
