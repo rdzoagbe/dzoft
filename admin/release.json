@@ -1,5 +1,5 @@
 {
-  "version": "2026.11.20.1",
+  "version": "2026.11.20.2",
   "features": [
     "unified-search",
     "invoice-amount-explanation",
@@ -8,6 +8,7 @@
     "manual-supplementary-proposal-sharing",
     "owner-only-proposal-sharing-security",
     "initial-quote-pricing",
-    "ux-cancel-and-safe-discard"
+    "ux-cancel-and-safe-discard",
+    "client-confirmed-project-balance"
   ]
 }
