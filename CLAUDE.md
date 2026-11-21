@@ -125,7 +125,8 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   nouveau mot de passe (Retour à la connexion), tâches (Modifier / Relire et publier), demande de modification du client, signature
   d’une proposition (« Plus tard »), calculateur de supplément et motif de refus (`data-form-cancel` dans `assets/change-requests.js`,
   jamais d’appel au serveur), confirmation avant « + Facture du suivi ». Test `tests/cancel-back-buttons.test.cjs`.
-  21 nov. 2026 : « Retirer cette proposition… » / « Ne pas retenir cette demande… » s’ouvre dans son propre volet (Annuler le referme) ;
+  21 nov. 2026 : « Retirer cette proposition… » / « Ne pas retenir cette demande… » s’ouvre dans son propre volet ; boutons « Retirer la proposition »
+  (ou « Ne pas retenir la demande ») et « Fermer sans rien changer » (« Annuler » était compris comme « annuler la proposition ») ;
   la fenêtre « Coller une demande » a son propre id (`m-paste-request`, `m-paste` = bouton du code de connexion) ; le calculateur du devis
   initial ne passe plus sous le menu latéral. Tests `tests/unique-page-ids.test.cjs` (aucun id en double), e2e « Cancel buttons close what they opened ».
 - `assets/rd-booking.js` (lien Google Agenda), `assets/rd-reviews.js` (avis publiés),

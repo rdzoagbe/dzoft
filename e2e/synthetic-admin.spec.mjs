@@ -1339,6 +1339,8 @@ test('Cancel buttons close what they opened, without saving (withdraw, paste a r
  await expect(box.locator('input[name=reason]')).toBeHidden();
  await box.locator('summary').click();
  await box.locator('input[name=reason]').fill('Remplacée par une autre');
+ await expect(box.locator('button[type=submit]')).toHaveText(/Retirer la proposition|Withdraw the proposal/);
+ await expect(box.locator('[data-form-cancel]')).toHaveText(/Fermer sans rien changer|Close without changing anything/);
  await box.locator('[data-form-cancel]').click();
  await expect(box).not.toHaveAttribute('open','');
  await box.locator('summary').click();

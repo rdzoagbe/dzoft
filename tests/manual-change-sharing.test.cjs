@@ -40,5 +40,5 @@ test('legacy sent history is preserved, new manual sharing has an auditable even
  assert.doesNotMatch(sql,/delete from|truncate |update public\.email_outbox/i);
  const project=read('admin/suivi.html');
  assert.match(project,/clientEmail:\(C&&C\.email\)/);
- assert.match(project,/change-requests\.js\?v=(?:20261119-quote-catalogue1|20261121-withdraw)/);
+ assert.match(project,/change-requests\.js\?v=(?:20261119-quote-catalogue1|20261121-withdraw|20261121-withdraw2)/);
 });

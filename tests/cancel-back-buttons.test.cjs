@@ -28,7 +28,7 @@ test('extra work: client request (Annuler), proposal to sign (Plus tard), calcul
  assert.match(js,/'Envoyer la demande','Submit request'\)\+'<\/button><button class="btn line" type="button" data-form-cancel>/);
  assert.match(js,/data-form-cancel="later">'\+tr\(en,'Plus tard','Later'\)/);
  assert.match(js,/data-form-cancel="calc">'\+tr\(en,'Annuler','Cancel'\)/);
- assert.match(js,/'Retirer \/ refuser','Withdraw \/ reject'\)\+'<\/button><button class="btn ghost sm" type="button" data-form-cancel>/);
+ assert.match(js,/tr\(en,'Retirer la proposition','Withdraw the proposal'\)\)\+'<\/button><button class="btn ghost sm" type="button" data-form-cancel>'\+tr\(en,'Fermer sans rien changer'/);
  // The cancel handler only resets or hides: it never calls the server.
  const h=js.slice(js.indexOf("closest('[data-form-cancel]')"),js.indexOf('api.client=bindClient'));
  assert.doesNotMatch(h,/sb\.|rpc\(|fetch\(/);
