@@ -123,6 +123,8 @@ function signedQuote(q){
  if(a.opt)doc.row('Options proposées, non comprises',money(a.opt));
  if(a.pct)doc.row('Acompte à la signature ('+a.pct+' %)',money(a.dep));
  doc.text(a.novat?'TVA non applicable, article 293 B du CGI.':'Montants hors taxes ; TVA au taux de 20 %.',{size:9});
+ var excl=String(f.excl||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
+ if(excl.length){doc.h('Ce devis ne comprend pas');excl.forEach(function(l){doc.text('- '+l);});}
  if(f.delay||f.pay||f.fix||f.notes){doc.h('Conditions');doc.kv('Délai de réalisation',f.delay);doc.kv('Paiement',f.pay);doc.kv('Corrections',f.fix);if(f.notes)doc.text(f.notes);}
  doc.h('Accord du client');
  doc.box(signatureLines(q.accepted_name,q.accepted_at,q.accepted_method,q.accepted_target,

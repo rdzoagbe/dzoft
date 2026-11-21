@@ -55,3 +55,29 @@ test('no blank template among the client documents; documents live in each proje
  assert.doesNotMatch(panels,/documentsByProject|\['documents',/);
  assert.match(admin,/documents:'projets'/);
 });
+
+test('signed quote PDF lists what the quote does not include, only when the signed version had the list',async()=>{
+ const D=load();
+ const withList=JSON.parse(JSON.stringify(q));
+ withList.accepted_data.f.excl='La publication sur les stores\n\n  Le paiement en ligne  ';
+ const pdf=await latin(D.signedQuote(withList));
+ assert.match(pdf,/CE DEVIS NE COMPREND PAS/);
+ assert.match(pdf,/- La publication sur les stores/);
+ assert.match(pdf,/- Le paiement en ligne/);
+ // A list typed in the editor after signature must not appear on the signed document.
+ const later=JSON.parse(JSON.stringify(q));
+ later.data.f.excl='Ajouté après la signature';
+ assert.doesNotMatch(await latin(D.signedQuote(later)),/CE DEVIS NE COMPREND PAS|Ajout/);
+});
+
+test('quote editor and client view carry the « Ce devis ne comprend pas » list',()=>{
+ const admin=fs.readFileSync(path.join(__dirname,'..','admin/devis.html'),'utf8');
+ const portal=fs.readFileSync(path.join(__dirname,'..','espace/index.html'),'utf8');
+ assert.match(admin,/id="excl" data-k="excl"/);
+ assert.match(admin,/EXCL_PRESETS = \[/);
+ assert.match(admin,/\.blk\.excl-empty\{display:none!important\}/,'an empty list is not printed');
+ // The package buttons must not take over the new buttons.
+ assert.match(admin,/querySelectorAll\('\.add\[data-preset\]'\)/);
+ assert.match(portal,/<h4>Ce devis ne comprend pas<\/h4><ul class="excl">/);
+ assert.match(portal,/'<li>' \+ esc\(l\) \+ '<\/li>'/,'client text is escaped');
+});
