@@ -359,9 +359,10 @@ footer{max-width:1180px}
 <script>
 (function(){
   var sb = window.RDsb, $ = function(id){ return document.getElementById(id); };
-  var TERMS = 'v2026-11', TERMS_URL = '../cgv.html';
-  function quoteTermsUrl(q){return q && q.accepted_at && q.accepted_terms==='v2026-10'?'../cgv-2026-10.html':TERMS_URL;}
-  function showNewScopeClause(q){return !q.accepted_at || q.accepted_terms==='v2026-11';}
+  var TERMS = 'v2026-12', TERMS_URL = '../cgv.html';
+  var OLD_TERMS = {'v2026-10':'cgv-2026-10.html','v2026-11':'cgv-2026-11.html'};
+  function quoteTermsUrl(q){return q && q.accepted_at && OLD_TERMS[q.accepted_terms]?'../'+OLD_TERMS[q.accepted_terms]:TERMS_URL;}
+  function showNewScopeClause(q){return !q.accepted_at || q.accepted_terms==='v2026-11' || q.accepted_terms==='v2026-12';}
   var GOOGLE_REVIEW = 'https://g.page/r/CYguS5Uj8gxpECE/review';
   var esc = function(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   // Interface language: the page-wide dictionary handles fixed labels; sentences built
@@ -1338,7 +1339,7 @@ footer{max-width:1180px}
       '<div><span>Acompte</span>' + a.pct + ' %</div>' + (f.pay ? '<div><span>Paiement</span>' + esc(f.pay) + '</div>' : '') +
       (f.fix ? '<div><span>Corrections</span>' + esc(f.fix) + '</div>' : '') + '</div>' +
       (f.notes ? '<p style="margin-top:6px;white-space:pre-wrap;font-size:13px">' + esc(f.notes) + '</p>' : '');
-    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/' + (q.accepted_at && q.accepted_terms==='v2026-10'?'cgv-2026-10.html':'cgv.html') + '</a></p>';
+    h += '<p style="margin-top:10px;font-size:12.5px;color:var(--mute)">Conditions générales de vente : <a href="' + quoteTermsUrl(q) + '" target="_blank" rel="noopener">rdzoagbe.github.io/dzoft/' + (q.accepted_at && OLD_TERMS[q.accepted_terms] || 'cgv.html') + '</a></p>';
     if (q.accepted_at) h += '<div class="signed">' + (q.accepted_method ? 'Signé électroniquement' : 'Bon pour accord donné en ligne') + ' le ' + time(q.accepted_at) + ' par ' + esc(q.accepted_name) +
       (q.accepted_method ? ' (code reçu ' + (q.accepted_method === 'sms' ? 'par SMS au ' : 'par e-mail à ') + esc(q.accepted_target || '') + ')' : '') +
       (q.accepted_terms ? ', avec acceptation des conditions générales de vente (version ' + esc(q.accepted_terms.replace(/^v/, '')) + ')' + (q.accepted_early_start ? ' et demande de démarrage immédiat' : '') : '') + '.</div>';

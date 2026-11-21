@@ -27,6 +27,13 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   colonne de droite = rendez-vous, téléphone, WhatsApp, e-mail. Carte de visite (recto/verso), contact .vcf et carte PDF sont sur
   « À propos » (`a-propos.html`, `en/a-propos.html`) ; la fiche de remise reste liée dans le brief et sur Méthode.
   Accueil (18 nov. 2026) : réalisations = Ahenora en avant (produit réalisé), puis StackLens, puis Le Fournil (démonstration, signalée).
+- CGV version 2026-12 (21 nov. 2026, demande de Roland après un supplément contesté) : le devis liste ce qui est compris, accord écrit
+  avant tout supplément (simple réponse écrite jusqu’à 100 €, devis complémentaire signé au-delà), demandes orales sans effet tant
+  qu’elles ne sont pas confirmées par écrit, barème indicatif, livraison = version finale remise pour vérification (14 jours), sans
+  attendre Apple ou Google. Versions archivées : `cgv-2026-10.html`, `cgv-2026-11.html` (+ `en/`) ; un devis signé garde sa version
+  (`accepted_terms`). Nouvelle version = archiver l’actuelle, changer `TERMS` dans `espace/index.html`, compléter `OLD_TERMS` et les
+  tests `tests/scope-change-terms.test.cjs`. Texte à faire relire par un juriste. Formulaire de devis : fonctions indispensables,
+  comptes utilisateurs, mise en ligne, qui valide.
 - `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
 - `en/` : version anglaise page à page (index, services, methode, faq, realisations, cgv,

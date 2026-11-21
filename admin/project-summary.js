@@ -70,7 +70,7 @@ function renderDocuments(){
  var box=document.getElementById('ps-docs');if(!box||!state.quote)return;
  var q=state.quote;
  if(!q.accepted_at){box.innerHTML='<p class="ps-note">'+tr('Les documents officiels apparaîtront ici après la signature du devis.','Official documents will appear here once the quote is signed.')+'</p>';return;}
- var f=((q.accepted_data||q.data||{}).f)||{},cgv=q.accepted_terms==='v2026-10'?'../cgv-2026-10.html':'../cgv.html',h='';
+ var f=((q.accepted_data||q.data||{}).f)||{},cgv=q.accepted_terms==='v2026-10'?'../cgv-2026-10.html':q.accepted_terms==='v2026-11'?'../cgv-2026-11.html':'../cgv.html',h='';
  h+='<h3 class="ps-doc-group">'+tr('Contrat','Contract')+'</h3><div class="ps-doc-list">'+
   entry(tr('Devis signé n° ','Signed quote no. ')+(f.num||q.numero||''),tr('Signé le ','Signed on ')+day(q.accepted_at)+(q.accepted_name?' · '+q.accepted_name:''),pdf('quote'))+
   entry(tr('Conditions générales acceptées','Accepted terms of sale'),q.accepted_terms?tr('Version ','Version ')+String(q.accepted_terms).replace(/^v/,''):'','<a class="btn sm line" href="'+cgv+'" target="_blank" rel="noopener">'+tr('Voir','View')+' ↗</a>')+'</div>';
