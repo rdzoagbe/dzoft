@@ -9,8 +9,9 @@ test('French and English landing pages describe the scope-bound fixed price',()=
  const fr=read('index.html'),en=read('en/index.html');
  const method=read('methode.html'),englishMethod=read('en/methode.html');
  const faq=read('faq.html'),englishFaq=read('en/faq.html');
- assert.match(fr,/Les demandes supplémentaires après signature peuvent modifier le budget uniquement après votre accord/);
- assert.match(en,/Changes requested after signing may affect the budget only if you approve/);
+ // Since 21 Nov 2026 the home page explains extras in a three-step block (tests/extras-explained.test.cjs).
+ assert.match(fr,/Rien sans votre «&nbsp;oui&nbsp;» écrit\./);
+ assert.match(en,/Nothing without your written “yes”\./);
  assert.doesNotMatch(method,/Le prix ne bouge plus/);
  assert.doesNotMatch(englishMethod,/The price then stays fixed/);
  assert.match(method,/les corrections nécessaires pour respecter le devis signé restent incluses/i);

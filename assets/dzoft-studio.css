@@ -77,6 +77,16 @@ h1,h2{text-wrap:balance}
 .price-list b{font-size:28px;line-height:1.2;letter-spacing:-.03em;color:var(--ink)}
 .price-list small{font-size:13px;font-weight:600;color:#304bc7}
 .price-note{margin-top:16px;font-size:14px;color:#4a5361}
+/* « Une nouvelle idée en cours de route ? » : how extras work, in three steps (21 Nov 2026). */
+.extras-promise{margin-top:26px;padding:24px 26px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.extras-promise h3{margin:0 0 12px;font-size:20px;letter-spacing:-.02em;color:var(--ink)}
+.extras-promise ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:ex}
+.extras-promise li{position:relative;padding-left:34px;font-size:14px;line-height:1.55;color:#3c4454;counter-increment:ex}
+.extras-promise li:before{content:counter(ex);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:#4361EE;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.extras-promise li b{display:block;color:var(--ink);margin-bottom:2px}
+.extras-promise p{margin:14px 0 0;font-size:13px;color:#4a5361}
+.extras-promise a{color:#3448D6;text-decoration:underline}
+@media(max-width:760px){.extras-promise{padding:20px 18px}.extras-promise ol{grid-template-columns:1fr;gap:14px}}
 /* Concrete commitments in the developer block. */
 .commitments{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:26px 0 0;padding:22px 0 0;border-top:1px solid #cdcec8}
 .commitments li{display:flex;flex-direction:column;gap:4px}
