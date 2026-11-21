@@ -294,3 +294,7 @@
 .dzoft-price-list [data-block-description],.dzoft-price-list [data-block-scope]{min-width:155px;max-width:290px}
 .dzoft-price-list [data-block-scope]{padding:7px}
 @media(max-width:700px){.dzoft-block-new{grid-template-columns:1fr;padding:13px}.dzoft-block-new button{width:100%}}
+
+.dzoft-change-archive{margin-top:16px;border:1px dashed #cdd6e6;border-radius:10px;padding:10px 12px;background:#f8fafd}
+.dzoft-change-archive>summary{cursor:pointer;font-weight:600;color:#4a5970;font-size:14px}
+.dzoft-change-archive .dzoft-change-item{opacity:.85}

@@ -75,6 +75,9 @@ const syntheticSb = `
         ],updates:[],supplements:0,credit_notes:window.__credits||[],credits:(window.__credits||[]).filter(c=>c.effect==='reduce').reduce((n,c)=>n+c.amount,0)};
       return {total:1500,base_total:1500,received:450,remaining:1050,legacy:0,payment_statuses:[],receipts:[],updates:[],supplements:0};
     }
+   if(location.search.includes('archiveFixture=1')&&name==='owner_list_change_requests')return [
+     {id:'44444444-4444-4444-8444-444444444444',title:'Proposition en cours',status:'proposed',sent_at:now,proposal_number:'D-SYNTHETIC-001-C2',proposal_version:1,extra_price:120,created_at:now,lines:[{label:'Écran',qty:1,price:120}]},
+     {id:'55555555-5555-4555-8555-555555555555',title:'Proposition retirée',status:'withdrawn',sent_at:now,proposal_number:'D-SYNTHETIC-001-C1',proposal_version:2,extra_price:350,created_at:now,lines:[{label:'Ajouts',qty:1,price:350}]}];
    // Unsent draft proposal (18 Nov 2026): « Modifier ce brouillon » re-prices it in place.
    if(location.search.includes('draftFixture=1')){
      window.__draft=window.__draft||{id:'33333333-3333-4333-8333-333333333333',title:'Ajouts demandés',status:'proposed',sent_at:null,proposal_number:'D-SYNTHETIC-001-C1',proposal_version:1,extra_price:400,already_done:true,timeline_impact:'',created_at:now,
@@ -1366,5 +1369,25 @@ test('Cancel buttons close what they opened, without saving (withdraw, paste a r
  await page.locator('#mp-close').click();
  await expect(page.locator('#m-paste-request')).toBeHidden();
  expect(writes).toEqual([]);
+ expect(errors).toEqual([]);
+});
+
+test('Withdrawn proposals are archived: kept under a closed « Archives » section, live ones stay on top',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&archiveFixture=1#billing',{waitUntil:'domcontentloaded'});
+ const root=page.locator('#dzoft-owner-changes');
+ const live=root.locator('[data-change-card="44444444-4444-4444-8444-444444444444"]');
+ await expect(live).toBeVisible();
+ const archive=root.locator('details.dzoft-change-archive');
+ await expect(archive).toHaveCount(1);
+ await expect(archive).not.toHaveAttribute('open','');
+ await expect(archive.locator(':scope > summary')).toContainText(/Archives \(1\)|Archive \(1\)/);
+ const old=archive.locator('[data-change-card="55555555-5555-4555-8555-555555555555"]');
+ await expect(old).toBeHidden();
+ await expect(live.locator('xpath=ancestor::details[contains(@class,"dzoft-change-archive")]')).toHaveCount(0);
+ await archive.locator(':scope > summary').click();
+ await expect(old).toBeVisible();
+ await expect(old).toContainText('D-SYNTHETIC-001-C1');
  expect(errors).toEqual([]);
 });

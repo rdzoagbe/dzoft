@@ -14,6 +14,14 @@ function num(v){var n=Number(String(v==null?'':v).replace(',','.'));return Numbe
 function cents(v){return Math.round(num(v)*100);}
 // Prices and quantities: at most two decimals, comma or point (what the server accepts).
 function amount(v){var t=String(v==null?'':v).trim();return /^-?\d{1,7}(?:[.,]\d{1,2})?$/.test(t)?num(t):NaN;}
+// Closed proposals (withdrawn, not proceeding, declined by the client) are archived, never deleted (21 Nov 2026):
+// they go under a closed « Archives » section, with their number, reason and history, so live work stays on top.
+var CLOSED={withdrawn:1,rejected:1,declined:1};
+function withArchive(records,card,en){
+ var open=records.filter(function(r){return !CLOSED[r.status];}),closed=records.filter(function(r){return CLOSED[r.status];});
+ return open.map(card).join('')+(closed.length?'<details class="dzoft-change-archive"><summary>'+tr(en,'Archives','Archive')+' ('+closed.length+') · '+
+  tr(en,'propositions retirées, refusées ou non retenues','withdrawn, declined or not proceeding')+'</summary>'+closed.map(card).join('')+'</details>':'');
+}
 function labels(en){return {requested:tr(en,'À étudier','Awaiting review'),proposed:tr(en,'Proposition à signer','Awaiting signature'),approved:tr(en,'Signée','Signed'),declined:tr(en,'Refusée par le client','Declined by client'),rejected:tr(en,'Non retenue','Not proceeding'),withdrawn:tr(en,'Retirée','Withdrawn'),in_progress:tr(en,'Travaux en cours','In progress'),completed:tr(en,'Travaux terminés','Work completed')};}
 function eventLabels(en){var l=labels(en);l.sent=tr(en,'Partage déclaré','Sharing recorded');l.approved=tr(en,'Signée','Signed');l.proposed=tr(en,'Proposition chiffrée','Priced proposal');l.requested=tr(en,'Demande','Request');return l;}
 function history(r,en){var h=r.history||[],l=eventLabels(en);return '<details class="dzoft-change-history"><summary>'+tr(en,'Historique des décisions','Decision history')+' ('+h.length+')</summary><ol>'+h.map(function(e){return '<li>'+esc(l[e.event_type]||e.event_type)+' · '+esc(e.actor_type==='owner'?'DZOFT':'Client')+' · '+esc(when(e.at))+'</li>';}).join('')+'</ol></details>';}
@@ -89,7 +97,7 @@ function bindClient(root,options){
  root.innerHTML=rootMarkup(en);var records=[];
  function refresh(){return call('list_change_requests',{p_quote:quoteId}).then(function(rows){records=Array.isArray(rows)?rows:[];root.querySelector('.dzoft-change-content').innerHTML=
   '<p class="dzoft-change-help">'+tr(en,'Les changements après signature sont étudiés séparément. Aucun supplément sans votre accord.','Changes after signing are reviewed separately. No extra charge without your agreement.')+'</p>'+
-  openForm(en)+(records.length?records.map(function(r){return clientCard(r,en,name,options.terms);}).join(''):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
+  openForm(en)+(records.length?withArchive(records,function(r){return clientCard(r,en,name,options.terms);},en):'<p>'+tr(en,'Aucune demande de modification pour ce projet.','No change requests for this project yet.')+'</p>');
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(promise,done){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return promise.then(function(){banner(root,done||tr(en,'Action enregistrée.','Action recorded.'),false);return refresh();}).catch(function(e){banner(root,stateError(e,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
  root.addEventListener('submit',function(ev){var form=ev.target;if(!form.matches('[data-change-create],[data-change-sign]'))return;ev.preventDefault();if(busy||!form.reportValidity())return;
@@ -338,7 +346,7 @@ function bindOwner(root,options){
   '<p class="dzoft-change-help">'+tr(en,'Une demande n’est pas une commande. Chiffrez les travaux, relisez et expliquez-les depuis Outlook ou WhatsApp. Après votre envoi manuel, confirmez le partage pour permettre la signature du client avant toute facturation.','A request is not an order. Price the work and explain it using Outlook or WhatsApp. After sending manually, confirm sharing to enable client signature before any invoicing.')+'</p>'+
   '<details class="dzoft-change-new" data-new-proposal'+(keepOpen?' open':'')+'><summary>'+tr(en,'＋ Proposer un complément chiffré','＋ Propose priced additional work')+'</summary>'+calculator(en,blocks,null,tiers)+'</details>'+
   '<p class="dzoft-change-note dzoft-price-link">'+tr(en,'Ma liste de prix ('+blocks.length+' prestation(s), '+tiers.length+' niveau(x)) se gère dans ','My price list ('+blocks.length+' item(s), '+tiers.length+' level(s)) is managed in ')+'<a href="./#/catalogue">'+tr(en,'Catalogue (Prestations)','Service catalogue')+'</a>.</p>'+
-  (records.length?records.map(function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);}).join(''):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
+  (records.length?withArchive(records,function(r){return adminCard(r,en,invoiceOf(r),blocks,tiers);},en):'<p>'+tr(en,'Aucune demande pour ce projet.','No change requests for this project.')+'</p>');
   root.querySelectorAll('form[data-change-offer]').forEach(recalc);
  }).catch(function(err){banner(root,stateError(err,en),true);});}
  function perform(p,msg){if(busy)return;busy=true;root.__dzoftChangeBusy=true;return p.then(function(){banner(root,msg||tr(en,'Décision enregistrée.','Decision recorded.'),false);return refresh();}).catch(function(err){banner(root,stateError(err,en),true);}).finally(function(){busy=false;root.__dzoftChangeBusy=false;});}
@@ -640,7 +648,7 @@ function bindOwner(root,options){
     f.hasAttribute('data-edit')?tr(en,'Brouillon modifié : relisez-le ci-dessous, puis préparez un message Outlook ou WhatsApp.','Draft updated: check it below, then prepare an Outlook or WhatsApp message.'):tr(en,'Brouillon créé : relisez-le ci-dessous, puis « Envoyer au client ».','Draft created: check it below, then “Send to client”.'));
    return;
   }
-  if(f.dataset.changeReject){if(!global.confirm(tr(en,'Retirer ou refuser cette proposition ?','Withdraw or reject this proposal?')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
+  if(f.dataset.changeReject){if(!global.confirm(tr(en,'Confirmer ? Elle sera rangée dans « Archives », jamais supprimée, et ne pourra plus être signée.','Confirm? It will be moved to « Archive », never deleted, and can no longer be signed.')))return;perform(sb.rpc('owner_reject_change',{p_request:f.dataset.changeReject,p_reason:f.elements.reason.value.trim()},true));}
  });
  root.__dzoftOwnerRefresh=refresh;root.__dzoftOwnerQuote=quoteId;
  return refresh();

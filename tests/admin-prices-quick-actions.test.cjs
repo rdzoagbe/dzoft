@@ -16,7 +16,7 @@ test('price list is edited only on the Catalogue page, and the project calculato
  assert.match(prices,/price_tiers:next/);assert.match(prices,/default_line_price:dp/);assert.match(prices,/price_blocks:next\.slice\(0,200\)/);
  assert.match(panels,/id="dzoft-prices" data-no-translate/);
  assert.match(panels,/window\.DzoftChanges\.prices\(box,\{sb:window\.RDsb,en:en\(\)\}\)/);
- assert.match(index,/change-requests\.js\?v=(?:20261119-quote-catalogue1|20261121-withdraw|20261121-withdraw2)/);
+ assert.match(index,/change-requests\.js\?v=(?:20261119-quote-catalogue1|20261121-withdraw|20261121-withdraw2|20261121-archive)/);
 });
 
 test('quick buttons only navigate: they never write, and they open the existing forms',()=>{

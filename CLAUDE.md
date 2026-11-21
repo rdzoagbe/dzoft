@@ -197,6 +197,8 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   « à l’étude », sans prix), ne peut ni recevoir de code ni la signer avant « Envoyer au client » ; la rechiffrer en refait un
   brouillon. Reste privé même retiré ou refusé sans avoir été envoyé (migration `20261117210000_…`).
   Tests `tests/change-proposal-draft.test.cjs`, `tests/change-draft-private-after-close.sql`.
+  Archives (21 nov. 2026, demande de Roland) : une proposition retirée, non retenue ou refusée par le client n’est jamais supprimée ;
+  elle passe sous « Archives (n) », section fermée en bas de la liste (admin et client), avec numéro, motif et historique. E2e « archived ».
   « ✎ Modifier ce brouillon » (18 nov. 2026) : un brouillon non envoyé se modifie sur place (lignes, prix, remise ; même numéro,
   reste brouillon, `owner_price_change_request`) ; Annuler remet ses lignes enregistrées. E2e « edited in place ».
   Textes envoyés au client toujours en français, quelle que soit la langue de l’admin (« Remise commerciale », titre par défaut).
