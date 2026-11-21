@@ -18,6 +18,8 @@
  body.dzoft-admin.dzoft-editor>header.top .back{color:#2442ce!important}
  body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{position:relative;margin-left:max(254px,calc(238px + max(16px,(100vw - 238px - 1160px)/2)))}
  body.dzoft-admin.dzoft-editor>.sheet{margin-right:auto}
+ /* The initial-quote calculator is a direct child of body too: keep it clear of the fixed menu (21 Nov 2026). */
+ body.dzoft-admin.dzoft-editor>.quote-estimator{position:relative;width:auto;max-width:1160px;margin-left:max(254px,calc(238px + max(16px,(100vw - 238px - 1160px)/2)));margin-right:max(16px,calc((100vw - 238px - 1160px)/2))}
  /* Project tools page: its content sits in .workspace-shell, kept to the right of the fixed menu. */
  body.dzoft-admin.dzoft-editor>.workspace-shell{margin-left:238px;margin-right:0;max-width:none;padding-left:max(24px,calc((100vw - 238px - 1480px)/2));padding-right:max(24px,calc((100vw - 238px - 1480px)/2))}
  body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 238px - 36px);max-width:1250px;margin-right:18px}
@@ -29,6 +31,7 @@
  body.dzoft-admin.dzoft-editor.dzoft-editor-menu-open .dzoft-editor-sidebar{transform:translateX(0)}
  body.dzoft-admin.dzoft-editor>.tools,body.dzoft-admin.dzoft-editor>header.top{margin-left:0}
  body.dzoft-admin.dzoft-editor>.sheet,body.dzoft-admin.dzoft-editor>main,body.dzoft-admin.dzoft-editor>.importbox,body.dzoft-admin.dzoft-editor>.accbanner{margin-left:auto;margin-right:auto}
+ body.dzoft-admin.dzoft-editor>.quote-estimator{margin-left:auto;margin-right:auto;width:calc(100% - 20px)}
  body.dzoft-admin.dzoft-editor>main#main{width:calc(100% - 24px);max-width:1250px;margin:14px auto}
  body.dzoft-admin.dzoft-editor>.workspace-shell{margin-left:auto;margin-right:auto;padding-left:16px;padding-right:16px}
  body.dzoft-admin.dzoft-editor .dzoft-editor-menu-toggle{display:inline-flex}

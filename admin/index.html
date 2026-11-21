@@ -226,7 +226,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 <link rel="stylesheet" href="workspace-home.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-epuree.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-flow.css?v=20261117-blue"><link rel="stylesheet" href="workspace-unified.css?v=20261117-blue"><link rel="stylesheet" href="client-links.css?v=20261117-blue"><link rel="stylesheet" href="dashboard-v3.css?v=20261118-onebutton">
-<link rel="stylesheet" href="../assets/change-requests.css?v=20261119-quote-catalogue1"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-blue">
+<link rel="stylesheet" href="../assets/change-requests.css?v=20261121-withdraw"><link rel="stylesheet" href="unified-app-shell.css?v=20261117-blue">
 <link rel="stylesheet" href="workspace-pages-v4.css?v=20261117-blue"><link rel="stylesheet" href="global-view-v5.css?v=20261117-blue"><link rel="stylesheet" href="workspace-v6.css?v=20261117-blue">
 </head>
 <body class="dzoft-admin">
@@ -600,7 +600,7 @@ td select{width:auto;padding:4px 6px;font-size:13px}
 </div>
 
 <!-- paste a request received elsewhere (WhatsApp, e-mail) -->
-<div class="modal" id="m-paste" hidden>
+<div class="modal" id="m-paste-request" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="mp-title">
     <h3 id="mp-title">Coller une demande</h3>
     <p style="font-size:14px;color:var(--mute)">Collez le message reçu par WhatsApp ou par e-mail : il est ajouté à vos demandes avec les bonnes informations.</p>
@@ -1935,15 +1935,16 @@ td select{width:auto;padding:4px 6px;font-size:13px}
   };
 
   /* ---------------- paste a request ---------------- */
-  $('b-paste').onclick = function(){ $('mp-text').value = ''; $('m-paste').hidden = false; $('mp-text').focus(); };
-  $('mp-close').onclick = function(){ $('m-paste').hidden = true; };
+  // The window has its own id: « m-paste » is the « Paste copied code » button of the sign-in code step (21 Nov 2026).
+  $('b-paste').onclick = function(){ $('mp-text').value = ''; $('m-paste-request').hidden = false; $('mp-text').focus(); };
+  $('mp-close').onclick = function(){ $('mp-text').value = ''; $('m-paste-request').hidden = true; $('b-paste').focus(); };
   $('mp-go').onclick = function(){
     var r = parseRequest($('mp-text').value);
     if (!r.prenom) r.prenom = 'Sans nom';
     sb.insert('leads', { prenom: r.prenom.slice(0, 100), activite: (r.activite || '').slice(0, 200), projet: (r.projet || '').slice(0, 100),
       budget: (r.budget || '').slice(0, 100), contact: (r.contact || '').slice(0, 200), elements: (r.elements || '').slice(0, 500),
       message: (r.message || '').slice(0, 5000), source: 'collée' })
-      .then(function(){ $('m-paste').hidden = true; toast('Demande ajoutée.'); loadAll(); }, fail);
+      .then(function(){ $('m-paste-request').hidden = true; toast('Demande ajoutée.'); loadAll(); }, fail);
   };
   function parseRequest(txt){
     var r = {}, rest = [], map = { 'prénom':'prenom', 'prenom':'prenom', 'activité':'activite', 'activite':'activite', 'projet':'projet',
@@ -2037,7 +2038,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function(){ na
 <script src="today-actions.js?v=20261115-clean3"></script>
 <script src="dashboard-v3.js?v=20261118-backup"></script>
 <script src="unified-app-shell.js?v=20261117-nav7"></script>
-<script src="../assets/change-requests.js?v=20261119-quote-catalogue1-ux20261120"></script>
+<script src="../assets/change-requests.js?v=20261121-withdraw"></script>
 <script src="workspace-panels-v7.js?v=20261117-onepage"></script>
 <script src="workspace-nav-v6.js?v=20261117-onepage"></script>
 <script>if (window.DzoftReapplyRoute) window.DzoftReapplyRoute();</script>

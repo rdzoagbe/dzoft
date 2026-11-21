@@ -23,7 +23,9 @@
 .dzoft-change-history{margin-top:14px;font-size:12px;color:var(--muted,var(--mute,#4a5970))}
 .dzoft-change-history summary{cursor:pointer}
 .dzoft-change-history ol{padding-left:20px;line-height:1.9;margin:7px 0}
-.dzoft-change-reject{border-top:1px solid #e2e7f0;padding-top:11px}
+.dzoft-change-reject{padding-top:11px}
+.dzoft-change-reject-box{margin-top:12px;border-top:1px solid #e2e7f0;padding-top:10px}
+.dzoft-change-reject-box>summary{cursor:pointer;color:#8a2a2a;font-weight:600;font-size:14px}
 @media(max-width:640px){.dzoft-change-item{padding:12px}.dzoft-change-actions{flex-direction:column}.dzoft-change-actions .btn,.dzoft-change-form>.btn{width:100%;justify-content:center}}
 /* Priced proposals: lines table, calculator, price list, code signature */
 .dzoft-change-table{overflow-x:auto;margin:10px 0;max-width:100%}

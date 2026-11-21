@@ -143,10 +143,11 @@ test('new project cards are searchable from the shared dossiers search', () => {
 });
 test('installed mobile app exposes global overview and closes on project links', () => {
   const mobile=readFileSync(new URL('../admin/installed-app-menu.js',import.meta.url),'utf8');
-  assert.match(mobile, /slug:'vue-globale'/);
+  // Seven entries since 17 Nov 2026: the old « vue-globale » address now opens the Tableau de bord (alias).
+  assert.match(mobile, /slug:'tableau-de-bord'/);
   assert.match(mobile, /\.dzoft-mobile-project a\[href\]/);
   assert.match(mobile, /menu\.open=false/);
-  assert.match(admin, /installed-app-menu\.js\?v=(?:20261116-nav-audit1|20261117-nav7)/);
+  assert.match(admin, /installed-app-menu\.js\?v=(?:20261116-nav-audit1|20261117-nav7|20261119-audit-nav)/);
 });
 test('all visible sidebar destinations map to real app views', () => {
   for(const value of ['tableau-de-bord','vue-globale','dossiers','demandes','clients','devis','projets','messages','comptabilite','parametres','corbeille']) {
