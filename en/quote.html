@@ -587,6 +587,31 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             </div>
           </fieldset>
           <div class="full">
+            <label for="essentiels">Must-have features or screens (one per line)</label>
+            <p class="fhelp" id="essentiels-help">Write everything the project absolutely has to do. The quote will repeat this list: anything not on it will be priced separately, with your agreement.</p>
+            <textarea id="essentiels" name="essentiels" maxlength="1500" aria-describedby="essentiels-help" placeholder="Example:&#10;Book an appointment online&#10;Receive a confirmation email&#10;See my upcoming appointments"></textarea>
+          </div>
+          <div>
+            <label for="comptes-utilisateurs">Will users need to create an account?</label>
+            <select id="comptes-utilisateurs" name="comptes_utilisateurs">
+              <option value="">I don’t know yet</option>
+              <option value="Oui">Yes</option>
+              <option value="Non">No</option>
+            </select>
+          </div>
+          <div>
+            <label for="mise-en-ligne">Who handles going live or publishing?</label>
+            <select id="mise-en-ligne" name="mise_en_ligne">
+              <option value="">I don’t know yet</option>
+              <option value="DZOFT">DZOFT, to include in the quote</option>
+              <option value="Le client">I will do it myself</option>
+            </select>
+          </div>
+          <div class="full">
+            <label for="decideur">Who will approve the quote and the project steps?</label>
+            <input id="decideur" name="decideur" type="text" maxlength="200" placeholder="Just you, you and a partner…">
+          </div>
+          <div class="full">
             <label for="site-existant">Your current website or app (link, if you have one)</label>
             <input id="site-existant" name="site_existant" type="url" maxlength="400" autocomplete="url" placeholder="https://…">
           </div>
@@ -638,6 +663,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           <button class="btn-text" type="button" id="send-mail">or by email</button>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
+        <p class="full privacy" id="scope-note"><b>A precise quote, no surprises.</b> The quote lists exactly what the price includes. Anything requested afterwards is priced and submitted for your written agreement before it is done (<a href="cgv.html#a3">article 3 of the terms</a>).</p>
         <p class="full privacy" id="privacy">Whichever button you choose, your request is saved as soon as you click, in my secure follow-up tool (hosted in France), only to reply to you (see the <a href="confidentialite.html">privacy policy</a>). With “Send my request”, it is also emailed to me; with WhatsApp or email, it opens in your app and you send it yourself.</p>
       </form>
       </div>
@@ -706,6 +732,10 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       add('Fonctions mobiles à prévoir : ', 'Mobile app requirements: ', selectedChoices('mobile_features'));
     }
     add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
+    add('Fonctions indispensables : ', 'Must-have features: ', (d.get('essentiels') || '').trim().slice(0,1500));
+    if (d.get('comptes_utilisateurs')) add('Comptes utilisateurs : ', 'User accounts: ', label('comptes-utilisateurs'));
+    if (d.get('mise_en_ligne')) add('Mise en ligne ou publication : ', 'Going live or publishing: ', label('mise-en-ligne'));
+    add('Validation des étapes : ', 'Who approves: ', (d.get('decideur') || '').trim().slice(0,200));
     add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
     add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
     add('Exemples appréciés : ', 'Reference examples: ', (d.get('exemples') || '').trim().slice(0,500));

@@ -767,9 +767,12 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       $('b-follow').hidden = false;
       $('b-follow').href = 'suivi.html?q=' + encodeURIComponent(QID);
       $('b-follow').textContent = q.accepted_at ? 'Dossier client' : 'Suivi du devis';
-      if (q.accepted_at && q.accepted_terms !== 'v2026-11') {
+      if (q.accepted_at && q.accepted_terms !== 'v2026-11' && q.accepted_terms !== 'v2026-12') {
          $('scope-change-quote').hidden = true;
          if (q.accepted_terms === 'v2026-10') $('cgv-ref').textContent = 'rdzoagbe.github.io/dzoft/cgv-2026-10.html';
+       }
+       if (q.accepted_at && q.accepted_terms === 'v2026-11') {
+         $('cgv-ref').textContent = 'rdzoagbe.github.io/dzoft/cgv-2026-11.html';
        }
        if (q.accepted_at) {
         // the client's box carries the electronic signature, printed with the quote
