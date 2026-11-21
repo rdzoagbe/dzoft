@@ -34,6 +34,8 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   (`accepted_terms`). Nouvelle version = archiver l’actuelle, changer `TERMS` dans `espace/index.html`, compléter `OLD_TERMS` et les
   tests `tests/scope-change-terms.test.cjs`. Texte à faire relire par un juriste. Formulaire de devis : fonctions indispensables,
   comptes utilisateurs, mise en ligne, qui valide.
+  Éditeur de devis (21 nov. 2026) : bloc « Ce devis ne comprend pas » (`f.excl`, une ligne par élément, boutons d’ajout rapide
+  `EXCL_PRESETS`), repris dans la vue du client et le PDF du devis signé (version figée à la signature) ; vide = non imprimé.
 - `cgv.html` · `confidentialite.html` · `404.html` ·
   `demos/{boulangerie,coiffure,plombier}/` (sites fictifs, `noindex`, bandeau `.demo`).
 - `en/` : version anglaise page à page (index, services, methode, faq, realisations, cgv,

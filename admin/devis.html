@@ -89,6 +89,8 @@ tr.is-opt .otag{display:inline-block}
 tr.is-opt .tot{font-style:italic;color:var(--mute)}
 .why{font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
 .adders{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.excl-hint{font-size:12.5px;color:#8a5a00;background:#fff3d6;border-radius:8px;padding:6px 10px;margin-top:8px}
+.add[aria-pressed="true"]{border-style:solid;background:#e6edff}
 a.tb{text-decoration:none;display:inline-flex;align-items:center}
 .esign{color:#136c3a;font-weight:800;font-size:13px;margin:4px 0 2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .accbanner{max-width:820px;margin:12px auto 0;background:#e7f8ef;border:1px solid #9ed5b3;color:#136c3a;border-radius:12px;padding:10px 14px;font-size:14px}
@@ -143,7 +145,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
 @media print{
   @page{size:A4;margin:9mm}
   body,body.dzoft-admin{background:#fff!important;color:#0B1020!important}
-  .noprint,.tools,.importbox,.adders,.hostadd,.rm,tr.blank{display:none!important}
+  .noprint,.tools,.importbox,.adders,.hostadd,.rm,tr.blank,.blk.excl-empty{display:none!important}
   .sheet{background:#fff!important;box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
   input.f,.ed{border:0!important;background:transparent!important;padding:0}
   .ed:empty:before{content:""}
@@ -260,6 +262,13 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     <div class="why"><b>Comment lire ce devis.</b> Chaque ligne correspond à une partie du travail, avec son prix : le total en est la somme. <span id="why-opt" hidden>Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. </span>Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>
     <div class="why" id="scope-change-quote"><b>Prix convenu et demandes après signature.</b> Le montant ci-dessus couvre les prestations décrites dans le présent devis. Une nouvelle fonctionnalité, une page supplémentaire ou toute modification importante demandée après acceptation peut modifier le budget et le délai. DZOFT proposera d’abord un devis complémentaire ou un avenant précisant ces changements : aucun supplément ne sera réalisé ni facturé sans votre accord exprès. Les corrections nécessaires pour respecter ce devis restent incluses.</div>
     <label class="chk noprint"><input type="checkbox" id="novat" data-k="novat" data-keep="1" checked> Franchise de TVA (article 293 B du CGI)</label>
+  </div>
+
+  <div class="blk excl-empty" id="excl-blk">
+    <h3>Ce devis ne comprend pas</h3>
+    <div class="ed" contenteditable="true" id="excl" data-k="excl" data-ph="Une ligne par élément non compris dans le prix. Le client le lit avant de signer."></div>
+    <div class="adders" id="excl-adders" aria-label="Éléments non compris, à ajouter d’un clic"></div>
+    <p class="excl-hint noprint" id="excl-hint">Rien n’est listé. Indiquez ce qui n’est pas compris : c’est la ligne que le client lit, et elle évite les malentendus sur le prix.</p>
   </div>
 
   <div class="blk accounts" id="accounts">
@@ -660,6 +669,36 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
     apply:applyPricingPlan
   });
   $('b-estimate').onclick=function(){if(quoteEstimator)quoteEstimator.open();};
+  /* « Ce devis ne comprend pas » : one line per item, typed or added with a button. Nothing is sent by these buttons. */
+  var EXCL_PRESETS = [
+    'Les demandes ajoutées après la signature (chiffrées à part, avec votre accord écrit)',
+    'Les changements de design après validation des maquettes',
+    'La publication sur l’App Store et Google Play',
+    'Le paiement en ligne réel',
+    'Les frais des comptes tiers (nom de domaine, hébergement, comptes Apple et Google)',
+    'La rédaction des textes et la création des visuels',
+    'Les textes juridiques et leur validation par un juriste',
+    'La maintenance après la période de corrections'
+  ];
+  function exclLines(){ return ($('excl').innerText || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean); }
+  function syncExcl(){
+    var lines = exclLines();
+    $('excl-blk').classList.toggle('excl-empty', !lines.length);
+    $('excl-hint').hidden = !!lines.length;
+    [].forEach.call($('excl-adders').children, function(b){ b.setAttribute('aria-pressed', lines.indexOf(b.dataset.line) >= 0 ? 'true' : 'false'); });
+  }
+  EXCL_PRESETS.forEach(function(line){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'add'; b.dataset.line = line; b.textContent = '+ ' + line.replace(/ \(.*\)$/, '');
+    b.onclick = function(){
+      var lines = exclLines(), i = lines.indexOf(line);
+      if (i >= 0) lines.splice(i, 1); else lines.push(line);
+      $('excl').innerText = lines.join('\n');
+      $('excl').dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    $('excl-adders').appendChild(b);
+  });
+  $('excl').addEventListener('input', syncExcl);
   function setField(k, v){
     var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
     if (el.isContentEditable) el.innerText = v; else el.value = v;
@@ -671,6 +710,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       else if (el.type !== 'checkbox' && !el.defaultValue) el.value = '';
       else if (el.type !== 'checkbox') el.value = el.defaultValue;
     });
+    syncExcl();
     var d = new Date(), v = new Date(); v.setDate(v.getDate() + 30);
     $('num').value = nextNum(); $('date').value = iso(d); $('valid').value = iso(v);
     state.lines = []; state.host = [];
@@ -746,7 +786,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
       var el = document.querySelector('[data-k="' + k + '"]'); if (!el) return;
       if (el.type === 'checkbox') el.checked = saved.f[k]; else if (el.isContentEditable) el.innerText = saved.f[k]; else el.value = saved.f[k];
     });
-    renderLines(); renderHost();
+    renderLines(); renderHost(); syncExcl();
   }
   if (QID) {
     // a quote stored in the private space: the owner's address stays in this browser only
@@ -798,7 +838,7 @@ a.tb{text-decoration:none;display:inline-flex;align-items:center}
   }
 
   [].forEach.call(document.querySelectorAll('[data-k]'), function(el){ el.addEventListener('input', totals); el.addEventListener('change', totals); });
-  [].forEach.call(document.querySelectorAll('.add'), function(b){ b.onclick = function(){ addPreset(+b.dataset.preset); }; });
+  [].forEach.call(document.querySelectorAll('.add[data-preset]'), function(b){ b.onclick = function(){ addPreset(+b.dataset.preset); }; });
   $('providers').innerHTML = Object.keys(PROVIDERS).map(function(k){ return '<option value="' + esc(k) + '">'; }).join('');
   $('b-host').onclick = suggestHost;
   $('b-hostline').onclick = function(){ state.host.push({l: '', w: '', c: ''}); renderHost(); var ins = $('hostlist').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); };

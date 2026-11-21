@@ -98,6 +98,7 @@ main{max-width:900px;margin:0 auto;padding:22px 16px 60px}
 .qv .tot td{border:0;padding:4px 6px}
 .qv .tot tr.grand td{font-size:17px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px}
 .qv .vat{text-align:right;font-size:12.5px;color:var(--mute);margin-top:4px}
+.qv .excl{margin:4px 0 0 18px;font-size:13.5px}.qv .excl li{margin:3px 0}
 .qv .why{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
 .qv .conds{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13.5px}
 .qv .conds span{color:var(--mute);margin-right:6px}
@@ -352,7 +353,7 @@ footer{max-width:1180px}
 <script src="../assets/rd-steps.js"></script>
 <link rel="stylesheet" href="../assets/project-tracking.css?v=20261114-auto-number&cancel=20261115">
 <script src="../assets/project-tracking.js?v=20261120-balance2"></script>
-<script src="../assets/dzoft-documents.js?v=20261118-avoirs"></script>
+<script src="../assets/dzoft-documents.js?v=20261121-excl"></script>
 <link rel="stylesheet" href="simplified-client.css?v=20261120-balance2">
 <link rel="stylesheet" href="../assets/change-requests.css?v=20261121-withdraw">
 <script src="../assets/change-requests.js?v=20261121-withdraw"></script>
@@ -1330,6 +1331,8 @@ footer{max-width:1180px}
       (a.opt ? 'Les lignes marquées « Option » ne sont pas comprises dans le total : vous choisissez de les ajouter ou non. ' : '') +
       'Si le budget ne convient pas, une partie peut être retirée ou simplifiée : dites-moi lesquelles et je mets le devis à jour.</div>';
     if (showNewScopeClause(q)) h += '<div class="why"><b>Prix et modifications après signature.</b> Ce devis fixe le prix des prestations décrites. Toute demande supplémentaire ou modification importante après acceptation peut entraîner un devis complémentaire et un délai ajusté, soumis à votre accord exprès avant intervention ou facturation. Les corrections nécessaires pour respecter ce devis sont incluses.</div>';
+    var excl = String(f.excl || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    if (excl.length) h += '<h4>Ce devis ne comprend pas</h4><ul class="excl">' + excl.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
     var host = d.host || [];
     if (host.length) h += '<h4>Hébergement et comptes, à votre nom</h4>' + (f.accnote ? '<p class="sub" style="font-size:13px;margin-bottom:6px">' + esc(f.accnote) + '</p>' : '') +
       '<table><thead><tr><th>Élément</th><th>Où</th><th>Coût indicatif</th></tr></thead><tbody>' +
