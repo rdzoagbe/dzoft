@@ -222,9 +222,11 @@ function adminCard(r,en,invoice,blocks,tiers){
  // An unsent draft can be changed in place (lines, prices, discount): the server keeps its number and it stays a draft.
  if(draft)h+='<details class="dzoft-change-new dzoft-change-edit"><summary>'+tr(en,'✎ Modifier ce brouillon','✎ Edit this draft')+'</summary>'+calculator(en,blocks,r,tiers,true)+'</details>';
  if(r.status==='requested'||r.status==='proposed'){
-  h+='<form data-change-reject="'+esc(r.id)+'" class="dzoft-change-form dzoft-change-reject"><label>'+tr(en,'Motif si la proposition est retirée ou la demande non retenue','Reason if withdrawn or declined')+
+  // Behind its own toggle (21 Nov 2026): « Annuler » then visibly closes it, instead of only emptying an always-visible field.
+  h+='<details class="dzoft-change-reject-box"><summary>'+(r.status==='requested'?tr(en,'Ne pas retenir cette demande…','Decline this request…'):tr(en,'Retirer cette proposition…','Withdraw this proposal…'))+'</summary>'+
+   '<form data-change-reject="'+esc(r.id)+'" class="dzoft-change-form dzoft-change-reject"><label>'+tr(en,'Motif si la proposition est retirée ou la demande non retenue','Reason if withdrawn or declined')+
    '<input name="reason" minlength="5" maxlength="600" placeholder="'+tr(en,'Ex. : remplacée par une nouvelle proposition','E.g. replaced by a new proposal')+'" required></label>'+
-   '<button class="btn line sm" type="submit">'+tr(en,'Retirer / refuser','Withdraw / reject')+'</button><button class="btn ghost sm" type="button" data-form-cancel>'+tr(en,'Annuler','Cancel')+'</button></form>';
+   '<button class="btn line sm" type="submit">'+tr(en,'Retirer / refuser','Withdraw / reject')+'</button><button class="btn ghost sm" type="button" data-form-cancel>'+tr(en,'Annuler','Cancel')+'</button></form></details>';
  }
  if(['approved','in_progress','completed'].includes(r.status))h+=signedNote(r,en)+'<p class="dzoft-change-meta">'+tr(en,'Facturez ce complément séparément, sans modifier la facture initiale.','Invoice this addition separately; do not change the original invoice.')+'</p>';
  if(r.status==='approved')h+='<div class="dzoft-change-actions">'+(r.already_done?'':'<button class="btn line sm" type="button" data-change-progress="'+esc(r.id)+'" data-next="in_progress">'+tr(en,'Démarrer les travaux complémentaires','Start approved additional work')+'</button>')+

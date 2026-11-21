@@ -1326,3 +1326,43 @@ test('« Préparer l’e-mail » opens Hotmail (Outlook.com) with the quote, not
  expect(url.searchParams.get('body').length).toBeGreaterThan(20);
  expect(page.url()).toContain('admin/devis.html');
 });
+
+test('Cancel buttons close what they opened, without saving (withdraw, paste a request, external invoice, quick note)',async({page})=>{
+ await syntheticOwner(page);
+ const errors=[],writes=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('request',r=>{if(r.method()!=='GET')writes.push(r.url());});
+ page.on('dialog',d=>d.dismiss());
+ // 1. Withdraw / reject a proposal: behind its own toggle; Cancel empties the reason and closes it.
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0&draftFixture=1#billing',{waitUntil:'domcontentloaded'});
+ const box=page.locator('#dzoft-owner-changes details.dzoft-change-reject-box').first();
+ await expect(box).not.toHaveAttribute('open','');
+ await expect(box.locator('input[name=reason]')).toBeHidden();
+ await box.locator('summary').click();
+ await box.locator('input[name=reason]').fill('Remplacée par une autre');
+ await box.locator('[data-form-cancel]').click();
+ await expect(box).not.toHaveAttribute('open','');
+ await box.locator('summary').click();
+ await expect(box.locator('input[name=reason]')).toHaveValue('');
+ // 2. External invoice form: Cancel hides it.
+ await page.goto('admin/suivi.html?q=c8a50cee-3856-4539-98a3-f5df201dbff0#billing',{waitUntil:'domcontentloaded'});
+ const add=page.locator('#iv-add');
+ if(await add.isVisible()){
+  await add.click();await expect(page.locator('#iv-external-form')).toBeVisible();
+  await page.locator('#iv-external-cancel').click();await expect(page.locator('#iv-external-form')).toBeHidden();
+ }
+ // 3. Journal quick note: Cancel forgets the typed text.
+ await page.locator('[data-project-tab="work"]').click();
+ await page.locator('details > summary').filter({hasText:'Journal privé du projet'}).first().click();
+ await page.locator('#jr-quick-text').fill('Note à oublier');
+ await page.locator('#jr-quick-cancel').click();
+ await expect(page.locator('#jr-quick-text')).toHaveValue('');
+ // 4. Dashboard « Coller une demande »: the window opens, Cancel closes it.
+ await page.goto('admin/#/demandes',{waitUntil:'domcontentloaded'});
+ await page.locator('#b-paste').click();
+ await expect(page.locator('#m-paste-request')).toBeVisible();
+ await page.locator('#mp-text').fill('Bonjour, je voudrais un site');
+ await page.locator('#mp-close').click();
+ await expect(page.locator('#m-paste-request')).toBeHidden();
+ expect(writes).toEqual([]);
+ expect(errors).toEqual([]);
+});
