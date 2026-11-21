@@ -27,6 +27,9 @@ et le prévenir ensuite ; demander d’abord pour ce qui touche ses comptes, les
   colonne de droite = rendez-vous, téléphone, WhatsApp, e-mail. Carte de visite (recto/verso), contact .vcf et carte PDF sont sur
   « À propos » (`a-propos.html`, `en/a-propos.html`) ; la fiche de remise reste liée dans le brief et sur Méthode.
   Accueil (18 nov. 2026) : réalisations = Ahenora en avant (produit réalisé), puis StackLens, puis Le Fournil (démonstration, signalée).
+  Accueil (21 nov. 2026, demande de Roland) : bloc « Une nouvelle idée en cours de route ? » sous les prix (3 étapes : le devis dit tout,
+  le prix d’abord par écrit, rien sans votre « oui » écrit — 100 € / devis complémentaire, oral sans effet), lien CGV article 3 ;
+  même règle dans Services, Méthode et FAQ (FR/EN). À garder aligné sur l’article 3 des CGV. Test `tests/extras-explained.test.cjs`.
 - CGV version 2026-12 (21 nov. 2026, demande de Roland après un supplément contesté) : le devis liste ce qui est compris, accord écrit
   avant tout supplément (simple réponse écrite jusqu’à 100 €, devis complémentaire signé au-delà), demandes orales sans effet tant
   qu’elles ne sont pas confirmées par écrit, barème indicatif, livraison = version finale remise pour vérification (14 jours), sans
