@@ -94,7 +94,7 @@
    block('Nature : prestation de services. Facture liée au devis '+safe(q.numero||'')+'.',88);
    if(inv.changeNote)block(inv.changeNote,88);
    // Reminder, not a unilateral revision. Legacy signed agreements keep their original document wording.
-   if(q.accepted_terms==='v2026-11'){
+   if(q.accepted_terms==='v2026-11'||q.accepted_terms==='v2026-12'){
      y-=7;
      text('PRIX CONVENU ET CHANGEMENTS',10,true);
      block('Le prix du devis reste fixe pour les prestations convenues. Une demande hors périmètre peut entraîner un supplément ou un délai ajusté, uniquement après acceptation expresse d’un devis complémentaire ou d’un avenant avant intervention et facturation. Les corrections dues au devis signé restent incluses.',87);

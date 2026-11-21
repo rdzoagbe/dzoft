@@ -74,7 +74,7 @@
       :'<section class="pay-info"><h2>Facture acquittée</h2><p>Aucun paiement supplémentaire n’est dû sur cette facture.</p></section>')+
     '<footer class="foot">'+(taxable?'TVA calculée à 20 %. Vérifiez le régime et les mentions fiscales applicables avant émission.':'TVA non applicable, article 293 B du CGI.')+
     '<p>Facture relative au devis '+esc(quote.numero||'')+'. Les paiements reçus sont affichés séparément du solde du projet.</p>'+
-    (quote.accepted_terms==='v2026-11'?'<p><b>Prix convenu et demandes complémentaires :</b> le prix initial couvre uniquement les prestations du devis accepté. Toute demande hors périmètre fera l’objet d’un devis complémentaire ou avenant accepté expressément avant toute facturation supplémentaire. Les corrections dues au devis initial restent incluses.</p>':'')+'</footer>'+
+    (quote.accepted_terms==='v2026-11'||quote.accepted_terms==='v2026-12'?'<p><b>Prix convenu et demandes complémentaires :</b> le prix initial couvre uniquement les prestations du devis accepté. Toute demande hors périmètre fera l’objet d’un devis complémentaire ou avenant accepté expressément avant toute facturation supplémentaire. Les corrections dues au devis initial restent incluses.</p>':'')+'</footer>'+
     '</main></body></html>';
    w.document.open();w.document.write(body);w.document.close();w.focus();
    return true;

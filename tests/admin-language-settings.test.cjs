@@ -58,8 +58,9 @@ test('language selection exists only in Settings and persists across private pag
 test('Settings introduction translates correctly; no new permissions or auth changes',()=>{
  assert.match(lang,/'Langue de l’interface': 'Interface language'/);
  assert.match(lang,/Choose your language\. Changes apply instantly and are saved on this device\./);
- assert.match(html,/Conditions générales de vente \(version actuelle 2026-11\)/);
+ assert.match(html,/Conditions générales de vente \(version actuelle 2026-12\)/);
  assert.match(html,/href="\.\.\/cgv-2026-10\.html"/);
+ assert.match(html,/href="\.\.\/cgv-2026-11\.html"/);
  assert.match(html,/id="device-passkeys"/);
  assert.match(html,/sb\.devicePasskey\.register\(\)/);
  assert.match(html,/sb\.mfa\.challenge\(mfaFactor\)/);

@@ -588,6 +588,31 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
             </div>
           </fieldset>
           <div class="full">
+            <label for="essentiels">Les fonctions ou écrans indispensables (un par ligne)</label>
+            <p class="fhelp" id="essentiels-help">Écrivez tout ce que le projet doit absolument savoir faire. Le devis reprendra cette liste : ce qui n’y figure pas sera chiffré à part, avec votre accord.</p>
+            <textarea id="essentiels" name="essentiels" maxlength="1500" aria-describedby="essentiels-help" placeholder="Exemple :&#10;Prendre rendez-vous en ligne&#10;Recevoir un e-mail de confirmation&#10;Voir mes rendez-vous à venir"></textarea>
+          </div>
+          <div>
+            <label for="comptes-utilisateurs">Les utilisateurs devront-ils créer un compte ?</label>
+            <select id="comptes-utilisateurs" name="comptes_utilisateurs">
+              <option value="">Je ne sais pas encore</option>
+              <option value="Oui">Oui</option>
+              <option value="Non">Non</option>
+            </select>
+          </div>
+          <div>
+            <label for="mise-en-ligne">Qui s’occupe de la mise en ligne ou de la publication ?</label>
+            <select id="mise-en-ligne" name="mise_en_ligne">
+              <option value="">Je ne sais pas encore</option>
+              <option value="DZOFT">DZOFT, à inclure dans le devis</option>
+              <option value="Le client">Je m’en occupe moi-même</option>
+            </select>
+          </div>
+          <div class="full">
+            <label for="decideur">Qui validera le devis et les étapes du projet ?</label>
+            <input id="decideur" name="decideur" type="text" maxlength="200" placeholder="Vous seul, vous et un associé…">
+          </div>
+          <div class="full">
             <label for="site-existant">Votre site ou application actuelle (lien, si existant)</label>
             <input id="site-existant" name="site_existant" type="url" maxlength="400" autocomplete="url" placeholder="https://…">
           </div>
@@ -639,6 +664,7 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
           <button class="btn-text" type="button" id="send-mail">ou par e-mail</button>
         </div>
         <p class="full fstatus" id="fstatus" role="status" aria-live="polite"></p>
+        <p class="full privacy" id="scope-note"><b>Un devis précis, sans surprise.</b> Le devis liste exactement ce qui est compris dans le prix. Toute demande ajoutée ensuite est chiffrée et soumise à votre accord écrit avant d’être réalisée (<a href="cgv.html#a3">article 3 des conditions générales</a>).</p>
         <p class="full privacy" id="privacy">Quel que soit le bouton choisi, votre demande est enregistrée dès votre clic dans mon outil de suivi sécurisé (hébergé en France), uniquement pour vous répondre (voir la <a href="confidentialite.html">politique de confidentialité</a>). Avec « Envoyer ma demande », elle m’est aussi transmise par e-mail ; avec WhatsApp ou l’e-mail, elle s’ouvre dans votre application et vous l’envoyez vous-même.</p>
       </form>
       </div>
@@ -705,6 +731,10 @@ footer details p{color:#8fa3b8;font-size:13.5px;padding:0 16px 14px}
       add('Fonctions mobiles à prévoir : ', 'Mobile app requirements: ', selectedChoices('mobile_features'));
     }
     add('Actions attendues : ', 'Key actions: ', selectedChoices('actions'));
+    add('Fonctions indispensables : ', 'Must-have features: ', (d.get('essentiels') || '').trim().slice(0,1500));
+    if (d.get('comptes_utilisateurs')) add('Comptes utilisateurs : ', 'User accounts: ', label('comptes-utilisateurs'));
+    if (d.get('mise_en_ligne')) add('Mise en ligne ou publication : ', 'Going live or publishing: ', label('mise-en-ligne'));
+    add('Validation des étapes : ', 'Who approves: ', (d.get('decideur') || '').trim().slice(0,200));
     add('Éléments déjà disponibles : ', 'Existing materials: ', selectedChoices('assets'));
     add('Site ou application actuelle : ', 'Current website or app: ', (d.get('site_existant') || '').trim().slice(0,400));
     add('Exemples appréciés : ', 'Reference examples: ', (d.get('exemples') || '').trim().slice(0,500));

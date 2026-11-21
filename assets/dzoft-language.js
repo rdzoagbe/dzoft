@@ -55,11 +55,11 @@ Object.assign(dzoftEnglish, {
   "Vérifier les sauvegardes Supabase": "Review Supabase backups",
   "Guide de sauvegarde et restauration": "Backup and restore guide",
   "Liste de contrôle : restauration isolée": "Checklist: isolated recovery test",
-  "Conditions générales de vente (version actuelle 2026-11) :": "Terms of sale (current version 2026-11):",
+  "Conditions générales de vente (version actuelle 2026-12) :": "Terms of sale (current version 2026-12):",
   "archivée ici": "archived here",
   "À compléter dans les CGV : le médiateur de la consommation (article 16), obligatoire pour vos clients particuliers.": "To complete in your terms of sale: the consumer mediator (Article 16), required for individual consumers.",
-  "Conditions générales de vente (version actuelle 2026-11) : rdzoagbe.github.io/dzoft/cgv.html. La version 2026-10, applicable aux accords conclus sous cette version, reste archivée ici. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.": "Terms of sale (current version 2026-11): rdzoagbe.github.io/dzoft/cgv.html. The 2026-10 version remains archived for agreements accepted under that version. Clients accept the applicable terms when signing their quote and may request work to begin before the 14-day withdrawal period ends.",
-  "La version 2026-10, applicable aux accords conclus sous cette version, reste": "The 2026-10 version, applicable to agreements accepted under that version, remains",
+  "Conditions générales de vente (version actuelle 2026-12) : rdzoagbe.github.io/dzoft/cgv.html. Versions archivées, applicables aux accords conclus sous chacune d’elles : 2026-10, 2026-11. Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.": "Terms of sale (current version 2026-12): rdzoagbe.github.io/dzoft/cgv.html. Archived versions, applicable to agreements accepted under each of them: 2026-10, 2026-11. Clients accept the applicable terms when signing their quote and may request work to begin before the 14-day withdrawal period ends.",
+  "Versions archivées, applicables aux accords conclus sous chacune d’elles :": "Archived versions, applicable to agreements accepted under each of them:",
   "Le client accepte les CGV applicables lors de la validation du devis, et choisit s’il veut démarrer avant la fin du délai de rétractation de 14 jours.": "Clients accept the applicable terms when confirming their quote and may request work to begin before the 14-day withdrawal period ends."
 });
 // Billing-specific text must be translated as part of the same saved

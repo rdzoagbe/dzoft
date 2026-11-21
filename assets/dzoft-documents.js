@@ -89,7 +89,7 @@ function amounts(d){
  var novat=f.novat!==false&&f.novat!=='false',vat=novat?0:once*0.2,pct=Math.min(100,Math.max(0,parseFloat(f.deppct)||0));
  return {once:once,vat:vat,ttc:once+vat,month:month*(novat?1:1.2),opt:opt,pct:pct,dep:(once+vat)*pct/100,novat:novat};
 }
-function termsUrl(q){return 'https://rdzoagbe.github.io/dzoft/'+(q.accepted_terms==='v2026-10'?'cgv-2026-10.html':'cgv.html');}
+function termsUrl(q){return 'https://rdzoagbe.github.io/dzoft/'+(q.accepted_terms==='v2026-10'?'cgv-2026-10.html':q.accepted_terms==='v2026-11'?'cgv-2026-11.html':'cgv.html');}
 function signatureLines(name,at,method,target,extra){
  var how=method==='email'?'avec le code reçu par e-mail à '+(target||'l’adresse du client'):method==='sms'?'avec le code reçu par SMS au '+(target||'numéro du client'):'en ligne';
  return ['Signé électroniquement le '+frDateTime(at)+' par '+(name||'le client')+', '+how+'.'].concat(extra||[]);
